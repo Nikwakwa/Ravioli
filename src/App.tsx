@@ -3,6 +3,7 @@ import { useCallback, useRef, useState } from 'react';
 import { ActionDock } from './components/ActionDock';
 import { ActivityFeed } from './components/ActivityFeed';
 import { CatAvatar } from './components/CatAvatar';
+import { ChangelogModal } from './components/ChangelogModal';
 import { FloatingEffects } from './components/FloatingEffects';
 import { PlayerSelector } from './components/PlayerSelector';
 import { Balcony } from './components/scenes/Balcony';
@@ -16,6 +17,7 @@ import { loadPlayer, playerColor, savePlayer } from './utils/player';
 export function App() {
   const [player, setPlayer] = useState<string | null>(() => loadPlayer());
   const [pickerOpen, setPickerOpen] = useState<boolean>(() => !loadPlayer());
+  const [changelogOpen, setChangelogOpen] = useState(false);
   const [scene, setScene] = useState<SceneId>('room');
   const [swipeDir, setSwipeDir] = useState<1 | -1>(1);
   const [notice, setNotice] = useState<Notice | null>(null);
@@ -135,6 +137,7 @@ export function App() {
           }}
           player={player ?? 'Nico'}
           onOpenPlayer={() => setPickerOpen(true)}
+          onOpenChangelog={() => setChangelogOpen(true)}
           mode={mode}
           status={status}
         />
@@ -189,6 +192,7 @@ export function App() {
         </div>
 
         <PlayerSelector open={pickerOpen} current={player} onSelect={handleSelectPlayer} />
+        <ChangelogModal open={changelogOpen} onClose={() => setChangelogOpen(false)} />
       </main>
     </div>
   );

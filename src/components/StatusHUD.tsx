@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { CloudOff, Home, Loader2, Moon, Radio, Sun, Users, Wifi } from 'lucide-react';
 import { STAT_META } from '../data/actions';
+import { APP_VERSION } from '../data/changelog';
 import { STAT_KEYS, type LiveCat, type Mood, type SceneId, type SyncMode, type SyncStatus } from '../types';
 import { NEED_THRESHOLD } from '../utils/decayEngine';
 import { playerColor } from '../utils/player';
@@ -26,11 +27,22 @@ export interface StatusHUDProps {
   onSceneChange: (scene: SceneId) => void;
   player: string;
   onOpenPlayer: () => void;
+  onOpenChangelog: () => void;
   mode: SyncMode;
   status: SyncStatus;
 }
 
-export function StatusHUD({ live, mood, scene, onSceneChange, player, onOpenPlayer, mode, status }: StatusHUDProps) {
+export function StatusHUD({
+  live,
+  mood,
+  scene,
+  onSceneChange,
+  player,
+  onOpenPlayer,
+  onOpenChangelog,
+  mode,
+  status,
+}: StatusHUDProps) {
   const badge = MOOD_BADGE[mood];
   const pColor = playerColor(player);
   const night = live.isSleeping;
@@ -48,9 +60,21 @@ export function StatusHUD({ live, mood, scene, onSceneChange, player, onOpenPlay
         >
           <span className="text-xl leading-none select-none">{badge.emoji}</span>
           <div className="min-w-0 leading-tight">
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1">
               <span className="font-display text-sm font-bold">{live.name}</span>
               <SyncDot mode={mode} status={status} />
+              <button
+                type="button"
+                onClick={onOpenChangelog}
+                title="View Changelog"
+                className={`rounded-full px-1.5 py-0.5 font-mono text-[9px] font-extrabold transition-transform active:scale-95 ${
+                  night
+                    ? 'bg-white/10 text-indigo-200 hover:bg-white/20'
+                    : 'bg-amber-950/8 text-amber-800 hover:bg-amber-950/15'
+                }`}
+              >
+                {APP_VERSION}
+              </button>
             </div>
             <p className={`truncate text-[10px] font-bold ${night ? 'text-indigo-200/80' : 'text-amber-800/80'}`}>
               {badge.label}
