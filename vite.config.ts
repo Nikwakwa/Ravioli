@@ -47,9 +47,10 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}'],
+        globIgnores: ['**/version.json'],
         navigateFallback: `${base}index.html`,
-        // Never cache Supabase API / realtime traffic.
-        navigateFallbackDenylist: [/^\/rest\//, /^\/realtime\//],
+        // Never cache Supabase API / realtime traffic or version.json.
+        navigateFallbackDenylist: [/^\/rest\//, /^\/realtime\//, /version\.json$/],
       },
     }),
   ],

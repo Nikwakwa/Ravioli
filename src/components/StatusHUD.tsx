@@ -28,6 +28,7 @@ export interface StatusHUDProps {
   player: string;
   onOpenPlayer: () => void;
   onOpenChangelog: () => void;
+  hasUpdate?: boolean;
   mode: SyncMode;
   status: SyncStatus;
 }
@@ -40,6 +41,7 @@ export function StatusHUD({
   player,
   onOpenPlayer,
   onOpenChangelog,
+  hasUpdate,
   mode,
   status,
 }: StatusHUDProps) {
@@ -66,14 +68,17 @@ export function StatusHUD({
               <button
                 type="button"
                 onClick={onOpenChangelog}
-                title="View Changelog"
-                className={`rounded-full px-1.5 py-0.5 font-mono text-[9px] font-extrabold transition-transform active:scale-95 ${
+                title="What’s New"
+                className={`relative rounded-full px-1.5 py-0.5 font-mono text-[9px] font-extrabold transition-transform active:scale-95 ${
                   night
                     ? 'bg-white/10 text-indigo-200 hover:bg-white/20'
                     : 'bg-amber-950/8 text-amber-800 hover:bg-amber-950/15'
                 }`}
               >
                 {APP_VERSION}
+                {hasUpdate && (
+                  <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-emerald-500 ring-2 ring-white" />
+                )}
               </button>
             </div>
             <p className={`truncate text-[10px] font-bold ${night ? 'text-indigo-200/80' : 'text-amber-800/80'}`}>

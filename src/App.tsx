@@ -1,4 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion';
+import { RefreshCw } from 'lucide-react';
 import { useCallback, useRef, useState } from 'react';
 import { ActionDock } from './components/ActionDock';
 import { ActivityFeed } from './components/ActivityFeed';
@@ -10,6 +11,7 @@ import { Balcony } from './components/scenes/Balcony';
 import { LivingRoom } from './components/scenes/LivingRoom';
 import { StatusHUD } from './components/StatusHUD';
 import { useCatGame, type Notice } from './hooks/useCatGame';
+import { useVersionCheck } from './hooks/useVersionCheck';
 import type { SceneId } from './types';
 import { vibrate } from './utils/feedback';
 import { loadPlayer, playerColor, savePlayer } from './utils/player';
@@ -36,6 +38,7 @@ export function App() {
     player ?? 'Nico',
     pushNotice,
   );
+  const { availableVersion, reloading, applyUpdate } = useVersionCheck();
 
   const handleSelectPlayer = (name: string) => {
     savePlayer(name);
@@ -138,9 +141,36 @@ export function App() {
           player={player ?? 'Nico'}
           onOpenPlayer={() => setPickerOpen(true)}
           onOpenChangelog={() => setChangelogOpen(true)}
+          hasUpdate={Boolean(availableVersion)}
           mode={mode}
           status={status}
         />
+
+        {/* New version available banner */}
+        <AnimatePresence>
+          {availableVersion && (
+            <motion.div
+              key="update-banner"
+              initial={{ opacity: 0, y: -12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -12 }}
+              className="relative z-30 mx-3 mt-1"
+            >
+              <button
+                type="button"
+                onClick={() => void applyUpdate()}
+                disabled={reloading}
+                className="flex w-full items-center justify-between gap-2 rounded-2xl bg-emerald-600 px-3.5 py-2 text-xs font-extrabold text-white shadow-lg transition-transform active:scale-[0.99]"
+              >
+                <span>✨ A new update ({availableVersion}) is ready!</span>
+                <span className="flex items-center gap-1 rounded-full bg-white/20 px-2.5 py-0.5 text-[11px]">
+                  <RefreshCw className={`h-3 w-3 ${reloading ? 'animate-spin' : ''}`} />
+                  {reloading ? 'Reloading…' : 'Reload'}
+                </span>
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Partner / info toast */}
         <AnimatePresence>
@@ -192,7 +222,12 @@ export function App() {
         </div>
 
         <PlayerSelector open={pickerOpen} current={player} onSelect={handleSelectPlayer} />
-        <ChangelogModal open={changelogOpen} onClose={() => setChangelogOpen(false)} />
+        <ChangelogModal
+          open={changelogOpen}
+          onClose={() => setChangelogOpen(false)}
+          availableVersion={availableVersion}
+          onReload={() => void applyUpdate()}
+        />
       </main>
     </div>
   );

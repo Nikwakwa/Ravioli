@@ -7,35 +7,41 @@ export interface ReleaseEntry {
 
 export const CHANGELOG: ReleaseEntry[] = [
   {
+    version: 'v0.4.0',
+    date: '2026-10-30',
+    title: 'Update Alerts & Simpler Notes',
+    changes: [
+      'A friendly banner now lets you know whenever a new update is ready, with a one-tap reload button.',
+      'Rewrote these update notes in plain, cozy language.',
+    ],
+  },
+  {
     version: 'v0.3.0',
     date: '2026-10-30',
-    title: 'Version Numbering & In-App Changelog',
+    title: 'What’s New Drawer',
     changes: [
-      'Added vx.y.z version tracking across the app, CHANGELOG.md, and Git tags.',
-      'Tap the version badge in the top bar anytime to see what changed in each push.',
+      'Tap the version badge next to Oli’s name anytime to see the latest additions.',
     ],
   },
   {
     version: 'v0.2.0',
     date: '2026-10-30',
-    title: 'UX/UI Overhaul & Night Glass Theme',
+    title: 'Cozy Room Makeover & Night Mode',
     changes: [
-      'Recalibrated Living Room & Balcony stage so Oli sits right on the rug and cushion with the fountain and plants in full view.',
-      'Fixed-height Action Dock so switching tabs never jumps the layout.',
-      'Redesigned 5-stat HUD cards so labels never clip on mobile screens.',
-      'Added cozy night-mode frosted glass surfaces while Oli is napping.',
-      'Tapping Oli now pops up mood-aware purr & thought bubbles.',
+      'Oli now sits right on his plush rug and sunny balcony cushion, with his water fountain and plants in full view.',
+      'Tucking Oli in for a nap now dims the menus into a soft night theme.',
+      'Tap Oli to pet him and see what he’s thinking!',
+      'Swiping left or right on the room switches between the Living Room and the Sunny Balcony.',
     ],
   },
   {
     version: 'v0.1.0',
     date: '2026-10-30',
-    title: 'Initial Launch — Hello Oli!',
+    title: 'Hello Oli! 🐱',
     changes: [
-      'Animated SVG Oli with ginger tabby coat, golden eyes, chin freckles, and ear tattoos.',
-      'Living Room & Sunny Balcony scenes with swipe navigation.',
-      'Serverless Tamagotchi timestamp-delta decay engine + piecewise nap auto-wake.',
-      'Real-time co-op sync for Nico & Athina via Supabase Realtime + GitHub Pages PWA deploy.',
+      'Meet Oli — complete with his ginger coat, golden eyes, tiny chin freckles, and little ear tattoos.',
+      'Feed him wet food, chicken hearts, or quail eggs, refresh his fountain, play feather wand, or give him chin scratches.',
+      'Care for Oli together in real time as Nico & Athina.',
     ],
   },
 ];

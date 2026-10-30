@@ -1,8 +1,18 @@
 import { AnimatePresence, motion } from 'framer-motion';
-import { Sparkles, X } from 'lucide-react';
+import { RefreshCw, Sparkles, X } from 'lucide-react';
 import { APP_VERSION, CHANGELOG } from '../data/changelog';
 
-export function ChangelogModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+export function ChangelogModal({
+  open,
+  onClose,
+  availableVersion,
+  onReload,
+}: {
+  open: boolean;
+  onClose: () => void;
+  availableVersion?: string | null;
+  onReload?: () => void;
+}) {
   return (
     <AnimatePresence>
       {open && (
@@ -29,14 +39,11 @@ export function ChangelogModal({ open, onClose }: { open: boolean; onClose: () =
                 <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-500/15 text-amber-700">
                   <Sparkles className="h-4 w-4" />
                 </span>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h2 className="font-display text-base font-bold text-amber-950">What’s New</h2>
-                    <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[11px] font-extrabold text-amber-800">
-                      {APP_VERSION}
-                    </span>
-                  </div>
-                  <p className="text-xs font-semibold text-amber-900/65">Every push gets a new vx.y.z release</p>
+                <div className="flex items-center gap-2">
+                  <h2 className="font-display text-base font-bold text-amber-950">What’s New</h2>
+                  <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[11px] font-extrabold text-amber-800">
+                    {APP_VERSION}
+                  </span>
                 </div>
               </div>
               <button
@@ -48,6 +55,22 @@ export function ChangelogModal({ open, onClose }: { open: boolean; onClose: () =
                 <X className="h-4 w-4" />
               </button>
             </div>
+
+            {availableVersion && onReload && (
+              <div className="mb-3 flex items-center justify-between gap-2 rounded-2xl border border-emerald-500/30 bg-emerald-50 px-3 py-2.5">
+                <span className="text-xs font-bold text-emerald-950">
+                  ✨ New version <span className="font-extrabold">{availableVersion}</span> is ready!
+                </span>
+                <button
+                  type="button"
+                  onClick={onReload}
+                  className="flex shrink-0 items-center gap-1 rounded-full bg-emerald-600 px-3 py-1 text-xs font-extrabold text-white shadow-xs active:scale-95"
+                >
+                  <RefreshCw className="h-3 w-3" />
+                  Reload
+                </button>
+              </div>
+            )}
 
             <div className="flex max-h-80 touch-pan-y flex-col gap-2.5 overflow-y-auto pr-1">
               {CHANGELOG.map((rel, idx) => (
@@ -68,7 +91,7 @@ export function ChangelogModal({ open, onClose }: { open: boolean; onClose: () =
                     </div>
                     <span className="text-[10px] font-bold text-amber-800/60">{rel.date}</span>
                   </div>
-                  <ul className="mt-2 flex flex-col gap-1 pl-3.5 text-[11px] font-semibold text-amber-900/80 list-disc">
+                  <ul className="mt-2 flex list-disc flex-col gap-1 pl-3.5 text-[11px] font-semibold text-amber-900/80">
                     {rel.changes.map((c, i) => (
                       <li key={i}>{c}</li>
                     ))}
