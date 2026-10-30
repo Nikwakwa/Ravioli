@@ -85,13 +85,7 @@ export function App() {
   return (
     <div className="flex h-dvh w-full items-center justify-center bg-[#23170f]">
       {/* Mobile portrait frame (full-bleed on phones, phone-sized card on desktop) */}
-      <main
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={(e) => finishSwipe(e.clientX, e.clientY)}
-        onPointerCancel={() => finishSwipe()}
-        className="safe-shell relative flex h-full w-full max-w-[440px] flex-col justify-between overflow-hidden bg-[#fbe3cb] shadow-2xl"
-      >
+      <main className="safe-shell relative flex h-full w-full max-w-[440px] flex-col justify-between overflow-hidden bg-[#fbe3cb] shadow-2xl">
         {/* Scene background */}
         <div className="pointer-events-none absolute inset-0">
           <AnimatePresence mode="wait" initial={false}>
@@ -120,11 +114,11 @@ export function App() {
             )}
           </AnimatePresence>
 
-          {/* Cozy sleep-mode dim overlay */}
+          {/* Subtle sleep-mode ambient vignette */}
           <motion.div
             className="pointer-events-none absolute inset-0 bg-indigo-950"
             initial={false}
-            animate={{ opacity: live.isSleeping ? (scene === 'room' ? 0.38 : 0.15) : 0 }}
+            animate={{ opacity: live.isSleeping ? (scene === 'room' ? 0.22 : 0.12) : 0 }}
             transition={{ duration: 0.7 }}
           />
         </div>
@@ -153,7 +147,7 @@ export function App() {
               initial={{ opacity: 0, y: -12, scale: 0.92 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -10, scale: 0.92 }}
-              className="pointer-events-none relative z-30 mx-4 self-center rounded-full bg-amber-950/85 px-3.5 py-1.5 text-xs font-bold text-amber-50 shadow-lg backdrop-blur-md"
+              className="pointer-events-none fixed top-28 left-1/2 z-30 -translate-x-1/2 rounded-full bg-amber-950/90 px-3.5 py-1.5 text-xs font-bold whitespace-nowrap text-amber-50 shadow-lg backdrop-blur-md"
             >
               {notice.player && (
                 <span
@@ -168,9 +162,15 @@ export function App() {
           )}
         </AnimatePresence>
 
-        {/* Center stage: Oli + floating bubbles/particles */}
-        <div className="relative z-10 flex flex-1 items-end justify-center pb-2">
-          <FloatingEffects event={event} tapHeartKey={tapHeartKey} />
+        {/* Center stage: swipeable scene area + Oli sitting on the rug/cushion */}
+        <div
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={(e) => finishSwipe(e.clientX, e.clientY)}
+          onPointerCancel={() => finishSwipe()}
+          className="relative z-10 flex flex-1 items-end justify-center pb-3"
+        >
+          <FloatingEffects event={event} tapHeartKey={tapHeartKey} mood={mood} />
           <div className="relative h-56 w-56 sm:h-60 sm:w-60">
             <CatAvatar
               mood={mood}
@@ -184,7 +184,7 @@ export function App() {
 
         {/* Bottom co-op pill + tactile care dock */}
         <div>
-          <ActivityFeed log={log} now={now} />
+          <ActivityFeed log={log} now={now} isSleeping={live.isSleeping} />
           <ActionDock isSleeping={live.isSleeping} busy={busy} onAction={perform} onToggleSleep={toggleSleep} />
         </div>
 

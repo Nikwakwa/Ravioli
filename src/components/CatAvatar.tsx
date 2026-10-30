@@ -135,17 +135,17 @@ function headMotion(animation: CatAnimation, sec: number, sleeping: boolean): { 
     case 'eating':
     case 'eating_egg':
       return {
-        animate: { y: [0, 40, 34, 40, 34, 40, 34, 0], rotate: [0, 0, 2, -2, 2, -2, 0, 0] },
+        animate: { y: [0, 22, 15, 22, 15, 22, 15, 0], rotate: [0, 0, 2, -2, 2, -2, 0, 0] },
         transition: { duration: sec, ease: 'easeInOut' },
       };
     case 'treat':
       return {
-        animate: { y: [0, 38, 30, 38, 0, -4, 0], rotate: [0, 0, 3, -3, 0, -8, 0] },
+        animate: { y: [0, 20, 13, 20, 0, -4, 0], rotate: [0, 0, 3, -3, 0, -8, 0] },
         transition: { duration: sec, ease: 'easeInOut' },
       };
     case 'drinking':
       return {
-        animate: { y: [0, 42, 39, 42, 39, 42, 39, 42, 0] },
+        animate: { y: [0, 24, 19, 24, 19, 24, 19, 24, 0] },
         transition: { duration: sec, ease: 'easeInOut' },
       };
     case 'purring':
@@ -541,17 +541,17 @@ function SleepZzz() {
       {[0, 1, 2].map((i) => (
         <motion.text
           key={i}
-          x={140}
-          y={92}
+          x={132}
+          y={114}
           fontFamily="Fredoka, sans-serif"
           fontWeight={700}
-          fontSize={12 + i * 4}
-          fill="#c8d4ff"
-          stroke="#4b5a9c"
-          strokeWidth={0.6}
+          fontSize={13 + i * 4}
+          fill="#e0e7ff"
+          stroke="#4338ca"
+          strokeWidth={0.8}
           initial={{ opacity: 0, x: 0, y: 0 }}
-          animate={{ opacity: [0, 1, 1, 0], x: [0, 10, 22, 34], y: [0, -24, -48, -72] }}
-          transition={{ duration: 3.6, repeat: Infinity, delay: i * 1.2, ease: 'easeOut' }}
+          animate={{ opacity: [0, 1, 1, 0], x: [0, 10, 20, 30], y: [0, -22, -44, -66] }}
+          transition={{ duration: 3.4, repeat: Infinity, delay: i * 1.1, ease: 'easeOut' }}
         >
           z
         </motion.text>

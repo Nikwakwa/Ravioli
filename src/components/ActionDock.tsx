@@ -4,7 +4,7 @@ import {
   Brush,
   Droplets,
   Drumstick,
-   Egg,
+  Egg,
   Feather,
   HandHeart,
   Heart,
@@ -48,10 +48,16 @@ export function ActionDock({ isSleeping, busy, onAction, onToggleSleep }: Action
   const [category, setCategory] = useState<ActionCategory>('feed');
   const actions = CARE_ACTIONS.filter((a) => a.category === category);
 
+  const shellClass = isSleeping
+    ? 'bg-slate-900/85 border-white/10 text-amber-50'
+    : 'bg-white/92 border-amber-900/10 text-amber-950';
+
   return (
-    <section className="relative z-20 mx-3 mb-2 rounded-3xl bg-white/90 p-2.5 shadow-lg backdrop-blur-md border border-amber-900/10">
+    <section
+      className={`relative z-20 mx-3 mb-2 rounded-3xl border p-2.5 shadow-lg backdrop-blur-md transition-colors duration-500 ${shellClass}`}
+    >
       {/* Category tabs */}
-      <div className="mb-2 grid grid-cols-4 gap-1 rounded-2xl bg-amber-950/5 p-1">
+      <div className={`mb-2 grid grid-cols-4 gap-1 rounded-2xl p-1 ${isSleeping ? 'bg-white/5' : 'bg-amber-950/6'}`}>
         {CATEGORIES.map((c) => {
           const Icon = CATEGORY_ICONS[c.id];
           const active = category === c.id;
@@ -61,13 +67,19 @@ export function ActionDock({ isSleeping, busy, onAction, onToggleSleep }: Action
               type="button"
               onClick={() => setCategory(c.id)}
               className={`relative flex items-center justify-center gap-1.5 rounded-xl py-1.5 text-xs font-extrabold transition-colors ${
-                active ? 'text-amber-950' : 'text-amber-900/60 hover:text-amber-900'
+                active
+                  ? isSleeping
+                    ? 'text-amber-950'
+                    : 'text-amber-950'
+                  : isSleeping
+                    ? 'text-indigo-200/70 hover:text-white'
+                    : 'text-amber-900/60 hover:text-amber-900'
               }`}
             >
               {active && (
                 <motion.span
                   layoutId="dock-tab"
-                  className="absolute inset-0 rounded-xl bg-white shadow-xs"
+                  className={`absolute inset-0 rounded-xl shadow-xs ${isSleeping ? 'bg-amber-300' : 'bg-white'}`}
                   transition={{ type: 'spring', stiffness: 380, damping: 30 }}
                 />
               )}
@@ -78,15 +90,15 @@ export function ActionDock({ isSleeping, busy, onAction, onToggleSleep }: Action
         })}
       </div>
 
-      {/* Action cards for active category */}
+      {/* Fixed-height action slot (h-[84px]) so switching tabs never jumps the layout */}
       <AnimatePresence mode="wait" initial={false}>
         <motion.div
           key={category}
-          initial={{ opacity: 0, y: 6 }}
+          initial={{ opacity: 0, y: 4 }}
           animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -6 }}
-          transition={{ duration: 0.16 }}
-          className={`grid gap-2 ${
+          exit={{ opacity: 0, y: -4 }}
+          transition={{ duration: 0.14 }}
+          className={`grid h-[84px] gap-2 ${
             category === 'feed' || category === 'comfort'
               ? 'grid-cols-3'
               : category === 'play'
@@ -97,29 +109,51 @@ export function ActionDock({ isSleeping, busy, onAction, onToggleSleep }: Action
           {actions.map((action) => {
             const Icon = ACTION_ICONS[action.id] ?? Sparkles;
             const lockedBySleep = isSleeping && action.requiresAwake;
+            const isSingleWide = category === 'hydrate';
+
             return (
               <motion.button
                 key={action.id}
                 type="button"
-                whileTap={{ scale: 0.95 }}
+                whileTap={{ scale: 0.96 }}
                 disabled={busy}
                 onClick={() => onAction(action)}
                 title={action.name}
-                className={`flex flex-col items-start justify-between rounded-2xl border p-2.5 text-left transition-all ${
+                className={`flex h-full flex-col justify-between rounded-2xl border p-2 text-left transition-all ${
                   lockedBySleep
-                    ? 'border-amber-900/10 bg-amber-950/5 opacity-55'
-                    : 'border-amber-900/10 bg-gradient-to-b from-amber-50/90 to-orange-50/60 shadow-xs active:shadow-none'
+                    ? isSleeping
+                      ? 'border-white/5 bg-white/5 opacity-45'
+                      : 'border-amber-900/10 bg-amber-950/5 opacity-55'
+                    : isSleeping
+                      ? 'border-white/10 bg-slate-800/90 text-amber-50 shadow-xs'
+                      : 'border-amber-900/10 bg-gradient-to-b from-amber-50/95 to-orange-50/70 text-amber-950 shadow-xs active:shadow-none'
                 }`}
               >
                 <div className="flex w-full items-center justify-between gap-1">
-                  <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-500/15 text-amber-700">
-                    <Icon className="h-4 w-4" />
+                  <span
+                    className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-xl ${
+                      isSleeping ? 'bg-amber-400/20 text-amber-300' : 'bg-amber-500/15 text-amber-700'
+                    }`}
+                  >
+                    <Icon className="h-3.5 w-3.5" />
                   </span>
-                  <EffectPills effect={action.effect} />
+                  {lockedBySleep ? (
+                    <span className="rounded-full bg-indigo-500/20 px-1.5 py-0.5 text-[9px] font-extrabold text-indigo-300">
+                      😴 Zzz
+                    </span>
+                  ) : (
+                    <EffectPills effect={action.effect} showLabels={isSingleWide} />
+                  )}
                 </div>
-                <div className="mt-1.5">
-                  <p className="font-display text-xs font-bold leading-tight text-amber-950">{action.short}</p>
-                  <p className="mt-0.5 line-clamp-1 text-[10px] font-semibold text-amber-900/60">{action.name}</p>
+                <div className="min-w-0">
+                  <p className="truncate font-display text-xs font-bold leading-tight">{action.short}</p>
+                  <p
+                    className={`mt-0.5 truncate text-[10px] font-semibold leading-tight ${
+                      isSleeping ? 'text-indigo-200/70' : 'text-amber-900/60'
+                    }`}
+                  >
+                    {action.name}
+                  </p>
                 </div>
               </motion.button>
             );
@@ -129,35 +163,41 @@ export function ActionDock({ isSleeping, busy, onAction, onToggleSleep }: Action
           {category === 'comfort' && (
             <motion.button
               type="button"
-              whileTap={{ scale: 0.95 }}
+              whileTap={{ scale: 0.96 }}
               disabled={busy}
               onClick={onToggleSleep}
-              className={`flex flex-col items-start justify-between rounded-2xl border p-2.5 text-left transition-all ${
+              className={`flex h-full flex-col justify-between rounded-2xl border p-2 text-left transition-all ${
                 isSleeping
-                  ? 'border-indigo-400/40 bg-gradient-to-b from-indigo-900 to-slate-900 text-indigo-50 shadow-xs'
-                  : 'border-amber-900/10 bg-gradient-to-b from-indigo-50/80 to-amber-50/60 text-amber-950 shadow-xs'
+                  ? 'border-amber-300/40 bg-gradient-to-b from-amber-400/25 to-indigo-900/60 text-amber-100 shadow-xs'
+                  : 'border-indigo-900/15 bg-gradient-to-b from-indigo-50/90 to-amber-50/60 text-amber-950 shadow-xs'
               }`}
             >
-              <div className="flex w-full items-center justify-between">
+              <div className="flex w-full items-center justify-between gap-1">
                 <span
-                  className={`flex h-8 w-8 items-center justify-center rounded-xl ${
-                    isSleeping ? 'bg-indigo-400/20 text-amber-200' : 'bg-indigo-500/15 text-indigo-700'
+                  className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-xl ${
+                    isSleeping ? 'bg-amber-300/25 text-amber-200' : 'bg-indigo-500/15 text-indigo-700'
                   }`}
                 >
-                  {isSleeping ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                  {isSleeping ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}
                 </span>
                 <span
-                  className={`rounded-full px-1.5 py-0.5 text-[10px] font-extrabold ${
-                    isSleeping ? 'bg-amber-300/20 text-amber-200' : 'bg-amber-200/70 text-amber-900'
+                  className={`rounded-full px-1.5 py-0.5 text-[9px] font-extrabold leading-none ${
+                    isSleeping ? 'bg-amber-300 text-amber-950' : 'bg-indigo-100 text-indigo-900'
                   }`}
                 >
-                  {isSleeping ? 'Wake' : '+15/h ⚡'}
+                  {isSleeping ? 'Wake' : '+15/h'}
                 </span>
               </div>
-              <div className="mt-1.5">
-                <p className="font-display text-xs font-bold leading-tight">{isSleeping ? 'Wake Oli Up' : 'Nap Mode'}</p>
-                <p className={`mt-0.5 line-clamp-1 text-[10px] font-semibold ${isSleeping ? 'text-indigo-200/80' : 'text-amber-900/60'}`}>
-                  {isSleeping ? 'Lights on & stretch' : 'Cozy dim & recharge'}
+              <div className="min-w-0">
+                <p className="truncate font-display text-xs font-bold leading-tight">
+                  {isSleeping ? 'Wake Oli Up' : 'Nap Mode'}
+                </p>
+                <p
+                  className={`mt-0.5 truncate text-[10px] font-semibold leading-tight ${
+                    isSleeping ? 'text-amber-200/80' : 'text-amber-900/60'
+                  }`}
+                >
+                  {isSleeping ? 'Turn lights back on' : 'Cozy dim & recharge'}
                 </p>
               </div>
             </motion.button>
@@ -168,17 +208,18 @@ export function ActionDock({ isSleeping, busy, onAction, onToggleSleep }: Action
   );
 }
 
-function EffectPills({ effect }: { effect: Partial<CatStats> }) {
+function EffectPills({ effect, showLabels }: { effect: Partial<CatStats>; showLabels?: boolean }) {
   const entries = STAT_KEYS.flatMap((k) => (effect[k] ? [{ key: k, val: effect[k]! }] : []));
   return (
-    <div className="flex flex-wrap justify-end gap-0.5">
+    <div className="flex shrink-0 items-center gap-0.5">
       {entries.map(({ key, val }) => (
         <span
           key={key}
           style={{ backgroundColor: STAT_META[key].soft, color: '#432818' }}
-          className="rounded-full px-1.5 py-0.5 text-[9px] font-extrabold leading-none"
+          className="rounded-full px-1.5 py-0.5 text-[9px] font-extrabold leading-none whitespace-nowrap"
         >
           {val > 0 ? `+${val}` : val}
+          {showLabels ? ` ${STAT_META[key].label}` : ''}
         </span>
       ))}
     </div>
