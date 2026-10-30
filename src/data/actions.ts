@@ -11,6 +11,8 @@ export interface CareAction {
   name: string;
   /** Short label for the dock card. */
   short: string;
+  /** Highlights Oli's favourite item in the dock. */
+  favorite?: boolean;
   effect: Partial<CatStats>;
   animation: CatAnimation;
   particles: ParticleKind[];
@@ -34,6 +36,20 @@ export const CATEGORIES: { id: ActionCategory; label: string }[] = [
 ];
 
 export const CARE_ACTIONS: CareAction[] = [
+  {
+    id: 'churu',
+    category: 'feed',
+    name: 'Churu Creamy Lickable Tube (His Favourite!)',
+    short: 'Churu Tube',
+    favorite: true,
+    effect: { hunger: 10, hydration: 10, happiness: 25 },
+    animation: 'churu',
+    particles: ['hearts', 'sparkles'],
+    log: 'Spoiled {cat} with his favourite Churu lickable tube',
+    requiresAwake: true,
+    haptic: [25, 35, 25, 35, 40],
+    durationMs: 3000,
+  },
   {
     id: 'wet_food',
     category: 'feed',

@@ -94,6 +94,12 @@ function expressionFor(mood: Mood, animation: CatAnimation, petting: boolean) {
       blush = true;
       earDroop = false;
       break;
+    case 'churu':
+      eyes = 'happy';
+      mouth = 'lap';
+      blush = true;
+      earDroop = false;
+      break;
     case 'drinking':
       eyes = 'halflid';
       mouth = 'lap';
@@ -141,6 +147,11 @@ function headMotion(animation: CatAnimation, sec: number, sleeping: boolean): { 
     case 'treat':
       return {
         animate: { y: [0, 20, 13, 20, 0, -4, 0], rotate: [0, 0, 3, -3, 0, -8, 0] },
+        transition: { duration: sec, ease: 'easeInOut' },
+      };
+    case 'churu':
+      return {
+        animate: { y: [0, -3, 1, -3, 1, -3, 0], rotate: [0, 5, 2, 5, 2, 5, 0] },
         transition: { duration: sec, ease: 'easeInOut' },
       };
     case 'drinking':
@@ -535,6 +546,59 @@ function Brush({ sec }: { sec: number }) {
   );
 }
 
+function ChuruTube({ sec }: { sec: number }) {
+  return (
+    <motion.g
+      initial={{ opacity: 0, x: 24, y: 10 }}
+      animate={{
+        opacity: 1,
+        x: [14, 2, 4, 2, 4, 2, 14],
+        y: [6, 0, 2, 0, 2, 0, 6],
+      }}
+      exit={{ opacity: 0, x: 24 }}
+      transition={{ duration: sec, ease: 'easeInOut' }}
+    >
+      {/* Angled tube pointing right at Oli's mouth (100, 108) */}
+      <g transform="translate(106 108) rotate(24)">
+        {/* Creamy purée dollop at tip */}
+        <motion.ellipse
+          cx={-3}
+          cy={0}
+          rx={5.5}
+          ry={4}
+          fill="#f7d9b5"
+          stroke="#e2b98b"
+          strokeWidth={0.8}
+          animate={{ scale: [1, 1.2, 0.85, 1.15, 0.7] }}
+          transition={{ duration: sec, ease: 'easeInOut' }}
+        />
+        {/* Narrow nozzle */}
+        <rect x={0} y={-4} width={10} height={8} rx={2} fill="#fff5eb" stroke="#e56b86" strokeWidth={0.8} />
+        {/* Main Churu sachet body */}
+        <path d="M8 -8 L64 -10 L64 10 L8 8 Z" fill="#ef5b82" />
+        <path d="M22 -8.6 L48 -9.4 L48 9.4 L22 8.6 Z" fill="#fff8f0" />
+        {/* Gold accent stripe */}
+        <rect x={20} y={-8.6} width={2.5} height={17.2} fill="#f4b942" />
+        <rect x={47.5} y={-9.4} width={2.5} height={18.8} fill="#f4b942" />
+        {/* CHURU label */}
+        <text
+          x={35}
+          y={2.5}
+          textAnchor="middle"
+          fontSize={6.2}
+          fontFamily="Fredoka, sans-serif"
+          fontWeight={700}
+          fill="#d93864"
+        >
+          CHURU
+        </text>
+        {/* Crimped bottom seal */}
+        <rect x={63} y={-10.5} width={5} height={21} rx={1.5} fill="#d93864" />
+      </g>
+    </motion.g>
+  );
+}
+
 function SleepZzz() {
   return (
     <g>
@@ -614,6 +678,7 @@ export function CatAvatar({ mood, animation, animationKey, onPet, className, x, 
       eating: 2.6,
       eating_egg: 2.4,
       treat: 2.2,
+      churu: 3.0,
       drinking: 2.8,
       purring: 3,
       playing: 3.2,
@@ -817,6 +882,7 @@ export function CatAvatar({ mood, animation, animationKey, onPet, className, x, 
           {(anim === 'eating' || anim === 'eating_egg' || anim === 'treat') && (
             <FoodBowl key="bowl" kind={anim === 'treat' ? 'heart' : anim === 'eating_egg' ? 'egg' : 'wet'} sec={animSec} />
           )}
+          {anim === 'churu' && <ChuruTube key="churu" sec={animSec} />}
           {anim === 'drinking' && <WaterDish key="dish" />}
           {anim === 'playing' && <FeatherWand key="wand" sec={animSec} />}
           {anim === 'brushing' && <Brush key="brush" sec={animSec} />}

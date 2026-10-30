@@ -67,6 +67,7 @@ export type CatAnimation =
   | 'eating'
   | 'eating_egg'
   | 'treat'
+  | 'churu'
   | 'drinking'
   | 'purring'
   | 'playing'

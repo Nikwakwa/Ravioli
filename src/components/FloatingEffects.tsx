@@ -5,12 +5,12 @@ import { STAT_KEYS, type Mood, type StatKey } from '../types';
 import { STAT_ICONS } from './statIcons';
 
 const PET_LINES: Record<Mood, string[]> = {
-  sleeping: ['Zzz… dreaming of chicken hearts…', 'Purr… five more minutes… 😴', 'Soft sleepy purrs… 🌙'],
+  sleeping: ['Zzz… dreaming of a Churu tube…', 'Purr… five more minutes… 😴', 'Soft sleepy purrs… 🌙'],
   relaxed: ['So cozy right now… ✨', 'Mmm… warm & zen~ 😌', 'Slow blink of love 🧡'],
-  ecstatic: ['PURRRR!! Best humans ever! 😻', 'Headbonk!! 🧡✨', 'Making biscuits on the rug! 🐾'],
-  happy: ['Prrrr… right under the chin~ 🧡', 'Mrrrow~ 😺', 'Happy tail swishes! ✨'],
+  ecstatic: ['PURRRR!! Best humans ever! 😻', 'Churu-powered zoomies!! 🧡✨', 'Making biscuits on the rug! 🐾'],
+  happy: ['Prrrr… right under the chin~ 🧡', 'Did someone say Churu?! 😺', 'Happy tail swishes! ✨'],
   content: ['Purrrr… 🧡', 'Little nose boop! 🐾', 'Soft ginger floof~ ✨'],
-  hungry: ['Meow? Is it pouch o’clock? 🍖', 'Tiny tummy rumble… 🥺', 'Dreaming of quail eggs…'],
+  hungry: ['Meow? Could I have a Churu tube? 🐾', 'Tiny tummy rumble… 🥺', 'Dreaming of Churu & quail eggs…'],
   thirsty: ['Mew… fountain splash please? 💧', 'Thirsty little ginger boy 💧'],
   tired: ['Biiiig stretch & yawn… 🥱', 'Ready for a cozy nap soon…'],
   sad: ['Needed that cuddle… 🧡', 'Purr… stay with me a bit? 🥺'],

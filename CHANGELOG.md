@@ -4,6 +4,13 @@ All updates to **Oli** are listed here.
 
 ---
 
+## `v0.5.0` — 2026-10-30
+### Oli’s Favourite Treat: Churu! 🐾
+- Added Oli’s favourite creamy lickable **Churu Tube** to the Feed menu (marked with a `★ Fav` badge).
+- Added a custom Churu tube licking animation and Churu thought bubbles when you pet him.
+
+---
+
 ## `v0.4.0` — 2026-10-30
 ### Update Alerts & Simpler Notes
 - Added a friendly banner that appears whenever a new update is available so you can reload with one tap.

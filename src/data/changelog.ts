@@ -7,6 +7,15 @@ export interface ReleaseEntry {
 
 export const CHANGELOG: ReleaseEntry[] = [
   {
+    version: 'v0.5.0',
+    date: '2026-10-30',
+    title: 'Oli’s Favourite Treat: Churu! 🐾',
+    changes: [
+      'Added Oli’s absolute favourite treat in the Feed menu: a creamy lickable Churu tube!',
+      'Watch him happily lick the Churu tube with hearts and sparkles.',
+    ],
+  },
+  {
     version: 'v0.4.0',
     date: '2026-10-30',
     title: 'Update Alerts & Simpler Notes',
