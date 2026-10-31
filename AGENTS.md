@@ -1,5 +1,9 @@
 # Agent Rules for Ravioli
 
+## Communication Style
+- Always communicate in plain, everyday language. Avoid dev jargon, complex technical details, or code-heavy explanations unless explicitly asked.
+- Keep updates simple, clear, and easy to understand at a glance (focus on what changed and how it helps).
+
 ## Git Commit, Tag & Push Workflow (Zero-Prompt Automation)
 
 To prevent the user from having to manually approve every `git commit`, `git tag`, or `git push` command due to changing commit messages, tags, quotes, or command chaining:
