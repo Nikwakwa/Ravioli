@@ -102,11 +102,12 @@ function loadMesses(): RoomMess[] {
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed)) return [];
     return parsed
+      .map((m) => (m && m.kind === 'hairball' ? { ...m, kind: 'vomit' } : m))
       .filter(
         (m): m is RoomMess =>
           m &&
           typeof m.id === 'string' &&
-          (m.kind === 'poop' || m.kind === 'hairball') &&
+          (m.kind === 'poop' || m.kind === 'vomit') &&
           (m.slot === 0 || m.slot === 1 || m.slot === 2),
       )
       .slice(0, MAX_ROOM_MESSES);
@@ -465,7 +466,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
       for (let i = 0; i < countToSpawn; i++) {
         const slot = pickFreeMessSlot(next);
         if (slot === null) break;
-        const kind: MessKind = live.hygiene < 45 || i % 2 === 1 ? 'hairball' : 'poop';
+        const kind: MessKind = live.hygiene < 45 || i % 2 === 1 ? 'vomit' : 'poop';
         next.push({
           id: `${now.toString(36)}-${i}-${Math.random().toString(36).slice(2, 5)}`,
           kind,
@@ -538,7 +539,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
         text:
           target.kind === 'poop'
             ? `✨ Scooped up ${live.name}’s poop! The rug is fresh & clean.`
-            : `✨ Cleaned up ${live.name}’s hairball from the rug!`,
+            : `✨ Cleaned up ${live.name}’s throw-up from the rug!`,
         tone: 'info',
       });
       playEvent({
@@ -601,7 +602,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
         return;
       }
 
-      // 6. Overfeeding / Treat-spam check (4th treat in 15m triggers a Tummy Ache + Hairball!)
+      // 6. Overfeeding / Treat-spam check (4th treat in 15m triggers a Tummy Ache + Throw-up!)
       const nowMs = Date.now();
       if (action.isTreat) {
         const recent = loadRecentTreats(nowMs);
@@ -609,12 +610,12 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
           const until = nowMs + TUMMY_ACHE_MS;
           setTummyAcheUntil(until);
           saveTummyAcheUntil(until);
-          spawnMess('hairball');
+          spawnMess('vomit');
           const achePenalty: Partial<CatStats> = { happiness: -10, energy: -15, hygiene: -10 };
           lockFor(1600);
           vibrate([40, 60, 40, 60, 40]);
           noticeRef.current({
-            text: `🤢 Too many treats gave ${live.name} a tummy ache & a hairball! Tap the hairball to clean up.`,
+            text: `🤢 Too many treats made ${live.name} throw up & get a tummy ache! Tap the mess to clean up.`,
             tone: 'warn',
           });
           playEvent({

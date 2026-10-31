@@ -7,6 +7,15 @@ export interface ReleaseEntry {
 
 export const CHANGELOG: ReleaseEntry[] = [
   {
+    version: 'v0.11.1',
+    date: '2026-10-31',
+    title: 'Poop & Throw-Up Messes on the Rug! 🤢💩',
+    changes: [
+      'Replaced hairballs with cat throw-up splats on the rug when Oli eats too many treats or gets neglected!',
+      'Tap any poop or throw-up mess directly on the rug (or use Care → Scoop Mess) to clean it up.',
+    ],
+  },
+  {
     version: 'v0.11.0',
     date: '2026-10-31',
     title: 'Poop, Hairballs & Rug Cleanup! 💩✨',

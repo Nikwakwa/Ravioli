@@ -36,9 +36,9 @@ This document tracks our gameplay evolution from a passive care toy into a full 
 
 ---
 
-## ✅ Phase 2: On-Screen Messes (Litter / Hairballs) & Interactive Room *(Completed)*
+## ✅ Phase 2: On-Screen Messes (Poop & Throw-Up) & Interactive Room *(Completed)*
 
-- **Poop / Hairball Spawns:** After meals or as `hygiene` decays over time, 1–3 messes (hairballs on the rug or a stinky litter icon) appear in `LivingRoom.tsx`.
+- **Poop & Throw-Up Spawns:** After meals, overfeeding treats, or as `hygiene` decays over time, 1–3 messes (poop swirls or throw-up splats on the rug) appear in `LivingRoom.tsx`.
 - **Consequences:** Active messes accelerate `hygiene` and `happiness` decay and prevent Oli from reaching `Thriving` (`ecstatic`) status.
 - **Interactive Cleaning:** Tap messes directly in the room (or use `Care → Scoop / Clean`) to whisk them away for a `+Clean` and `+Joy` boost.
 

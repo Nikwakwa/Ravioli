@@ -4,6 +4,12 @@ All updates to **Oli** are listed here.
 
 ---
 
+## `v0.11.1` — 2026-10-31
+### Poop & Throw-Up Messes on the Rug! 🤢💩
+- Replaced hairball messes with cat **throw-up splats** (`vomit`) on the rug when Oli overeats treats into a tummy ache or is left unattended.
+
+---
+
 ## `v0.11.0` — 2026-10-31
 ### Poop, Hairballs & Rug Cleanup! 💩✨
 - **On-Screen Tamagotchi Messes:** Up to 3 messes (**poop swirls** and **fuzzy ginger hairballs**) can now spawn on the living room rug — after every 2nd meal, when overfed into a tummy ache, or every 2.5 hours away.

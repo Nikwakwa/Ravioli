@@ -59,7 +59,7 @@ export type NewActivity = Omit<ActivityEntry, 'id' | 'created_at'>;
 export type SyncMode = 'supabase' | 'local';
 export type SyncStatus = 'connecting' | 'live' | 'local' | 'offline' | 'error';
 
-export type MessKind = 'poop' | 'hairball';
+export type MessKind = 'poop' | 'vomit';
 
 export interface RoomMess {
   id: string;

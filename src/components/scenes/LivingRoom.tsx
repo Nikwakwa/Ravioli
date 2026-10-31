@@ -419,7 +419,7 @@ export function LivingRoom({
         </g>
       </g>
 
-      {/* Tamagotchi-style on-screen messes (poop & hairballs) on the rug — tap to scoop! */}
+      {/* Tamagotchi-style on-screen messes (poop & throw-up) on the rug — tap to scoop! */}
       <AnimatePresence>
         {messes.map((mess) => {
           const pos = MESS_SLOTS[mess.slot] ?? MESS_SLOTS[0];
@@ -436,7 +436,7 @@ export function LivingRoom({
               className="pointer-events-auto cursor-pointer"
               style={{ pointerEvents: 'auto', cursor: 'pointer' }}
               role="button"
-              aria-label={isPoop ? 'Scoop poop mess' : 'Clean ginger hairball'}
+              aria-label={isPoop ? 'Scoop poop mess' : 'Clean up cat throw-up'}
             >
               {/* Generous 48x48 invisible touch hitbox for mobile fingers */}
               <rect x="-24" y="-30" width="48" height="48" fill="transparent" style={{ pointerEvents: 'all' }} />
@@ -448,7 +448,7 @@ export function LivingRoom({
                 rx="16"
                 ry="7"
                 fill="none"
-                stroke={isPoop ? '#b45309' : '#ea580c'}
+                stroke={isPoop ? '#b45309' : '#65a30d'}
                 strokeWidth="1.2"
                 strokeDasharray="3 2"
                 animate={{ scale: [0.92, 1.12, 0.92], opacity: [0.35, 0.75, 0.35] }}
@@ -473,18 +473,22 @@ export function LivingRoom({
                   <ellipse cx="-2.5" cy="2" rx="2" ry="0.9" fill="#b67849" opacity="0.7" />
                 </g>
               ) : (
-                /* Fuzzy ginger tabby hairball tuft */
+                /* Cat throw-up / puke splat on the rug */
                 <g>
-                  <ellipse cx="0" cy="2" rx="10.5" ry="5.5" fill="#e0782d" stroke="#8a4212" strokeWidth="1.1" />
-                  <circle cx="-4" cy="0" r="4.5" fill="#f08a3c" />
-                  <circle cx="4" cy="1" r="4.2" fill="#d96b22" />
-                  <circle cx="0" cy="-1.5" r="4.5" fill="#f6a25c" />
                   <path
-                    d="M-9 1 l-3 -2 M8 -1 l3 -2 M-3 -5 l-1 -3 M3 -4 l2 -3 M-5 4 l2 -1.5 M3 4 l-2 -1.5"
-                    stroke="#8a4212"
+                    d="M-11 2 C-13 -2 -7 -5 -3 -4 C0 -6 6 -6 9 -3 C13 -2 13 3 9 5 C6 7 1 6 -3 7 C-8 7 -10 5 -11 2 Z"
+                    fill="#9cb83c"
+                    stroke="#5a6e1b"
                     strokeWidth="1.1"
-                    strokeLinecap="round"
                   />
+                  <ellipse cx="-1" cy="1" rx="6.5" ry="3" fill="#b8d152" opacity="0.85" />
+                  {/* Little undigested treat / kibble chunks */}
+                  <circle cx="-4.5" cy="1" r="1.6" fill="#b45309" />
+                  <circle cx="3" cy="2.2" r="1.4" fill="#c26a27" />
+                  <circle cx="0.5" cy="-1" r="1.2" fill="#d97706" />
+                  {/* Little splatter droplets around the puddle */}
+                  <circle cx="-13" cy="4" r="1.4" fill="#9cb83c" stroke="#5a6e1b" strokeWidth="0.7" />
+                  <circle cx="12.5" cy="3" r="1.2" fill="#9cb83c" stroke="#5a6e1b" strokeWidth="0.7" />
                 </g>
               )}
 
@@ -493,7 +497,7 @@ export function LivingRoom({
                 <motion.path
                   key={i}
                   d={`M${dx} -11 Q${dx - 2} -15 ${dx} -18 Q${dx + 2} -21 ${dx} -24`}
-                  stroke={isPoop ? '#65a30d' : '#d97706'}
+                  stroke="#65a30d"
                   strokeWidth="1.3"
                   strokeLinecap="round"
                   fill="none"

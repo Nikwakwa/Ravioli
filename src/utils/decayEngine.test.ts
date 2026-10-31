@@ -210,13 +210,13 @@ describe('Tamagotchi Phase 1 & 2 action, dock & mess rules', () => {
     expect(
       pickFreeMessSlot([
         { id: '1', kind: 'poop', slot: 0, created_at: '' },
-        { id: '2', kind: 'hairball', slot: 2, created_at: '' },
+        { id: '2', kind: 'vomit', slot: 2, created_at: '' },
       ]),
     ).toBe(1);
     expect(
       pickFreeMessSlot([
         { id: '1', kind: 'poop', slot: 0, created_at: '' },
-        { id: '2', kind: 'hairball', slot: 1, created_at: '' },
+        { id: '2', kind: 'vomit', slot: 1, created_at: '' },
         { id: '3', kind: 'poop', slot: 2, created_at: '' },
       ]),
     ).toBeNull();
