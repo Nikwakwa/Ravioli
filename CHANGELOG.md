@@ -4,6 +4,14 @@ All updates to **Oli** are listed here.
 
 ---
 
+## `v0.7.1` — 2026-10-31
+### Cute Oli Is Back 🧡
+- Reverted the overly realistic v0.7.0 avatar (slit pupils, eyeliner, lip spot, ear notch, nose freckles, chest bands, striped socks) back to the cute v0.6.0 design.
+- Kept only a few photo-inspired touches: warmer amber eyes with rounder pupils, whiter muzzle/bib, a ringed tail with a white tip, and two tiny fangs when yawning.
+- The real-life Living Room from v0.7.0 is unchanged.
+
+---
+
 ## `v0.7.0` — 2026-10-31
 ### Real-Life Oli & Your Actual Living Room! 📸🐾
 - Redesigned virtual **Oli** from your 16 real photos: added the small V-notch on his left ear tip, prominent dark stippled tattoo in his right ear, nose lentigo freckles, signature central dark lower-lip spot, ginger chest "necklace" stripes, asymmetrical white front socks with pink toe pads, fang yawn, and white-tipped ringed tail.

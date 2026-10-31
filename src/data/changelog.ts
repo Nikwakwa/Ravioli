@@ -7,6 +7,15 @@ export interface ReleaseEntry {
 
 export const CHANGELOG: ReleaseEntry[] = [
   {
+    version: 'v0.7.1',
+    date: '2026-10-31',
+    title: 'Cute Oli Is Back 🧡',
+    changes: [
+      'Oli’s last makeover was a bit too realistic (and a little creepy!), so he’s back to his cute, round self.',
+      'He keeps a few touches from his real photos: warmer amber eyes, a white muzzle, and a striped tail with a white tip.',
+    ],
+  },
+  {
     version: 'v0.7.0',
     date: '2026-10-31',
     title: 'Real-Life Oli & Your Actual Living Room! 📸🐾',
