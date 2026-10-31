@@ -12,7 +12,6 @@ import {
   Moon,
   Sparkles,
   SprayCan,
-  Star,
   Sun,
   Utensils,
   type LucideIcon,
@@ -124,59 +123,33 @@ export function ActionDock({ isSleeping, busy, onAction, onToggleSleep }: Action
                   whileTap={{ scale: 0.96 }}
                   disabled={busy}
                   onClick={() => onAction(action)}
-                  title={action.name}
-                  className={`flex h-full items-center justify-between gap-1.5 rounded-2xl border px-2.5 py-1.5 text-left transition-all ${
+                  className={`flex h-full items-center gap-2 rounded-2xl border px-2.5 py-1.5 text-left transition-all ${
                     lockedBySleep
                       ? isSleeping
                         ? 'border-white/5 bg-white/5 opacity-45'
                         : 'border-amber-900/10 bg-amber-950/5 opacity-55'
-                      : action.favorite
-                        ? isSleeping
-                          ? 'border-pink-400/40 bg-gradient-to-r from-pink-950/70 to-slate-800/90 text-amber-50 shadow-xs'
-                          : 'border-pink-400/40 bg-gradient-to-r from-pink-50 via-rose-50/80 to-amber-50 text-amber-950 shadow-xs'
-                        : isSleeping
-                          ? 'border-white/10 bg-slate-800/90 text-amber-50 shadow-xs'
-                          : 'border-amber-900/10 bg-gradient-to-b from-amber-50/95 to-orange-50/70 text-amber-950 shadow-xs'
+                      : isSleeping
+                        ? 'border-white/10 bg-slate-800/90 text-amber-50 shadow-xs'
+                        : 'border-amber-900/10 bg-gradient-to-b from-amber-50/95 to-orange-50/70 text-amber-950 shadow-xs'
                   }`}
                 >
-                  <div className="flex min-w-0 items-center gap-2">
-                    <span
-                      className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-xl ${
-                        action.favorite
-                          ? 'bg-pink-500/15 text-pink-600'
-                          : isSleeping
-                            ? 'bg-amber-400/20 text-amber-300'
-                            : 'bg-amber-500/15 text-amber-700'
-                      }`}
-                    >
-                      <Icon className="h-3.5 w-3.5" />
-                    </span>
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-1">
-                        <p className="truncate font-display text-xs font-bold leading-tight">{action.short}</p>
-                        {action.favorite && (
-                          <span className="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-amber-400/25 px-1 py-0.5 text-[8px] font-extrabold text-amber-700 dark:text-amber-300">
-                            <Star className="h-2 w-2 fill-current" />
-                            Fav
-                          </span>
-                        )}
-                      </div>
-                      <p
-                        className={`truncate text-[9px] font-semibold leading-tight ${
-                          isSleeping ? 'text-indigo-200/70' : 'text-amber-900/60'
-                        }`}
-                      >
-                        {action.favorite ? 'Creamy lickable treat' : action.name}
-                      </p>
-                    </div>
+                  <span
+                    className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-xl ${
+                      isSleeping ? 'bg-amber-400/20 text-amber-300' : 'bg-amber-500/15 text-amber-700'
+                    }`}
+                  >
+                    <Icon className="h-3.5 w-3.5" />
+                  </span>
+                  <div className="flex min-w-0 flex-1 flex-col justify-center gap-0.5">
+                    <p className="font-display text-xs font-bold leading-tight">{action.short}</p>
+                    {lockedBySleep ? (
+                      <span className="w-fit rounded-full bg-indigo-500/20 px-1.5 py-0.5 text-[9px] font-extrabold leading-none text-indigo-300">
+                        😴 Sleeping
+                      </span>
+                    ) : (
+                      <EffectPills effect={action.effect} showLabels maxPills={2} />
+                    )}
                   </div>
-                  {lockedBySleep ? (
-                    <span className="shrink-0 rounded-full bg-indigo-500/20 px-1.5 py-0.5 text-[9px] font-extrabold text-indigo-300">
-                      😴
-                    </span>
-                  ) : (
-                    <EffectPills effect={action.effect} maxPills={2} />
-                  )}
                 </motion.button>
               );
             }
@@ -188,8 +161,7 @@ export function ActionDock({ isSleeping, busy, onAction, onToggleSleep }: Action
                 whileTap={{ scale: 0.96 }}
                 disabled={busy}
                 onClick={() => onAction(action)}
-                title={action.name}
-                className={`flex h-full flex-col justify-between rounded-2xl border p-2 text-left transition-all ${
+                className={`flex h-full flex-col justify-between rounded-2xl border p-2.5 text-left transition-all ${
                   lockedBySleep
                     ? isSleeping
                       ? 'border-white/5 bg-white/5 opacity-45'
@@ -212,19 +184,10 @@ export function ActionDock({ isSleeping, busy, onAction, onToggleSleep }: Action
                       😴 Zzz
                     </span>
                   ) : (
-                    <EffectPills effect={action.effect} showLabels={isSingleWide} />
+                    <EffectPills effect={action.effect} showLabels={isSingleWide || category === 'play'} />
                   )}
                 </div>
-                <div className="min-w-0">
-                  <p className="truncate font-display text-xs font-bold leading-tight">{action.short}</p>
-                  <p
-                    className={`mt-0.5 truncate text-[10px] font-semibold leading-tight ${
-                      isSleeping ? 'text-indigo-200/70' : 'text-amber-900/60'
-                    }`}
-                  >
-                    {action.name}
-                  </p>
-                </div>
+                <p className="font-display text-xs font-bold leading-snug">{action.short}</p>
               </motion.button>
             );
           })}
@@ -236,7 +199,7 @@ export function ActionDock({ isSleeping, busy, onAction, onToggleSleep }: Action
               whileTap={{ scale: 0.96 }}
               disabled={busy}
               onClick={onToggleSleep}
-              className={`flex h-full flex-col justify-between rounded-2xl border p-2 text-left transition-all ${
+              className={`flex h-full flex-col justify-between rounded-2xl border p-2.5 text-left transition-all ${
                 isSleeping
                   ? 'border-amber-300/40 bg-gradient-to-b from-amber-400/25 to-indigo-900/60 text-amber-100 shadow-xs'
                   : 'border-indigo-900/15 bg-gradient-to-b from-indigo-50/90 to-amber-50/60 text-amber-950 shadow-xs'
@@ -258,18 +221,9 @@ export function ActionDock({ isSleeping, busy, onAction, onToggleSleep }: Action
                   {isSleeping ? 'Wake' : '+15/h'}
                 </span>
               </div>
-              <div className="min-w-0">
-                <p className="truncate font-display text-xs font-bold leading-tight">
-                  {isSleeping ? 'Wake Oli Up' : 'Nap Mode'}
-                </p>
-                <p
-                  className={`mt-0.5 truncate text-[10px] font-semibold leading-tight ${
-                    isSleeping ? 'text-amber-200/80' : 'text-amber-900/60'
-                  }`}
-                >
-                  {isSleeping ? 'Turn lights back on' : 'Cozy dim & recharge'}
-                </p>
-              </div>
+              <p className="font-display text-xs font-bold leading-snug">
+                {isSleeping ? 'Wake Oli Up' : 'Nap Mode'}
+              </p>
             </motion.button>
           )}
         </motion.div>
@@ -291,7 +245,7 @@ function EffectPills({
     .sort((a, b) => Math.abs(b.val) - Math.abs(a.val))
     .slice(0, maxPills ?? 5);
   return (
-    <div className="flex shrink-0 items-center gap-0.5">
+    <div className="flex shrink-0 items-center gap-1">
       {entries.map(({ key, val }) => (
         <span
           key={key}

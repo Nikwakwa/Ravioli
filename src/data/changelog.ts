@@ -7,6 +7,16 @@ export interface ReleaseEntry {
 
 export const CHANGELOG: ReleaseEntry[] = [
   {
+    version: 'v0.8.0',
+    date: '2026-10-31',
+    title: 'Care Manual & Cleaner Action Tiles 📖',
+    changes: [
+      'Added a "Rules" button in the top bar that opens the Oli Care Manual with exact hourly decay rates, nap rules, and action boosts.',
+      'Redesigned the action tiles so every label and stat boost fits cleanly without getting cut off.',
+      'Removed the "Fav" badge on Churu and cleared the kiwis off the coffee table.',
+    ],
+  },
+  {
     version: 'v0.7.1',
     date: '2026-10-31',
     title: 'Cute Oli Is Back 🧡',

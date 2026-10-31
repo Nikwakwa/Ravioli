@@ -4,6 +4,14 @@ All updates to **Oli** are listed here.
 
 ---
 
+## `v0.8.0` — 2026-10-31
+### Care Manual & Cleaner Action Tiles 📖
+- Added a **Rules** button in the top HUD that opens the **Oli Care Manual & Rules** sheet with exact hourly stat decay/recharge rates, nap rules, mood thresholds, and care action boosts.
+- Simplified the action tiles in the bottom dock so labels and stat pills never get truncated.
+- Removed the "Fav" badge/highlight feature and removed the kiwis from the coffee table.
+
+---
+
 ## `v0.7.1` — 2026-10-31
 ### Cute Oli Is Back 🧡
 - Reverted the overly realistic v0.7.0 avatar (slit pupils, eyeliner, lip spot, ear notch, nose freckles, chest bands, striped socks) back to the cute v0.6.0 design.

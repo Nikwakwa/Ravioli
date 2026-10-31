@@ -8,7 +8,7 @@ import { motion } from 'framer-motion';
  * - Light-wood framed landscape print with wide white mat on the wall
  * - Wooden tripod floor lamp with white drum shade
  * - Dark charcoal woven L-shaped sofa with terracotta-red, sage-olive & geometric triangle cushions + tan "Bedsure" bolster cat bed
- * - Modern white coffee table with cork coaster, candle jar & kiwis
+ * - Modern white coffee table with cork coaster & candle jar
  * - Fluffy off-white / cream high-pile shag rug where Oli sits
  * - White cuboid pet water fountain with glowing blue LED status light & stainless steel bowl
  */
@@ -295,7 +295,7 @@ export function LivingRoom({ sleeping, fountainBoost }: { sleeping: boolean; fou
         </g>
       </g>
 
-      {/* Modern white coffee table with cork coaster, candle jar & kiwis (x: 256..396, y: 342..392) */}
+      {/* Modern white coffee table with cork coaster & candle jar (x: 256..396, y: 342..392) */}
       <g>
         {/* Table shadow */}
         <polygon points="262,386 398,386 400,358 278,358" fill="rgba(35,30,22,0.14)" />
@@ -306,9 +306,7 @@ export function LivingRoom({ sleeping, fountainBoost }: { sleeping: boolean; fou
         <polygon points="262,354 398,354 400,334 282,334" fill="#ffffff" stroke="#dedad0" strokeWidth="1" />
         {/* Round cork coaster (IMG_20251030_201609.jpg) */}
         <ellipse cx="298" cy="344" rx="9" ry="3.2" fill="#b88456" stroke="#99683d" strokeWidth="0.6" />
-        {/* Two little kiwis & glass jar (PXL_20260527_180843044.jpg) */}
-        <ellipse cx="326" cy="346" rx="4.2" ry="3" fill="#7d6732" />
-        <ellipse cx="334" cy="348" rx="4" ry="2.8" fill="#6e5a2a" />
+        {/* Little glass candle jar */}
         <rect x="350" y="335" width="9" height="11" rx="2" fill="#f2efe9" stroke="#ccc7bc" strokeWidth="0.8" />
         <ellipse cx="354.5" cy="335" rx="4.5" ry="1.4" fill="#ffffff" stroke="#ccc7bc" strokeWidth="0.8" />
       </g>

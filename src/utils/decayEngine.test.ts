@@ -180,6 +180,6 @@ describe('security sanitizers (catStorage)', () => {
       message: 'Spoofed message that gets replaced with canonical text',
     });
     expect(valid?.player).toBe('Athina');
-    expect(valid?.message).toBe('Spoiled Oli with his favourite Churu lickable tube');
+    expect(valid?.message).toBe('Fed Oli a Churu lickable tube');
   });
 });

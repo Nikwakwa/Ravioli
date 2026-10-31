@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { CloudOff, Loader2, Radio, Users, Wifi } from 'lucide-react';
+import { BookOpen, CloudOff, Loader2, Radio, Users, Wifi } from 'lucide-react';
 import { STAT_META } from '../data/actions';
 import { APP_VERSION } from '../data/changelog';
 import { STAT_KEYS, type LiveCat, type Mood, type SyncMode, type SyncStatus } from '../types';
@@ -26,6 +26,7 @@ export interface StatusHUDProps {
   player: string;
   onOpenPlayer: () => void;
   onOpenChangelog: () => void;
+  onOpenGuide: () => void;
   hasUpdate?: boolean;
   mode: SyncMode;
   status: SyncStatus;
@@ -37,6 +38,7 @@ export function StatusHUD({
   player,
   onOpenPlayer,
   onOpenChangelog,
+  onOpenGuide,
   hasUpdate,
   mode,
   status,
@@ -51,7 +53,7 @@ export function StatusHUD({
 
   return (
     <header className="relative z-20 flex flex-col gap-2 px-3 pt-2.5">
-      {/* Row 1: Cat identity + player pill */}
+      {/* Row 1: Cat identity + Rules & Player pills */}
       <div className="flex items-center justify-between gap-2">
         <div
           className={`flex min-w-0 items-center gap-2.5 rounded-2xl border px-3 py-1.5 shadow-sm backdrop-blur-md transition-colors duration-500 ${surface}`}
@@ -83,17 +85,30 @@ export function StatusHUD({
           </div>
         </div>
 
-        {/* Player selector pill */}
-        <button
-          type="button"
-          onClick={onOpenPlayer}
-          style={{ backgroundColor: pColor.bg, color: pColor.fg }}
-          className="flex shrink-0 items-center gap-1.5 rounded-full border border-black/5 px-3 py-1.5 text-xs font-extrabold shadow-sm transition-transform active:scale-95"
-          title="Switch player"
-        >
-          <Users className="h-3.5 w-3.5" />
-          <span>{player}</span>
-        </button>
+        <div className="flex shrink-0 items-center gap-1.5">
+          {/* Manual / Rules pill */}
+          <button
+            type="button"
+            onClick={onOpenGuide}
+            title="Care Manual & Rules"
+            className={`flex items-center gap-1 rounded-full border px-2.5 py-1.5 text-xs font-extrabold shadow-sm backdrop-blur-md transition-transform active:scale-95 ${surface}`}
+          >
+            <BookOpen className="h-3.5 w-3.5 text-amber-600" />
+            <span>Rules</span>
+          </button>
+
+          {/* Player selector pill */}
+          <button
+            type="button"
+            onClick={onOpenPlayer}
+            style={{ backgroundColor: pColor.bg, color: pColor.fg }}
+            className="flex items-center gap-1.5 rounded-full border border-black/5 px-3 py-1.5 text-xs font-extrabold shadow-sm transition-transform active:scale-95"
+            title="Switch player"
+          >
+            <Users className="h-3.5 w-3.5" />
+            <span>{player}</span>
+          </button>
+        </div>
       </div>
 
       {/* Row 2: 5 stat meters — vertical stack per tile so labels never clip on mobile */}

@@ -11,8 +11,6 @@ export interface CareAction {
   name: string;
   /** Short label for the dock card. */
   short: string;
-  /** Highlights Oli's favourite item in the dock. */
-  favorite?: boolean;
   effect: Partial<CatStats>;
   animation: CatAnimation;
   particles: ParticleKind[];
@@ -37,36 +35,35 @@ export const CATEGORIES: { id: ActionCategory; label: string }[] = [
 
 export const CARE_ACTIONS: CareAction[] = [
   {
-    id: 'churu',
-    category: 'feed',
-    name: 'Churu Creamy Lickable Tube (His Favourite!)',
-    short: 'Churu Tube',
-    favorite: true,
-    effect: { hunger: 10, hydration: 10, happiness: 25 },
-    animation: 'churu',
-    particles: ['hearts', 'sparkles'],
-    log: 'Spoiled {cat} with his favourite Churu lickable tube',
-    requiresAwake: true,
-    haptic: [25, 35, 25, 35, 40],
-    durationMs: 3000,
-  },
-  {
     id: 'wet_food',
     category: 'feed',
-    name: 'Premium Wet Food Pouch',
+    name: 'Wet Food Pouch',
     short: 'Wet Food',
     effect: { hunger: 35, hydration: 5 },
     animation: 'eating',
     particles: ['crumbs'],
-    log: 'Served {cat} a premium wet food pouch',
+    log: 'Served {cat} a wet food pouch',
     requiresAwake: true,
     haptic: 25,
     durationMs: 2600,
   },
   {
+    id: 'churu',
+    category: 'feed',
+    name: 'Churu Lickable Treat',
+    short: 'Churu Tube',
+    effect: { hunger: 10, hydration: 10, happiness: 25 },
+    animation: 'churu',
+    particles: ['hearts', 'sparkles'],
+    log: 'Fed {cat} a Churu lickable tube',
+    requiresAwake: true,
+    haptic: [25, 35, 25, 35, 40],
+    durationMs: 3000,
+  },
+  {
     id: 'chicken_heart',
     category: 'feed',
-    name: 'Freeze-Dried Chicken Heart Treat',
+    name: 'Chicken Heart Treat',
     short: 'Chicken Heart',
     effect: { hunger: 12, happiness: 15 },
     animation: 'treat',
@@ -79,7 +76,7 @@ export const CARE_ACTIONS: CareAction[] = [
   {
     id: 'quail_egg',
     category: 'feed',
-    name: 'Freeze-Dried Quail Egg Topper',
+    name: 'Quail Egg Topper',
     short: 'Quail Egg',
     effect: { hunger: 15, happiness: 10 },
     animation: 'eating_egg',
@@ -92,12 +89,12 @@ export const CARE_ACTIONS: CareAction[] = [
   {
     id: 'fountain',
     category: 'hydrate',
-    name: 'Refresh Stainless Steel Fountain',
+    name: 'Refresh Water Fountain',
     short: 'Fresh Fountain',
     effect: { hydration: 40, happiness: 5 },
     animation: 'drinking',
     particles: ['ripples'],
-    log: 'Refreshed {cat}’s stainless steel fountain',
+    log: 'Refreshed {cat}’s water fountain',
     requiresAwake: true,
     haptic: [15, 30, 15],
     durationMs: 2800,
@@ -105,7 +102,7 @@ export const CARE_ACTIONS: CareAction[] = [
   {
     id: 'chin_scratch',
     category: 'play',
-    name: 'Chin Scratches & Purr Session',
+    name: 'Chin Scratches',
     short: 'Chin Scratches',
     effect: { happiness: 20 },
     animation: 'purring',
@@ -118,7 +115,7 @@ export const CARE_ACTIONS: CareAction[] = [
   {
     id: 'feather_wand',
     category: 'play',
-    name: 'Feather Wand Game',
+    name: 'Feather Wand',
     short: 'Feather Wand',
     effect: { happiness: 25, energy: -10 },
     animation: 'playing',
@@ -131,7 +128,7 @@ export const CARE_ACTIONS: CareAction[] = [
   {
     id: 'pheromone_mist',
     category: 'comfort',
-    name: 'Calming Pheromone Mist',
+    name: 'Calming Mist',
     short: 'Calming Mist',
     effect: { happiness: 15 },
     animation: 'misting',
@@ -145,7 +142,7 @@ export const CARE_ACTIONS: CareAction[] = [
   {
     id: 'brush',
     category: 'comfort',
-    name: 'Gentle Coat Brushing',
+    name: 'Brush Coat',
     short: 'Brush Coat',
     effect: { hygiene: 30, happiness: 5 },
     animation: 'brushing',

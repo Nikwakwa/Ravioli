@@ -6,6 +6,7 @@ import { ActivityFeed } from './components/ActivityFeed';
 import { CatAvatar } from './components/CatAvatar';
 import { ChangelogModal } from './components/ChangelogModal';
 import { FloatingEffects } from './components/FloatingEffects';
+import { GuideModal } from './components/GuideModal';
 import { PlayerSelector } from './components/PlayerSelector';
 import { LivingRoom } from './components/scenes/LivingRoom';
 import { StatusHUD } from './components/StatusHUD';
@@ -18,6 +19,7 @@ export function App() {
   const [player, setPlayer] = useState<string | null>(() => loadPlayer());
   const [pickerOpen, setPickerOpen] = useState<boolean>(() => !loadPlayer());
   const [changelogOpen, setChangelogOpen] = useState(false);
+  const [guideOpen, setGuideOpen] = useState(false);
   const [notice, setNotice] = useState<Notice | null>(null);
   const [tapHeartKey, setTapHeartKey] = useState(0);
   const noticeTimer = useRef<number | undefined>(undefined);
@@ -80,6 +82,7 @@ export function App() {
           player={player ?? 'Nico'}
           onOpenPlayer={() => setPickerOpen(true)}
           onOpenChangelog={() => setChangelogOpen(true)}
+          onOpenGuide={() => setGuideOpen(true)}
           hasUpdate={Boolean(availableVersion)}
           mode={mode}
           status={status}
@@ -155,6 +158,7 @@ export function App() {
         </div>
 
         <PlayerSelector open={pickerOpen} current={player} onSelect={handleSelectPlayer} />
+        <GuideModal open={guideOpen} onClose={() => setGuideOpen(false)} />
         <ChangelogModal
           open={changelogOpen}
           onClose={() => setChangelogOpen(false)}
