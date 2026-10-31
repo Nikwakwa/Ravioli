@@ -15,6 +15,7 @@ const PET_LINES: Record<Mood, string[]> = {
   tired: ['Biiiig stretch & yawn… 🥱', 'Ready for a cozy nap soon…'],
   sad: ['Needed that cuddle… 🧡', 'Purr… stay with me a bit? 🥺'],
   grubby: ['Brush my floof please? 🪮', 'A little messy today~'],
+  deceased: ['Resting peacefully… 🕊️', 'Oli needs emergency vet care 💔'],
 };
 
 /**

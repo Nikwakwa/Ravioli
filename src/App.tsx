@@ -1,9 +1,10 @@
 import { AnimatePresence, motion } from 'framer-motion';
-import { RefreshCw } from 'lucide-react';
+import { Play, RefreshCw } from 'lucide-react';
 import { useCallback, useRef, useState } from 'react';
 import { ActionDock } from './components/ActionDock';
 import { CatAvatar } from './components/CatAvatar';
 import { ChangelogModal } from './components/ChangelogModal';
+import { EmergencyRevivalModal } from './components/EmergencyRevivalModal';
 import { FloatingEffects } from './components/FloatingEffects';
 import { GuideModal } from './components/GuideModal';
 import { NotificationModal } from './components/NotificationModal';
@@ -56,6 +57,8 @@ export function App() {
     cleanMess,
     fulfillWhim,
     toggleSleep,
+    togglePause,
+    reviveOli,
     now,
   } = useCatGame('Nico', pushNotice);
   const { availableVersion, reloading, applyUpdate } = useVersionCheck();
@@ -149,10 +152,42 @@ export function App() {
           churuStash={churuStash}
           onOpenChangelog={() => setChangelogOpen(true)}
           onOpenGuide={() => setGuideOpen(true)}
+          onTogglePause={togglePause}
           notificationsOn={notifPrefs.enabled}
           onToggleNotifications={() => setNotifOpen(true)}
           hasUpdate={Boolean(availableVersion)}
         />
+
+        {/* Care Clock Paused (Vacation Mode) banner */}
+        <AnimatePresence>
+          {live.isPaused && (
+            <motion.div
+              key="paused-banner"
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="relative z-30 mx-3 mt-1"
+            >
+              <div className="flex items-center justify-between gap-2 rounded-2xl border border-sky-400/35 bg-sky-950/90 px-3.5 py-2 text-sky-100 shadow-lg backdrop-blur-md">
+                <div className="flex items-center gap-2">
+                  <span className="text-base">✈️</span>
+                  <div>
+                    <p className="text-xs font-bold leading-tight text-white">Care Clock Paused (Vacation Mode)</p>
+                    <p className="text-[10px] text-sky-200/80">Oli is resting safely. Stats will not decay.</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={togglePause}
+                  className="flex items-center gap-1 rounded-xl bg-sky-500 px-3 py-1 text-xs font-black text-white shadow-sm transition-transform active:scale-95 hover:bg-sky-400"
+                >
+                  <Play className="h-3 w-3 fill-current" />
+                  <span>Resume</span>
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* New version available banner */}
         <AnimatePresence>
@@ -247,6 +282,8 @@ export function App() {
         <GuideModal
           open={guideOpen}
           onClose={() => setGuideOpen(false)}
+          isPaused={live.isPaused}
+          onTogglePause={togglePause}
           notificationsOn={notifPrefs.enabled}
           onToggleNotifications={() => {
             setGuideOpen(false);
@@ -254,6 +291,7 @@ export function App() {
           }}
           onTestNotification={handleTestNotification}
         />
+        <EmergencyRevivalModal live={live} onRevive={reviveOli} />
         <ChangelogModal
           open={changelogOpen}
           onClose={() => setChangelogOpen(false)}

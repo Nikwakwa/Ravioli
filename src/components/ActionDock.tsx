@@ -68,6 +68,8 @@ function refusalHint(
   messCount: number,
   churuStash: number,
 ): string | null {
+  if (live.isDeceased) return '💔 Deceased';
+  if (live.isPaused) return '✈️ Paused';
   if (action.id === 'scoop_mess') {
     return messCount === 0 ? '✨ Spotless' : null;
   }

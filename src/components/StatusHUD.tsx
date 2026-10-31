@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Bell, BellOff, BookOpen } from 'lucide-react';
+import { Bell, BellOff, BookOpen, Pause, Play } from 'lucide-react';
 import { STAT_META } from '../data/actions';
 import { APP_VERSION } from '../data/changelog';
 import { STAT_KEYS, type LiveCat, type Mood } from '../types';
@@ -17,6 +17,7 @@ const MOOD_BADGE: Record<Mood, { label: string; emoji: string }> = {
   tired: { label: 'Sleepy eyes', emoji: '🥱' },
   sad: { label: 'Needs cuddles', emoji: '🥺' },
   grubby: { label: 'Needs a brush', emoji: '🪮' },
+  deceased: { label: 'Passed away — tap to revive', emoji: '👼' },
 };
 
 export interface StatusHUDProps {
@@ -27,6 +28,7 @@ export interface StatusHUDProps {
   churuStash?: number;
   onOpenChangelog: () => void;
   onOpenGuide: () => void;
+  onTogglePause: () => void;
   notificationsOn?: boolean;
   onToggleNotifications?: () => void;
   hasUpdate?: boolean;
@@ -40,15 +42,26 @@ export function StatusHUD({
   churuStash = 3,
   onOpenChangelog,
   onOpenGuide,
+  onTogglePause,
   notificationsOn,
   onToggleNotifications,
   hasUpdate,
 }: StatusHUDProps) {
-  const badge = tummyAche
-    ? { label: 'Tummy ache — pet or brush!', emoji: '🤢' }
-    : messCount > 0 && !live.isSleeping
-      ? { label: messCount === 1 ? 'Mess on the rug — tap to scoop!' : `${messCount} messes on the rug — scoop up!`, emoji: '💩' }
-      : MOOD_BADGE[mood];
+  const badge = live.isDeceased
+    ? { label: 'Oli has passed away — tap to revive', emoji: '👼' }
+    : live.isPaused
+      ? { label: 'Care clock paused (Vacation Mode)', emoji: '✈️' }
+      : tummyAche
+        ? { label: 'Tummy ache — pet or brush!', emoji: '🤢' }
+        : messCount > 0 && !live.isSleeping
+          ? {
+              label:
+                messCount === 1
+                  ? 'Mess on the rug — tap to scoop!'
+                  : `${messCount} messes on the rug — scoop up!`,
+              emoji: '💩',
+            }
+          : MOOD_BADGE[mood];
   const night = live.isSleeping;
 
   const surface = night
@@ -81,6 +94,19 @@ export function StatusHUD({
                   <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-emerald-500 ring-2 ring-white" />
                 )}
               </button>
+              {live.isPaused && (
+                <span className="rounded-full bg-sky-500/20 px-1.5 py-0.5 text-[9px] font-extrabold text-sky-700 dark:text-sky-300">
+                  ✈️ Paused
+                </span>
+              )}
+              {live.livesLeft < 9 && (
+                <span
+                  title="Lives Remaining"
+                  className="rounded-full bg-amber-500/15 px-1.5 py-0.5 text-[9px] font-extrabold text-amber-700 dark:text-amber-300"
+                >
+                  🐾 {live.livesLeft}/9
+                </span>
+              )}
               {live.isCalm && !tummyAche && (
                 <span className="rounded-full bg-purple-500/15 px-1.5 py-0.5 text-[9px] font-extrabold text-purple-700 dark:text-purple-300">
                   ✨ Zen
@@ -104,6 +130,31 @@ export function StatusHUD({
         </div>
 
         <div className="flex shrink-0 items-center gap-1.5">
+          {/* Pause / Resume Care Clock button */}
+          <button
+            type="button"
+            onClick={onTogglePause}
+            title={live.isPaused ? 'Resume Care Clock' : 'Pause Care Clock (Vacation Mode)'}
+            aria-label={live.isPaused ? 'Resume Care Clock' : 'Pause Care Clock (Vacation Mode)'}
+            className={`flex items-center gap-1 rounded-full border px-2 py-1.5 text-xs font-extrabold shadow-sm backdrop-blur-md transition-transform active:scale-95 ${
+              live.isPaused
+                ? 'border-sky-400 bg-sky-500 text-white shadow-md animate-pulse'
+                : surface
+            }`}
+          >
+            {live.isPaused ? (
+              <>
+                <Play className="h-3 w-3 fill-current text-white" />
+                <span className="text-[10px]">Resume</span>
+              </>
+            ) : (
+              <>
+                <Pause className="h-3 w-3 text-amber-700 dark:text-amber-200" />
+                <span className="text-[10px]">Pause</span>
+              </>
+            )}
+          </button>
+
           {/* Churu Treat Stash counter pill */}
           <div
             title="Churu Treat Stash — earn more by fulfilling Oli’s cravings or scooping messes!"

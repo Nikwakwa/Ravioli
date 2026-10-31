@@ -59,7 +59,7 @@ export function RoomMesses({
                 <ellipse cx="0" cy="6.5" rx="14" ry="4.8" fill="rgba(45,30,18,0.28)" />
 
                 {isPoop ? (
-                  /* Classic Tamagotchi coiled poop swirl */
+                  /* Coiled poop swirl */
                   <g>
                     <ellipse cx="0" cy="4.5" rx="12" ry="4.8" fill="#7c4722" stroke="#4f2b12" strokeWidth="1.3" />
                     <ellipse cx="0" cy="0" rx="9" ry="4" fill="#8d532a" stroke="#4f2b12" strokeWidth="1.3" />
@@ -92,7 +92,7 @@ export function RoomMesses({
                   </g>
                 )}
 
-                {/* Animated Tamagotchi stink waves rising above the mess */}
+                {/* Animated stink waves rising above the mess */}
                 {[-6, 0, 6].map((dx, i) => (
                   <motion.path
                     key={i}

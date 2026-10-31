@@ -4,6 +4,14 @@ All updates to **Oli** are listed here.
 
 ---
 
+## `v0.14.0` — 2026-10-31
+### Vacation Mode (Pause Clock) & 9 Lives! ✈️🐾
+- **Pause Care Clock (Vacation Mode):** Added a dedicated Pause/Resume toggle in the top bar (and inside the Rules manual). Tap **Pause** before taking a flight, traveling, or when you won't have your phone — Oli's stats freeze completely in time with zero decay, no mess spawns, and no expiring whims until you tap **Resume**.
+- **9 Lives & Severe Neglect Warning:** If left completely unattended without food and water for over **48 continuous hours at zero stats** (over 2.5 days of complete neglect), Oli can succumb to severe dehydration and pass away. A new emergency vet revival allows you to nurse him back to life using **1 of his 9 lives**!
+- **Pure Virtual Pet Identity:** Removed all legacy third-party naming references so Oli stands proudly on his own as a cozy, dedicated virtual cat companion.
+
+---
+
 ## `v0.13.1` — 2026-10-31
 ### Notification Logo & Badge Fix 🔔🐱
 - **Full-Color Game Logo Restoration:** Replaced relative asset URLs with guaranteed absolute URLs for the notification icon (`pwa-192x192.png`). OS notification services (Windows Action Center, Android, macOS) run outside the browser scope and fail to load relative URLs, which previously caused them to render a blank/white square placeholder instead of Oli's logo.
@@ -12,16 +20,16 @@ All updates to **Oli** are listed here.
 ---
 
 ## `v0.13.0` — 2026-10-31
-### Tamagotchi Play Minigames! 🎮🐾
+### Play Micro-Minigames! 🎮🐾
 - **Feather Pounce! (`feather_wand`):** 3-round reflex timing minigame where the feather sweeps across the arena — tap **🐾 POUNCE!** while it's inside the narrowing green sweet-spot zone!
-- **Which Paw? Left or Right! (`laser_pointer`):** Classic Gen-1 Tamagotchi 3-round Left/Right game — watch for the subtle red laser glint and guess whether Oli trapped the dot under his **⬅️ Left Paw** or **Right Paw ➡️**!
+- **Which Paw? Left or Right! (`laser_pointer`):** Classic 3-round Left/Right paw game — watch for the subtle red laser glint and guess whether Oli trapped the dot under his **⬅️ Left Paw** or **Right Paw ➡️**!
 - **Combo Rewards & Quick Skip:** Score **2/3** for `+8 Bonus Joy`, or **3/3 Perfect Combo 🏆** for `+15 Bonus Joy`, celebratory confetti, and **+1 Churu Tube 🍬** (stacks with `2×` Attention Call cravings!). Includes a `Skip` button for instant play anytime.
 
 ---
 
 ## `v0.12.0` — 2026-10-31
 ### Attention Calls ("Meow!" Cravings) & Churu Stash! 💭🍬
-- **Tamagotchi Attention Calls (`WhimBubble`):** Periodically while awake, Oli displays a thought bubble above his head requesting a specific action (e.g., *Chicken Heart*, *Feather Wand*, *Laser Zoomies*, *Brush Coat*).
+- **Attention Calls (`WhimBubble`):** Periodically while awake, Oli displays a thought bubble above his head requesting a specific action (e.g., *Chicken Heart*, *Feather Wand*, *Laser Zoomies*, *Brush Coat*).
 - **One-Tap Fulfill & 2× Joy Reward:** Tap the craving bubble directly (or the highlighted `💭 2× Joy` button in the dock) before it expires to grant **2× Joy** and earn **+1 Churu Tube 🍬**! Ignoring a craving leaves Oli pouty (`-8 Joy`).
 - **Churu Treat Stash Economy:** `Churu Tubes` are now tracked in a finite stash (`🍬` pill in the top HUD and `×N` badge on the Churu tile, starting with 3 and holding up to 9). Earn extra tubes by fulfilling cravings or scooping every 2nd mess on the rug.
 
@@ -42,7 +50,7 @@ All updates to **Oli** are listed here.
 
 ## `v0.11.0` — 2026-10-31
 ### Poop, Hairballs & Rug Cleanup! 💩✨
-- **On-Screen Tamagotchi Messes:** Up to 3 messes (**poop swirls** and **fuzzy ginger hairballs**) can now spawn on the living room rug — after every 2nd meal, when overfed into a tummy ache, or every 2.5 hours away.
+- **On-Screen Room Messes:** Up to 3 messes (**poop swirls** and **fuzzy ginger hairballs**) can now spawn on the living room rug — after every 2nd meal, when overfed into a tummy ache, or every 2.5 hours away.
 - **Interactive Cleanup:** Tap any mess directly on the rug or use **Care → Scoop Mess** (`+15 Clean, +6 Joy`) to whisk it away with sparkles.
 - **Mess Consequences:** Uncleaned messes block `Thriving` (`ecstatic`) status and display a live `💩 Mess` counter in the top HUD and `Care` tab.
 
@@ -55,12 +63,12 @@ All updates to **Oli** are listed here.
 ---
 
 ## `v0.10.0` — 2026-10-31
-### Tamagotchi Rules, Laser Zoomies & Direct Petting! 🥚🐾
-- Streamlined the UI for single-player Tamagotchi gameplay (parked co-op UI for a future update) and reorganized the dock into **Feed · Play · Care · Rest**.
+### Care Rules, Laser Zoomies & Direct Petting! 🥚🐾
+- Streamlined the UI for single-player virtual pet care (parked co-op UI for a future update) and reorganized the dock into **Feed · Play · Care · Rest**.
 - **Interactive Petting & Fountain:** Tapping Oli on the rug now grants **+6 Joy** chin scratches (20s cooldown), and tapping the water fountain in the room refreshes his water directly.
 - **New Play Action — Laser Zoomies:** High-energy play session (`+32 Joy, -18 Energy, -8 Hunger, -5 Water`) with a custom red laser dot animation.
 - **Fullness & Tummy Ache Mechanics:** Meals (`Wet Food`, `Quail Egg`) are refused with a head-shake animation when Oli is already full, and spamming more than 3 treats in 15 minutes causes a **Tummy Ache** that can be soothed by petting, brushing, or misting.
-- **Tamagotchi Sleep & Energy Rules:** Oli refuses naps when hyper (`85+` Energy), refuses play when tired, and automatically passes out into a nap when Energy drops to `≤ 5`.
+- **Smart Sleep & Energy Rules:** Oli refuses naps when hyper (`85+` Energy), refuses play when tired, and automatically passes out into a nap when Energy drops to `≤ 5`.
 
 ---
 

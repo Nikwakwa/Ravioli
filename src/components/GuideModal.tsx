@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion';
-import { Bell, BellOff, BookOpen, Moon, Sparkles, Sun, X } from 'lucide-react';
+import { Bell, BellOff, BookOpen, Moon, Pause, Play, Sparkles, Sun, X } from 'lucide-react';
 import {
   AUTO_NAP_ENERGY,
   CARE_ACTIONS,
@@ -10,7 +10,14 @@ import {
   STAT_META,
 } from '../data/actions';
 import { STAT_KEYS } from '../types';
-import { DECAY_RATES, MIN_NAP_HOURS, NEED_THRESHOLD, THRIVING_THRESHOLD } from '../utils/decayEngine';
+import {
+  DECAY_RATES,
+  MAX_LIVES,
+  MIN_NAP_HOURS,
+  NEED_THRESHOLD,
+  NEGLECT_DEATH_HOURS,
+  THRIVING_THRESHOLD,
+} from '../utils/decayEngine';
 import { CRITICAL_THRESHOLD } from '../utils/notifications';
 import { STAT_ICONS } from './statIcons';
 
@@ -22,12 +29,16 @@ function minutesPerPoint(ratePerHour: number): string {
 export function GuideModal({
   open,
   onClose,
+  isPaused,
+  onTogglePause,
   notificationsOn,
   onToggleNotifications,
   onTestNotification,
 }: {
   open: boolean;
   onClose: () => void;
+  isPaused?: boolean;
+  onTogglePause?: () => void;
   notificationsOn?: boolean;
   onToggleNotifications?: () => void;
   onTestNotification?: () => void;
@@ -63,7 +74,7 @@ export function GuideModal({
                     Oli Care Manual & Rules
                   </h2>
                   <p className="text-[11px] font-semibold text-amber-800/75">
-                    Tamagotchi rules, fullness, tummy aches, naps & actions
+                    Care rules, fullness, tummy aches, vacation pause & 9 lives
                   </p>
                 </div>
               </div>
@@ -78,7 +89,36 @@ export function GuideModal({
             </div>
 
             <div className="flex max-h-[68dvh] touch-pan-y flex-col gap-3 overflow-y-auto pr-1 text-amber-950">
-              {/* Section 0: Notifications & Important Alerts */}
+              {/* Section 0A: Vacation / Flight Mode Clock Pause */}
+              {onTogglePause && (
+                <div className="rounded-2xl border border-sky-400/25 bg-sky-50/70 p-3 shadow-2xs">
+                  <div className="mb-1.5 flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-base leading-none">✈️</span>
+                      <h3 className="font-display text-xs font-bold text-sky-950">
+                        Pause Care Clock (Vacation Mode)
+                      </h3>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={onTogglePause}
+                      className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-extrabold transition-colors active:scale-95 ${
+                        isPaused
+                          ? 'bg-sky-600 text-white shadow-xs'
+                          : 'bg-sky-900/10 text-sky-900 hover:bg-sky-900/15'
+                      }`}
+                    >
+                      {isPaused ? <Play className="h-3 w-3 fill-current" /> : <Pause className="h-3 w-3" />}
+                      <span>{isPaused ? 'Resume Clock' : 'Pause Clock'}</span>
+                    </button>
+                  </div>
+                  <p className="text-[11px] font-medium leading-snug text-sky-900/85">
+                    Taking a flight, studying for finals, or away from your phone? Pause the care clock! Oli’s stats freeze completely in time — no decay, no messes, and no cravings until you tap Resume.
+                  </p>
+                </div>
+              )}
+
+              {/* Section 0B: Notifications & Important Alerts */}
               {onToggleNotifications && (
                 <div className="rounded-2xl border border-amber-900/8 bg-white p-3 shadow-2xs">
                   <div className="mb-1.5 flex items-center justify-between gap-2">
@@ -121,10 +161,10 @@ export function GuideModal({
                 </div>
               )}
 
-              {/* Section 1: Tamagotchi Rules (Fullness, Tummy Ache & Petting) */}
+              {/* Section 1: Core Care Rules (Fullness, Tummy Ache & Petting) */}
               <div className="rounded-2xl border border-amber-900/8 bg-white p-3 shadow-2xs">
                 <h3 className="mb-1 font-display text-xs font-bold text-amber-950">
-                  🥚 Tamagotchi Rules: Fullness, Treats & Petting
+                  🐾 Core Care Rules: Fullness, Treats & Petting
                 </h3>
                 <ul className="flex list-disc flex-col gap-1 pl-4 text-[11px] font-semibold leading-snug text-amber-900/85">
                   <li>
@@ -168,6 +208,14 @@ export function GuideModal({
                     <em>Which Paw? Left or Right!</em> Score <strong>2/3</strong> for +8 Bonus Joy, or{' '}
                     <strong className="text-emerald-700">3/3 Perfect Combo</strong> for +15 Bonus Joy &amp;{' '}
                     <strong>+1 Churu Tube 🍬</strong>!
+                  </li>
+                  <li>
+                    <strong className="text-rose-700">🐾 9 Lives &amp; Severe Neglect Warning:</strong> While normal sleep
+                    and busy workdays are completely safe, leaving Oli unattended for over{' '}
+                    <strong>{NEGLECT_DEATH_HOURS} continuous hours at 0 food and water</strong> (over 2.5 days of complete
+                    neglect) can cause him to pass away! Oli has <strong>{MAX_LIVES} lives</strong> — an emergency vet revival
+                    will nurse him back to life, but please use <strong>Pause Care Clock</strong> whenever traveling so he
+                    stays safe!
                   </li>
                 </ul>
               </div>

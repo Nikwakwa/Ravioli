@@ -14,7 +14,7 @@
  *   calls with the public anon key cannot inject phishing links or spoofed text.
  */
 import { createClient, type RealtimeChannel, type SupabaseClient } from '@supabase/supabase-js';
-import { actionById, formatLog, PET_ACTION_ID, SLEEP_ACTION_ID } from '../data/actions';
+import { actionById, formatLog, PAUSE_ACTION_ID, PET_ACTION_ID, REVIVE_ACTION_ID, SLEEP_ACTION_ID } from '../data/actions';
 import type { ActivityEntry, CatState, NewActivity, SyncMode, SyncStatus } from '../types';
 import { clampStat, createDefaultCatState } from '../utils/decayEngine';
 
@@ -86,6 +86,12 @@ export function sanitizeCatState(raw: unknown): CatState {
     calm_until: isoOr(r.calm_until, null),
     last_updated_at: isoOr(r.last_updated_at, d.last_updated_at) ?? d.last_updated_at,
     version: Math.max(0, Math.floor(num(r.version, 0))),
+    paused_at: isoOr(r.paused_at, null),
+    deceased_at: isoOr(r.deceased_at, null),
+    lives_left:
+      typeof r.lives_left === 'number' && Number.isFinite(r.lives_left)
+        ? Math.max(0, Math.min(9, Math.floor(r.lives_left)))
+        : 9,
   };
 }
 
@@ -111,6 +117,13 @@ export function sanitizeActivity(raw: unknown): ActivityEntry | null {
     message = rawMsg.toLowerCase().includes('woke')
       ? 'Gently woke Oli up from his nap'
       : 'Tucked Oli in for a cozy nap';
+  } else if (actionId === PAUSE_ACTION_ID) {
+    const rawMsg = typeof r.message === 'string' ? r.message : '';
+    message = rawMsg.toLowerCase().includes('resume')
+      ? 'Resumed the care clock — welcome back!'
+      : 'Paused the care clock (vacation mode)';
+  } else if (actionId === REVIVE_ACTION_ID) {
+    message = 'Miraculous emergency vet care revived Oli!';
   } else {
     // Reject unknown action_ids so external API callers cannot inject custom strings.
     return null;
@@ -138,6 +151,9 @@ function toRow(state: CatState) {
     calm_until: state.calm_until,
     last_updated_at: state.last_updated_at,
     version: state.version,
+    paused_at: state.paused_at ?? null,
+    deceased_at: state.deceased_at ?? null,
+    lives_left: state.lives_left ?? 9,
   };
 }
 

@@ -19,6 +19,7 @@ import {
   deriveMood,
   isThriving,
   materialize,
+  MAX_LIVES,
   nextNeed,
 } from '../utils/decayEngine';
 import {
@@ -34,10 +35,12 @@ import {
   MESS_SPAWN_HOURS,
   MINIGAME_ROUNDS,
   MIN_WAKE_ENERGY,
+  PAUSE_ACTION_ID,
   PET_ACTION_ID,
   PET_COOLDOWN_MS,
   PET_JOY_BOOST,
   pickCandidateWhim,
+  REVIVE_ACTION_ID,
   SLEEP_ACTION_ID,
   TREAT_WINDOW_MS,
   TUMMY_ACHE_MS,
@@ -441,7 +444,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
   }, [acceptState, addEntry, playEvent]);
 
   // ---------------------------------------------------------------------------
-  // Tamagotchi clock: 30 s tick + foreground refresh
+  // Pet care clock: 30 s tick + foreground refresh
   // ---------------------------------------------------------------------------
   useEffect(() => {
     const id = window.setInterval(() => setNow(Date.now()), TICK_MS);
@@ -461,9 +464,10 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
 
   const live: LiveCat | null = useMemo(() => (base ? computeLiveStats(base, now) : null), [base, now]);
 
-  // Derive mood with Tamagotchi tummy-ache & room-mess overrides (messes block 'ecstatic'!)
+  // Derive mood with tummy-ache, room-mess & deceased overrides (messes block 'ecstatic'!)
   const mood: Mood = useMemo(() => {
     if (!live) return 'content';
+    if (live.isDeceased) return 'deceased';
     if (live.isSleeping) return 'sleeping';
     if (tummyAche) return 'sad';
     if (messes.length >= 2) return 'grubby';
@@ -474,7 +478,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
 
   // Schedule an exact timer for the next low-need threshold crossing so alerts fire right on time.
   useEffect(() => {
-    if (!live) return;
+    if (!live || live.isPaused || live.isDeceased) return;
     const upcoming = nextNeed(live);
     if (!upcoming) return;
     const delayMs = Math.min(Math.max(1000, Math.ceil(upcoming.hours * 3_600_000) + 250), 2_147_483_647);
@@ -485,7 +489,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
   // Detect low-need (< 25) and critical (<= 5) threshold crossings and notify once per crossing.
   const alertedRef = useRef<AlertedMap | null>(null);
   useEffect(() => {
-    if (!live) return;
+    if (!live || live.isPaused || live.isDeceased) return;
     alertedRef.current ??= loadAlertedMap();
     const prefs = loadNotificationPrefs();
     const { nextAlerted, alerts } = evaluateStatThresholds(live, alertedRef.current, prefs);
@@ -501,6 +505,21 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
       }
     }
   }, [live]);
+
+  // Send an urgent rescue alert if Oli ever succumbs to prolonged neglect
+  const deceasedAlertedRef = useRef(false);
+  useEffect(() => {
+    if (live?.isDeceased && !deceasedAlertedRef.current) {
+      deceasedAlertedRef.current = true;
+      void sendSystemNotification(
+        '🚨 Oli needs emergency rescue!',
+        'Oli has succumbed to extreme neglect. Open the app to give him emergency vet care.',
+        'oli-emergency',
+      );
+    } else if (live && !live.isDeceased) {
+      deceasedAlertedRef.current = false;
+    }
+  }, [live?.isDeceased]);
 
   // Notify when Oli wakes up on his own (piecewise decay crossed the wake point).
   const prevSleeping = useRef<boolean | null>(null);
@@ -553,10 +572,10 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
   // Phase 3: Attention Calls ("Meow!" Whims / Cravings) lifecycle
   // ---------------------------------------------------------------------------
   useEffect(() => {
-    if (!ready || !live) return;
+    if (!ready || !live || live.isPaused || live.isDeceased) return;
 
-    // Clear whim if Oli falls asleep or gets a tummy ache
-    if (whim && (live.isSleeping || tummyAche)) {
+    // Clear whim if Oli falls asleep, gets a tummy ache, or clock is paused/deceased
+    if (whim && (live.isSleeping || tummyAche || live.isPaused || live.isDeceased)) {
       setWhim(null);
       saveActiveWhim(null);
       return;
@@ -580,7 +599,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
     }
 
     // Otherwise, if Oli is awake & feeling fine, schedule his next Attention Call!
-    if (live.isSleeping || tummyAche) return;
+    if (live.isSleeping || tummyAche || live.isPaused || live.isDeceased) return;
     const elapsedSinceLast = Date.now() - loadLastWhimAt();
     const waitMs = Math.max(8_000, WHIM_COOLDOWN_MS - elapsedSinceLast);
 
@@ -605,9 +624,9 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
     return () => window.clearTimeout(spawnTimer);
   }, [ready, live, whim, now, tummyAche, clearWhim, commit]);
 
-  // Passive Tamagotchi mess catch-up: spawn 1 mess per MESS_SPAWN_HOURS (2.5h) elapsed, up to 3 max.
+  // Passive room mess catch-up: spawn 1 mess per MESS_SPAWN_HOURS (2.5h) elapsed, up to 3 max.
   useEffect(() => {
-    if (!ready || !live) return;
+    if (!ready || !live || live.isPaused || live.isDeceased) return;
     const lastMs = loadLastMessAt(now);
     const hoursSince = (now - lastMs) / MS_PER_HOUR;
     if (hoursSince < MESS_SPAWN_HOURS) return;
@@ -645,7 +664,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
   // Autonomous pass-out nap: if Oli's Energy drops to <= AUTO_NAP_ENERGY (5) while awake, he curls up to nap automatically.
   const autoNappingRef = useRef(false);
   useEffect(() => {
-    if (!live || live.isSleeping || busy || autoNappingRef.current) return;
+    if (!live || live.isSleeping || live.isPaused || live.isDeceased || busy || autoNappingRef.current) return;
     if (live.energy <= AUTO_NAP_ENERGY) {
       autoNappingRef.current = true;
       noticeRef.current({
@@ -727,6 +746,17 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
     (action: CareAction, minigameHits?: number) => {
       if (!base || !live || busy) return;
 
+      if (live.isDeceased) {
+        noticeRef.current({ text: `💔 Oli needs emergency care before you can interact with him!`, tone: 'warn' });
+        vibrate([20, 40, 20]);
+        return;
+      }
+
+      if (live.isPaused) {
+        triggerRefusal(`✈️ Care clock is paused. Tap "Resume" above to care for Oli!`);
+        return;
+      }
+
       // Special case: Care -> Scoop Mess delegates to cleanMess()
       if (action.id === 'scoop_mess') {
         cleanMess();
@@ -770,7 +800,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
         return;
       }
 
-      // 6b. Phase 4: Launch interactive Tamagotchi Minigame for Play actions!
+      // 6b. Phase 4: Launch interactive Minigame for Play actions!
       if (action.category === 'play' && minigameHits === undefined) {
         vibrate(15);
         setActiveMinigame(action);
@@ -919,7 +949,12 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
 
   /** Direct interactive petting on Oli's rug avatar (replaces the old Chin Scratches dock button). */
   const petOli = useCallback(() => {
-    if (!base || !live) return;
+    if (!base || !live || busy) return;
+    if (live.isDeceased) return;
+    if (live.isPaused) {
+      triggerRefusal(`✈️ Care clock is paused. Tap "Resume" above to pet Oli!`);
+      return;
+    }
     vibrate([25, 25, 35, 25, 25]);
 
     if (live.isSleeping) return;
@@ -1009,10 +1044,14 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
   }, []);
 
   const toggleSleep = useCallback(() => {
-    if (!live || busy) return;
+    if (!live || busy || live.isDeceased) return;
+    if (live.isPaused) {
+      triggerRefusal(`✈️ Care clock is paused. Tap "Resume" above to tuck Oli in!`);
+      return;
+    }
     const target = !live.isSleeping;
 
-    // Tamagotchi sleep rules:
+    // Sleep rules:
     // 1. Cannot force Oli to nap if he's already full of energy (>= 85)
     if (target && live.energy >= MAX_SLEEP_ENERGY) {
       triggerRefusal(`⚡ ${live.name} has too much energy to nap right now! Play with him first.`);
@@ -1045,6 +1084,74 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
     void commit(mutator, SLEEP_ACTION_ID, message);
   }, [live, busy, player, playEvent, commit, triggerRefusal]);
 
+  /** Freezes or unfreezes time drift so travel/flights don't cause unintended decay or neglect. */
+  const togglePause = useCallback(() => {
+    if (!base || !live || live.isDeceased) return;
+    const isCurrentlyPaused = Boolean(base.paused_at);
+    const nowMs = Date.now();
+    const nowIso = new Date(nowMs).toISOString();
+
+    if (isCurrentlyPaused) {
+      const mutator = (b: CatState): CatState => ({
+        ...b,
+        paused_at: null,
+        last_updated_at: nowIso,
+      });
+      noticeRef.current({ text: '▶️ Care clock resumed! Welcome back!', tone: 'info' });
+      vibrate([20, 60, 20]);
+      void commit(mutator, PAUSE_ACTION_ID, 'Resumed the care clock — welcome back!');
+    } else {
+      const mutator = (b: CatState): CatState => {
+        const mat = materialize(b, nowMs);
+        return {
+          ...mat,
+          paused_at: nowIso,
+          last_updated_at: nowIso,
+        };
+      };
+      noticeRef.current({ text: '✈️ Care clock paused (Vacation Mode)! Oli is resting safely.', tone: 'info' });
+      vibrate(30);
+      void commit(mutator, PAUSE_ACTION_ID, 'Paused the care clock (vacation mode)');
+    }
+  }, [base, live, commit]);
+
+  /** Miraculously revives Oli from severe neglect using 1 of his 9 lives. */
+  const reviveOli = useCallback(() => {
+    if (!base || !live || !live.isDeceased) return;
+    const nowMs = Date.now();
+    const nowIso = new Date(nowMs).toISOString();
+    const currentLives = live.livesLeft;
+    const nextLives = currentLives > 0 ? currentLives - 1 : MAX_LIVES;
+
+    const mutator = (b: CatState): CatState => ({
+      ...b,
+      hunger: 35,
+      hydration: 35,
+      happiness: 30,
+      energy: 40,
+      hygiene: 40,
+      is_sleeping: false,
+      calm_until: null,
+      deceased_at: null,
+      paused_at: null,
+      lives_left: nextLives,
+      last_updated_at: nowIso,
+    });
+
+    setMesses([]);
+    saveMesses([]);
+    clearWhim();
+    clearTummyAche();
+
+    noticeRef.current({
+      text: `🩺 Oli was revived! He's weak and hungry — give him food and water right away! (${nextLives} lives left)`,
+      tone: 'info',
+    });
+    vibrate([40, 80, 40, 80, 40]);
+    celebrate();
+    void commit(mutator, REVIVE_ACTION_ID, 'Miraculous emergency vet care revived Oli!');
+  }, [base, live, clearTummyAche, clearWhim, commit]);
+
   return {
     ready,
     live,
@@ -1067,6 +1174,8 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
     cleanMess,
     fulfillWhim,
     toggleSleep,
+    togglePause,
+    reviveOli,
     now,
   };
 }

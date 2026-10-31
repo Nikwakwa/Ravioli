@@ -21,6 +21,12 @@ export interface CatState extends CatStats {
   last_updated_at: string;
   /** Monotonic counter for optimistic concurrency (co-op race safety). */
   version: number;
+  /** ISO timestamp when the care clock was paused (e.g. flight/vacation mode). Null when ticking normally. */
+  paused_at?: string | null;
+  /** ISO timestamp when Oli passed away from prolonged neglect (>= 48h at 0 hunger & 0 hydration). Null when alive. */
+  deceased_at?: string | null;
+  /** Number of lives remaining (out of 9). Defaults to 9. */
+  lives_left?: number;
 }
 
 /** Live view computed on the fly by the decay engine. */
@@ -30,6 +36,9 @@ export interface LiveCat extends CatStats {
   isCalm: boolean;
   /** True when Oli woke up on his own because his energy reached 100. */
   wokeNaturally: boolean;
+  isPaused: boolean;
+  isDeceased: boolean;
+  livesLeft: number;
 }
 
 export type Mood =
@@ -42,7 +51,8 @@ export type Mood =
   | 'thirsty'
   | 'tired'
   | 'sad'
-  | 'grubby';
+  | 'grubby'
+  | 'deceased';
 
 export interface ActivityEntry {
   id: string;
@@ -69,7 +79,7 @@ export interface RoomMess {
   created_at: string;
 }
 
-/** Tamagotchi attention call ("Meow!" whim/craving) for a specific care action. */
+/** Attention call ("Meow!" whim/craving) for a specific care action. */
 export interface CatWhim {
   id: string;
   actionId: string;

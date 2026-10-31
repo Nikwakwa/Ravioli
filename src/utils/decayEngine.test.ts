@@ -7,8 +7,10 @@ import {
   isFeatherInSweetSpot,
   MAX_SLEEP_ENERGY,
   MIN_WAKE_ENERGY,
+  PAUSE_ACTION_ID,
   PET_ACTION_ID,
   pickCandidateWhim,
+  REVIVE_ACTION_ID,
 } from '../data/actions';
 import { pickFreeMessSlot } from '../hooks/useCatGame';
 import { cleanText, sanitizeActivity, sanitizeCatState } from '../services/catStorage';
@@ -16,7 +18,10 @@ import { evaluateStatThresholds, getNotificationAssetUrls, toAbsoluteNotificatio
 import type { CatState } from '../types';
 import {
   DECAY_RATES,
+  hoursUntilBothZero,
+  MAX_LIVES,
   MIN_NAP_HOURS,
+  NEGLECT_DEATH_HOURS,
   applyEffect,
   clampStat,
   computeLiveStats,
@@ -205,7 +210,7 @@ describe('security sanitizers (catStorage)', () => {
   });
 });
 
-describe('Tamagotchi Phase 1 & 2 action, dock & mess rules', () => {
+describe('Core action, dock & mess rules', () => {
   it('organizes dock into 4 balanced categories (feed, play, care, rest)', () => {
     expect(CATEGORIES.map((c) => c.id)).toEqual(['feed', 'play', 'care', 'rest']);
     expect(CARE_ACTIONS.filter((a) => a.category === 'feed')).toHaveLength(4);
@@ -272,6 +277,82 @@ describe('Tamagotchi Phase 1 & 2 action, dock & mess rules', () => {
     expect(isFeatherInSweetSpot(10, 0)).toBe(false);
     expect(isFeatherInSweetSpot(36, 0)).toBe(true);
     expect(isFeatherInSweetSpot(36, 2)).toBe(false); // tighter sweet spot on round 3 (38–62%)
+  });
+});
+
+describe('Care Clock Pause (Vacation Mode) & Extreme Neglect Protection (9 Lives)', () => {
+  it('freezes all stat decay when paused_at is set, even after 72 hours away', () => {
+    const pauseTime = new Date(T0).toISOString();
+    const pausedState = base({ paused_at: pauseTime, last_updated_at: pauseTime });
+
+    // 72 hours later...
+    const live = computeLiveStats(pausedState, T0 + 72 * H);
+    expect(live.isPaused).toBe(true);
+    expect(live.isDeceased).toBe(false);
+    expect(live.hunger).toBe(80);
+    expect(live.hydration).toBe(80);
+    expect(live.energy).toBe(50);
+  });
+
+  it('keeps Oli alive during normal everyday absence (e.g. 12h sleep, 24h busy day)', () => {
+    const normalAbsence = computeLiveStats(base(), T0 + 24 * H);
+    expect(normalAbsence.isDeceased).toBe(false);
+    expect(normalAbsence.livesLeft).toBe(MAX_LIVES);
+  });
+
+  it('triggers deceased state only after 48 continuous hours of zero food & water (extreme neglect)', () => {
+    const timeToZero = hoursUntilBothZero(base(), false); // ~13.3 hours
+    expect(timeToZero).toBeGreaterThan(8);
+
+    // Just before 48h at zero: Oli is weak & empty, but still hanging on!
+    const justBefore = computeLiveStats(base(), T0 + (timeToZero + NEGLECT_DEATH_HOURS - 1) * H);
+    expect(justBefore.isDeceased).toBe(false);
+
+    // After 48h at zero: Oli passes away and mood becomes 'deceased'
+    const afterNeglect = computeLiveStats(base(), T0 + (timeToZero + NEGLECT_DEATH_HOURS + 1) * H);
+    expect(afterNeglect.isDeceased).toBe(true);
+    expect(deriveMood(afterNeglect)).toBe('deceased');
+    expect(afterNeglect.hunger).toBe(0);
+  });
+
+  it('preserves paused_at, deceased_at, and lives_left in sanitizeCatState', () => {
+    const iso = new Date(T0).toISOString();
+    const sanitized = sanitizeCatState({
+      name: 'Oli',
+      hunger: 60,
+      paused_at: iso,
+      deceased_at: iso,
+      lives_left: 7,
+    });
+    expect(sanitized.paused_at).toBe(iso);
+    expect(sanitized.deceased_at).toBe(iso);
+    expect(sanitized.lives_left).toBe(7);
+  });
+
+  it('canonicalizes PAUSE_ACTION_ID and REVIVE_ACTION_ID in sanitizeActivity', () => {
+    const pauseAct = sanitizeActivity({
+      id: 'p1',
+      player: 'Nico',
+      action_id: PAUSE_ACTION_ID,
+      message: 'pause',
+    });
+    expect(pauseAct?.message).toBe('Paused the care clock (vacation mode)');
+
+    const resumeAct = sanitizeActivity({
+      id: 'p2',
+      player: 'Nico',
+      action_id: PAUSE_ACTION_ID,
+      message: 'resumed',
+    });
+    expect(resumeAct?.message).toBe('Resumed the care clock — welcome back!');
+
+    const reviveAct = sanitizeActivity({
+      id: 'r1',
+      player: 'Athina',
+      action_id: REVIVE_ACTION_ID,
+      message: 'revive',
+    });
+    expect(reviveAct?.message).toBe('Miraculous emergency vet care revived Oli!');
   });
 });
 

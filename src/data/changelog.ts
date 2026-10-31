@@ -7,6 +7,16 @@ export interface ReleaseEntry {
 
 export const CHANGELOG: ReleaseEntry[] = [
   {
+    version: 'v0.14.0',
+    date: '2026-10-31',
+    title: 'Vacation Mode (Pause Clock) & 9 Lives! ✈️🐾',
+    changes: [
+      'Pause Care Clock (Vacation Mode): Heading out on a flight or busy for a few days? Tap the Pause button in the top bar to freeze Oli’s stats in time until you return.',
+      '9 Lives & Severe Neglect Warning: Left unattended for over 48 continuous hours at zero food and water? Oli can now succumb to extreme neglect — but emergency vet care can miraculously revive him using 1 of his 9 lives!',
+      'Pure Virtual Pet Identity: Cleaned all legacy references so Oli shines as his own cozy, dedicated companion.',
+    ],
+  },
+  {
     version: 'v0.13.1',
     date: '2026-10-31',
     title: 'Notification Logo & Badge Fix 🔔🐱',
@@ -18,10 +28,10 @@ export const CHANGELOG: ReleaseEntry[] = [
   {
     version: 'v0.13.0',
     date: '2026-10-31',
-    title: 'Tamagotchi Play Minigames! 🎮🐾',
+    title: 'Play Micro-Minigames! 🎮🐾',
     changes: [
       'Feather Pounce! (Feather Wand): 3-round reflex game — tap POUNCE when the darting feather enters the green sweet-spot zone!',
-      'Which Paw? Left or Right! (Laser Zoomies): Classic 3-round Tamagotchi game — spot the subtle red laser glint and guess which paw Oli traps the dot under!',
+      'Which Paw? Left or Right! (Laser Zoomies): Classic 3-round paw game — spot the subtle red laser glint and guess which paw Oli traps the dot under!',
       'Minigame Rewards: Score 2/3 for +8 Bonus Joy, or 3/3 Perfect Combo for +15 Bonus Joy, confetti & +1 Churu Tube 🍬!',
     ],
   },
@@ -57,7 +67,7 @@ export const CHANGELOG: ReleaseEntry[] = [
     date: '2026-10-31',
     title: 'Poop, Hairballs & Rug Cleanup! 💩✨',
     changes: [
-      'Tamagotchi Messes: Every 2nd meal (or every 2.5 hours away, or after a treat tummy ache) Oli leaves a poop or ginger hairball on the living room rug!',
+      'Room Messes: Every 2nd meal (or every 2.5 hours away, or after a treat tummy ache) Oli leaves a poop or ginger hairball on the living room rug!',
       'Tap any mess directly on the rug — or use Care → Scoop Mess — to clean it up for +15 Clean & +6 Joy.',
       'Active messes block Thriving status and show a badge on the HUD and Care tab until scooped.',
     ],
@@ -73,9 +83,9 @@ export const CHANGELOG: ReleaseEntry[] = [
   {
     version: 'v0.10.0',
     date: '2026-10-31',
-    title: 'Tamagotchi Rules, Laser Zoomies & Direct Petting! 🥚🐾',
+    title: 'Care Rules, Laser Zoomies & Direct Petting! 🥚🐾',
     changes: [
-      'Streamlined into a focused single-player Tamagotchi with 4 balanced tabs: Feed, Play, Care & Rest.',
+      'Streamlined into a focused single-player virtual pet with 4 balanced tabs: Feed, Play, Care & Rest.',
       'Tap Oli directly on the rug for Chin Scratches (+6 Joy) and tap the living room fountain directly to refresh his water!',
       'Added Laser Zoomies in Play — watch Oli chase a glowing red laser dot across the rug.',
       'Fullness & Tummy Aches: Oli shakes his head when too full for a meal, and eating more than 3 treats in 15 minutes gives him a tummy ache (soothe it with belly rubs, brushing, or Calming Mist).',

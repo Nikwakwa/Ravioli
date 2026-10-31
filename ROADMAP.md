@@ -1,10 +1,10 @@
-# 🐱 Ravioli — Tamagotchi Gameplay Roadmap
+# 🐱 Ravioli — Virtual Pet Gameplay Roadmap
 
-This document tracks our gameplay evolution from a passive care toy into a full **Tamagotchi-style virtual pet game**, along with parked ideas for future updates.
+This document tracks our gameplay evolution from a passive care toy into a full **virtual pet game & cozy cat companion**, along with parked ideas for future updates.
 
 ---
 
-## ✅ Phase 1: Core Tamagotchi Rules, Single-Player Focus & Dock Overhaul *(Completed)*
+## ✅ Phase 1: Core Care Rules, Single-Player Focus & Dock Overhaul *(Completed)*
 
 ### 1. Single-Player Streamlining (Co-op Temporarily Removed)
 - Remove the multi-player selector modal (`PlayerSelector`), partner HUD pill, `SyncDot`, `ActivityFeed` bar above the dock, and partner notification toggle so the screen is clean and focused entirely on Oli.
@@ -26,7 +26,7 @@ This document tracks our gameplay evolution from a passive care toy into a full 
   - **Quail Egg Topper (Booster Meal):** `+20 Hunger`, `+10 Energy`, `+8 Joy`. Refused if `hunger >= 90`.
   - **Chicken Heart (Crunchy Snack):** `+12 Hunger`, `+18 Joy`.
   - **Churu Tube (Ultimate Treat):** `+10 Hunger`, `+12 Water`, `+30 Joy`.
-- **Fullness Refusal:** If Oli is already full (`hunger >= 85` for wet food, `>= 90` for quail egg), he plays a classic Tamagotchi **head-shake refusal animation** (`refuse`) and won't eat a heavy meal.
+- **Fullness Refusal:** If Oli is already full (`hunger >= 85` for wet food, `>= 90` for quail egg), he plays a cute **head-shake refusal animation** (`refuse`) and won't eat a heavy meal.
 - **Overfeeding / Treat Spam ("Tummy Ache"):** Feeding more than 2 treats within 15 minutes (or stuffing Oli when `hunger >= 98`) triggers a **Tummy Ache** (`-15 Energy`, `-10 Clean`, `-8 Joy`) and blocks treats for 15 minutes.
 
 ### 4. Autonomous Sleep & Energy Rules
@@ -56,15 +56,22 @@ This document tracks our gameplay evolution from a passive care toy into a full 
 
 ## ✅ Phase 4: Micro-Minigames for `Play` *(Completed)*
 
-Replace passive Play buttons with quick 10-second Tamagotchi minigames:
+Replace passive Play buttons with quick 10-second interactive minigames:
 1. **Feather Pounce Reflex:** The feather wand darts across the screen; tap when Oli's pupils dilate (`3` quick rounds) to score a pounce combo.
-2. **Guess Which Paw (Left / Right):** Classic Gen-1 Tamagotchi game — Oli hides a crinkle ball under his left or right paw (`3` guesses).
+2. **Guess Which Paw (Left / Right):** Classic guessing game — Oli hides the laser dot under his left or right paw (`3` guesses).
+
+---
+
+## ✅ Phase 5: Vacation Mode (Pause Care Clock) & 9-Lives Neglect Warning *(Completed)*
+
+- **Pause Care Clock (Vacation Mode):** Tap the Pause button in the top bar to freeze time and stat decay whenever taking a long flight or away for a few days.
+- **9 Lives & Severe Neglect Protection:** If left unattended for over 48 continuous hours at zero food and water (over 2.5 days of complete neglect), Oli can succumb to severe dehydration. Miraculous emergency vet care revives him using 1 of his 9 lives!
 
 ---
 
 ## ⏸️ Parked for Later: Co-op Mode & Progression
 
-*(Saved for future re-introduction once single-player Tamagotchi mechanics are complete)*
+*(Saved for future re-introduction once single-player care mechanics are complete)*
 - **Live Partner Co-op:** Nico & Athina player switcher (`PlayerSelector`), live Supabase WebSocket sync (`catStorage.ts`), partner activity feed (`ActivityFeed`), and background partner notifications.
 - **Double Love Combo:** If both partners care for Oli within 15 minutes of each other, trigger a 2-hour slow-decay buff.
 - **Care Streak & Bond Level:** Track consecutive days Oli stays above critical thresholds without neglect.

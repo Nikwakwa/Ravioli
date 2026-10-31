@@ -78,6 +78,11 @@ function expressionFor(mood: Mood, animation: CatAnimation, petting: boolean) {
       eyes = 'closed';
       mouth = 'smile';
       break;
+    case 'deceased':
+      eyes = 'closed';
+      mouth = 'neutral';
+      earDroop = true;
+      break;
     default:
       break;
   }
@@ -913,6 +918,16 @@ export function CatAvatar({ mood, animation, animationKey, onPet, className, x, 
               {/* Head */}
               <motion.g key={`head-${animationKey}-${anim}`} style={{ originX: 0.5, originY: 1 }} animate={head.animate} transition={head.transition}>
                 <Head {...headProps} />
+                {mood === 'deceased' && (
+                  <motion.g
+                    initial={{ opacity: 0, y: -4 }}
+                    animate={{ opacity: [0.75, 1, 0.75], y: [-3, -7, -3] }}
+                    transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
+                  >
+                    <ellipse cx={100} cy={16} rx={22} ry={6} fill="none" stroke="#fcd34d" strokeWidth={3} />
+                    <ellipse cx={100} cy={16} rx={24} ry={7.5} fill="none" stroke="#fef08a" strokeWidth={1} opacity={0.6} />
+                  </motion.g>
+                )}
               </motion.g>
 
               {anim === 'purring' && <PurrWaves />}

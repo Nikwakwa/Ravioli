@@ -1,5 +1,5 @@
 /**
- * Serverless "Tamagotchi Time" engine.
+ * Serverless pet decay engine.
  *
  * There is no backend cron: the database only stores a *base* snapshot of the
  * stats plus `last_updated_at`. Every client derives the *live* stats on the
@@ -31,6 +31,14 @@ export const MAX_ELAPSED_HOURS = 24 * 90;
 /** Thresholds used by mood derivation and the "next need" hint. */
 export const NEED_THRESHOLD = 25;
 export const THRIVING_THRESHOLD = 85;
+
+/**
+ * Extreme neglect protection: both Hunger AND Hydration must be completely empty (0)
+ * for 48 consecutive hours (2 full days at 0) before Oli succumbs to severe dehydration/starvation.
+ * Normal overnight sleep or busy workdays will never trigger this.
+ */
+export const NEGLECT_DEATH_HOURS = 48;
+export const MAX_LIVES = 9;
 
 const MS_PER_HOUR = 3_600_000;
 
@@ -81,18 +89,83 @@ export function hoursUntilNaturalWake(energy: number): number {
 }
 
 /**
+ * Calculates how many hours from the current snapshot until BOTH Hunger and Hydration reach 0.
+ * Hydration decays at 8/h. Hunger decays at 3/h while sleeping, then 6/h when awake.
+ */
+export function hoursUntilBothZero(baseStats: CatStats, isSleeping: boolean): number {
+  const hoursHydration = baseStats.hydration / Math.abs(DECAY_RATES.awake.hydration);
+  const napHours = isSleeping ? hoursUntilNaturalWake(baseStats.energy) : 0;
+  const hungerLostNap = napHours * Math.abs(DECAY_RATES.sleeping.hunger);
+  const hungerAfterNap = Math.max(0, baseStats.hunger - hungerLostNap);
+  const hoursHunger = napHours + hungerAfterNap / Math.abs(DECAY_RATES.awake.hunger);
+  return Math.max(hoursHydration, hoursHunger);
+}
+
+/**
  * Computes the live stats from a base snapshot at time `now`.
  *
  * Piecewise: if Oli is sleeping, he regenerates energy until it is full (or the
  * minimum nap elapses), then automatically wakes and awake rates apply for the
  * remaining time — so he wakes up even if nobody opens the app.
+ *
+ * If the care clock is paused (vacation/flight mode), stats are frozen at the
+ * exact moment it was paused.
+ *
+ * If prolonged extreme neglect occurred (48+ consecutive hours at 0 hunger & 0 hydration),
+ * Oli enters the deceased state (which can be revived using one of his 9 lives).
  */
 export function computeLiveStats(base: CatState, now: TimeInput = Date.now()): LiveCat {
-  const nowMs = toMs(now);
+  const isPaused = Boolean(base.paused_at);
+  const isAlreadyDeceased = Boolean(base.deceased_at);
+  const livesLeft =
+    typeof base.lives_left === 'number' && Number.isFinite(base.lives_left)
+      ? Math.max(0, Math.min(MAX_LIVES, base.lives_left))
+      : MAX_LIVES;
+
+  if (isAlreadyDeceased) {
+    return {
+      hunger: 0,
+      hydration: 0,
+      happiness: 0,
+      energy: 0,
+      hygiene: 0,
+      name: base.name,
+      isSleeping: false,
+      isCalm: false,
+      wokeNaturally: false,
+      isPaused: false,
+      isDeceased: true,
+      livesLeft,
+    };
+  }
+
+  // If clock is paused, reference time is frozen at the moment of pausing
+  const nowMs = isPaused && base.paused_at ? Date.parse(base.paused_at) : toMs(now);
   const hours = elapsedHours(base.last_updated_at, nowMs);
   let stats = pickStats(base);
   let isSleeping = base.is_sleeping;
   let wokeNaturally = false;
+
+  // Check for extreme neglect death while unpaused
+  if (!isPaused) {
+    const timeToBothZero = hoursUntilBothZero(stats, isSleeping);
+    if (hours >= timeToBothZero + NEGLECT_DEATH_HOURS) {
+      return {
+        hunger: 0,
+        hydration: 0,
+        happiness: 0,
+        energy: 0,
+        hygiene: 0,
+        name: base.name,
+        isSleeping: false,
+        isCalm: false,
+        wokeNaturally: false,
+        isPaused: false,
+        isDeceased: true,
+        livesLeft,
+      };
+    }
+  }
 
   if (isSleeping) {
     const napHours = hoursUntilNaturalWake(stats.energy);
@@ -116,6 +189,9 @@ export function computeLiveStats(base: CatState, now: TimeInput = Date.now()): L
     isSleeping,
     isCalm: Number.isFinite(calmUntil) && calmUntil > nowMs,
     wokeNaturally,
+    isPaused,
+    isDeceased: false,
+    livesLeft,
   };
 }
 
@@ -137,6 +213,9 @@ export function materialize(base: CatState, now: TimeInput = Date.now()): CatSta
     is_sleeping: live.isSleeping,
     calm_until: calmStillActive,
     last_updated_at: new Date(nowMs).toISOString(),
+    paused_at: base.paused_at ?? null,
+    deceased_at: live.isDeceased ? (base.deceased_at ?? new Date(nowMs).toISOString()) : null,
+    lives_left: live.livesLeft,
   };
 }
 
@@ -160,6 +239,7 @@ export function isThriving(stats: CatStats): boolean {
 
 /** Single dominant mood used to drive the cat's face & body language. */
 export function deriveMood(live: LiveCat): Mood {
+  if (live.isDeceased) return 'deceased';
   if (live.isSleeping) return 'sleeping';
   if (live.hunger < NEED_THRESHOLD) return 'hungry';
   if (live.hydration < NEED_THRESHOLD) return 'thirsty';
@@ -200,5 +280,8 @@ export function createDefaultCatState(now: TimeInput = Date.now()): CatState {
     calm_until: null,
     last_updated_at: new Date(toMs(now)).toISOString(),
     version: 0,
+    paused_at: null,
+    deceased_at: null,
+    lives_left: 9,
   };
 }

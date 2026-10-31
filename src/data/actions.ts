@@ -36,7 +36,7 @@ export interface CareAction {
   soothesTummy?: boolean;
 }
 
-/** Tamagotchi sleep & overfeeding rule constants. */
+/** Sleep & overfeeding rule constants. */
 export const MAX_SLEEP_ENERGY = 85;
 export const MIN_WAKE_ENERGY = 20;
 export const AUTO_NAP_ENERGY = 5;
@@ -219,6 +219,8 @@ export const CARE_ACTIONS: CareAction[] = [
 
 export const SLEEP_ACTION_ID = 'toggle_sleep';
 export const PET_ACTION_ID = 'chin_scratch';
+export const PAUSE_ACTION_ID = 'toggle_pause';
+export const REVIVE_ACTION_ID = 'emergency_revive';
 
 export const STAT_META: Record<StatKey, { label: string; color: string; soft: string }> = {
   hunger: { label: 'Hunger', color: '#f08a3c', soft: '#ffe2c8' },
@@ -237,7 +239,7 @@ export function formatLog(template: string, catName: string): string {
 }
 
 /**
- * Selects a context-aware Tamagotchi whim/craving that Oli can actually perform right now
+ * Selects a context-aware whim/craving that Oli can actually perform right now
  * (never picks a meal when he's too full or a play workout when he's too tired).
  */
 export function pickCandidateWhim(
