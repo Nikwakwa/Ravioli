@@ -3,24 +3,41 @@ import { useEffect, useId, useMemo, useState } from 'react';
 import type { CatAnimation, Mood } from '../types';
 
 /**
- * Oli — hand-drawn SVG ginger cat.
- * Golden eyes, cream muzzle & bib, tabby stripes, tiny dark chin freckles and a
- * subtle ear tattoo inside both ears. Everything is animated with Framer Motion.
+ * Oli — hand-crafted SVG portrait based on real photos of Oli:
+ * - Rich orange-ginger mackerel tabby coat with chestnut stripes & buff highlights
+ * - Right ear (viewer's left): slightly rounded tip + prominent dark blue-black stippled ID tattoo
+ * - Left ear (viewer's right): signature small V-shaped notch near the tip + faint inner tattoo
+ * - Amber-gold / hazel-gold eyes with dark eyeliner rims & pale cream "spectacles"
+ * - Terracotta-pink nose with tiny dark lentigo freckles
+ * - Snowy-white whisker pads & chin with his signature dark black-brown central lower-lip spot
+ * - Cream throat & striped ginger chest "necklace" bands
+ * - Tabby-barred front legs with white socks/mittens & pink toe beans
+ * - Ringed tail with alternating dark ginger & cream-white bands and a pure white tail tip
  */
 
 const C = {
-  coat: '#f08a3c',
-  coatLight: '#f6a25c',
-  stripe: '#d2681f',
-  cream: '#fff1dc',
-  creamShade: '#f6dcbc',
-  innerEar: '#f5b0a4',
-  nose: '#e7808a',
-  line: '#6f3f27',
-  pupil: '#22130a',
-  irisEdge: '#b67700',
-  freckle: '#5a321d',
-  tattoo: '#34456b',
+  coat: '#e57c2e',
+  coatDeep: '#cf6419',
+  coatLight: '#f39c52',
+  coatBuff: '#f8be82',
+  stripe: '#ab430b',
+  stripeDark: '#873005',
+  cream: '#fffaf2',
+  creamWarm: '#faeedb',
+  creamShade: '#ead5b8',
+  innerEar: '#f0b3aa',
+  innerEarDeep: '#df948a',
+  nose: '#e27d78',
+  noseRim: '#b55450',
+  pawPad: '#efb0b6',
+  line: '#592d16',
+  eyeliner: '#381c0c',
+  pupil: '#190e07',
+  irisEdge: '#8f5d06',
+  freckle: '#321a0e',
+  lipSpot: '#26130b',
+  chinSkin: '#d9bdb8',
+  tattoo: '#253549',
 };
 
 type EyeState = 'open' | 'wide' | 'halflid' | 'sad' | 'closed' | 'happy';
@@ -117,6 +134,7 @@ function expressionFor(mood: Mood, animation: CatAnimation, petting: boolean) {
     case 'yawning':
       eyes = 'closed';
       mouth = 'yawn';
+      earDroop = true;
       break;
     default:
       break;
@@ -186,14 +204,14 @@ function headMotion(animation: CatAnimation, sec: number, sleeping: boolean): { 
       };
     default:
       return {
-        animate: { rotate: [-2, 2, -2], y: [0, 0.8, 0] },
+        animate: { rotate: [-1.8, 1.8, -1.8], y: [0, 0.8, 0] },
         transition: { duration: 7, repeat: Infinity, ease: 'easeInOut' },
       };
   }
 }
 
 // -----------------------------------------------------------------------------
-// Eyes
+// Eyes — Golden-amber / hazel-gold with dark eyeliner rims & pale spectacles
 // -----------------------------------------------------------------------------
 
 function Eye({
@@ -215,106 +233,202 @@ function Eye({
   lookX: number;
   playing: boolean;
 }) {
+  const outer = side === 'l' ? -1 : 1;
+
   if (state === 'closed') {
     return (
-      <path d={`M${cx - 11} ${cy + 1} Q${cx} ${cy + 9} ${cx + 11} ${cy + 1}`} stroke={C.line} strokeWidth={2.6} fill="none" strokeLinecap="round" />
+      <g>
+        <ellipse cx={cx} cy={cy} rx={13.5} ry={12.5} fill={C.creamWarm} opacity={0.55} />
+        <path
+          d={`M${cx - 11.5} ${cy + 0.5} Q${cx} ${cy + 8.5} ${cx + 11.5} ${cy + 0.5}`}
+          stroke={C.eyeliner}
+          strokeWidth={2.6}
+          fill="none"
+          strokeLinecap="round"
+        />
+        <path
+          d={`M${cx + outer * 10} ${cy + 1} l${outer * 4} 2`}
+          stroke={C.stripe}
+          strokeWidth={1.8}
+          strokeLinecap="round"
+        />
+      </g>
     );
   }
   if (state === 'happy') {
     return (
-      <path d={`M${cx - 11} ${cy + 4} Q${cx} ${cy - 8} ${cx + 11} ${cy + 4}`} stroke={C.line} strokeWidth={2.8} fill="none" strokeLinecap="round" />
+      <g>
+        <ellipse cx={cx} cy={cy} rx={13.5} ry={12.5} fill={C.creamWarm} opacity={0.55} />
+        <path
+          d={`M${cx - 11} ${cy + 3.5} Q${cx} ${cy - 7.5} ${cx + 11} ${cy + 3.5}`}
+          stroke={C.eyeliner}
+          strokeWidth={2.8}
+          fill="none"
+          strokeLinecap="round"
+        />
+      </g>
     );
   }
 
   const clipId = `${uid}-eye-${side}`;
   const wide = state === 'wide';
-  const outer = side === 'l' ? -1 : 1;
+  const tilt = side === 'l' ? 7 : -7;
 
   return (
-    <motion.g animate={{ scaleY: blinking ? 0.08 : 1 }} transition={{ duration: 0.08 }}>
-      <defs>
-        <clipPath id={clipId}>
-          <ellipse cx={cx} cy={cy} rx={12} ry={13} />
-        </clipPath>
-      </defs>
-      <ellipse cx={cx} cy={cy} rx={12} ry={13} fill={`url(#${uid}-iris)`} stroke={C.irisEdge} strokeWidth={1.3} />
-      <g clipPath={`url(#${clipId})`}>
-        <motion.g
-          animate={playing ? { x: [0, -4, 4, -4, 4, -4, 4, 0] } : { x: lookX }}
-          transition={playing ? { duration: 3.2, ease: 'easeInOut' } : { type: 'spring', stiffness: 120, damping: 14 }}
-        >
-          <motion.ellipse
-            cx={cx}
-            cy={cy + 0.5}
-            animate={{ rx: wide ? 7.2 : 4.2, ry: wide ? 10.5 : 9.6 }}
-            transition={{ type: 'spring', stiffness: 200, damping: 18 }}
-            fill={C.pupil}
-          />
-          <circle cx={cx - 3.8} cy={cy - 5} r={3.1} fill="#fff" />
-          <circle cx={cx + 3.6} cy={cy + 4.2} r={1.3} fill="#fff" opacity={0.85} />
-        </motion.g>
+    <g>
+      {/* Pale cream "spectacle" ring around eye */}
+      <ellipse cx={cx} cy={cy + 0.5} rx={14.5} ry={14} fill={C.creamWarm} opacity={0.7} />
+      {/* Inner tear-duct corner highlight */}
+      <circle cx={cx - outer * 11.5} cy={cy + 3} r={2.4} fill={C.cream} opacity={0.9} />
+
+      <motion.g animate={{ scaleY: blinking ? 0.08 : 1 }} transition={{ duration: 0.08 }} style={{ originY: `${cy}px` }}>
+        <defs>
+          <clipPath id={clipId}>
+            <ellipse cx={cx} cy={cy} rx={12.2} ry={12.8} transform={`rotate(${tilt} ${cx} ${cy})`} />
+          </clipPath>
+        </defs>
+        {/* Amber-gold iris with dark eyeliner rim */}
+        <ellipse
+          cx={cx}
+          cy={cy}
+          rx={12.2}
+          ry={12.8}
+          transform={`rotate(${tilt} ${cx} ${cy})`}
+          fill={`url(#${uid}-iris)`}
+          stroke={C.eyeliner}
+          strokeWidth={1.9}
+        />
+        <g clipPath={`url(#${clipId})`}>
+          {/* Subtle iris texture ring */}
+          <ellipse cx={cx} cy={cy} rx={9.2} ry={9.8} fill="none" stroke="#9e6d08" strokeWidth={0.7} strokeDasharray="1.5 2.5" opacity={0.55} />
+          <motion.g
+            animate={playing ? { x: [0, -4, 4, -4, 4, -4, 4, 0] } : { x: lookX }}
+            transition={playing ? { duration: 3.2, ease: 'easeInOut' } : { type: 'spring', stiffness: 120, damping: 14 }}
+          >
+            {/* Vertical slit / dilated pupil (like Oli's photos in sun vs indoor light) */}
+            <motion.ellipse
+              cx={cx}
+              cy={cy + 0.4}
+              animate={{ rx: wide ? 7.6 : 3.4, ry: wide ? 10.8 : 10.2 }}
+              transition={{ type: 'spring', stiffness: 200, damping: 18 }}
+              fill={C.pupil}
+            />
+            <circle cx={cx - 3.6} cy={cy - 4.6} r={3.0} fill="#fff" />
+            <circle cx={cx + 3.5} cy={cy + 4.0} r={1.25} fill="#fff" opacity={0.85} />
+          </motion.g>
+          {/* Upper inner shadow under lid */}
+          <path d={`M${cx - 14} ${cy - 13} Q${cx} ${cy - 8} ${cx + 14} ${cy - 13} V${cy - 16} H${cx - 14} Z`} fill="#241206" opacity={0.22} />
+
+          {state === 'halflid' && (
+            <path
+              d={`M${cx - 15} ${cy - 15} H${cx + 15} V${cy - 1} Q${cx} ${cy + 2.5} ${cx - 15} ${cy - 1} Z`}
+              fill={C.coat}
+            />
+          )}
+          {state === 'sad' && (
+            <path
+              d={`M${cx - 15} ${cy - 15} H${cx + 15} V${cy - 15 + (outer > 0 ? 13 : 4)} L${cx - 15} ${cy - 15 + (outer > 0 ? 4 : 13)} Z`}
+              fill={C.coat}
+            />
+          )}
+        </g>
         {state === 'halflid' && (
           <path
-            d={`M${cx - 14} ${cy - 15} H${cx + 14} V${cy - 1} Q${cx} ${cy + 3} ${cx - 14} ${cy - 1} Z`}
-            fill={C.coat}
+            d={`M${cx - 12.2} ${cy - 1} Q${cx} ${cy + 2.5} ${cx + 12.2} ${cy - 1}`}
+            stroke={C.eyeliner}
+            strokeWidth={1.8}
+            fill="none"
+            strokeLinecap="round"
           />
         )}
-        {state === 'sad' && (
-          <path
-            d={`M${cx - 14} ${cy - 15} H${cx + 14} V${cy - 15 + (outer > 0 ? 13 : 4)} L${cx - 14} ${cy - 15 + (outer > 0 ? 4 : 13)} Z`}
-            fill={C.coat}
-          />
-        )}
-      </g>
-      {state === 'halflid' && (
-        <path d={`M${cx - 12} ${cy - 1} Q${cx} ${cy + 3} ${cx + 12} ${cy - 1}`} stroke={C.line} strokeWidth={1.6} fill="none" strokeLinecap="round" />
-      )}
-    </motion.g>
+      </motion.g>
+    </g>
   );
 }
 
+// -----------------------------------------------------------------------------
+// Mouth — Includes Oli's signature dark central lower-lip spot & big fang yawn
+// -----------------------------------------------------------------------------
+
 function Mouth({ state }: { state: MouthState }) {
-  const stroke = { stroke: C.line, strokeWidth: 1.9, fill: 'none', strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
+  const stroke = { stroke: C.line, strokeWidth: 1.85, fill: 'none', strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
+  // Signature dark lentigo spot right at the center of Oli's lower lip + subtle side mottling
+  const lipFreckles = (
+    <g>
+      <ellipse cx={100} cy={104.2} rx={1.9} ry={2.2} fill={C.lipSpot} />
+      <circle cx={96.5} cy={104.8} r={0.95} fill={C.lipSpot} opacity={0.8} />
+      <circle cx={103.4} cy={104.7} r={0.85} fill={C.lipSpot} opacity={0.75} />
+    </g>
+  );
+
   switch (state) {
     case 'smile':
-      return <path d="M100 99 V102 M100 102 Q94 109 88 103 M100 102 Q106 109 112 103" {...stroke} />;
+      return (
+        <g>
+          {lipFreckles}
+          <path d="M100 98.5 V102.5 M100 102.5 Q94 108.5 87.5 103 M100 102.5 Q106 108.5 112.5 103" {...stroke} />
+        </g>
+      );
     case 'frown':
-      return <path d="M100 99 V103 M92 108 Q100 102 108 108" {...stroke} />;
+      return (
+        <g>
+          {lipFreckles}
+          <path d="M100 98.5 V103 M92 108 Q100 102.5 108 108" {...stroke} />
+        </g>
+      );
     case 'chew':
       return (
-        <motion.g animate={{ scaleY: [1, 0.4, 1] }} transition={{ duration: 0.32, repeat: Infinity }}>
-          <ellipse cx={100} cy={105} rx={5} ry={4} fill="#9b3d3d" />
-          <path d="M100 99 V101" {...stroke} />
+        <motion.g animate={{ scaleY: [1, 0.45, 1] }} transition={{ duration: 0.32, repeat: Infinity }}>
+          <ellipse cx={100} cy={105.5} rx={5.5} ry={4.2} fill="#7d2929" />
+          <ellipse cx={100} cy={107} rx={3.6} ry={2.2} fill="#e8838e" />
+          <circle cx={100} cy={109.5} r={1.6} fill={C.lipSpot} />
+          <path d="M100 98.5 V101.5" {...stroke} />
         </motion.g>
       );
     case 'lap':
       return (
         <g>
-          <path d="M100 99 V102 M100 102 Q95 106 90 103 M100 102 Q105 106 110 103" {...stroke} />
+          {lipFreckles}
+          <path d="M100 98.5 V102 M100 102 Q95 106 89.5 103 M100 102 Q105 106 110.5 103" {...stroke} />
           <motion.ellipse
             cx={100}
-            cy={107}
-            rx={3}
-            fill="#f08a96"
-            animate={{ ry: [0, 4, 0] }}
+            cy={107.5}
+            rx={3.4}
+            fill="#f0828f"
+            animate={{ ry: [0, 4.5, 0] }}
             transition={{ duration: 0.4, repeat: Infinity }}
           />
         </g>
       );
     case 'yawn':
+      // Inspired directly by IMG_20250815_195236.jpg (Oli's epic fang yawn!)
       return (
-        <motion.g initial={{ scaleY: 0.2 }} animate={{ scaleY: [0.2, 1, 1, 0.2] }} transition={{ duration: 1.5 }}>
-          <ellipse cx={100} cy={107} rx={7} ry={8} fill="#8d3434" />
-          <ellipse cx={100} cy={111} rx={4} ry={3} fill="#f08a96" />
+        <motion.g initial={{ scaleY: 0.2 }} animate={{ scaleY: [0.2, 1.05, 1, 0.2] }} transition={{ duration: 1.5 }} style={{ originY: '100px' }}>
+          <ellipse cx={100} cy={108} rx={8.5} ry={10.5} fill="#6e2226" stroke={C.lipSpot} strokeWidth={1.2} />
+          {/* Curled pink tongue */}
+          <path d="M95 108 Q100 105 105 108 Q106 119 100 120 Q94 119 95 108 Z" fill="#e86f7c" />
+          <path d="M100 108 V117" stroke="#c94f5d" strokeWidth={0.9} strokeLinecap="round" />
+          {/* Upper & lower white fangs */}
+          <path d="M94.5 100.5 L95.8 106.5 L97.2 101 Z" fill="#fffdf7" />
+          <path d="M105.5 100.5 L104.2 106.5 L102.8 101 Z" fill="#fffdf7" />
+          <path d="M95.5 115.5 L96.4 112.5 L97.3 115.5 Z" fill="#fffdf7" />
+          <path d="M104.5 115.5 L103.6 112.5 L102.7 115.5 Z" fill="#fffdf7" />
+          {/* Little dark gum lentigo spot visible when yawning */}
+          <circle cx={93.2} cy={109} r={1.1} fill={C.lipSpot} />
         </motion.g>
       );
     default:
-      return <path d="M100 99 V102 M100 102 Q95 107 90 104 M100 102 Q105 107 110 104" {...stroke} />;
+      return (
+        <g>
+          {lipFreckles}
+          <path d="M100 98.5 V102.5 M100 102.5 Q94.5 106.8 89 103.8 M100 102.5 Q105.5 106.8 111 103.8" {...stroke} />
+        </g>
+      );
   }
 }
 
 // -----------------------------------------------------------------------------
-// Head
+// Head — Real Oli's ears (tattoo + left-ear notch), tabby M, cheek ribbons & nose freckles
 // -----------------------------------------------------------------------------
 
 function Head({
@@ -336,75 +450,121 @@ function Head({
   uid: string;
   playing: boolean;
 }) {
-  const earRot = earDroop ? 16 : 0;
+  const earRot = earDroop ? 15 : 0;
   return (
     <g>
-      {/* Ears (with tiny ID tattoos inside) */}
+      {/* OLI'S RIGHT EAR (viewer's left): slightly rounded tip + prominent dark stippled tattoo */}
       <motion.g
         style={{ originX: 0.7, originY: 1 }}
         animate={{ rotate: -earRot + (earTwitch ? -9 : 0) }}
         transition={{ type: 'spring', stiffness: 260, damping: 12 }}
       >
-        <path d="M50 66 L45 19 Q45 12 52 15 L90 40 Z" fill={C.coat} />
-        <path d="M56 58 L53 25 L82 42 Z" fill={C.innerEar} />
-        <path d="M55 50 l6 -4 M56 42 l5 -1" stroke={C.cream} strokeWidth={1.4} strokeLinecap="round" opacity={0.9} />
-        <text
-          x={63}
-          y={46}
-          fontSize={4.6}
-          fontFamily="ui-monospace, monospace"
-          fontWeight={700}
-          fill={C.tattoo}
-          opacity={0.55}
-          transform="rotate(28 63 46)"
-        >
-          OL1
-        </text>
+        <path d="M48 68 L39 20 C38 11 46 9 53 14 L89 41 Z" fill={C.coatDeep} />
+        <path d="M50 66 L41 21 C40 13 47 11 53 15 L87 41 Z" fill={C.coat} />
+        <path d="M55 59 L47 23 C46 18 50 17 54 20 L81 43 Z" fill={C.innerEar} />
+        <path d="M58 56 L53 31 L76 44 Z" fill={C.innerEarDeep} opacity={0.45} />
+        {/* Realistic stippled blue-black ear tattoo inside right ear (matches Oli's photos) */}
+        <g fill={C.tattoo} opacity={0.72} transform="rotate(24 58 34)">
+          <path
+            d="M52 29 C50 28 49 31 52 32 C55 33 54 36 51 35 M57 29 C59 29 60 32 58 34 L56 36 M54 38 C56 37 59 38 58 40"
+            stroke={C.tattoo}
+            strokeWidth={1.55}
+            fill="none"
+            strokeLinecap="round"
+          />
+          <circle cx={50.5} cy={27.5} r={0.9} />
+          <circle cx={55} cy={27} r={1.0} />
+          <circle cx={60} cy={31} r={0.85} />
+          <circle cx={52} cy={38} r={0.95} />
+          <circle cx={57} cy={41} r={0.8} />
+        </g>
+        {/* Long pale cream ear furnishings (tufts) */}
+        <path
+          d="M53 56 Q62 50 67 48 M54 49 Q61 45 65 44 M56 42 Q61 40 64 40"
+          stroke={C.cream}
+          strokeWidth={1.6}
+          strokeLinecap="round"
+          fill="none"
+          opacity={0.92}
+        />
       </motion.g>
+
+      {/* OLI'S LEFT EAR (viewer's right): sharp tip with signature outer V-notch + faint tattoo */}
       <motion.g
         style={{ originX: 0.3, originY: 1 }}
         animate={{ rotate: earRot }}
         transition={{ type: 'spring', stiffness: 260, damping: 12 }}
       >
-        <path d="M150 66 L155 19 Q155 12 148 15 L110 40 Z" fill={C.coat} />
-        <path d="M144 58 L147 25 L118 42 Z" fill={C.innerEar} />
-        <path d="M145 50 l-6 -4 M144 42 l-5 -1" stroke={C.cream} strokeWidth={1.4} strokeLinecap="round" opacity={0.9} />
-        <text
-          x={128}
-          y={50}
-          fontSize={4.6}
-          fontFamily="ui-monospace, monospace"
-          fontWeight={700}
-          fill={C.tattoo}
-          opacity={0.55}
-          transform="rotate(-28 133 46)"
-        >
-          2FX
-        </text>
+        {/* Outer silhouette includes the distinctive small nick/notch at (156, 25) */}
+        <path
+          d="M152 68 L160 31 L155.5 27.5 L159.5 24 L158 17 C157 10 150 10 145 15 L111 41 Z"
+          fill={C.coatDeep}
+        />
+        <path
+          d="M150 66 L158.5 31 L154.2 27.5 L158 24 L156.8 18 C156 12 150 12 145 16 L113 41 Z"
+          fill={C.coat}
+        />
+        <path
+          d="M145 59 L153 27.5 L150.5 25.5 L152.5 23 C152 18 148 18 144 21 L119 43 Z"
+          fill={C.innerEar}
+        />
+        <path d="M142 56 L147 31 L124 44 Z" fill={C.innerEarDeep} opacity={0.45} />
+        {/* Faint secondary tattoo trace inside left ear */}
+        <g opacity={0.38} transform="rotate(-24 142 35)">
+          <path d="M140 31 Q143 33 141 36 M145 32 L144 37" stroke={C.tattoo} strokeWidth={1.2} fill="none" strokeLinecap="round" />
+          <circle cx={142} cy={29} r={0.8} fill={C.tattoo} />
+        </g>
+        {/* Long pale cream ear furnishings */}
+        <path
+          d="M147 56 Q138 50 133 48 M146 49 Q139 45 135 44 M144 42 Q139 40 136 40"
+          stroke={C.cream}
+          strokeWidth={1.6}
+          strokeLinecap="round"
+          fill="none"
+          opacity={0.92}
+        />
       </motion.g>
 
-      {/* Head shape with cheek fluff */}
+      {/* Head shape with plush cheek ruffs */}
       <path
-        d="M100 30 C137 30 161 52 161 82 C161 92 158 100 153 106 L160 110 L149 112 C141 119 125 124 100 124 C75 124 59 119 51 112 L40 110 L47 106 C42 100 39 92 39 82 C39 52 63 30 100 30 Z"
+        d="M100 29 C137 29 162 52 162 82 C162 92 158 100 153 106 L160 110 L149 113 C140 120 124 125 100 125 C76 125 60 120 51 113 L40 110 L47 106 C42 100 38 92 38 82 C38 52 63 29 100 29 Z"
         fill={C.coat}
       />
-      <ellipse cx={100} cy={58} rx={34} ry={18} fill={C.coatLight} opacity={0.45} />
+      {/* Warm crown & cheek shading */}
+      <ellipse cx={100} cy={54} rx={36} ry={18} fill={C.coatLight} opacity={0.5} />
+      <path d="M44 88 Q54 114 82 121 L118 121 Q146 114 156 88 Q148 106 100 108 Q52 106 44 88 Z" fill={C.creamWarm} opacity={0.45} />
 
-      {/* Tabby "M" + cheek stripes */}
-      <g stroke={C.stripe} strokeWidth={3.4} strokeLinecap="round" fill="none">
-        <path d="M100 35 V50" />
-        <path d="M89 37 Q91 45 94 50" />
-        <path d="M111 37 Q109 45 106 50" />
-        <path d="M44 82 Q52 81 57 85" />
-        <path d="M45 94 Q52 91 58 94" />
-        <path d="M156 82 Q148 81 143 85" />
-        <path d="M155 94 Q148 91 142 94" />
+      {/* Classic tabby forehead "M" + crown stripes + double cheek ribbons */}
+      <g stroke={C.stripe} strokeWidth={3.1} strokeLinecap="round" strokeLinejoin="round" fill="none">
+        {/* Forehead M */}
+        <path d="M84 56 L87 38 L94 49 L100 35 L106 49 L113 38 L116 56" strokeWidth={2.9} />
+        {/* Outer brow arches */}
+        <path d="M72 58 Q77 44 83 37" strokeWidth={2.4} opacity={0.85} />
+        <path d="M128 58 Q123 44 117 37" strokeWidth={2.4} opacity={0.85} />
+        {/* Left cheek ribbons (sweeping back from outer eye & mid-cheek) */}
+        <path d="M62 81 Q51 82 43 88" />
+        <path d="M65 92 Q52 93 44 100" />
+        {/* Right cheek ribbons */}
+        <path d="M138 81 Q149 82 157 88" />
+        <path d="M135 92 Q148 93 156 100" />
       </g>
+      {/* Cream stripe between cheek ribbons (characteristic of Oli's side profile) */}
+      <path d="M63 86 Q52 87 44 94 M137 86 Q148 87 156 94" stroke={C.creamWarm} strokeWidth={2.2} strokeLinecap="round" fill="none" opacity={0.75} />
 
-      {/* Muzzle + chin */}
-      <ellipse cx={89} cy={101} rx={14} ry={11} fill={C.cream} />
-      <ellipse cx={111} cy={101} rx={14} ry={11} fill={C.cream} />
-      <ellipse cx={100} cy={112} rx={11} ry={8} fill={C.cream} />
+      {/* Snowy-white inverted-V muzzle blaze & plush whisker pads + chin */}
+      <path
+        d="M100 76 C93 82 86 90 73 95 C69 102 74 113 86 114 C91 119 109 119 114 114 C126 113 131 102 127 95 C114 90 107 82 100 76 Z"
+        fill={C.cream}
+      />
+      <ellipse cx={87} cy={101.5} rx={15} ry={11} fill={C.cream} />
+      <ellipse cx={113} cy={101.5} rx={15} ry={11} fill={C.cream} />
+      {/* Chin with subtle pinkish-grey speckled skin tone showing through short white fur */}
+      <ellipse cx={100} cy={113} rx={12.5} ry={7.5} fill={C.cream} />
+      <ellipse cx={100} cy={111.5} rx={8.5} ry={4.8} fill={C.chinSkin} opacity={0.38} />
+
+      {/* Warm ginger-buff nose bridge (Oli's nose bridge is orange-buff down to the pink nose) */}
+      <path d="M93 66 Q100 63 107 66 L105.5 92 H94.5 Z" fill={C.coatLight} />
+      <path d="M95 70 Q100 68 105 70 L104 91 H96 Z" fill={C.coatBuff} opacity={0.65} />
 
       {/* Blush */}
       <motion.g animate={{ opacity: blush ? 1 : 0 }} transition={{ duration: 0.4 }}>
@@ -413,36 +573,60 @@ function Head({
       </motion.g>
 
       {/* Eyes */}
-      <Eye cx={76} cy={80} state={eyes} blinking={blinking} side="l" uid={uid} lookX={0} playing={playing} />
-      <Eye cx={124} cy={80} state={eyes} blinking={blinking} side="r" uid={uid} lookX={0} playing={playing} />
+      <Eye cx={76} cy={79} state={eyes} blinking={blinking} side="l" uid={uid} lookX={0} playing={playing} />
+      <Eye cx={124} cy={79} state={eyes} blinking={blinking} side="r" uid={uid} lookX={0} playing={playing} />
 
-      {/* Nose + mouth */}
-      <path d="M93.5 92 H106.5 C106.5 96 102.5 99.5 100 99.5 C97.5 99.5 93.5 96 93.5 92 Z" fill={C.nose} />
-      <ellipse cx={98} cy={93.5} rx={2} ry={1} fill="#fff" opacity={0.5} />
-      <Mouth state={mouth} />
-
-      {/* Tiny dark chin freckles */}
-      <g fill={C.freckle}>
-        <circle cx={95.5} cy={114} r={1.25} />
-        <circle cx={100.5} cy={116.5} r={1.3} />
-        <circle cx={105} cy={113.5} r={1.1} />
-        <circle cx={98.5} cy={111.5} r={0.8} />
+      {/* Long white eyebrow whiskers (super prominent in Oli's photos!) */}
+      <g stroke="#fffdf9" strokeWidth={1.05} strokeLinecap="round" fill="none" opacity={0.9}>
+        <path d="M68 65 Q58 46 46 38" />
+        <path d="M73 63 Q65 44 55 34" />
+        <path d="M132 65 Q142 46 154 38" />
+        <path d="M127 63 Q135 44 145 34" />
       </g>
 
-      {/* Whiskers */}
+      {/* Terracotta-pink nose + dark rim + real Oli's nose lentigo freckles */}
+      <path
+        d="M92.8 91.5 Q100 89.5 107.2 91.5 C107.2 95.8 102.8 99.2 100 99.5 C97.2 99.2 92.8 95.8 92.8 91.5 Z"
+        fill={C.nose}
+        stroke={C.noseRim}
+        strokeWidth={0.9}
+      />
+      {/* Nostril curves */}
+      <path d="M94.2 94.5 Q96.5 95.5 97.2 97.2 M105.8 94.5 Q103.5 95.5 102.8 97.2" stroke={C.noseRim} strokeWidth={1.1} fill="none" strokeLinecap="round" />
+      <ellipse cx={98} cy={92.8} rx={2.2} ry={0.9} fill="#fff" opacity={0.42} />
+      {/* Tiny dark lentigo freckles on Oli's nose leather */}
+      <circle cx={96.8} cy={92.2} r={0.85} fill={C.freckle} opacity={0.85} />
+      <circle cx={102.2} cy={91.8} r={0.95} fill={C.freckle} opacity={0.9} />
+      <circle cx={100.6} cy={93.4} r={0.65} fill={C.freckle} opacity={0.75} />
+
+      {/* Mouth + signature central lower-lip spot */}
+      <Mouth state={mouth} />
+
+      {/* Subtle whisker-pad follicle dots & chin speckles */}
+      <g fill={C.freckle} opacity={0.45}>
+        <circle cx={84} cy={99} r={0.75} />
+        <circle cx={81} cy={102.5} r={0.75} />
+        <circle cx={116} cy={99} r={0.75} />
+        <circle cx={119} cy={102.5} r={0.75} />
+        <circle cx={96.5} cy={113.5} r={0.9} />
+        <circle cx={102.8} cy={114.2} r={0.85} />
+      </g>
+
+      {/* Long white cheek whiskers */}
       <motion.g
-        stroke="#fffaf2"
-        strokeWidth={1.1}
+        stroke="#fffdf9"
+        strokeWidth={1.25}
         strokeLinecap="round"
-        animate={{ rotate: [0, -2, 0, 1.5, 0] }}
+        fill="none"
+        animate={{ rotate: [0, -1.6, 0, 1.4, 0] }}
         transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
       >
-        <path d="M78 101 L52 96" />
-        <path d="M78 105 L50 106" />
-        <path d="M79 109 L54 115" />
-        <path d="M122 101 L148 96" />
-        <path d="M122 105 L150 106" />
-        <path d="M121 109 L146 115" />
+        <path d="M79 100 Q58 96 34 94" />
+        <path d="M78 104 Q56 104 31 106" />
+        <path d="M80 108 Q60 112 38 118" />
+        <path d="M121 100 Q142 96 166 94" />
+        <path d="M122 104 Q144 104 169 106" />
+        <path d="M120 108 Q140 112 162 118" />
       </motion.g>
     </g>
   );
@@ -648,14 +832,20 @@ function PurrWaves() {
 }
 
 // -----------------------------------------------------------------------------
-// Poses
+// Tail — Alternating rich dark ginger & pale cream rings with a white tip
 // -----------------------------------------------------------------------------
 
 function TailStripes({ d, width }: { d: string; width: number }) {
   return (
     <>
+      {/* Base warm ginger tail */}
       <path d={d} stroke={C.coat} strokeWidth={width} fill="none" strokeLinecap="round" />
-      <path d={d} stroke={C.stripe} strokeWidth={width} fill="none" strokeDasharray="5 9" opacity={0.65} />
+      {/* Pale cream bands along the tail */}
+      <path d={d} stroke={C.creamWarm} strokeWidth={width - 0.6} fill="none" strokeDasharray="6 10" strokeDashoffset="3" opacity={0.88} />
+      {/* Bold dark ginger-chestnut tabby rings */}
+      <path d={d} stroke={C.stripe} strokeWidth={width} fill="none" strokeDasharray="6 10" opacity={0.88} />
+      {/* Snowy-white tail tip (Oli's signature white-tipped ringed tail!) */}
+      <path d={d} stroke={C.cream} strokeWidth={width + 0.4} fill="none" strokeLinecap="round" pathLength={100} strokeDasharray="14 100" strokeDashoffset="-86" />
     </>
   );
 }
@@ -774,10 +964,12 @@ export function CatAvatar({ mood, animation, animationKey, onPet, className, x, 
       aria-label={`Oli the ginger cat, ${mood}`}
     >
       <defs>
-        <radialGradient id={`${uid}-iris`} cx="50%" cy="45%" r="60%">
-          <stop offset="0%" stopColor="#ffe36b" />
-          <stop offset="60%" stopColor="#f7bd12" />
-          <stop offset="100%" stopColor="#e09a00" />
+        {/* Warm golden-amber / hazel-gold iris gradient matching PXL_20260905_091720609~2.jpg */}
+        <radialGradient id={`${uid}-iris`} cx="48%" cy="44%" r="58%">
+          <stop offset="0%" stopColor="#d9b436" />
+          <stop offset="35%" stopColor="#f2c438" />
+          <stop offset="75%" stopColor="#cf8e12" />
+          <stop offset="100%" stopColor="#8c5605" />
         </radialGradient>
       </defs>
 
@@ -805,20 +997,29 @@ export function CatAvatar({ mood, animation, animationKey, onPet, className, x, 
               <ellipse cx={100} cy={206} rx={80} ry={8} fill="rgba(40,20,10,0.22)" />
               <motion.g
                 style={{ originY: 1 }}
-                animate={{ scaleY: [1, 1.05, 1] }}
+                animate={{ scaleY: [1, 1.045, 1] }}
                 transition={{ duration: 4.5, repeat: Infinity, ease: 'easeInOut' }}
               >
-                <path d="M26 198 C22 160 60 136 102 136 C144 136 180 160 175 198 C174 206 28 206 26 198 Z" fill={C.coat} />
-                <g stroke={C.stripe} strokeWidth={3.6} strokeLinecap="round" fill="none" opacity={0.85}>
-                  <path d="M70 142 Q74 152 70 160" />
-                  <path d="M100 138 Q104 148 100 156" />
-                  <path d="M130 142 Q134 152 130 160" />
-                  <path d="M156 156 Q156 166 150 172" />
+                {/* Curled ginger loaf body (inspired by IMG_20250709_195907.jpg & PXL_20260906_174747974.PORTRAIT.jpg) */}
+                <path d="M26 198 C22 158 58 134 102 134 C146 134 180 158 175 198 C174 206 28 206 26 198 Z" fill={C.coat} />
+                {/* Cream underbelly & chest band */}
+                <path d="M40 198 Q78 184 128 198 Z" fill={C.creamWarm} opacity={0.85} />
+                {/* Rich mackerel tabby body stripes */}
+                <g stroke={C.stripe} strokeWidth={3.6} strokeLinecap="round" fill="none" opacity={0.88}>
+                  <path d="M64 143 Q70 158 63 176" />
+                  <path d="M84 137 Q90 155 83 175" />
+                  <path d="M104 136 Q111 154 104 176" />
+                  <path d="M124 139 Q132 156 124 178" />
+                  <path d="M144 146 Q151 162 142 182" />
+                  <path d="M160 158 Q163 170 156 184" />
                 </g>
               </motion.g>
-              <TailStripes d="M168 194 C172 212 120 214 96 210 C80 208 64 206 56 200" width={13} />
-              <ellipse cx={82} cy={200} rx={11} ry={5} fill={C.cream} />
-              <ellipse cx={112} cy={201} rx={11} ry={5} fill={C.cream} />
+              {/* Ringed tail wrapped around the front with snowy-white tail tip */}
+              <TailStripes d="M168 194 C172 212 122 213 96 209 C80 207 66 204 56 198" width={13} />
+              {/* White front paws peeking out (like IMG_20250709_195907.jpg) */}
+              <ellipse cx={64} cy={201} rx={12.5} ry={5.5} fill={C.cream} />
+              <path d="M59 199 v4 M64 199 v4 M69 199 v4" stroke={C.creamShade} strokeWidth={1.3} strokeLinecap="round" />
+              <ellipse cx={108} cy={201.5} rx={11} ry={5} fill={C.cream} />
               <g transform="translate(-4 62) rotate(-10 100 80)">
                 <motion.g animate={head.animate} transition={head.transition}>
                   <Head {...headProps} />
@@ -830,7 +1031,7 @@ export function CatAvatar({ mood, animation, animationKey, onPet, className, x, 
             <motion.g key="sit" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.45 }}>
               <ellipse cx={100} cy={209} rx={64} ry={8} fill="rgba(40,20,10,0.2)" />
 
-              {/* Tail */}
+              {/* Ringed tail with white tip */}
               <motion.g
                 style={{ originX: 0.05, originY: 0.95 }}
                 animate={sad ? { rotate: [18, 22, 18] } : { rotate: [-7, 10, -7] }}
@@ -845,26 +1046,53 @@ export function CatAvatar({ mood, animation, animationKey, onPet, className, x, 
                 animate={{ scaleY: [1, 1.028, 1], scaleX: [1, 1.01, 1] }}
                 transition={{ duration: 3.4, repeat: Infinity, ease: 'easeInOut' }}
               >
-                <path d="M66 112 C46 136 37 176 47 198 C53 209 147 209 153 198 C163 176 154 136 134 112 Z" fill={C.coat} />
+                {/* Main seated torso */}
+                <path d="M66 112 C45 136 37 176 47 198 C53 209 147 209 153 198 C163 176 155 136 134 112 Z" fill={C.coat} />
                 <ellipse cx={58} cy={188} rx={19} ry={17} fill={C.coat} />
                 <ellipse cx={142} cy={188} rx={19} ry={17} fill={C.coat} />
-                <g stroke={C.stripe} strokeWidth={3.5} strokeLinecap="round" fill="none">
-                  <path d="M51 150 Q60 147 66 152" />
-                  <path d="M47 166 Q57 162 65 167" />
-                  <path d="M149 150 Q140 147 134 152" />
-                  <path d="M153 166 Q143 162 135 167" />
-                  <path d="M44 190 Q52 176 70 176" opacity={0.55} />
-                  <path d="M156 190 Q148 176 130 176" opacity={0.55} />
+
+                {/* Snowy-cream throat patch & chest buff undercoat (matches IMG_20250813_212527.jpg & PXL_20260905_091720609~2.jpg) */}
+                <path d="M74 115 C64 138 66 175 100 188 C134 175 136 138 126 115 Z" fill={C.creamWarm} />
+                <path d="M80 114 C75 126 83 136 100 137 C117 136 125 126 120 114 Z" fill={C.cream} />
+
+                {/* Oli's signature ginger tabby chest "necklace" bands */}
+                <path d="M69 133 Q100 145 131 133" stroke={C.stripe} strokeWidth={4.2} fill="none" strokeLinecap="round" opacity={0.85} />
+                <path d="M65 144 Q100 158 135 144" stroke={C.coatDeep} strokeWidth={4.8} fill="none" strokeLinecap="round" opacity={0.9} />
+                <path d="M72 155 Q100 166 128 155" stroke={C.stripe} strokeWidth={3.4} fill="none" strokeLinecap="round" opacity={0.75} />
+
+                {/* Flank mackerel stripes */}
+                <g stroke={C.stripe} strokeWidth={3.6} strokeLinecap="round" fill="none">
+                  <path d="M51 148 Q61 145 68 151" />
+                  <path d="M46 163 Q57 159 66 165" />
+                  <path d="M43 178 Q55 173 66 178" />
+                  <path d="M149 148 Q139 145 132 151" />
+                  <path d="M154 163 Q143 159 134 165" />
+                  <path d="M157 178 Q145 173 134 178" />
                 </g>
-                <path d="M82 116 C71 140 73 176 100 186 C127 176 129 140 118 116 Z" fill={C.cream} />
-                <path d="M88 126 l4 4 l4 -4 l4 4 l4 -4 l4 4" stroke={C.creamShade} strokeWidth={1.4} fill="none" strokeLinecap="round" />
-                {/* Front legs + paws */}
-                <rect x={73} y={150} width={19} height={54} rx={9.5} fill={C.coat} />
-                <rect x={108} y={150} width={19} height={54} rx={9.5} fill={C.coat} />
-                <path d="M74 168 h17 M74 180 h17 M109 168 h17 M109 180 h17" stroke={C.stripe} strokeWidth={2.4} strokeLinecap="round" opacity={0.6} />
-                <ellipse cx={83} cy={203} rx={13} ry={8} fill={C.cream} />
-                <ellipse cx={117} cy={203} rx={13} ry={8} fill={C.cream} />
-                <path d="M79 200 v5 M85 200 v5 M113 200 v5 M119 200 v5" stroke={C.creamShade} strokeWidth={1.4} strokeLinecap="round" />
+
+                {/* Front legs with bold ginger tabby bars + asymmetrical white socks (like IMG_20250815_195236.jpg) */}
+                {/* Right front leg (viewer's left) — higher white sock */}
+                <rect x={72} y={148} width={20} height={55} rx={10} fill={C.coatLight} />
+                <path d="M72 174 H92 V203 H72 Z" fill={C.cream} />
+                <path d="M73 158 Q82 161 91 158 M73 168 Q82 171 91 168" stroke={C.stripe} strokeWidth={3.2} fill="none" strokeLinecap="round" />
+
+                {/* Left front leg (viewer's right) — ginger bars lower down + white ankle sock */}
+                <rect x={108} y={148} width={20} height={55} rx={10} fill={C.coatLight} />
+                <path d="M108 182 H128 V203 H108 Z" fill={C.cream} />
+                <path
+                  d="M109 158 Q118 161 127 158 M109 168 Q118 171 127 168 M109 177 Q118 180 127 177"
+                  stroke={C.stripe}
+                  strokeWidth={3.2}
+                  fill="none"
+                  strokeLinecap="round"
+                />
+
+                {/* Plump white paws with hint of pink toe cushions */}
+                <ellipse cx={82} cy={203} rx={13.5} ry={8} fill={C.cream} />
+                <ellipse cx={118} cy={203} rx={13.5} ry={8} fill={C.cream} />
+                <ellipse cx={82} cy={206.5} rx={8} ry={2.2} fill={C.pawPad} opacity={0.55} />
+                <ellipse cx={118} cy={206.5} rx={8} ry={2.2} fill={C.pawPad} opacity={0.55} />
+                <path d="M77.5 199.5 v6 M82.5 199 v6.5 M87.5 199.5 v6 M113.5 199.5 v6 M118.5 199 v6.5 M123.5 199.5 v6" stroke={C.creamShade} strokeWidth={1.4} strokeLinecap="round" />
               </motion.g>
 
               {/* Head */}

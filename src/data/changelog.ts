@@ -7,6 +7,15 @@ export interface ReleaseEntry {
 
 export const CHANGELOG: ReleaseEntry[] = [
   {
+    version: 'v0.7.0',
+    date: '2026-10-31',
+    title: 'Real-Life Oli & Your Actual Living Room! 📸🐾',
+    changes: [
+      'Redesigned Oli from your real photos: his left-ear tip notch, right-ear stippled tattoo, nose freckles, signature dark lower-lip spot, striped chest necklaces, asymmetrical white front socks, and white-tipped ringed tail!',
+      'Recreated your actual living room: cream travertine floor tiles, fluffy white high-pile shag rug, dark charcoal sofa with terracotta, sage & triangle pillows, Bedsure cat bed, white coffee table with cork coaster, white cube bookcase with trailing plants, ribbed radiator, tripod lamp, and blue-LED water fountain.',
+    ],
+  },
+  {
     version: 'v0.6.0',
     date: '2026-10-31',
     title: 'Cozy Living Room Focus & Security Hardening',

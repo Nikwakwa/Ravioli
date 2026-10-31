@@ -4,6 +4,13 @@ All updates to **Oli** are listed here.
 
 ---
 
+## `v0.7.0` — 2026-10-31
+### Real-Life Oli & Your Actual Living Room! 📸🐾
+- Redesigned virtual **Oli** from your 16 real photos: added the small V-notch on his left ear tip, prominent dark stippled tattoo in his right ear, nose lentigo freckles, signature central dark lower-lip spot, ginger chest "necklace" stripes, asymmetrical white front socks with pink toe pads, fang yawn, and white-tipped ringed tail.
+- Recreated your actual **Living Room**: cream floor tiles, fluffy white high-pile shag rug, dark charcoal woven L-sofa with terracotta, sage-olive & geometric triangle pillows, Oli's tan suede *Bedsure* bolster bed, white coffee table with cork coaster & kiwis, white cube bookcase with rattan basket & trailing plants, window with slatted roller blind & ribbed radiator, wooden tripod floor lamp, and white blue-LED water fountain.
+
+---
+
 ## `v0.6.0` — 2026-10-31
 ### Cozy Living Room Focus & Security Hardening
 - Removed the Balcony scene and switcher so the app focuses purely on Oli’s cozy Living Room.

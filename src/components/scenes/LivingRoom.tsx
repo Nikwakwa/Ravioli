@@ -1,95 +1,156 @@
 import { motion } from 'framer-motion';
 
 /**
- * Cozy living room: plush rug, cat tree, dark-gray angle sofa, plants and a
- * bubbling stainless steel water fountain.
- *
- * Stage geometry is calibrated for a 400×600 portrait viewport where:
- * - Top HUD occupies y ≈ 0..108
- * - Open stage window is y ≈ 108..436
- * - Oli sits on the plush rug at y ≈ 340..425
- * - Bottom ActivityFeed + ActionDock occupies y ≈ 436..600
+ * Nico & Athina's real Living Room — crafted from the 16 photos of Oli at home:
+ * - Crisp warm-white walls & large-format cream/beige travertine floor tiles + tile baseboard
+ * - White-framed window with slatted roller blind, windowsill plant & white ribbed radiator below
+ * - White cube bookcase/shelving unit with books, rattan basket & 3 potted plants on top (including trailing pothos)
+ * - Light-wood framed landscape print with wide white mat on the wall
+ * - Wooden tripod floor lamp with white drum shade
+ * - Dark charcoal woven L-shaped sofa with terracotta-red, sage-olive & geometric triangle cushions + tan "Bedsure" bolster cat bed
+ * - Modern white coffee table with cork coaster, candle jar & kiwis
+ * - Fluffy off-white / cream high-pile shag rug where Oli sits
+ * - White cuboid pet water fountain with glowing blue LED status light & stainless steel bowl
  */
 export function LivingRoom({ sleeping, fountainBoost }: { sleeping: boolean; fountainBoost: boolean }) {
   return (
     <svg viewBox="0 0 400 600" preserveAspectRatio="xMidYMid slice" className="absolute inset-0 h-full w-full">
       <defs>
         <linearGradient id="lr-wall" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={sleeping ? '#2c2747' : '#f5e2cc'} />
-          <stop offset="100%" stopColor={sleeping ? '#3a3154' : '#ebd0b3'} />
+          <stop offset="0%" stopColor={sleeping ? '#232238' : '#f7f5f0'} />
+          <stop offset="100%" stopColor={sleeping ? '#2f2c48' : '#ece8df'} />
         </linearGradient>
         <linearGradient id="lr-floor" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={sleeping ? '#5e4638' : '#cb9c70'} />
-          <stop offset="100%" stopColor={sleeping ? '#443228' : '#b28056'} />
+          <stop offset="0%" stopColor={sleeping ? '#423d4f' : '#e8dfd0'} />
+          <stop offset="100%" stopColor={sleeping ? '#332f3f' : '#d8ccb8'} />
         </linearGradient>
         <linearGradient id="lr-sky" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={sleeping ? '#141b3d' : '#96d4f7'} />
-          <stop offset="100%" stopColor={sleeping ? '#32356b' : '#fff2d6'} />
+          <stop offset="0%" stopColor={sleeping ? '#131936' : '#a8dbf7'} />
+          <stop offset="100%" stopColor={sleeping ? '#2c3163' : '#fff8e8'} />
         </linearGradient>
-        <radialGradient id="lr-rug" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor="#fbf0e2" />
-          <stop offset="68%" stopColor="#efd4b6" />
-          <stop offset="100%" stopColor="#dfba94" />
+        <radialGradient id="lr-shag" cx="50%" cy="50%" r="55%">
+          <stop offset="0%" stopColor={sleeping ? '#c8c3d4' : '#fcfaf3'} />
+          <stop offset="72%" stopColor={sleeping ? '#b2acc2' : '#f2ede0'} />
+          <stop offset="100%" stopColor={sleeping ? '#9b95ad' : '#e3dccb'} />
         </radialGradient>
-        <linearGradient id="lr-steel" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0%" stopColor="#9aa7b4" />
-          <stop offset="35%" stopColor="#f3f7fa" />
-          <stop offset="65%" stopColor="#c3ced8" />
-          <stop offset="100%" stopColor="#8493a2" />
-        </linearGradient>
         <radialGradient id="lr-lamp" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor="#ffd78a" stopOpacity="0.85" />
+          <stop offset="0%" stopColor="#ffd98e" stopOpacity="0.88" />
           <stop offset="55%" stopColor="#ffbe5c" stopOpacity="0.32" />
           <stop offset="100%" stopColor="#ffbe5c" stopOpacity="0" />
         </radialGradient>
-        <pattern id="lr-dots" width="26" height="26" patternUnits="userSpaceOnUse">
-          <circle cx="13" cy="13" r="1.4" fill={sleeping ? '#4b4068' : '#e2c2a0'} />
+        <pattern id="lr-weave" width="6" height="6" patternUnits="userSpaceOnUse">
+          <path d="M0 3 H6 M3 0 V6" stroke="#343942" strokeWidth="0.6" opacity="0.35" />
         </pattern>
       </defs>
 
-      {/* Wall (y: 0..316) */}
-      <rect width="400" height="316" fill="url(#lr-wall)" />
-      <rect width="400" height="316" fill="url(#lr-dots)" opacity="0.65" />
-      {/* Baseboard */}
-      <rect y="306" width="400" height="12" fill={sleeping ? '#4d3d56' : '#e0c09d'} />
-      <line x1="0" y1="306" x2="400" y2="306" stroke={sleeping ? '#3a2d42' : '#cfa982'} strokeWidth="1.5" />
+      {/* Crisp warm-white wall (y: 0..314) */}
+      <rect width="400" height="314" fill="url(#lr-wall)" />
 
-      {/* Floor (y: 316..600) */}
-      <rect y="316" width="400" height="284" fill="url(#lr-floor)" />
-      {[344, 376, 412, 452, 496].map((y) => (
-        <line key={y} x1="0" y1={y} x2="400" y2={y} stroke="#8f623f" strokeWidth="1.1" opacity="0.38" />
+      {/* Matching cream tile baseboard/skirting */}
+      <rect y="305" width="400" height="10" fill={sleeping ? '#3a3548' : '#dfd5c3'} />
+      <line x1="0" y1="305" x2="400" y2="305" stroke={sleeping ? '#2c2838' : '#cbc0ac'} strokeWidth="1.2" />
+
+      {/* Large-format cream/beige travertine floor tiles (y: 315..600) */}
+      <rect y="315" width="400" height="285" fill="url(#lr-floor)" />
+      {/* Subtle porcelain tile grout lines */}
+      {[346, 384, 428, 478].map((y) => (
+        <line key={y} x1="0" y1={y} x2="400" y2={y} stroke={sleeping ? '#2b2736' : '#c5b8a1'} strokeWidth="1" opacity="0.55" />
       ))}
       {[
-        [72, 316, 344],
-        [235, 344, 376],
-        [140, 376, 412],
-        [310, 376, 412],
-        [90, 412, 452],
-        [270, 412, 452],
-      ].map(([x, y1, y2], i) => (
-        <line key={i} x1={x} y1={y1} x2={x} y2={y2} stroke="#8f623f" strokeWidth="1.1" opacity="0.35" />
+        [85, 315, 346],
+        [220, 315, 346],
+        [345, 315, 346],
+        [45, 346, 384],
+        [185, 346, 384],
+        [320, 346, 384],
+        [110, 384, 428],
+        [265, 384, 428],
+        [60, 428, 478],
+        [215, 428, 478],
+      ].map(([x1, y1, y2], i) => (
+        <line key={i} x1={x1} y1={y1} x2={x1 - 12} y2={y2} stroke={sleeping ? '#2b2736' : '#c5b8a1'} strokeWidth="1" opacity="0.48" />
       ))}
 
-      {/* Window (center-left wall, y: 108..236) */}
+      {/* White cube bookcase / Kallax shelving unit on left (y: 142..312) */}
       <g>
-        <rect x="122" y="110" width="104" height="122" rx="10" fill="#fff8ee" />
-        <rect x="129" y="117" width="90" height="108" rx="6" fill="url(#lr-sky)" />
+        {/* Outer frame */}
+        <rect x="8" y="146" width="96" height="164" rx="2" fill={sleeping ? '#c7c4d4' : '#f9f8f5'} stroke={sleeping ? '#9e9ab0' : '#dcd8ce'} strokeWidth="1.5" />
+        {/* Shelf cubbies (2 columns x 3 rows) */}
+        <rect x="14" y="152" width="40" height="38" fill={sleeping ? '#8d899e' : '#e6e1d6'} />
+        <rect x="58" y="152" width="40" height="38" fill={sleeping ? '#8d899e' : '#e6e1d6'} />
+        <rect x="14" y="195" width="40" height="38" fill={sleeping ? '#8d899e' : '#e6e1d6'} />
+        <rect x="58" y="195" width="40" height="38" fill={sleeping ? '#8d899e' : '#e6e1d6'} />
+        {/* Lower cabinet doors */}
+        <rect x="14" y="238" width="41" height="66" fill={sleeping ? '#bab6c9' : '#f3f1ec'} stroke={sleeping ? '#9e9ab0' : '#dad5ca'} strokeWidth="1" />
+        <rect x="57" y="238" width="41" height="66" fill={sleeping ? '#bab6c9' : '#f3f1ec'} stroke={sleeping ? '#9e9ab0' : '#dad5ca'} strokeWidth="1" />
+        <circle cx="50" cy="270" r="1.5" fill="#78756e" />
+        <circle cx="62" cy="270" r="1.5" fill="#78756e" />
+
+        {/* Woven rattan basket in top-left cubby (IMG_20250709_195907.jpg) */}
+        <rect x="16" y="155" width="36" height="34" rx="2" fill="#b8804a" />
+        <rect x="28" y="160" width="12" height="5" rx="2" fill="#6e4723" />
+        <path d="M16 166 H52 M16 174 H52 M16 182 H52" stroke="#9c6836" strokeWidth="1" opacity="0.6" />
+
+        {/* Colorful books in top-right & middle cubbies */}
+        <rect x="61" y="160" width="5" height="29" fill="#c94a38" />
+        <rect x="66.5" y="158" width="6" height="31" fill="#2f5c8f" />
+        <rect x="73" y="162" width="4.5" height="27" fill="#e0a938" />
+        <rect x="78" y="159" width="6" height="30" fill="#3d7a5a" />
+        <rect x="85" y="164" width="5" height="25" rx="1" fill="#e8e2d5" transform="rotate(10 87 176)" />
+
+        <rect x="17" y="204" width="5.5" height="28" fill="#5e4b8b" />
+        <rect x="23" y="202" width="6" height="30" fill="#d96b43" />
+        <rect x="30" y="206" width="5" height="26" fill="#468284" />
+        {/* Little decorative house/jar in middle-right cubby */}
+        <path d="M72 232 v-13 l6 -6 l6 6 v13 Z" fill="#f5efe6" />
+        <path d="M71 219 l7 -7 l7 7 Z" fill="#c85a48" />
+
+        {/* 3 Potted plants on top of the shelf + trailing green pothos on right (IMG_20250709_195907.jpg) */}
+        {/* Left small green plant */}
+        <rect x="18" y="138" width="11" height="8" rx="1.5" fill="#2c2e33" />
+        <path d="M23.5 138 Q16 129 19 124 M23.5 138 Q24 126 24 121 M23.5 138 Q31 129 28 124" stroke="#558b52" strokeWidth="2" strokeLinecap="round" fill="none" />
+        {/* Center dark-burgundy/purple indoor plant */}
+        <rect x="52" y="136" width="13" height="10" rx="2" fill="#dcd6cc" />
+        <g fill="#4a2338">
+          <ellipse cx="54" cy="128" rx="3" ry="8" transform="rotate(-24 54 128)" />
+          <ellipse cx="58.5" cy="125" rx="3.2" ry="9" />
+          <ellipse cx="63" cy="128" rx="3" ry="8" transform="rotate(24 63 128)" />
+          <ellipse cx="51" cy="132" rx="2.5" ry="6" transform="rotate(-45 51 132)" fill="#632f4b" />
+          <ellipse cx="66" cy="132" rx="2.5" ry="6" transform="rotate(45 66 132)" fill="#632f4b" />
+        </g>
+        {/* Right bushy cascading green plant */}
+        <rect x="82" y="136" width="14" height="10" rx="2" fill="#8c969e" />
+        <g fill="#3a7542">
+          <circle cx="89" cy="130" r="8" />
+          <circle cx="96" cy="134" r="7" fill="#498c52" />
+          <circle cx="101" cy="142" r="6.5" />
+          <circle cx="104" cy="151" r="6" fill="#498c52" />
+          <circle cx="103" cy="160" r="5" />
+          <circle cx="106" cy="168" r="4" fill="#5aa163" />
+        </g>
+      </g>
+
+      {/* Window with white frame, slatted roller blind & white ribbed radiator below (x: 118..226) */}
+      <g>
+        {/* Outer white window frame */}
+        <rect x="120" y="106" width="104" height="114" rx="4" fill="#ffffff" stroke="#d8d4ca" strokeWidth="1.5" />
+        <rect x="126" y="112" width="92" height="102" rx="2" fill="url(#lr-sky)" />
         {sleeping ? (
           <g>
-            <circle cx="196" cy="142" r="11" fill="#fff6d8" />
-            <circle cx="201" cy="138" r="10" fill="#1e244d" />
+            <circle cx="194" cy="144" r="10" fill="#fff6d8" />
+            <circle cx="199" cy="140" r="9" fill="#1b2147" />
             {[
-              [142, 134],
+              [140, 138],
               [162, 158],
-              [206, 172],
-              [148, 192],
-              [188, 204],
+              [204, 172],
+              [146, 188],
+              [184, 198],
             ].map(([x, y], i) => (
               <motion.circle
                 key={i}
                 cx={x}
                 cy={y}
-                r={1.4}
+                r={1.3}
                 fill="#fff"
                 animate={{ opacity: [0.3, 1, 0.3] }}
                 transition={{ duration: 2 + i * 0.4, repeat: Infinity }}
@@ -98,170 +159,238 @@ export function LivingRoom({ sleeping, fountainBoost }: { sleeping: boolean; fou
           </g>
         ) : (
           <g>
-            <motion.g animate={{ x: [0, 14, 0] }} transition={{ duration: 20, repeat: Infinity, ease: 'easeInOut' }}>
-              <ellipse cx="158" cy="148" rx="18" ry="7" fill="#fff" opacity="0.92" />
-              <ellipse cx="170" cy="143" rx="12" ry="7" fill="#fff" opacity="0.92" />
+            <motion.g animate={{ x: [0, 12, 0] }} transition={{ duration: 20, repeat: Infinity, ease: 'easeInOut' }}>
+              <ellipse cx="158" cy="150" rx="16" ry="6" fill="#fff" opacity="0.9" />
+              <ellipse cx="170" cy="146" rx="11" ry="6" fill="#fff" opacity="0.9" />
             </motion.g>
-            <path d="M129 202 Q160 185 190 198 T219 192 V225 H129 Z" fill="#9bc989" opacity="0.75" />
           </g>
         )}
-        <rect x="172" y="117" width="3.5" height="108" fill="#fff8ee" />
-        <rect x="129" y="170" width="90" height="3.5" fill="#fff8ee" />
-        <rect x="115" y="230" width="118" height="8" rx="4" fill="#f7ead9" />
-        {/* Curtains */}
-        <path d="M108 104 Q114 168 106 244 L126 244 Q120 168 128 104 Z" fill="#e59a73" />
-        <path d="M240 104 Q234 168 242 244 L222 244 Q228 168 220 104 Z" fill="#e59a73" />
-        <rect x="102" y="99" width="144" height="6" rx="3" fill="#9b7350" />
-        {/* Sill plant */}
-        <path d="M144 230 h18 l-2.5 -13 h-13 Z" fill="#d98b5f" />
-        <g fill="#68a669">
-          <ellipse cx="149" cy="211" rx="4" ry="8" transform="rotate(-24 149 211)" />
-          <ellipse cx="157" cy="210" rx="4" ry="9" transform="rotate(20 157 210)" />
-          <ellipse cx="153" cy="207" rx="3.5" ry="9" />
+        {/* Slatted roller blind / shutter at top of window (with tiny light perforations like IMG_20250802_084158.jpg) */}
+        <rect x="126" y="112" width="92" height="22" fill={sleeping ? '#3a3d4d' : '#7b808a'} />
+        {[116, 121, 126, 131].map((y) => (
+          <line key={y} x1="126" y1={y} x2="218" y2={y} stroke="#eff2f7" strokeWidth="1" strokeDasharray="2 3" opacity={sleeping ? 0.25 : 0.75} />
+        ))}
+        {/* Center window mullion & handle */}
+        <rect x="170.5" y="112" width="3" height="102" fill="#ffffff" />
+        <rect x="174" y="160" width="2" height="9" rx="1" fill="#b8b5ad" />
+        {/* White windowsill */}
+        <rect x="115" y="218" width="114" height="6" rx="2" fill="#ffffff" stroke="#d5d0c5" strokeWidth="1" />
+
+        {/* Potted green plant on windowsill (PXL_20260215_160817495.jpg) */}
+        <ellipse cx="144" cy="213" rx="8" ry="6" fill="#5b6068" />
+        <g fill="#4c9150">
+          <ellipse cx="139" cy="204" rx="3.5" ry="7" transform="rotate(-22 139 204)" />
+          <ellipse cx="144" cy="202" rx="3.5" ry="8" />
+          <ellipse cx="149" cy="204" rx="3.5" ry="7" transform="rotate(24 149 204)" />
         </g>
+
+        {/* White vertical-ribbed radiator under window + round thermostat dial (IMG_20250802_104208.jpg) */}
+        <rect x="122" y="232" width="94" height="58" rx="4" fill={sleeping ? '#b8b5c7' : '#f7f6f2'} stroke={sleeping ? '#8e8ba1' : '#d8d4c9'} strokeWidth="1.2" />
+        {Array.from({ length: 11 }).map((_, i) => (
+          <rect
+            key={i}
+            x={127 + i * 8}
+            y={236}
+            width={4}
+            height={50}
+            rx={1.5}
+            fill={sleeping ? '#9e9bb0' : '#e6e3da'}
+          />
+        ))}
+        {/* Radiator thermostat valve on right */}
+        <circle cx="221" cy="240" r="4.5" fill="#f0eee9" stroke="#bab5a9" strokeWidth="1" />
+        <circle cx="221" cy="240" r="2" fill="#9c988e" />
       </g>
 
-      {/* Framed paw art */}
+      {/* Light-wood framed landscape print with wide white mat (PXL_20260321_203920849.jpg) */}
       <g>
-        <rect x="284" y="122" width="48" height="56" rx="4" fill="#8a6446" />
-        <rect x="288" y="126" width="40" height="48" rx="2" fill="#fbf2e6" />
-        <g fill="#f08a3c">
-          <ellipse cx="308" cy="156" rx="8" ry="6" />
-          <circle cx="299" cy="146" r="3" />
-          <circle cx="305" cy="142" r="3" />
-          <circle cx="311" cy="142" r="3" />
-          <circle cx="317" cy="146" r="3" />
-        </g>
+        <rect x="294" y="118" width="54" height="44" rx="2" fill="#c89e6e" stroke="#9e7649" strokeWidth="1.2" />
+        <rect x="297" y="121" width="48" height="38" fill="#faf8f5" />
+        {/* Landscape picture inside mat */}
+        <rect x="305" y="128" width="32" height="24" fill="#d8cfc4" />
+        <path d="M305 144 Q314 138 322 142 T337 139 V152 H305 Z" fill="#8b7362" />
+        <path d="M305 147 Q318 144 337 146 V152 H305 Z" fill="#5e493b" />
       </g>
 
-      {/* Floor lamp + warm sleep glow */}
+      {/* Wooden tripod floor lamp with round white drum shade (IMG_20250812_201843.jpg) */}
       <g>
         <motion.circle
-          cx="204"
-          cy="210"
-          r="125"
+          cx="256"
+          cy="198"
+          r="118"
           fill="url(#lr-lamp)"
-          animate={{ opacity: sleeping ? 1 : 0.15 }}
+          animate={{ opacity: sleeping ? 0.95 : 0.22 }}
           transition={{ duration: 0.8 }}
         />
-        <rect x="202" y="206" width="4" height="114" fill="#7a6250" />
-        <ellipse cx="204" cy="320" rx="14" ry="4" fill="#5d4a3c" />
-        <path d="M188 186 h32 l7 22 h-46 Z" fill={sleeping ? '#ffe3a3' : '#f6e7cf'} />
+        {/* Wooden tripod legs */}
+        <line x1="256" y1="212" x2="241" y2="314" stroke="#cfa46e" strokeWidth="3.2" strokeLinecap="round" />
+        <line x1="256" y1="212" x2="271" y2="314" stroke="#cfa46e" strokeWidth="3.2" strokeLinecap="round" />
+        <line x1="256" y1="212" x2="256" y2="316" stroke="#b58954" strokeWidth="2.6" strokeLinecap="round" />
+        <rect x="249" y="210" width="14" height="4" rx="1.5" fill="#b58954" />
+        {/* White cylinder drum shade */}
+        <rect
+          x="237"
+          y="174"
+          width="38"
+          height="36"
+          rx="3"
+          fill={sleeping ? '#ffe8ad' : '#fcfbf7'}
+          stroke={sleeping ? '#e0b96c' : '#dedad0'}
+          strokeWidth="1.2"
+        />
       </g>
 
-      {/* Cozy dark-gray angle sofa (L-shape on right, y: 232..374) */}
+      {/* Dark charcoal woven fabric L-shaped sofa (x: 196..398, y: 226..374) */}
       <g>
-        <rect x="224" y="232" width="182" height="62" rx="14" fill="#4a4e57" />
-        <rect x="232" y="242" width="76" height="46" rx="10" fill="#595e68" />
-        <rect x="312" y="242" width="84" height="46" rx="10" fill="#595e68" />
-        <rect x="216" y="278" width="190" height="38" rx="10" fill="#3f434b" />
-        <rect x="224" y="276" width="94" height="19" rx="8" fill="#616670" />
-        {/* Chaise extending forward */}
-        <path d="M314 276 h92 v84 a12 12 0 0 1 -12 12 h-68 a12 12 0 0 1 -12 -12 Z" fill="#3f434b" />
-        <rect x="320" y="276" width="80" height="72" rx="9" fill="#616670" />
-        <rect x="210" y="258" width="20" height="58" rx="9" fill="#43474f" />
-        {/* Mustard throw pillow + terracotta knit blanket */}
-        <rect x="244" y="250" width="34" height="28" rx="8" fill="#e5ab3e" transform="rotate(-8 261 264)" />
-        <path d="M326 302 h68 v38 q-34 8 -68 0 Z" fill="#d97f63" opacity="0.94" />
-        <path d="M326 312 h68 M326 322 h68 M326 332 h68" stroke="#c5694d" strokeWidth="1.8" />
-        {/* Legs */}
-        <rect x="222" y="315" width="7" height="8" rx="2" fill="#2b2e33" />
-        <rect x="324" y="370" width="7" height="8" rx="2" fill="#2b2e33" />
-        <rect x="388" y="370" width="7" height="8" rx="2" fill="#2b2e33" />
-      </g>
+        {/* Sofa backrest cushions */}
+        <rect x="200" y="228" width="196" height="58" rx="10" fill="#3e444f" />
+        <rect x="206" y="234" width="90" height="46" rx="7" fill="#4a515e" />
+        <rect x="300" y="234" width="90" height="46" rx="7" fill="#4a515e" />
+        <rect x="206" y="234" width="184" height="46" rx="7" fill="url(#lr-weave)" />
 
-      {/* Cat tree (left side, y: 146..366) */}
-      <g>
-        <rect x="36" y="158" width="13" height="202" fill="#d9c49f" />
-        {[176, 200, 224, 248, 272, 296, 320, 344].map((y) => (
-          <line key={y} x1="36" y1={y} x2="49" y2={y + 5} stroke="#b8a17a" strokeWidth="1.4" />
-        ))}
-        <rect x="68" y="254" width="11" height="106" fill="#d9c49f" />
-        {/* Top perch bed */}
-        <rect x="12" y="146" width="66" height="14" rx="6" fill="#8b6a52" />
-        <path d="M20 146 q25 -20 50 0 Z" fill="#a88269" />
-        {/* Middle platform */}
-        <rect x="30" y="244" width="64" height="12" rx="6" fill="#8b6a52" />
-        {/* Base */}
-        <rect x="10" y="354" width="88" height="14" rx="6" fill="#8b6a52" />
-        {/* Dangling pom-pom */}
-        <motion.g
-          style={{ originX: 0.5, originY: 0 }}
-          animate={{ rotate: [-10, 10, -10] }}
-          transition={{ duration: 2.6, repeat: Infinity, ease: 'easeInOut' }}
-        >
-          <line x1="86" y1="256" x2="86" y2="284" stroke="#6e5546" strokeWidth="1.2" />
-          <circle cx="86" cy="288" r="5" fill="#ef5f8f" />
-        </motion.g>
-      </g>
+        {/*Throw Pillows from Oli's photos! */}
+        {/* 1. Sage / olive-yellow pillow (IMG_20250707_182932.jpg & IMG_20250709_195907.jpg) */}
+        <rect x="208" y="240" width="34" height="32" rx="6" fill="#c7bf74" stroke="#9e9650" strokeWidth="0.8" transform="rotate(-6 225 256)" />
+        {/* 2. Terracotta / rust-red woven pillow (IMG_20250802_084158.jpg) */}
+        <rect x="234" y="244" width="34" height="30" rx="6" fill="#b54738" stroke="#8f3226" strokeWidth="0.8" transform="rotate(4 251 259)" />
+        {/* 3. Geometric triangle patchwork pillow (IMG_20250802_084158.jpg) */}
+        <g transform="translate(268 238) rotate(-3)">
+          <rect x="0" y="0" width="38" height="34" rx="5" fill="#f2efe9" stroke="#ccc6ba" strokeWidth="0.8" />
+          <polygon points="0,0 19,0 9.5,17" fill="#9ea3a8" />
+          <polygon points="19,0 38,0 28.5,17" fill="#d4cab8" />
+          <polygon points="9.5,17 28.5,17 19,0" fill="#faf8f4" />
+          <polygon points="0,34 19,34 9.5,17" fill="#d4cab8" />
+          <polygon points="19,34 38,34 28.5,17" fill="#7c8288" />
+          <polygon points="9.5,17 28.5,17 19,34" fill="#e6e1d6" />
+        </g>
+        {/* 4. Second terracotta pillow on right */}
+        <rect x="354" y="242" width="32" height="30" rx="6" fill="#b54738" transform="rotate(8 370 257)" />
 
-      {/* Potted monstera plant (left-center, y: 274..352) */}
-      <g>
-        <path d="M106 320 h32 l-5 28 h-22 Z" fill="#ece6dd" />
-        <rect x="103" y="315" width="38" height="8" rx="3.5" fill="#d8cfc3" />
-        <g fill="#4f8f58">
-          <path d="M122 316 C100 298 95 276 107 264 C119 276 124 294 122 316 Z" />
-          <path d="M122 316 C140 294 154 286 160 294 C154 308 140 316 122 316 Z" fill="#5fa868" />
-          <path d="M122 316 C116 286 122 260 135 254 C140 272 133 296 122 316 Z" fill="#478a51" />
+        {/* Sofa base & seat cushions */}
+        <rect x="194" y="274" width="204" height="40" rx="8" fill="#353a44" />
+        <rect x="202" y="270" width="108" height="22" rx="6" fill="#525a68" />
+        <rect x="202" y="270" width="108" height="22" rx="6" fill="url(#lr-weave)" />
+
+        {/* Chaise longue extending forward on right */}
+        <path d="M308 270 h90 v84 a10 10 0 0 1 -10 10 h-70 a10 10 0 0 1 -10 -10 Z" fill="#353a44" />
+        <rect x="312" y="270" width="82" height="72" rx="7" fill="#525a68" />
+        <rect x="312" y="270" width="82" height="72" rx="7" fill="url(#lr-weave)" />
+        {/* Left armrest */}
+        <rect x="190" y="254" width="16" height="58" rx="7" fill="#3b414c" />
+
+        {/* Oli's tan suede "Bedsure Comfy Pet" bolster bed on the sofa chaise (PXL_20260104_123003020.jpg) */}
+        <g transform="translate(320 286)">
+          {/* Cream sherpa inner cushion */}
+          <rect x="6" y="4" width="52" height="28" rx="8" fill="#f5ece0" />
+          {/* Tan suede bolster walls */}
+          <path
+            d="M0 8 Q0 0 8 0 H14 Q18 0 18 8 V16 H46 V8 Q46 0 50 0 H56 Q64 0 64 8 V28 Q64 36 54 36 H10 Q0 36 0 28 Z"
+            fill="#b89776"
+            stroke="#9c7b5b"
+            strokeWidth="1"
+          />
+          {/* Little brown leather Bedsure patch on front left */}
+          <rect x="8" y="23" width="12" height="9" rx="2" fill="#5e3a22" />
+          <circle cx="14" cy="27.5" r="2.2" fill="none" stroke="#b89776" strokeWidth="0.7" />
         </g>
       </g>
 
-      {/* Plush rug — centered right where Oli sits (cy = 398) */}
-      <ellipse cx="195" cy="402" rx="146" ry="42" fill="#cfa37a" />
-      <ellipse cx="195" cy="398" rx="140" ry="39" fill="url(#lr-rug)" />
-      <ellipse cx="195" cy="398" rx="108" ry="29" fill="none" stroke="#e7b9a1" strokeWidth="4.5" opacity="0.85" />
-      <ellipse cx="195" cy="398" rx="74" ry="19" fill="none" stroke="#f2cdb8" strokeWidth="3.5" opacity="0.85" />
+      {/* Modern white coffee table with cork coaster, candle jar & kiwis (x: 256..396, y: 342..392) */}
+      <g>
+        {/* Table shadow */}
+        <polygon points="262,386 398,386 400,358 278,358" fill="rgba(35,30,22,0.14)" />
+        {/* Table legs & apron */}
+        <rect x="266" y="354" width="8" height="32" fill="#dcd9d0" />
+        <rect x="272" y="354" width="128" height="16" fill="#e6e3da" />
+        {/* Crisp white tabletop */}
+        <polygon points="262,354 398,354 400,334 282,334" fill="#ffffff" stroke="#dedad0" strokeWidth="1" />
+        {/* Round cork coaster (IMG_20251030_201609.jpg) */}
+        <ellipse cx="298" cy="344" rx="9" ry="3.2" fill="#b88456" stroke="#99683d" strokeWidth="0.6" />
+        {/* Two little kiwis & glass jar (PXL_20260527_180843044.jpg) */}
+        <ellipse cx="326" cy="346" rx="4.2" ry="3" fill="#7d6732" />
+        <ellipse cx="334" cy="348" rx="4" ry="2.8" fill="#6e5a2a" />
+        <rect x="350" y="335" width="9" height="11" rx="2" fill="#f2efe9" stroke="#ccc7bc" strokeWidth="0.8" />
+        <ellipse cx="354.5" cy="335" rx="4.5" ry="1.4" fill="#ffffff" stroke="#ccc7bc" strokeWidth="0.8" />
+      </g>
 
-      {/* Bubbling stainless steel water fountain — visible on right of rug (x=318, y=384) */}
-      <g transform="translate(314 382)">
-        <ellipse cx="28" cy="34" rx="32" ry="6.5" fill="rgba(40,25,15,0.24)" />
-        <path d="M0 8 h56 l-5 26 h-46 Z" fill="url(#lr-steel)" />
-        <ellipse cx="28" cy="8" rx="28" ry="6.5" fill="#e6edf3" />
-        <ellipse cx="28" cy="8" rx="23" ry="4.8" fill="#7fd0f5" />
-        <rect x="23.5" y="-10" width="9" height="17" rx="3" fill="url(#lr-steel)" />
-        <ellipse cx="28" cy="-10" rx="6.5" ry="2.2" fill="#f2f6f9" />
-        {/* Water arch */}
+      {/* White cuboid LED pet water fountain + stainless bowl by the left wall (PXL_20260321_203920849.jpg) */}
+      <g transform="translate(26 350)">
+        <ellipse cx="26" cy="46" rx="34" ry="7" fill="rgba(40,35,28,0.16)" />
+        {/* White rounded-square fountain body */}
+        <rect x="4" y="6" width="42" height="38" rx="7" fill={sleeping ? '#d5d2e3' : '#fbfaf7'} stroke={sleeping ? '#aba6bf' : '#d5d0c5'} strokeWidth="1.2" />
+        {/* Top water dish recess */}
+        <ellipse cx="25" cy="8" rx="18" ry="4.5" fill="#e3ecf2" />
+        <ellipse cx="25" cy="8" rx="14.5" ry="3.4" fill="#7fd0f5" />
+        {/* Glowing blue LED status indicator on front of fountain */}
+        <circle cx="25" cy="32" r="4.5" fill="#38bdf8" opacity="0.35" />
+        <motion.circle
+          cx="25"
+          cy="32"
+          r="2.2"
+          fill="#00d2ff"
+          animate={{ opacity: [0.65, 1, 0.65] }}
+          transition={{ duration: 2, repeat: Infinity }}
+        />
+        {/* Bubbling water arch */}
         <motion.path
-          d="M28 -12 Q20 -15 17 5 M28 -12 Q36 -15 39 5"
+          d="M25 7 Q20 -2 17 7 M25 7 Q30 -2 33 7"
           stroke="#bfe8fb"
-          strokeWidth="2.2"
+          strokeWidth="2"
           fill="none"
           strokeLinecap="round"
           animate={{ opacity: [0.55, 1, 0.55] }}
           transition={{ duration: 1.1, repeat: Infinity }}
         />
-        {[0, 1, 2, 3].map((i) => (
+        {[0, 1, 2].map((i) => (
           <motion.circle
             key={i}
-            cx={20 + i * 5}
-            r={1.6}
+            cx={19 + i * 6}
+            r={1.4}
             fill="#ffffff"
             initial={{ cy: 8, opacity: 0 }}
-            animate={{ cy: [8, -4 - (fountainBoost ? 10 : 0)], opacity: [0, 1, 0] }}
-            transition={{ duration: fountainBoost ? 0.65 : 1.3, repeat: Infinity, delay: i * 0.28 }}
+            animate={{ cy: [8, -2 - (fountainBoost ? 8 : 0)], opacity: [0, 1, 0] }}
+            transition={{ duration: fountainBoost ? 0.6 : 1.2, repeat: Infinity, delay: i * 0.3 }}
           />
         ))}
-        {[0, 0.7].map((d) => (
-          <motion.ellipse
-            key={d}
-            cx="28"
-            cy="8"
-            fill="none"
-            stroke="#fff"
-            strokeWidth={0.9}
-            initial={{ rx: 3, ry: 0.9, opacity: 0.85 }}
-            animate={{ rx: 22, ry: 4.2, opacity: 0 }}
-            transition={{ duration: 1.4, repeat: Infinity, delay: d }}
-          />
-        ))}
+        {/* Little stainless steel bowl next to the fountain */}
+        <path d="M52 34 h22 l-2.5 9 h-17 Z" fill="#b8c2cc" stroke="#8e99a4" strokeWidth="0.8" />
+        <ellipse cx="63" cy="34" rx="11" ry="2.8" fill="#e1e7ed" stroke="#8e99a4" strokeWidth="0.8" />
       </g>
 
-      {/* Little toy mouse on the left edge of the rug */}
-      <g transform="translate(56 410) rotate(-14)">
-        <ellipse cx="0" cy="0" rx="11" ry="6.5" fill="#b9b2c9" />
-        <circle cx="-8" cy="-4.5" r="3.2" fill="#d9c6e8" />
-        <path d="M11 0 q9 2 13 -5" stroke="#8f86a3" strokeWidth="1.5" fill="none" />
-        <circle cx="-10" cy="0" r="1" fill="#3d3549" />
+      {/* Fluffy off-white / cream high-pile shag rug — centered where Oli sits (IMG_20251030_201609.jpg) */}
+      <g>
+        {/* Soft drop shadow under thick shag pile */}
+        <path
+          d="M42 404 Q48 368 198 366 Q348 368 362 406 Q368 442 198 444 Q36 442 42 404 Z"
+          fill="rgba(60,48,35,0.16)"
+        />
+        {/* Main high-pile cream shag silhouette */}
+        <path
+          d="M44 401 Q50 365 198 363 Q346 365 360 403 Q366 438 198 440 Q38 438 44 401 Z"
+          fill="url(#lr-shag)"
+          stroke={sleeping ? '#aca6bd' : '#dfd7c5'}
+          strokeWidth="2"
+          strokeDasharray="6 3"
+        />
+        {/* Fluffy shaggy yarn tufts & texture across the rug */}
+        <g stroke={sleeping ? '#9e98b0' : '#d8ceba'} strokeWidth="1.6" strokeLinecap="round" fill="none" opacity="0.85">
+          {[
+            [72, 392], [96, 384], [128, 378], [164, 375], [204, 376], [244, 378], [282, 383], [316, 390],
+            [64, 408], [92, 402], [122, 398], [156, 395], [238, 396], [274, 401], [308, 406], [336, 412],
+            [78, 424], [112, 420], [148, 423], [188, 426], [228, 425], [266, 422], [302, 424], [328, 426],
+          ].map(([x, y], i) => (
+            <path key={i} d={`M${x} ${y} l5 -3 m-1 4 l6 -1 m-10 0 l-4 -2`} />
+          ))}
+        </g>
+        <g stroke={sleeping ? '#dcd8eb' : '#ffffff'} strokeWidth="1.5" strokeLinecap="round" fill="none" opacity="0.9">
+          {[
+            [84, 388], [114, 382], [148, 379], [184, 377], [222, 379], [262, 382], [298, 388],
+            [74, 414], [104, 412], [136, 415], [252, 414], [288, 413], [320, 416],
+            [94, 428], [132, 430], [172, 431], [212, 431], [248, 429], [284, 428],
+          ].map(([x, y], i) => (
+            <path key={i} d={`M${x} ${y} l6 -2 m-2 3 l5 0`} />
+          ))}
+        </g>
       </g>
     </svg>
   );
