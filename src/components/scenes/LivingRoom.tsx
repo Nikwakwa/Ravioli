@@ -1,11 +1,4 @@
-import { AnimatePresence, motion } from 'framer-motion';
-import type { RoomMess } from '../../types';
-
-const MESS_SLOTS: Record<0 | 1 | 2, { x: number; y: number }> = {
-  0: { x: 294, y: 404 },
-  1: { x: 108, y: 414 },
-  2: { x: 268, y: 428 },
-};
+import { motion } from 'framer-motion';
 
 /**
  * Nico & Athina's real Living Room — crafted from the 16 photos of Oli at home:
@@ -23,14 +16,10 @@ export function LivingRoom({
   sleeping,
   fountainBoost,
   onTapFountain,
-  messes = [],
-  onTapMess,
 }: {
   sleeping: boolean;
   fountainBoost: boolean;
   onTapFountain?: () => void;
-  messes?: RoomMess[];
-  onTapMess?: (id: string) => void;
 }) {
   return (
     <svg viewBox="0 0 400 600" preserveAspectRatio="xMidYMid slice" className="absolute inset-0 h-full w-full">
@@ -418,97 +407,6 @@ export function LivingRoom({
           ))}
         </g>
       </g>
-
-      {/* Tamagotchi-style on-screen messes (poop & throw-up) on the rug — tap to scoop! */}
-      <AnimatePresence>
-        {messes.map((mess) => {
-          const pos = MESS_SLOTS[mess.slot] ?? MESS_SLOTS[0];
-          const isPoop = mess.kind === 'poop';
-          return (
-            <motion.g
-              key={mess.id}
-              initial={{ opacity: 0, scale: 0.3 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.2, y: -12 }}
-              transition={{ type: 'spring', stiffness: 320, damping: 20 }}
-              transform={`translate(${pos.x} ${pos.y})`}
-              onClick={() => onTapMess?.(mess.id)}
-              className="pointer-events-auto cursor-pointer"
-              style={{ pointerEvents: 'auto', cursor: 'pointer' }}
-              role="button"
-              aria-label={isPoop ? 'Scoop poop mess' : 'Clean up cat throw-up'}
-            >
-              {/* Generous 48x48 invisible touch hitbox for mobile fingers */}
-              <rect x="-24" y="-30" width="48" height="48" fill="transparent" style={{ pointerEvents: 'all' }} />
-
-              {/* Subtle pulsing attention ring */}
-              <motion.ellipse
-                cx="0"
-                cy="4"
-                rx="16"
-                ry="7"
-                fill="none"
-                stroke={isPoop ? '#b45309' : '#65a30d'}
-                strokeWidth="1.2"
-                strokeDasharray="3 2"
-                animate={{ scale: [0.92, 1.12, 0.92], opacity: [0.35, 0.75, 0.35] }}
-                transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
-              />
-
-              {/* Ground shadow */}
-              <ellipse cx="0" cy="6" rx="12" ry="4" fill="rgba(45,30,18,0.22)" />
-
-              {isPoop ? (
-                /* Classic Tamagotchi coiled poop swirl */
-                <g>
-                  <ellipse cx="0" cy="4" rx="10" ry="4" fill="#7c4722" stroke="#4f2b12" strokeWidth="1.1" />
-                  <ellipse cx="0" cy="0" rx="7.5" ry="3.4" fill="#8d532a" stroke="#4f2b12" strokeWidth="1.1" />
-                  <path
-                    d="M-4.5 -2 C-4 -6 2 -6 1 -9.5 C3.8 -7.5 5 -3.5 4.5 -2 Z"
-                    fill="#9c5e32"
-                    stroke="#4f2b12"
-                    strokeWidth="1.1"
-                    strokeLinejoin="round"
-                  />
-                  <ellipse cx="-2.5" cy="2" rx="2" ry="0.9" fill="#b67849" opacity="0.7" />
-                </g>
-              ) : (
-                /* Cat throw-up / puke splat on the rug */
-                <g>
-                  <path
-                    d="M-11 2 C-13 -2 -7 -5 -3 -4 C0 -6 6 -6 9 -3 C13 -2 13 3 9 5 C6 7 1 6 -3 7 C-8 7 -10 5 -11 2 Z"
-                    fill="#9cb83c"
-                    stroke="#5a6e1b"
-                    strokeWidth="1.1"
-                  />
-                  <ellipse cx="-1" cy="1" rx="6.5" ry="3" fill="#b8d152" opacity="0.85" />
-                  {/* Little undigested treat / kibble chunks */}
-                  <circle cx="-4.5" cy="1" r="1.6" fill="#b45309" />
-                  <circle cx="3" cy="2.2" r="1.4" fill="#c26a27" />
-                  <circle cx="0.5" cy="-1" r="1.2" fill="#d97706" />
-                  {/* Little splatter droplets around the puddle */}
-                  <circle cx="-13" cy="4" r="1.4" fill="#9cb83c" stroke="#5a6e1b" strokeWidth="0.7" />
-                  <circle cx="12.5" cy="3" r="1.2" fill="#9cb83c" stroke="#5a6e1b" strokeWidth="0.7" />
-                </g>
-              )}
-
-              {/* Animated Tamagotchi stink waves rising above the mess */}
-              {[-5, 0, 5].map((dx, i) => (
-                <motion.path
-                  key={i}
-                  d={`M${dx} -11 Q${dx - 2} -15 ${dx} -18 Q${dx + 2} -21 ${dx} -24`}
-                  stroke="#65a30d"
-                  strokeWidth="1.3"
-                  strokeLinecap="round"
-                  fill="none"
-                  animate={{ y: [0, -5, 0], opacity: [0.35, 0.9, 0.35] }}
-                  transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.3, ease: 'easeInOut' }}
-                />
-              ))}
-            </motion.g>
-          );
-        })}
-      </AnimatePresence>
     </svg>
   );
 }

@@ -7,6 +7,7 @@ import { ChangelogModal } from './components/ChangelogModal';
 import { FloatingEffects } from './components/FloatingEffects';
 import { GuideModal } from './components/GuideModal';
 import { NotificationModal } from './components/NotificationModal';
+import { RoomMesses } from './components/RoomMesses';
 import { LivingRoom } from './components/scenes/LivingRoom';
 import { StatusHUD } from './components/StatusHUD';
 import { actionById } from './data/actions';
@@ -110,8 +111,6 @@ export function App() {
             sleeping={live.isSleeping}
             fountainBoost={event?.actionId === 'fountain'}
             onTapFountain={handleTapFountain}
-            messes={messes}
-            onTapMess={cleanMess}
           />
 
           {/* Subtle sleep-mode ambient vignette */}
@@ -193,6 +192,7 @@ export function App() {
               className="h-full w-full drop-shadow-md"
             />
           </div>
+          <RoomMesses messes={messes} onClean={cleanMess} />
         </div>
 
         {/* Bottom tactile care dock */}

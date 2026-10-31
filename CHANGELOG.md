@@ -4,6 +4,13 @@ All updates to **Oli** are listed here.
 
 ---
 
+## `v0.11.2` — 2026-10-31
+### Visible Rug Messes Fix 💩✨
+- Fixed a Framer Motion `<motion.g>` SVG transform bug that overwrote `transform="translate(x, y)"` and sent messes to `(0, 0)` behind the top HUD.
+- Moved poop & throw-up messes into a dedicated foreground `RoomMesses` layer (`z-20`) inside the Center Stage right beside Oli on the rug, ensuring they are never hidden behind Oli or the bottom dock on any screen size.
+
+---
+
 ## `v0.11.1` — 2026-10-31
 ### Poop & Throw-Up Messes on the Rug! 🤢💩
 - Replaced hairball messes with cat **throw-up splats** (`vomit`) on the rug when Oli overeats treats into a tummy ache or is left unattended.

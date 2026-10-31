@@ -7,6 +7,14 @@ export interface ReleaseEntry {
 
 export const CHANGELOG: ReleaseEntry[] = [
   {
+    version: 'v0.11.2',
+    date: '2026-10-31',
+    title: 'Visible Rug Messes Fix 💩✨',
+    changes: [
+      'Fixed an SVG transform bug that reset messes to (0, 0) behind the top bar — messes now render in a foreground layer right next to Oli on the rug so they are always clearly visible and easy to tap.',
+    ],
+  },
+  {
     version: 'v0.11.1',
     date: '2026-10-31',
     title: 'Poop & Throw-Up Messes on the Rug! 🤢💩',
