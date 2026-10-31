@@ -1,0 +1,59 @@
+const fs = require('fs');
+const path = require('path');
+const sharp = require('sharp');
+
+// An elegant, crisp, recognizable white silhouette of Oli's cat head on 100% transparent background.
+// Follows Android Material / W3C Notification Badge guidelines:
+// - Solid white (#ffffff) shape
+// - 100% transparent background (alpha = 0)
+// - Cutouts for inner ears, eyes, and cute cat muzzle/mouth so facial features remain readable at 24x24dp.
+const badgeSvg = `
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <mask id="cat-cutouts">
+    <rect width="512" height="512" fill="black" />
+    <!-- Cat head & ears base in white (visible) -->
+    <path d="M115 235 L138 85 L232 168 Z" fill="white" />
+    <path d="M397 235 L374 85 L280 168 Z" fill="white" />
+    <ellipse cx="256" cy="282" rx="164" ry="142" fill="white" />
+
+    <!-- Cutouts in black (transparent holes) -->
+    <!-- Inner ears -->
+    <path d="M145 200 L158 128 L208 170 Z" fill="black" />
+    <path d="M367 200 L354 128 L304 170 Z" fill="black" />
+    <!-- Forehead tabby stripes -->
+    <path d="M236 150 Q256 195 276 150" stroke="black" stroke-width="14" fill="none" stroke-linecap="round" />
+    <path d="M216 160 Q228 190 234 198" stroke="black" stroke-width="12" fill="none" stroke-linecap="round" />
+    <path d="M296 160 Q284 190 278 198" stroke="black" stroke-width="12" fill="none" stroke-linecap="round" />
+    <!-- Eyes -->
+    <ellipse cx="196" cy="272" rx="26" ry="32" fill="black" />
+    <ellipse cx="316" cy="272" rx="26" ry="32" fill="black" />
+    <!-- Nose + cute mouth -->
+    <path d="M238 316 L274 316 L256 335 Z" fill="black" />
+    <path d="M256 335 Q256 354 236 356 M256 335 Q256 354 276 356" stroke="black" stroke-width="12" fill="none" stroke-linecap="round" />
+  </mask>
+  <rect width="512" height="512" fill="white" mask="url(#cat-cutouts)" />
+</svg>
+`.trim();
+
+async function run() {
+  const publicDir = path.resolve(__dirname, '..', 'public');
+  fs.writeFileSync(path.join(publicDir, 'badge.svg'), badgeSvg, 'utf8');
+
+  // Generate 96x96 and 72x72 badge PNGs
+  await sharp(Buffer.from(badgeSvg))
+    .resize(96, 96)
+    .png()
+    .toFile(path.join(publicDir, 'badge-96x96.png'));
+
+  await sharp(Buffer.from(badgeSvg))
+    .resize(72, 72)
+    .png()
+    .toFile(path.join(publicDir, 'badge-72x72.png'));
+
+  console.log('Successfully generated badge.svg, badge-96x96.png, and badge-72x72.png in public/');
+}
+
+run().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});

@@ -12,7 +12,7 @@ import {
 } from '../data/actions';
 import { pickFreeMessSlot } from '../hooks/useCatGame';
 import { cleanText, sanitizeActivity, sanitizeCatState } from '../services/catStorage';
-import { evaluateStatThresholds, type AlertedMap } from './notifications';
+import { evaluateStatThresholds, getNotificationAssetUrls, toAbsoluteNotificationUrl, type AlertedMap } from './notifications';
 import type { CatState } from '../types';
 import {
   DECAY_RATES,
@@ -318,5 +318,17 @@ describe('notification threshold crossings', () => {
     });
     expect(res.alerts).toHaveLength(1);
     expect(res.alerts[0].stat).toBe('hunger');
+  });
+
+  it('resolves notification icon and badge to absolute URLs preventing white square fallbacks', () => {
+    const assets = getNotificationAssetUrls('https://example.com/Ravioli/');
+    expect(assets.icon).toBe('https://example.com/Ravioli/pwa-192x192.png');
+    expect(assets.badge).toBe('https://example.com/Ravioli/badge-96x96.png');
+
+    const devAssets = getNotificationAssetUrls('http://localhost:5173/');
+    expect(devAssets.icon).toMatch(/^http:\/\/localhost:5173\/.*pwa-192x192\.png$/);
+    expect(devAssets.badge).toMatch(/^http:\/\/localhost:5173\/.*badge-96x96\.png$/);
+
+    expect(toAbsoluteNotificationUrl('/pwa-192x192.png', 'https://game.oli/')).toBe('https://game.oli/pwa-192x192.png');
   });
 });

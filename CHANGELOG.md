@@ -4,6 +4,13 @@ All updates to **Oli** are listed here.
 
 ---
 
+## `v0.13.1` — 2026-10-31
+### Notification Logo & Badge Fix 🔔🐱
+- **Full-Color Game Logo Restoration:** Replaced relative asset URLs with guaranteed absolute URLs for the notification icon (`pwa-192x192.png`). OS notification services (Windows Action Center, Android, macOS) run outside the browser scope and fail to load relative URLs, which previously caused them to render a blank/white square placeholder instead of Oli's logo.
+- **Dedicated Android Monochrome Badge (`badge-96x96.png`):** Generated a crisp white silhouette of Oli's cat head with transparent cutouts on a 100% transparent background, replacing the opaque peach background badge that Android previously flattened into a solid white square in the status bar and notification header.
+
+---
+
 ## `v0.13.0` — 2026-10-31
 ### Tamagotchi Play Minigames! 🎮🐾
 - **Feather Pounce! (`feather_wand`):** 3-round reflex timing minigame where the feather sweeps across the arena — tap **🐾 POUNCE!** while it's inside the narrowing green sweet-spot zone!

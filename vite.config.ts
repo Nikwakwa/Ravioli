@@ -40,7 +40,14 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       manifestFilename: 'manifest.json',
-      includeAssets: ['favicon.ico', 'icon.svg', 'apple-touch-icon-180x180.png'],
+      includeAssets: [
+        'favicon.ico',
+        'icon.svg',
+        'apple-touch-icon-180x180.png',
+        'badge.svg',
+        'badge-96x96.png',
+        'badge-72x72.png',
+      ],
       devOptions: {
         // Lets you test installability + offline caching while running `npm run dev`.
         enabled: true,

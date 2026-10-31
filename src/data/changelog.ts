@@ -7,6 +7,15 @@ export interface ReleaseEntry {
 
 export const CHANGELOG: ReleaseEntry[] = [
   {
+    version: 'v0.13.1',
+    date: '2026-10-31',
+    title: 'Notification Logo & Badge Fix 🔔🐱',
+    changes: [
+      'Fixed notifications displaying a white square: OS notification daemons (Windows Action Center, Android, macOS) require fully resolved absolute URLs for the full-color game logo (pwa-192x192.png).',
+      'Created a dedicated Android notification badge (badge-96x96.png): an adorable white silhouette of Oli on a 100% transparent background, replacing the opaque badge that Android previously flattened into a solid white block.',
+    ],
+  },
+  {
     version: 'v0.13.0',
     date: '2026-10-31',
     title: 'Tamagotchi Play Minigames! 🎮🐾',

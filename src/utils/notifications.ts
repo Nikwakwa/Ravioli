@@ -234,12 +234,53 @@ export async function requestNotificationAccess(): Promise<'granted' | 'denied' 
   return perm === 'granted' ? 'granted' : 'denied';
 }
 
+/**
+ * Resolves an asset path to a fully qualified absolute URL (e.g. `https://...` or `http://...`).
+ *
+ * Required because OS notification managers (Android NotificationManager, Windows Action Center,
+ * macOS Notification Center) run in separate system processes outside the web page context and cannot
+ * reliably resolve relative or root-relative paths like `/pwa-192x192.png`. When given relative URLs,
+ * the OS fails to fetch the image and displays a blank/white square placeholder instead of the logo.
+ */
+export function toAbsoluteNotificationUrl(path: string, baseHref?: string): string {
+  try {
+    const base = baseHref || (typeof document !== 'undefined' && document.baseURI) || (typeof window !== 'undefined' && window.location?.href);
+    if (base) {
+      return new URL(path, base).href;
+    }
+  } catch {
+    // Fall back to original path if URL construction fails
+  }
+  return path;
+}
+
+/**
+ * Returns the fully resolved URLs for the notification icon (large game logo)
+ * and notification badge (monochrome white silhouette on transparent background).
+ */
+export function getNotificationAssetUrls(customBaseUrl?: string): { icon: string; badge: string } {
+  if (customBaseUrl) {
+    const prefix = customBaseUrl.endsWith('/') ? customBaseUrl : `${customBaseUrl}/`;
+    return {
+      icon: new URL('pwa-192x192.png', prefix).href,
+      badge: new URL('badge-96x96.png', prefix).href,
+    };
+  }
+
+  const baseUrl = (typeof document !== 'undefined' && document.baseURI) || (typeof window !== 'undefined' && window.location?.href);
+  const viteBase = import.meta.env.BASE_URL || '/';
+  const prefix = viteBase.endsWith('/') ? viteBase : `${viteBase}/`;
+  return {
+    icon: toAbsoluteNotificationUrl(`${prefix}pwa-192x192.png`, baseUrl || undefined),
+    badge: toAbsoluteNotificationUrl(`${prefix}badge-96x96.png`, baseUrl || undefined),
+  };
+}
+
 /** Sends an OS/browser notification via the Service Worker (PWA) or Notification constructor. */
 export async function sendSystemNotification(title: string, body: string, tag = 'oli-alert'): Promise<void> {
   const prefs = loadNotificationPrefs();
   if (!prefs.enabled) return;
-  const icon = `${import.meta.env.BASE_URL}pwa-192x192.png`;
-  const badge = `${import.meta.env.BASE_URL}pwa-64x64.png`;
+  const { icon, badge } = getNotificationAssetUrls();
 
   try {
     if ('serviceWorker' in navigator) {
@@ -260,7 +301,16 @@ export async function sendSystemNotification(title: string, body: string, tag = 
   }
 
   try {
-    new Notification(title, { body, tag, icon });
+    const n = new Notification(title, {
+      body,
+      tag,
+      icon,
+      badge,
+    } as NotificationOptions);
+    n.onclick = () => {
+      window.focus();
+      n.close();
+    };
   } catch {
     // Ignore on restricted environments
   }
