@@ -7,6 +7,7 @@ import { CatAvatar } from './components/CatAvatar';
 import { ChangelogModal } from './components/ChangelogModal';
 import { FloatingEffects } from './components/FloatingEffects';
 import { GuideModal } from './components/GuideModal';
+import { NotificationModal } from './components/NotificationModal';
 import { PlayerSelector } from './components/PlayerSelector';
 import { LivingRoom } from './components/scenes/LivingRoom';
 import { StatusHUD } from './components/StatusHUD';
@@ -14,10 +15,11 @@ import { useCatGame, type Notice } from './hooks/useCatGame';
 import { useVersionCheck } from './hooks/useVersionCheck';
 import { vibrate } from './utils/feedback';
 import {
-  enableNotifications,
-  loadNotificationsEnabled,
-  saveNotificationsEnabled,
+  loadNotificationPrefs,
+  requestNotificationAccess,
+  saveNotificationPrefs,
   sendSystemNotification,
+  type NotificationPrefs,
 } from './utils/notifications';
 import { loadPlayer, playerColor, savePlayer } from './utils/player';
 
@@ -26,7 +28,8 @@ export function App() {
   const [pickerOpen, setPickerOpen] = useState<boolean>(() => !loadPlayer());
   const [changelogOpen, setChangelogOpen] = useState(false);
   const [guideOpen, setGuideOpen] = useState(false);
-  const [notificationsOn, setNotificationsOn] = useState<boolean>(() => loadNotificationsEnabled());
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [notifPrefs, setNotifPrefs] = useState<NotificationPrefs>(() => loadNotificationPrefs());
   const [notice, setNotice] = useState<Notice | null>(null);
   const [tapHeartKey, setTapHeartKey] = useState(0);
   const noticeTimer = useRef<number | undefined>(undefined);
@@ -54,24 +57,29 @@ export function App() {
     setTapHeartKey((k) => k + 1);
   };
 
-  const handleToggleNotifications = async () => {
-    if (notificationsOn) {
-      saveNotificationsEnabled(false);
-      setNotificationsOn(false);
+  const handleChangeNotifPrefs = (next: NotificationPrefs) => {
+    saveNotificationPrefs(next);
+    setNotifPrefs(next);
+  };
+
+  const handleToggleMasterNotifications = async () => {
+    if (notifPrefs.enabled) {
+      handleChangeNotifPrefs({ ...notifPrefs, enabled: false });
       pushNotice({ text: '🔕 Oli notifications muted', tone: 'info' });
       return;
     }
-    const res = await enableNotifications();
+    const res = await requestNotificationAccess();
     if (res === 'granted') {
-      setNotificationsOn(true);
+      const next = { ...notifPrefs, enabled: true };
+      handleChangeNotifPrefs(next);
       pushNotice({ text: '🔔 Oli notifications enabled!', tone: 'info' });
       void sendSystemNotification(
         '🔔 Oli notifications enabled!',
-        'We’ll let you know when Oli’s stats drop below 25 or when he wakes up.',
+        'You can customize which alerts to receive anytime.',
         'oli-test',
       );
     } else if (res === 'denied') {
-      setNotificationsOn(false);
+      handleChangeNotifPrefs({ ...notifPrefs, enabled: false });
       pushNotice({ text: 'Notifications blocked by browser settings.', tone: 'warn' });
     } else {
       pushNotice({ text: 'Notifications are not supported on this browser.', tone: 'warn' });
@@ -123,8 +131,8 @@ export function App() {
           onOpenPlayer={() => setPickerOpen(true)}
           onOpenChangelog={() => setChangelogOpen(true)}
           onOpenGuide={() => setGuideOpen(true)}
-          notificationsOn={notificationsOn}
-          onToggleNotifications={() => void handleToggleNotifications()}
+          notificationsOn={notifPrefs.enabled}
+          onToggleNotifications={() => setNotifOpen(true)}
           hasUpdate={Boolean(availableVersion)}
           mode={mode}
           status={status}
@@ -200,11 +208,22 @@ export function App() {
         </div>
 
         <PlayerSelector open={pickerOpen} current={player} onSelect={handleSelectPlayer} />
+        <NotificationModal
+          open={notifOpen}
+          onClose={() => setNotifOpen(false)}
+          prefs={notifPrefs}
+          onToggleMaster={() => void handleToggleMasterNotifications()}
+          onChangePrefs={handleChangeNotifPrefs}
+          onTestNotification={handleTestNotification}
+        />
         <GuideModal
           open={guideOpen}
           onClose={() => setGuideOpen(false)}
-          notificationsOn={notificationsOn}
-          onToggleNotifications={() => void handleToggleNotifications()}
+          notificationsOn={notifPrefs.enabled}
+          onToggleNotifications={() => {
+            setGuideOpen(false);
+            setNotifOpen(true);
+          }}
           onTestNotification={handleTestNotification}
         />
         <ChangelogModal

@@ -14,6 +14,7 @@ import { celebrate, vibrate } from '../utils/feedback';
 import {
   evaluateStatThresholds,
   loadAlertedMap,
+  loadNotificationPrefs,
   saveAlertedMap,
   sendSystemNotification,
   type AlertedMap,
@@ -108,7 +109,11 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
             if (Date.now() - Date.parse(entry.created_at) > REMOTE_EVENT_MAX_AGE_MS) return;
 
             noticeRef.current({ text: entry.message, tone: 'partner', player: entry.player });
-            if (typeof document !== 'undefined' && document.visibilityState !== 'visible') {
+            if (
+              typeof document !== 'undefined' &&
+              document.visibilityState !== 'visible' &&
+              loadNotificationPrefs().partner
+            ) {
               void sendSystemNotification(`🐾 ${entry.player}`, entry.message, 'oli-partner');
             }
             const action = actionById(entry.action_id);
@@ -185,7 +190,8 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
   useEffect(() => {
     if (!live) return;
     alertedRef.current ??= loadAlertedMap();
-    const { nextAlerted, alerts } = evaluateStatThresholds(live, alertedRef.current);
+    const prefs = loadNotificationPrefs();
+    const { nextAlerted, alerts } = evaluateStatThresholds(live, alertedRef.current, prefs);
     alertedRef.current = nextAlerted;
     saveAlertedMap(nextAlerted);
 
@@ -206,7 +212,9 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
     if (prevSleeping.current === true && !live.isSleeping && live.wokeNaturally) {
       const msg = `${live.name} woke up from his nap, full of energy!`;
       noticeRef.current({ text: msg, tone: 'info' });
-      void sendSystemNotification(`☀️ ${live.name} woke up!`, msg, 'oli-wake');
+      if (loadNotificationPrefs().wakeUp) {
+        void sendSystemNotification(`☀️ ${live.name} woke up!`, msg, 'oli-wake');
+      }
       playEvent({ actionId: 'wake', player: '', remote: true, effect: {}, particles: [], animation: 'yawning', durationMs: 1600 });
     }
     prevSleeping.current = live.isSleeping;

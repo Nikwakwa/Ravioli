@@ -7,6 +7,14 @@ export interface ReleaseEntry {
 
 export const CHANGELOG: ReleaseEntry[] = [
   {
+    version: 'v0.9.1',
+    date: '2026-10-31',
+    title: 'Customizable Alert Preferences 🔔',
+    changes: [
+      'Tap the bell icon to open the Notification Preferences sheet and choose exactly which events (Low-Need < 25, Critical ≤ 5, Nap Wake-Up, Partner Actions) and which individual stats (Hunger, Water, Joy, Energy, Clean) trigger alerts.',
+    ],
+  },
+  {
     version: 'v0.9.0',
     date: '2026-10-31',
     title: 'Smart Oli Notifications 🔔',

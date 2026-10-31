@@ -4,6 +4,13 @@ All updates to **Oli** are listed here.
 
 ---
 
+## `v0.9.1` — 2026-10-31
+### Customizable Alert Preferences 🔔
+- Added a dedicated **Notification Preferences** sheet (`NotificationModal`) opened from the top-bar bell icon (or from **Rules → Choose Alerts…**).
+- Choose individually whether to receive **Low-Need (< 25)**, **Critical (≤ 5)**, **Oli Wakes Up**, and **Partner Co-op Actions** alerts, and pick which specific needs (**Hunger**, **Water**, **Joy**, **Energy**, **Clean**) to watch.
+
+---
+
 ## `v0.9.0` — 2026-10-31
 ### Smart Oli Notifications 🔔
 - Added a **🔔 Bell toggle** in the top bar (and a Notifications control with a **Test Alert** button inside the **Rules** manual) to enable system/PWA notifications.

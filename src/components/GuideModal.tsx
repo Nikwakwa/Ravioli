@@ -101,7 +101,7 @@ export function GuideModal({
                             : 'bg-amber-950/10 text-amber-900 hover:bg-amber-950/15'
                         }`}
                       >
-                        {notificationsOn ? 'Enabled ✓' : 'Enable Alerts'}
+                        {notificationsOn ? 'Customize ✓' : 'Choose Alerts…'}
                       </button>
                     </div>
                   </div>

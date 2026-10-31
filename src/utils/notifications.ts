@@ -5,13 +5,46 @@ import { NEED_THRESHOLD } from './decayEngine';
 export const CRITICAL_THRESHOLD = 5;
 
 const LS_ENABLED = 'ravioli:v1:notifications_enabled';
+const LS_PREFS = 'ravioli:v1:notification_prefs';
 const LS_ALERTED = 'ravioli:v1:alerted_levels';
 
 export type AlertLevel = 'none' | 'low' | 'critical';
 export type AlertedMap = Record<StatKey, AlertLevel>;
 
+export interface NotificationPrefs {
+  /** Master switch (also requires browser permission === 'granted'). */
+  enabled: boolean;
+  /** Alert when a watched stat drops below NEED_THRESHOLD (25). */
+  lowNeed: boolean;
+  /** Urgent alert when a watched stat drops to CRITICAL_THRESHOLD (5) or below. */
+  critical: boolean;
+  /** Alert when Oli finishes his nap (Energy reaches 100) and wakes up naturally. */
+  wakeUp: boolean;
+  /** Alert when your co-op partner performs an action while the app is in the background. */
+  partner: boolean;
+  /** Which of the 5 stats should trigger lowNeed / critical alerts. */
+  stats: Record<StatKey, boolean>;
+}
+
+export const DEFAULT_NOTIFICATION_PREFS: NotificationPrefs = {
+  enabled: false,
+  lowNeed: true,
+  critical: true,
+  wakeUp: true,
+  partner: true,
+  stats: {
+    hunger: true,
+    hydration: true,
+    happiness: true,
+    energy: true,
+    hygiene: true,
+  },
+};
+
 export interface ImportantAlert {
   id: string;
+  stat: StatKey;
+  level: 'low' | 'critical';
   title: string;
   body: string;
   tag: string;
@@ -58,17 +91,42 @@ export function getNotificationPermission(): NotificationPermission | 'unsupport
   return Notification.permission;
 }
 
-export function loadNotificationsEnabled(): boolean {
+export function loadNotificationPrefs(): NotificationPrefs {
   try {
-    return window.localStorage.getItem(LS_ENABLED) === 'true' && getNotificationPermission() === 'granted';
+    const granted = getNotificationPermission() === 'granted';
+    const raw = window.localStorage.getItem(LS_PREFS);
+    if (!raw) {
+      const legacyEnabled = window.localStorage.getItem(LS_ENABLED) === 'true';
+      return {
+        ...DEFAULT_NOTIFICATION_PREFS,
+        enabled: legacyEnabled && granted,
+        stats: { ...DEFAULT_NOTIFICATION_PREFS.stats },
+      };
+    }
+    const parsed = JSON.parse(raw) as Partial<NotificationPrefs>;
+    const stats: Record<StatKey, boolean> = { ...DEFAULT_NOTIFICATION_PREFS.stats };
+    if (parsed.stats && typeof parsed.stats === 'object') {
+      for (const k of STAT_KEYS) {
+        if (typeof parsed.stats[k] === 'boolean') stats[k] = parsed.stats[k]!;
+      }
+    }
+    return {
+      enabled: Boolean(parsed.enabled) && granted,
+      lowNeed: typeof parsed.lowNeed === 'boolean' ? parsed.lowNeed : true,
+      critical: typeof parsed.critical === 'boolean' ? parsed.critical : true,
+      wakeUp: typeof parsed.wakeUp === 'boolean' ? parsed.wakeUp : true,
+      partner: typeof parsed.partner === 'boolean' ? parsed.partner : true,
+      stats,
+    };
   } catch {
-    return false;
+    return { ...DEFAULT_NOTIFICATION_PREFS, stats: { ...DEFAULT_NOTIFICATION_PREFS.stats } };
   }
 }
 
-export function saveNotificationsEnabled(enabled: boolean): void {
+export function saveNotificationPrefs(prefs: NotificationPrefs): void {
   try {
-    window.localStorage.setItem(LS_ENABLED, enabled ? 'true' : 'false');
+    window.localStorage.setItem(LS_PREFS, JSON.stringify(prefs));
+    window.localStorage.setItem(LS_ENABLED, prefs.enabled ? 'true' : 'false');
   } catch {
     // ignore storage errors
   }
@@ -101,21 +159,26 @@ export function saveAlertedMap(map: AlertedMap): void {
 
 /**
  * Pure threshold-crossing detector.
- * Compares current `stats` against the previously alerted levels (`prevAlerted`):
- * - If a stat is >= NEED_THRESHOLD (25), its alert level resets to `'none'`.
- * - If a stat drops < NEED_THRESHOLD (25) and wasn't already `'low'` or `'critical'`, emits a low-need alert.
- * - If a stat drops <= CRITICAL_THRESHOLD (5) and wasn't already `'critical'`, emits a critical alert.
+ * Compares current `stats` against the previously alerted levels (`prevAlerted`),
+ * filtering emitted alerts by `prefs` (if provided) so the user only receives
+ * the alert levels and stats they opted into.
  */
 export function evaluateStatThresholds(
   stats: CatStats,
   prevAlerted: AlertedMap,
+  prefs?: Pick<NotificationPrefs, 'lowNeed' | 'critical' | 'stats'>,
 ): { nextAlerted: AlertedMap; alerts: ImportantAlert[] } {
   const nextAlerted: AlertedMap = { ...prevAlerted };
   const alerts: ImportantAlert[] = [];
 
+  const allowLow = prefs ? prefs.lowNeed : true;
+  const allowCrit = prefs ? prefs.critical : true;
+  const allowedStats = prefs?.stats;
+
   for (const key of STAT_KEYS) {
     const val = Math.round(stats[key]);
     const prev = prevAlerted[key] ?? 'none';
+    const statWatched = allowedStats ? allowedStats[key] !== false : true;
 
     if (val >= NEED_THRESHOLD) {
       nextAlerted[key] = 'none';
@@ -125,14 +188,18 @@ export function evaluateStatThresholds(
     if (val <= CRITICAL_THRESHOLD) {
       if (prev !== 'critical') {
         nextAlerted[key] = 'critical';
-        const label = STAT_META[key].label;
-        alerts.push({
-          id: `crit-${key}`,
-          title: `🚨 Oli’s ${label} is critical (${val})!`,
-          body: `${LOW_MESSAGES[key].body(val)}`,
-          tag: `oli-need-${key}`,
-          tone: 'warn',
-        });
+        if (statWatched && allowCrit) {
+          const label = STAT_META[key].label;
+          alerts.push({
+            id: `crit-${key}`,
+            stat: key,
+            level: 'critical',
+            title: `🚨 Oli’s ${label} is critical (${val})!`,
+            body: `${LOW_MESSAGES[key].body(val)}`,
+            tag: `oli-need-${key}`,
+            tone: 'warn',
+          });
+        }
       }
       continue;
     }
@@ -140,37 +207,37 @@ export function evaluateStatThresholds(
     // Between CRITICAL_THRESHOLD and NEED_THRESHOLD
     if (prev === 'none') {
       nextAlerted[key] = 'low';
-      alerts.push({
-        id: `low-${key}`,
-        title: LOW_MESSAGES[key].title,
-        body: LOW_MESSAGES[key].body(val),
-        tag: `oli-need-${key}`,
-        tone: 'warn',
-      });
+      if (statWatched && allowLow) {
+        alerts.push({
+          id: `low-${key}`,
+          stat: key,
+          level: 'low',
+          title: LOW_MESSAGES[key].title,
+          body: LOW_MESSAGES[key].body(val),
+          tag: `oli-need-${key}`,
+          tone: 'warn',
+        });
+      }
     }
   }
 
   return { nextAlerted, alerts };
 }
 
-/** Requests browser notification permission and enables notifications if granted. */
-export async function enableNotifications(): Promise<'granted' | 'denied' | 'unsupported'> {
+/** Requests browser notification permission and returns the resulting status. */
+export async function requestNotificationAccess(): Promise<'granted' | 'denied' | 'unsupported'> {
   if (!isNotificationSupported()) return 'unsupported';
   let perm = Notification.permission;
   if (perm === 'default') {
     perm = await Notification.requestPermission();
   }
-  if (perm === 'granted') {
-    saveNotificationsEnabled(true);
-    return 'granted';
-  }
-  saveNotificationsEnabled(false);
-  return 'denied';
+  return perm === 'granted' ? 'granted' : 'denied';
 }
 
 /** Sends an OS/browser notification via the Service Worker (PWA) or Notification constructor. */
 export async function sendSystemNotification(title: string, body: string, tag = 'oli-alert'): Promise<void> {
-  if (!loadNotificationsEnabled()) return;
+  const prefs = loadNotificationPrefs();
+  if (!prefs.enabled) return;
   const icon = `${import.meta.env.BASE_URL}pwa-192x192.png`;
   const badge = `${import.meta.env.BASE_URL}pwa-64x64.png`;
 

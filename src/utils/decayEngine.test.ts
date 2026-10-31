@@ -218,4 +218,15 @@ describe('notification threshold crossings', () => {
     expect(step4.alerts).toHaveLength(0);
     expect(step4.nextAlerted.hydration).toBe('none');
   });
+
+  it('filters out alerts for stats or severity levels disabled in user preferences', () => {
+    const baseStats = { hunger: 20, hydration: 20, happiness: 80, energy: 80, hygiene: 90 };
+    const res = evaluateStatThresholds(baseStats, noneMap, {
+      lowNeed: true,
+      critical: true,
+      stats: { hunger: true, hydration: false, happiness: true, energy: true, hygiene: true },
+    });
+    expect(res.alerts).toHaveLength(1);
+    expect(res.alerts[0].stat).toBe('hunger');
+  });
 });

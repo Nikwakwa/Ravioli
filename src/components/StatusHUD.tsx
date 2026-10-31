@@ -95,8 +95,8 @@ export function StatusHUD({
             <button
               type="button"
               onClick={onToggleNotifications}
-              title={notificationsOn ? 'Notifications enabled (tap to mute)' : 'Enable Oli notifications'}
-              aria-label={notificationsOn ? 'Disable notifications' : 'Enable notifications'}
+              title="Notification preferences"
+              aria-label="Notification preferences"
               className={`relative flex h-7 w-7 items-center justify-center rounded-full border shadow-sm backdrop-blur-md transition-transform active:scale-95 ${
                 notificationsOn
                   ? night
