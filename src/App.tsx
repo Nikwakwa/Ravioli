@@ -13,6 +13,12 @@ import { StatusHUD } from './components/StatusHUD';
 import { useCatGame, type Notice } from './hooks/useCatGame';
 import { useVersionCheck } from './hooks/useVersionCheck';
 import { vibrate } from './utils/feedback';
+import {
+  enableNotifications,
+  loadNotificationsEnabled,
+  saveNotificationsEnabled,
+  sendSystemNotification,
+} from './utils/notifications';
 import { loadPlayer, playerColor, savePlayer } from './utils/player';
 
 export function App() {
@@ -20,6 +26,7 @@ export function App() {
   const [pickerOpen, setPickerOpen] = useState<boolean>(() => !loadPlayer());
   const [changelogOpen, setChangelogOpen] = useState(false);
   const [guideOpen, setGuideOpen] = useState(false);
+  const [notificationsOn, setNotificationsOn] = useState<boolean>(() => loadNotificationsEnabled());
   const [notice, setNotice] = useState<Notice | null>(null);
   const [tapHeartKey, setTapHeartKey] = useState(0);
   const noticeTimer = useRef<number | undefined>(undefined);
@@ -45,6 +52,39 @@ export function App() {
   const handlePetOli = () => {
     vibrate([15, 25, 15]);
     setTapHeartKey((k) => k + 1);
+  };
+
+  const handleToggleNotifications = async () => {
+    if (notificationsOn) {
+      saveNotificationsEnabled(false);
+      setNotificationsOn(false);
+      pushNotice({ text: '🔕 Oli notifications muted', tone: 'info' });
+      return;
+    }
+    const res = await enableNotifications();
+    if (res === 'granted') {
+      setNotificationsOn(true);
+      pushNotice({ text: '🔔 Oli notifications enabled!', tone: 'info' });
+      void sendSystemNotification(
+        '🔔 Oli notifications enabled!',
+        'We’ll let you know when Oli’s stats drop below 25 or when he wakes up.',
+        'oli-test',
+      );
+    } else if (res === 'denied') {
+      setNotificationsOn(false);
+      pushNotice({ text: 'Notifications blocked by browser settings.', tone: 'warn' });
+    } else {
+      pushNotice({ text: 'Notifications are not supported on this browser.', tone: 'warn' });
+    }
+  };
+
+  const handleTestNotification = () => {
+    pushNotice({ text: '🔔 Sent test notification!', tone: 'info' });
+    void sendSystemNotification(
+      '🐱 Meow from Oli!',
+      'Notifications are working! You’ll be alerted when any need drops below 25.',
+      'oli-test',
+    );
   };
 
   if (!ready || !live) {
@@ -83,6 +123,8 @@ export function App() {
           onOpenPlayer={() => setPickerOpen(true)}
           onOpenChangelog={() => setChangelogOpen(true)}
           onOpenGuide={() => setGuideOpen(true)}
+          notificationsOn={notificationsOn}
+          onToggleNotifications={() => void handleToggleNotifications()}
           hasUpdate={Boolean(availableVersion)}
           mode={mode}
           status={status}
@@ -158,7 +200,13 @@ export function App() {
         </div>
 
         <PlayerSelector open={pickerOpen} current={player} onSelect={handleSelectPlayer} />
-        <GuideModal open={guideOpen} onClose={() => setGuideOpen(false)} />
+        <GuideModal
+          open={guideOpen}
+          onClose={() => setGuideOpen(false)}
+          notificationsOn={notificationsOn}
+          onToggleNotifications={() => void handleToggleNotifications()}
+          onTestNotification={handleTestNotification}
+        />
         <ChangelogModal
           open={changelogOpen}
           onClose={() => setChangelogOpen(false)}

@@ -7,6 +7,15 @@ export interface ReleaseEntry {
 
 export const CHANGELOG: ReleaseEntry[] = [
   {
+    version: 'v0.9.0',
+    date: '2026-10-31',
+    title: 'Smart Oli Notifications 🔔',
+    changes: [
+      'Tap the bell icon in the top bar (or inside Rules) to enable browser/PWA notifications.',
+      'Get alerted automatically when any need drops below 25 (or critical at 5), when Oli wakes up from a nap, or when your partner cares for him in the background.',
+    ],
+  },
+  {
     version: 'v0.8.0',
     date: '2026-10-31',
     title: 'Care Manual & Cleaner Action Tiles 📖',

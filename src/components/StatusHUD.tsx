@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { BookOpen, CloudOff, Loader2, Radio, Users, Wifi } from 'lucide-react';
+import { Bell, BellOff, BookOpen, CloudOff, Loader2, Radio, Users, Wifi } from 'lucide-react';
 import { STAT_META } from '../data/actions';
 import { APP_VERSION } from '../data/changelog';
 import { STAT_KEYS, type LiveCat, type Mood, type SyncMode, type SyncStatus } from '../types';
@@ -27,6 +27,8 @@ export interface StatusHUDProps {
   onOpenPlayer: () => void;
   onOpenChangelog: () => void;
   onOpenGuide: () => void;
+  notificationsOn?: boolean;
+  onToggleNotifications?: () => void;
   hasUpdate?: boolean;
   mode: SyncMode;
   status: SyncStatus;
@@ -39,6 +41,8 @@ export function StatusHUD({
   onOpenPlayer,
   onOpenChangelog,
   onOpenGuide,
+  notificationsOn,
+  onToggleNotifications,
   hasUpdate,
   mode,
   status,
@@ -86,6 +90,32 @@ export function StatusHUD({
         </div>
 
         <div className="flex shrink-0 items-center gap-1.5">
+          {/* Notifications bell toggle */}
+          {onToggleNotifications && (
+            <button
+              type="button"
+              onClick={onToggleNotifications}
+              title={notificationsOn ? 'Notifications enabled (tap to mute)' : 'Enable Oli notifications'}
+              aria-label={notificationsOn ? 'Disable notifications' : 'Enable notifications'}
+              className={`relative flex h-7 w-7 items-center justify-center rounded-full border shadow-sm backdrop-blur-md transition-transform active:scale-95 ${
+                notificationsOn
+                  ? night
+                    ? 'border-amber-300/40 bg-amber-300/20 text-amber-200'
+                    : 'border-amber-500/30 bg-amber-50 text-amber-700'
+                  : surface
+              }`}
+            >
+              {notificationsOn ? (
+                <Bell className="h-3.5 w-3.5 text-amber-600 dark:text-amber-300" />
+              ) : (
+                <BellOff className="h-3.5 w-3.5 opacity-60" />
+              )}
+              {notificationsOn && (
+                <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-emerald-500 ring-2 ring-white" />
+              )}
+            </button>
+          )}
+
           {/* Manual / Rules pill */}
           <button
             type="button"

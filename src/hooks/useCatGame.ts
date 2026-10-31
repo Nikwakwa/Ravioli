@@ -7,9 +7,17 @@ import {
   deriveMood,
   isThriving,
   materialize,
+  nextNeed,
 } from '../utils/decayEngine';
 import { actionById, formatLog, SLEEP_ACTION_ID, type CareAction, type ParticleKind } from '../data/actions';
 import { celebrate, vibrate } from '../utils/feedback';
+import {
+  evaluateStatThresholds,
+  loadAlertedMap,
+  saveAlertedMap,
+  sendSystemNotification,
+  type AlertedMap,
+} from '../utils/notifications';
 import { DEVICE_ID } from '../utils/player';
 
 const TICK_MS = 30_000;
@@ -100,6 +108,9 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
             if (Date.now() - Date.parse(entry.created_at) > REMOTE_EVENT_MAX_AGE_MS) return;
 
             noticeRef.current({ text: entry.message, tone: 'partner', player: entry.player });
+            if (typeof document !== 'undefined' && document.visibilityState !== 'visible') {
+              void sendSystemNotification(`🐾 ${entry.player}`, entry.message, 'oli-partner');
+            }
             const action = actionById(entry.action_id);
             if (action) {
               playEvent({
@@ -159,12 +170,43 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
   const live: LiveCat | null = useMemo(() => (base ? computeLiveStats(base, now) : null), [base, now]);
   const mood: Mood = live ? deriveMood(live) : 'content';
 
+  // Schedule an exact timer for the next low-need threshold crossing so alerts fire right on time.
+  useEffect(() => {
+    if (!live) return;
+    const upcoming = nextNeed(live);
+    if (!upcoming) return;
+    const delayMs = Math.min(Math.max(1000, Math.ceil(upcoming.hours * 3_600_000) + 250), 2_147_483_647);
+    const timer = window.setTimeout(() => setNow(Date.now()), delayMs);
+    return () => window.clearTimeout(timer);
+  }, [live]);
+
+  // Detect low-need (< 25) and critical (<= 5) threshold crossings and notify once per crossing.
+  const alertedRef = useRef<AlertedMap | null>(null);
+  useEffect(() => {
+    if (!live) return;
+    alertedRef.current ??= loadAlertedMap();
+    const { nextAlerted, alerts } = evaluateStatThresholds(live, alertedRef.current);
+    alertedRef.current = nextAlerted;
+    saveAlertedMap(nextAlerted);
+
+    if (alerts.length > 0) {
+      const first = alerts[0];
+      noticeRef.current({ text: first.title, tone: first.tone });
+      vibrate([30, 50, 30]);
+      for (const a of alerts) {
+        void sendSystemNotification(a.title, a.body, a.tag);
+      }
+    }
+  }, [live]);
+
   // Notify when Oli wakes up on his own (piecewise decay crossed the wake point).
   const prevSleeping = useRef<boolean | null>(null);
   useEffect(() => {
     if (!live) return;
     if (prevSleeping.current === true && !live.isSleeping && live.wokeNaturally) {
-      noticeRef.current({ text: `${live.name} woke up from his nap, full of energy!`, tone: 'info' });
+      const msg = `${live.name} woke up from his nap, full of energy!`;
+      noticeRef.current({ text: msg, tone: 'info' });
+      void sendSystemNotification(`☀️ ${live.name} woke up!`, msg, 'oli-wake');
       playEvent({ actionId: 'wake', player: '', remote: true, effect: {}, particles: [], animation: 'yawning', durationMs: 1600 });
     }
     prevSleeping.current = live.isSleeping;

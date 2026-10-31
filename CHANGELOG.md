@@ -4,6 +4,13 @@ All updates to **Oli** are listed here.
 
 ---
 
+## `v0.9.0` — 2026-10-31
+### Smart Oli Notifications 🔔
+- Added a **🔔 Bell toggle** in the top bar (and a Notifications control with a **Test Alert** button inside the **Rules** manual) to enable system/PWA notifications.
+- Automatically notifies you once whenever any stat crosses below **25** (low-need alert) or **5** (critical alert), when Oli finishes his nap and wakes up on his own, or when your co-op partner cares for him while the app is in the background.
+
+---
+
 ## `v0.8.0` — 2026-10-31
 ### Care Manual & Cleaner Action Tiles 📖
 - Added a **Rules** button in the top HUD that opens the **Oli Care Manual & Rules** sheet with exact hourly stat decay/recharge rates, nap rules, mood thresholds, and care action boosts.

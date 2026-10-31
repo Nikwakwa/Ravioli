@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { cleanText, sanitizeActivity, sanitizeCatState } from '../services/catStorage';
+import { evaluateStatThresholds, type AlertedMap } from './notifications';
 import type { CatState } from '../types';
 import {
   DECAY_RATES,
@@ -181,5 +182,40 @@ describe('security sanitizers (catStorage)', () => {
     });
     expect(valid?.player).toBe('Athina');
     expect(valid?.message).toBe('Fed Oli a Churu lickable tube');
+  });
+});
+
+describe('notification threshold crossings', () => {
+  const noneMap: AlertedMap = {
+    hunger: 'none',
+    hydration: 'none',
+    happiness: 'none',
+    energy: 'none',
+    hygiene: 'none',
+  };
+
+  it('alerts once when a stat drops below 25, escalates at <= 5, and resets once refilled >= 25', () => {
+    const baseStats = { hunger: 70, hydration: 24, happiness: 80, energy: 80, hygiene: 90 };
+
+    // 1. Crosses < 25 → emits low alert for hydration
+    const step1 = evaluateStatThresholds(baseStats, noneMap);
+    expect(step1.alerts).toHaveLength(1);
+    expect(step1.alerts[0].id).toBe('low-hydration');
+    expect(step1.nextAlerted.hydration).toBe('low');
+
+    // 2. Stays at 20 → does NOT spam another low alert
+    const step2 = evaluateStatThresholds({ ...baseStats, hydration: 20 }, step1.nextAlerted);
+    expect(step2.alerts).toHaveLength(0);
+
+    // 3. Drops to 4 (critical <= 5) → emits critical alert once
+    const step3 = evaluateStatThresholds({ ...baseStats, hydration: 4 }, step2.nextAlerted);
+    expect(step3.alerts).toHaveLength(1);
+    expect(step3.alerts[0].id).toBe('crit-hydration');
+    expect(step3.nextAlerted.hydration).toBe('critical');
+
+    // 4. Refilled to 60 (>= 25) → resets alert state back to 'none'
+    const step4 = evaluateStatThresholds({ ...baseStats, hydration: 60 }, step3.nextAlerted);
+    expect(step4.alerts).toHaveLength(0);
+    expect(step4.nextAlerted.hydration).toBe('none');
   });
 });

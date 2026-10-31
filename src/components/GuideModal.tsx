@@ -1,8 +1,9 @@
 import { AnimatePresence, motion } from 'framer-motion';
-import { BookOpen, Moon, Sparkles, Sun, X } from 'lucide-react';
+import { Bell, BellOff, BookOpen, Moon, Sparkles, Sun, X } from 'lucide-react';
 import { CARE_ACTIONS, STAT_META } from '../data/actions';
 import { STAT_KEYS } from '../types';
 import { DECAY_RATES, MIN_NAP_HOURS, NEED_THRESHOLD, THRIVING_THRESHOLD } from '../utils/decayEngine';
+import { CRITICAL_THRESHOLD } from '../utils/notifications';
 import { STAT_ICONS } from './statIcons';
 
 function minutesPerPoint(ratePerHour: number): string {
@@ -10,7 +11,19 @@ function minutesPerPoint(ratePerHour: number): string {
   return `1 pt / ${mins}m`;
 }
 
-export function GuideModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+export function GuideModal({
+  open,
+  onClose,
+  notificationsOn,
+  onToggleNotifications,
+  onTestNotification,
+}: {
+  open: boolean;
+  onClose: () => void;
+  notificationsOn?: boolean;
+  onToggleNotifications?: () => void;
+  onTestNotification?: () => void;
+}) {
   return (
     <AnimatePresence>
       {open && (
@@ -57,6 +70,49 @@ export function GuideModal({ open, onClose }: { open: boolean; onClose: () => vo
             </div>
 
             <div className="flex max-h-[68dvh] touch-pan-y flex-col gap-3 overflow-y-auto pr-1 text-amber-950">
+              {/* Section 0: Notifications & Important Alerts */}
+              {onToggleNotifications && (
+                <div className="rounded-2xl border border-amber-900/8 bg-white p-3 shadow-2xs">
+                  <div className="mb-1.5 flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-1.5">
+                      {notificationsOn ? (
+                        <Bell className="h-3.5 w-3.5 text-amber-600" />
+                      ) : (
+                        <BellOff className="h-3.5 w-3.5 text-amber-900/50" />
+                      )}
+                      <h3 className="font-display text-xs font-bold text-amber-950">🔔 Important Notifications</h3>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      {notificationsOn && onTestNotification && (
+                        <button
+                          type="button"
+                          onClick={onTestNotification}
+                          className="rounded-full bg-amber-500/15 px-2.5 py-1 text-[10px] font-extrabold text-amber-800 active:scale-95"
+                        >
+                          Test Alert
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={onToggleNotifications}
+                        className={`rounded-full px-2.5 py-1 text-[10px] font-extrabold transition-colors active:scale-95 ${
+                          notificationsOn
+                            ? 'bg-emerald-600 text-white'
+                            : 'bg-amber-950/10 text-amber-900 hover:bg-amber-950/15'
+                        }`}
+                      >
+                        {notificationsOn ? 'Enabled ✓' : 'Enable Alerts'}
+                      </button>
+                    </div>
+                  </div>
+                  <p className="text-[11px] font-semibold leading-snug text-amber-900/80">
+                    When enabled, you’ll get a notification whenever a stat crosses below{' '}
+                    <strong>{NEED_THRESHOLD}</strong> (low need) or <strong>{CRITICAL_THRESHOLD}</strong> (critical),
+                    when Oli wakes up from his nap, or when your partner cares for him in the background.
+                  </p>
+                </div>
+              )}
+
               {/* Section 1: Hourly Stat Rates */}
               <div className="rounded-2xl border border-amber-900/8 bg-white p-3 shadow-2xs">
                 <div className="mb-1.5 flex items-center justify-between">
