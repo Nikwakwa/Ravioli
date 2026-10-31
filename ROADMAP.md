@@ -54,7 +54,7 @@ This document tracks our gameplay evolution from a passive care toy into a full 
 
 ---
 
-## 🎮 Phase 4: Micro-Minigames for `Play`
+## ✅ Phase 4: Micro-Minigames for `Play` *(Completed)*
 
 Replace passive Play buttons with quick 10-second Tamagotchi minigames:
 1. **Feather Pounce Reflex:** The feather wand darts across the screen; tap when Oli's pupils dilate (`3` quick rounds) to score a pounce combo.

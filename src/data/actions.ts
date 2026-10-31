@@ -275,3 +275,35 @@ export function pickCandidateWhim(
   const idx = Math.min(candidates.length - 1, Math.max(0, Math.floor(seed * candidates.length)));
   return candidates[idx];
 }
+
+// ---------------------------------------------------------------------------
+// Phase 4: Play Micro-Minigame helpers (Feather Pounce & Left/Right Paw Guess)
+// ---------------------------------------------------------------------------
+export const MINIGAME_ROUNDS = 3;
+
+export interface MinigameReward {
+  bonusJoy: number;
+  churuBonus: number;
+  tier: 'perfect' | 'great' | 'good';
+}
+
+export function computeMinigameReward(hits: number, totalRounds: number = MINIGAME_ROUNDS): MinigameReward {
+  if (hits >= totalRounds) {
+    return { bonusJoy: 15, churuBonus: 1, tier: 'perfect' };
+  }
+  if (hits === totalRounds - 1) {
+    return { bonusJoy: 8, churuBonus: 0, tier: 'great' };
+  }
+  return { bonusJoy: 0, churuBonus: 0, tier: 'good' };
+}
+
+export function getFeatherSweetSpot(roundIndex: number): { min: number; max: number } {
+  // Slightly tighter sweet spot each round (Round 1: 32–68%, Round 2: 35–65%, Round 3: 38–62%)
+  const shrink = Math.min(2, Math.max(0, roundIndex)) * 3;
+  return { min: 32 + shrink, max: 68 - shrink };
+}
+
+export function isFeatherInSweetSpot(positionPct: number, roundIndex: number): boolean {
+  const { min, max } = getFeatherSweetSpot(roundIndex);
+  return positionPct >= min && positionPct <= max;
+}

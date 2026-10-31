@@ -4,6 +4,14 @@ All updates to **Oli** are listed here.
 
 ---
 
+## `v0.13.0` — 2026-10-31
+### Tamagotchi Play Minigames! 🎮🐾
+- **Feather Pounce! (`feather_wand`):** 3-round reflex timing minigame where the feather sweeps across the arena — tap **🐾 POUNCE!** while it's inside the narrowing green sweet-spot zone!
+- **Which Paw? Left or Right! (`laser_pointer`):** Classic Gen-1 Tamagotchi 3-round Left/Right game — watch for the subtle red laser glint and guess whether Oli trapped the dot under his **⬅️ Left Paw** or **Right Paw ➡️**!
+- **Combo Rewards & Quick Skip:** Score **2/3** for `+8 Bonus Joy`, or **3/3 Perfect Combo 🏆** for `+15 Bonus Joy`, celebratory confetti, and **+1 Churu Tube 🍬** (stacks with `2×` Attention Call cravings!). Includes a `Skip` button for instant play anytime.
+
+---
+
 ## `v0.12.0` — 2026-10-31
 ### Attention Calls ("Meow!" Cravings) & Churu Stash! 💭🍬
 - **Tamagotchi Attention Calls (`WhimBubble`):** Periodically while awake, Oli displays a thought bubble above his head requesting a specific action (e.g., *Chicken Heart*, *Feather Wand*, *Laser Zoomies*, *Brush Coat*).

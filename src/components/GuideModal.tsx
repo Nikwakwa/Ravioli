@@ -159,7 +159,15 @@ export function GuideModal({
                   </li>
                   <li>
                     <strong>🍬 Churu Treat Stash:</strong> You start with <strong>3 Churu Tubes</strong> (up to 9 max).
-                    Earn more by fulfilling Oli’s cravings or scooping every 2nd mess!
+                    Earn more by fulfilling Oli’s cravings, scoring a <strong>3/3 Perfect Play</strong> in minigames, or
+                    scooping every 2nd mess!
+                  </li>
+                  <li>
+                    <strong>🎮 3-Round Play Minigames:</strong> Choosing <strong>Feather Wand</strong> launches{' '}
+                    <em>Feather Pounce!</em> (reflex timing) and <strong>Laser Zoomies</strong> launches{' '}
+                    <em>Which Paw? Left or Right!</em> Score <strong>2/3</strong> for +8 Bonus Joy, or{' '}
+                    <strong className="text-emerald-700">3/3 Perfect Combo</strong> for +15 Bonus Joy &amp;{' '}
+                    <strong>+1 Churu Tube 🍬</strong>!
                   </li>
                 </ul>
               </div>

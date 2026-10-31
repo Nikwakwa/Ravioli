@@ -24,6 +24,7 @@ import {
 import {
   actionById,
   AUTO_NAP_ENERGY,
+  computeMinigameReward,
   DEFAULT_CHURU_STASH,
   formatLog,
   MAX_CHURU_STASH,
@@ -31,6 +32,7 @@ import {
   MAX_SLEEP_ENERGY,
   MAX_TREATS_IN_WINDOW,
   MESS_SPAWN_HOURS,
+  MINIGAME_ROUNDS,
   MIN_WAKE_ENERGY,
   PET_ACTION_ID,
   PET_COOLDOWN_MS,
@@ -290,6 +292,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
   const [messes, setMesses] = useState<RoomMess[]>(() => loadMesses());
   const [churuStash, setChuruStash] = useState<number>(() => loadChuruStash());
   const [whim, setWhim] = useState<CatWhim | null>(() => loadActiveWhim());
+  const [activeMinigame, setActiveMinigame] = useState<CareAction | null>(null);
   const busyTimer = useRef<number | undefined>(undefined);
   const lastPetRef = useRef<number>(0);
 
@@ -721,7 +724,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
   );
 
   const perform = useCallback(
-    (action: CareAction) => {
+    (action: CareAction, minigameHits?: number) => {
       if (!base || !live || busy) return;
 
       // Special case: Care -> Scoop Mess delegates to cleanMess()
@@ -767,6 +770,13 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
         return;
       }
 
+      // 6b. Phase 4: Launch interactive Tamagotchi Minigame for Play actions!
+      if (action.category === 'play' && minigameHits === undefined) {
+        vibrate(15);
+        setActiveMinigame(action);
+        return;
+      }
+
       // 7. Overfeeding / Treat-spam check (4th treat in 15m triggers a Tummy Ache + Throw-up!)
       const nowMs = Date.now();
       if (action.isTreat) {
@@ -804,18 +814,39 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
         updateChuruStash((c) => c - 1);
       }
 
-      // 9. Check if this action fulfills Oli's active Attention Call / Whim!
+      // 9. Check if this action fulfills Oli's active Attention Call / Whim + apply Minigame bonuses!
       const matchedWhim = whim && whim.actionId === action.id;
       const finalEffect: Partial<CatStats> = { ...action.effect };
+      const mgReward =
+        minigameHits !== undefined ? computeMinigameReward(minigameHits, MINIGAME_ROUNDS) : null;
+
+      if (mgReward && mgReward.bonusJoy > 0) {
+        finalEffect.happiness = (finalEffect.happiness ?? 0) + mgReward.bonusJoy;
+      }
+
       if (matchedWhim) {
         clearWhim();
         const baseJoy = finalEffect.happiness ?? 8;
         finalEffect.happiness = Math.max(16, baseJoy * 2);
-        updateChuruStash((c) => c + 1);
+        const earnedChurus = 1 + (mgReward?.churuBonus ?? 0);
+        updateChuruStash((c) => c + earnedChurus);
         noticeRef.current({
-          text: `🎉 Craving fulfilled! 2× Joy (+${finalEffect.happiness}) & earned +1 Churu Tube 🍬!`,
+          text: `🎉 Craving fulfilled! 2× Joy (+${finalEffect.happiness}) & earned +${earnedChurus} Churu 🍬!`,
           tone: 'info',
         });
+      } else if (mgReward) {
+        if (mgReward.churuBonus > 0) {
+          updateChuruStash((c) => c + mgReward.churuBonus);
+          noticeRef.current({
+            text: `🏆 3/3 Perfect Play! +${finalEffect.happiness} Joy & earned +1 Churu Tube 🍬!`,
+            tone: 'info',
+          });
+        } else if (mgReward.bonusJoy > 0) {
+          noticeRef.current({
+            text: `✨ 2/3 Great Play! +${finalEffect.happiness} Joy!`,
+            tone: 'info',
+          });
+        }
       }
 
       // 10. Soothe tummy ache if using Brush or Calming Mist
@@ -844,16 +875,19 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
         player: player ?? 'Nico',
         remote: false,
         effect: finalEffect,
-        particles: matchedWhim
-          ? Array.from(new Set([...action.particles, 'hearts' as const, 'sparkles' as const]))
-          : action.particles,
+        particles:
+          matchedWhim || mgReward?.tier === 'perfect'
+            ? Array.from(new Set([...action.particles, 'hearts' as const, 'sparkles' as const]))
+            : action.particles,
         animation: action.animation,
         durationMs: action.durationMs,
       });
 
       const wasThriving = messes.length === 0 && isThriving(live);
       const willThrive = messes.length === 0 && isThriving(applyEffect(live, finalEffect));
-      if (!wasThriving && willThrive) window.setTimeout(celebrate, 500);
+      if ((!wasThriving && willThrive) || mgReward?.tier === 'perfect') {
+        window.setTimeout(celebrate, 350);
+      }
 
       const mutator = (b: CatState): CatState => {
         const t = Date.now();
@@ -960,6 +994,20 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
     if (action) perform(action);
   }, [whim, petOli, perform]);
 
+  const completeMinigame = useCallback(
+    (hits: number) => {
+      if (!activeMinigame) return;
+      const action = activeMinigame;
+      setActiveMinigame(null);
+      perform(action, hits);
+    },
+    [activeMinigame, perform],
+  );
+
+  const cancelMinigame = useCallback(() => {
+    setActiveMinigame(null);
+  }, []);
+
   const toggleSleep = useCallback(() => {
     if (!live || busy) return;
     const target = !live.isSleeping;
@@ -1005,6 +1053,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
     messes,
     churuStash,
     whim,
+    activeMinigame,
     log,
     mode,
     status,
@@ -1012,6 +1061,8 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
     event,
     busy,
     perform,
+    completeMinigame,
+    cancelMinigame,
     petOli,
     cleanMess,
     fulfillWhim,

@@ -7,6 +7,16 @@ export interface ReleaseEntry {
 
 export const CHANGELOG: ReleaseEntry[] = [
   {
+    version: 'v0.13.0',
+    date: '2026-10-31',
+    title: 'Tamagotchi Play Minigames! 🎮🐾',
+    changes: [
+      'Feather Pounce! (Feather Wand): 3-round reflex game — tap POUNCE when the darting feather enters the green sweet-spot zone!',
+      'Which Paw? Left or Right! (Laser Zoomies): Classic 3-round Tamagotchi game — spot the subtle red laser glint and guess which paw Oli traps the dot under!',
+      'Minigame Rewards: Score 2/3 for +8 Bonus Joy, or 3/3 Perfect Combo for +15 Bonus Joy, confetti & +1 Churu Tube 🍬!',
+    ],
+  },
+  {
     version: 'v0.12.0',
     date: '2026-10-31',
     title: 'Attention Calls ("Meow!" Cravings) & Churu Stash! 💭🍬',

@@ -7,6 +7,7 @@ import { ChangelogModal } from './components/ChangelogModal';
 import { FloatingEffects } from './components/FloatingEffects';
 import { GuideModal } from './components/GuideModal';
 import { NotificationModal } from './components/NotificationModal';
+import { PlayMinigameModal } from './components/PlayMinigameModal';
 import { RoomMesses } from './components/RoomMesses';
 import { LivingRoom } from './components/scenes/LivingRoom';
 import { StatusHUD } from './components/StatusHUD';
@@ -45,9 +46,12 @@ export function App() {
     messes,
     churuStash,
     whim,
+    activeMinigame,
     event,
     busy,
     perform,
+    completeMinigame,
+    cancelMinigame,
     petOli,
     cleanMess,
     fulfillWhim,
@@ -225,6 +229,13 @@ export function App() {
           />
         </div>
 
+        <PlayMinigameModal
+          action={activeMinigame}
+          catName={live.name}
+          whimActive={Boolean(whim && activeMinigame && whim.actionId === activeMinigame.id)}
+          onComplete={completeMinigame}
+          onCancel={cancelMinigame}
+        />
         <NotificationModal
           open={notifOpen}
           onClose={() => setNotifOpen(false)}

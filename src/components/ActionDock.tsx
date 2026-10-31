@@ -286,11 +286,15 @@ export function ActionDock({
                 </div>
                 <div className="flex items-center justify-between gap-1">
                   <p className="font-display text-xs font-bold leading-snug">{action.short}</p>
-                  {action.soothesTummy && tummyAche && (
+                  {action.soothesTummy && tummyAche ? (
                     <span className="rounded-full bg-emerald-500/20 px-1.5 py-0.5 text-[9px] font-extrabold text-emerald-700">
                       Soothes 🧡
                     </span>
-                  )}
+                  ) : action.category === 'play' && !muted ? (
+                    <span className="rounded-full bg-amber-500/18 px-1.5 py-0.5 text-[9px] font-extrabold leading-none text-amber-800 dark:text-amber-200">
+                      🎮 3-Rd
+                    </span>
+                  ) : null}
                 </div>
               </motion.button>
             );

@@ -3,6 +3,8 @@ import {
   actionById,
   CARE_ACTIONS,
   CATEGORIES,
+  computeMinigameReward,
+  isFeatherInSweetSpot,
   MAX_SLEEP_ENERGY,
   MIN_WAKE_ENERGY,
   PET_ACTION_ID,
@@ -258,6 +260,18 @@ describe('Tamagotchi Phase 1 & 2 action, dock & mess rules', () => {
       expect(w).not.toBeNull();
       expect(['wet_food', 'quail_egg', 'feather_wand', 'laser_pointer']).not.toContain(w?.actionId);
     }
+  });
+
+  it('rewards 3-round Play minigames with bonus Joy on 2/3 and +1 Churu on 3/3', () => {
+    expect(computeMinigameReward(3, 3)).toEqual({ bonusJoy: 15, churuBonus: 1, tier: 'perfect' });
+    expect(computeMinigameReward(2, 3)).toEqual({ bonusJoy: 8, churuBonus: 0, tier: 'great' });
+    expect(computeMinigameReward(1, 3)).toEqual({ bonusJoy: 0, churuBonus: 0, tier: 'good' });
+    expect(computeMinigameReward(0, 3)).toEqual({ bonusJoy: 0, churuBonus: 0, tier: 'good' });
+
+    expect(isFeatherInSweetSpot(50, 0)).toBe(true);
+    expect(isFeatherInSweetSpot(10, 0)).toBe(false);
+    expect(isFeatherInSweetSpot(36, 0)).toBe(true);
+    expect(isFeatherInSweetSpot(36, 2)).toBe(false); // tighter sweet spot on round 3 (38–62%)
   });
 });
 
