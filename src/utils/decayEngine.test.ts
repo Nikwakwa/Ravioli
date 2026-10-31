@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { cleanText, sanitizeActivity, sanitizeCatState } from '../services/catStorage';
 import type { CatState } from '../types';
 import {
   DECAY_RATES,
@@ -149,5 +150,36 @@ describe('mood & hints', () => {
     const need = nextNeed(computeLiveStats(base({ energy: 80 }), T0));
     expect(need?.stat).toBe('hydration');
     expect(need?.hours).toBeCloseTo((80 - 25) / 8);
+  });
+});
+
+describe('security sanitizers (catStorage)', () => {
+  it('pins cat name to Oli even if remote payload attempts spoofing', () => {
+    const state = sanitizeCatState({ name: '<script>alert(1)</script>', hunger: 50 });
+    expect(state.name).toBe('Oli');
+  });
+
+  it('strips HTML tags, quotes, and URLs from text fields', () => {
+    expect(cleanText('<b>Athina</b> https://evil.example/phish "hi"', 24)).toBe('Athina hi');
+  });
+
+  it('rejects unknown action_id payloads and canonicalizes valid action messages', () => {
+    expect(
+      sanitizeActivity({
+        id: '1',
+        player: 'Athina',
+        action_id: 'unknown_hack',
+        message: 'Click https://evil.example',
+      }),
+    ).toBeNull();
+
+    const valid = sanitizeActivity({
+      id: '2',
+      player: '<b>Athina</b>',
+      action_id: 'churu',
+      message: 'Spoofed message that gets replaced with canonical text',
+    });
+    expect(valid?.player).toBe('Athina');
+    expect(valid?.message).toBe('Spoiled Oli with his favourite Churu lickable tube');
   });
 });

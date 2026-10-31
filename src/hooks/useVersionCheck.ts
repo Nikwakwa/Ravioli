@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { APP_VERSION } from '../data/changelog';
 
 const CHECK_INTERVAL_MS = 60_000;
+const VERSION_RE = /^v\d{1,3}\.\d{1,3}\.\d{1,3}$/;
 
 export function useVersionCheck() {
   const [availableVersion, setAvailableVersion] = useState<string | null>(null);
@@ -21,8 +22,8 @@ export function useVersionCheck() {
         headers: { pragma: 'no-cache', 'cache-control': 'no-cache' },
       });
       if (!res.ok) return;
-      const data = (await res.json()) as { version?: string };
-      if (typeof data.version === 'string' && data.version.startsWith('v') && data.version !== APP_VERSION) {
+      const data = (await res.json()) as { version?: unknown };
+      if (typeof data.version === 'string' && VERSION_RE.test(data.version) && data.version !== APP_VERSION) {
         setAvailableVersion(data.version);
       }
     } catch {

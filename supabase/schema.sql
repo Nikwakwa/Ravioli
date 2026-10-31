@@ -11,7 +11,7 @@
 -- -----------------------------------------------------------------------------
 create table if not exists public.cat_state (
   id              smallint primary key default 1 check (id = 1),
-  name            text        not null default 'Oli' check (char_length(name) between 1 and 24),
+  name            text        not null default 'Oli' check (name = 'Oli'),
   hunger          real        not null default 70 check (hunger    between 0 and 100),
   hydration       real        not null default 70 check (hydration between 0 and 100),
   happiness       real        not null default 75 check (happiness between 0 and 100),
@@ -32,9 +32,22 @@ insert into public.cat_state (id) values (1) on conflict (id) do nothing;
 -- -----------------------------------------------------------------------------
 create table if not exists public.activity_log (
   id         bigint generated always as identity primary key,
-  player     text        not null check (char_length(player) between 1 and 24),
-  action_id  text        not null check (char_length(action_id) between 1 and 48),
-  message    text        not null check (char_length(message) between 1 and 160),
+  player     text        not null check (char_length(player) between 1 and 24 and player !~ '[<>]'),
+  action_id  text        not null check (
+    action_id in (
+      'churu',
+      'wet_food',
+      'chicken_heart',
+      'quail_egg',
+      'fountain',
+      'chin_scratch',
+      'feather_wand',
+      'pheromone_mist',
+      'brush',
+      'toggle_sleep'
+    )
+  ),
+  message    text        not null check (char_length(message) between 1 and 160 and message !~ '[<>]'),
   -- Random per-device id so each phone can tell its own echoes from partner actions.
   device_id  text        check (char_length(device_id) <= 64),
   created_at timestamptz not null default now()

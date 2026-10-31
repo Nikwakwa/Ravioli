@@ -59,8 +59,6 @@ export type NewActivity = Omit<ActivityEntry, 'id' | 'created_at'>;
 export type SyncMode = 'supabase' | 'local';
 export type SyncStatus = 'connecting' | 'live' | 'local' | 'offline' | 'error';
 
-export type SceneId = 'room' | 'balcony';
-
 /** Transient, purely visual animation the cat should play. */
 export type CatAnimation =
   | 'idle'

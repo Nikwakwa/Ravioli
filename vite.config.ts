@@ -14,6 +14,29 @@ export default defineConfig({
   plugins: [
     react(),
     tailwindcss(),
+    {
+      name: 'ravioli-csp',
+      apply: 'build',
+      transformIndexHtml(html) {
+        const csp = [
+          "default-src 'self'",
+          "script-src 'self'",
+          "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+          "font-src 'self' https://fonts.gstatic.com",
+          "img-src 'self' data: blob:",
+          "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
+          "worker-src 'self' blob:",
+          "manifest-src 'self'",
+          "object-src 'none'",
+          "base-uri 'self'",
+          "form-action 'self'",
+        ].join('; ');
+        return html.replace(
+          '<meta charset="UTF-8" />',
+          `<meta charset="UTF-8" />\n    <meta http-equiv="Content-Security-Policy" content="${csp}" />`,
+        );
+      },
+    },
     VitePWA({
       registerType: 'autoUpdate',
       manifestFilename: 'manifest.json',

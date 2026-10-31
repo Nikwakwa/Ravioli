@@ -4,6 +4,13 @@ All updates to **Oli** are listed here.
 
 ---
 
+## `v0.6.0` — 2026-10-31
+### Cozy Living Room Focus & Security Hardening
+- Removed the Balcony scene and switcher so the app focuses purely on Oli’s cozy Living Room.
+- Added strict Content Security Policy (CSP), canonical activity-log message validation, and input sanitization.
+
+---
+
 ## `v0.5.0` — 2026-10-30
 ### Oli’s Favourite Treat: Churu! 🐾
 - Added Oli’s favourite creamy lickable **Churu Tube** to the Feed menu (marked with a `★ Fav` badge).

@@ -7,12 +7,10 @@ import { CatAvatar } from './components/CatAvatar';
 import { ChangelogModal } from './components/ChangelogModal';
 import { FloatingEffects } from './components/FloatingEffects';
 import { PlayerSelector } from './components/PlayerSelector';
-import { Balcony } from './components/scenes/Balcony';
 import { LivingRoom } from './components/scenes/LivingRoom';
 import { StatusHUD } from './components/StatusHUD';
 import { useCatGame, type Notice } from './hooks/useCatGame';
 import { useVersionCheck } from './hooks/useVersionCheck';
-import type { SceneId } from './types';
 import { vibrate } from './utils/feedback';
 import { loadPlayer, playerColor, savePlayer } from './utils/player';
 
@@ -20,13 +18,9 @@ export function App() {
   const [player, setPlayer] = useState<string | null>(() => loadPlayer());
   const [pickerOpen, setPickerOpen] = useState<boolean>(() => !loadPlayer());
   const [changelogOpen, setChangelogOpen] = useState(false);
-  const [scene, setScene] = useState<SceneId>('room');
-  const [swipeDir, setSwipeDir] = useState<1 | -1>(1);
   const [notice, setNotice] = useState<Notice | null>(null);
   const [tapHeartKey, setTapHeartKey] = useState(0);
   const noticeTimer = useRef<number | undefined>(undefined);
-  const swipeStart = useRef<{ x: number; y: number } | null>(null);
-  const swipeCurrent = useRef<{ x: number; y: number } | null>(null);
 
   const pushNotice = useCallback((n: Omit<Notice, 'id'>) => {
     setNotice({ ...n, id: Date.now() });
@@ -44,31 +38,6 @@ export function App() {
     savePlayer(name);
     setPlayer(name);
     setPickerOpen(false);
-  };
-
-  const handlePointerDown = (e: React.PointerEvent) => {
-    swipeStart.current = { x: e.clientX, y: e.clientY };
-    swipeCurrent.current = { x: e.clientX, y: e.clientY };
-  };
-
-  const handlePointerMove = (e: React.PointerEvent) => {
-    if (!swipeStart.current) return;
-    swipeCurrent.current = { x: e.clientX, y: e.clientY };
-  };
-
-  const finishSwipe = (endX?: number, endY?: number) => {
-    const start = swipeStart.current;
-    const end = endX !== undefined && endY !== undefined ? { x: endX, y: endY } : swipeCurrent.current;
-    swipeStart.current = null;
-    swipeCurrent.current = null;
-    if (!start || !end) return;
-    const dx = end.x - start.x;
-    const dy = end.y - start.y;
-    if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.2) {
-      setSwipeDir(dx < 0 ? 1 : -1);
-      setScene((prev) => (prev === 'room' ? 'balcony' : 'room'));
-      vibrate(12);
-    }
   };
 
   const handlePetOli = () => {
@@ -91,39 +60,15 @@ export function App() {
     <div className="flex h-dvh w-full items-center justify-center bg-[#23170f]">
       {/* Mobile portrait frame (full-bleed on phones, phone-sized card on desktop) */}
       <main className="safe-shell relative flex h-full w-full max-w-[440px] flex-col justify-between overflow-hidden bg-[#fbe3cb] shadow-2xl">
-        {/* Scene background */}
+        {/* Cozy Living Room background */}
         <div className="pointer-events-none absolute inset-0">
-          <AnimatePresence mode="wait" initial={false}>
-            {scene === 'room' ? (
-              <motion.div
-                key="room"
-                initial={{ opacity: 0, x: -32 * swipeDir }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -32 * swipeDir }}
-                transition={{ duration: 0.26, ease: 'easeOut' }}
-                className="absolute inset-0"
-              >
-                <LivingRoom sleeping={live.isSleeping} fountainBoost={event?.actionId === 'fountain'} />
-              </motion.div>
-            ) : (
-              <motion.div
-                key="balcony"
-                initial={{ opacity: 0, x: 32 * swipeDir }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 32 * swipeDir }}
-                transition={{ duration: 0.26, ease: 'easeOut' }}
-                className="absolute inset-0"
-              >
-                <Balcony sleeping={live.isSleeping} />
-              </motion.div>
-            )}
-          </AnimatePresence>
+          <LivingRoom sleeping={live.isSleeping} fountainBoost={event?.actionId === 'fountain'} />
 
           {/* Subtle sleep-mode ambient vignette */}
           <motion.div
             className="pointer-events-none absolute inset-0 bg-indigo-950"
             initial={false}
-            animate={{ opacity: live.isSleeping ? (scene === 'room' ? 0.22 : 0.12) : 0 }}
+            animate={{ opacity: live.isSleeping ? 0.22 : 0 }}
             transition={{ duration: 0.7 }}
           />
         </div>
@@ -132,12 +77,6 @@ export function App() {
         <StatusHUD
           live={live}
           mood={mood}
-          scene={scene}
-          onSceneChange={(s) => {
-            setSwipeDir(s === 'balcony' ? 1 : -1);
-            setScene(s);
-            vibrate(10);
-          }}
           player={player ?? 'Nico'}
           onOpenPlayer={() => setPickerOpen(true)}
           onOpenChangelog={() => setChangelogOpen(true)}
@@ -195,14 +134,8 @@ export function App() {
           )}
         </AnimatePresence>
 
-        {/* Center stage: swipeable scene area + Oli sitting on the rug/cushion */}
-        <div
-          onPointerDown={handlePointerDown}
-          onPointerMove={handlePointerMove}
-          onPointerUp={(e) => finishSwipe(e.clientX, e.clientY)}
-          onPointerCancel={() => finishSwipe()}
-          className="relative z-10 flex flex-1 items-end justify-center pb-3"
-        >
+        {/* Center stage: Oli sitting on the living room plush rug */}
+        <div className="relative z-10 flex flex-1 items-end justify-center pb-3">
           <FloatingEffects event={event} tapHeartKey={tapHeartKey} mood={mood} />
           <div className="relative h-56 w-56 sm:h-60 sm:w-60">
             <CatAvatar

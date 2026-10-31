@@ -1,17 +1,20 @@
 /**
- * Dual-mode data layer.
+ * Dual-mode data layer (hardened).
  *
  * - **Supabase mode** (when VITE_SUPABASE_URL + VITE_SUPABASE_ANON_KEY are set):
  *   Postgres single-row `cat_state` + `activity_log`, live-synced over
  *   Supabase Realtime WebSockets.
  * - **Local mode** (zero config): localStorage persistence + BroadcastChannel
- *   so multiple tabs on the same device sync instantly — perfect for testing
- *   co-op from minute one.
+ *   so multiple tabs on the same device sync instantly.
  *
- * If Supabase is configured but unreachable / not yet migrated, we gracefully
- * fall back to local mode instead of crashing.
+ * Security hardening:
+ * - Untrusted remote/persisted rows are strictly sanitized: `name` is pinned to
+ *   `'Oli'`, `action_id` is checked against the known action allowlist, and
+ *   canonical log messages are reconstructed from `action_id` so direct REST
+ *   calls with the public anon key cannot inject phishing links or spoofed text.
  */
 import { createClient, type RealtimeChannel, type SupabaseClient } from '@supabase/supabase-js';
+import { actionById, formatLog, SLEEP_ACTION_ID } from '../data/actions';
 import type { ActivityEntry, CatState, NewActivity, SyncMode, SyncStatus } from '../types';
 import { clampStat, createDefaultCatState } from '../utils/decayEngine';
 
@@ -57,12 +60,23 @@ function isoOr(value: unknown, fallback: string | null): string | null {
   return Number.isFinite(Date.parse(value)) ? new Date(value).toISOString() : fallback;
 }
 
+/** Strips HTML tags, control chars, angle brackets, quotes, and URLs from user-facing strings. */
+export function cleanText(input: string, maxLen: number): string {
+  return input
+    .replace(/<[^>]*>/g, '')
+    .replace(/https?:\/\/\S+/gi, '')
+    .replace(/[\u0000-\u001F\u007F<>`"']/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, maxLen);
+}
+
 export function sanitizeCatState(raw: unknown): CatState {
   const d = createDefaultCatState();
   if (!raw || typeof raw !== 'object') return d;
   const r = raw as Record<string, unknown>;
   return {
-    name: typeof r.name === 'string' && r.name.trim() ? r.name.slice(0, 24) : d.name,
+    name: 'Oli',
     hunger: clampStat(num(r.hunger, d.hunger)),
     hydration: clampStat(num(r.hydration, d.hydration)),
     happiness: clampStat(num(r.happiness, d.happiness)),
@@ -75,23 +89,44 @@ export function sanitizeCatState(raw: unknown): CatState {
   };
 }
 
+/** Canonicalizes activity entries so arbitrary text cannot be injected via the public anon API. */
 export function sanitizeActivity(raw: unknown): ActivityEntry | null {
   if (!raw || typeof raw !== 'object') return null;
   const r = raw as Record<string, unknown>;
-  if (r.id == null || typeof r.player !== 'string' || typeof r.message !== 'string') return null;
+  if (r.id == null || typeof r.player !== 'string' || typeof r.action_id !== 'string') return null;
+
+  const player = cleanText(r.player, 24);
+  if (!player) return null;
+
+  const actionId = cleanText(r.action_id, 48);
+  const knownAction = actionById(actionId);
+
+  let message: string;
+  if (knownAction) {
+    message = formatLog(knownAction.log, 'Oli');
+  } else if (actionId === SLEEP_ACTION_ID) {
+    const rawMsg = typeof r.message === 'string' ? r.message : '';
+    message = rawMsg.toLowerCase().includes('woke')
+      ? 'Gently woke Oli up from his nap'
+      : 'Tucked Oli in for a cozy nap';
+  } else {
+    // Reject unknown action_ids so external API callers cannot inject custom strings.
+    return null;
+  }
+
   return {
-    id: String(r.id),
-    player: r.player.slice(0, 24),
-    action_id: typeof r.action_id === 'string' ? r.action_id : 'unknown',
-    message: r.message.slice(0, 160),
-    device_id: typeof r.device_id === 'string' ? r.device_id.slice(0, 64) : null,
+    id: cleanText(String(r.id), 64) || uid(),
+    player,
+    action_id: actionId,
+    message,
+    device_id: typeof r.device_id === 'string' ? cleanText(r.device_id, 64) : null,
     created_at: isoOr(r.created_at, new Date().toISOString()) ?? new Date().toISOString(),
   };
 }
 
 function toRow(state: CatState) {
   return {
-    name: state.name,
+    name: 'Oli',
     hunger: state.hunger,
     hydration: state.hydration,
     happiness: state.happiness,
@@ -163,7 +198,6 @@ export class LocalCatStorage implements CatStorage {
     } catch {
       this.channel = null;
     }
-    // Fallback cross-tab sync for browsers without BroadcastChannel.
     window.addEventListener('storage', (ev) => {
       if (this.channel) return;
       if (ev.key === LS_STATE && ev.newValue) {
@@ -208,18 +242,19 @@ export class LocalCatStorage implements CatStorage {
   }
 
   async commit(mutator: CatMutator, activity: NewActivity | null): Promise<CommitResult> {
-    // Same-device writes are effectively serialized by the JS event loop.
     const current = this.readState();
-    const next: CatState = { ...mutator(current), version: current.version + 1 };
+    const next: CatState = sanitizeCatState({ ...mutator(current), version: current.version + 1 });
     safeStorage.set(LS_STATE, JSON.stringify(next));
     this.channel?.postMessage({ type: 'state', state: next } satisfies LocalMessage);
 
     let entry: ActivityEntry | null = null;
     if (activity) {
-      entry = { ...activity, id: uid(), created_at: new Date().toISOString() };
-      const log = [entry, ...this.readLog()].slice(0, LOCAL_LOG_RETAIN);
-      safeStorage.set(LS_LOG, JSON.stringify(log));
-      this.channel?.postMessage({ type: 'activity', entry } satisfies LocalMessage);
+      entry = sanitizeActivity({ ...activity, id: uid(), created_at: new Date().toISOString() });
+      if (entry) {
+        const log = [entry, ...this.readLog()].slice(0, LOCAL_LOG_RETAIN);
+        safeStorage.set(LS_LOG, JSON.stringify(log));
+        this.channel?.postMessage({ type: 'activity', entry } satisfies LocalMessage);
+      }
     }
     return { state: next, entry };
   }
@@ -245,7 +280,11 @@ export class SupabaseCatStorage implements CatStorage {
   private cached: CatState | null = null;
 
   constructor(url: string, anonKey: string) {
-    this.client = createClient(url, anonKey, {
+    const parsed = new URL(url);
+    if (parsed.protocol !== 'https:') {
+      throw new Error('VITE_SUPABASE_URL must use https://');
+    }
+    this.client = createClient(parsed.origin, anonKey, {
       auth: { persistSession: false, autoRefreshToken: false },
       realtime: { params: { eventsPerSecond: 10 } },
     });
@@ -282,7 +321,7 @@ export class SupabaseCatStorage implements CatStorage {
     let current = this.cached ?? (await this.fetchState());
 
     for (let attempt = 0; attempt < MAX_COMMIT_ATTEMPTS; attempt++) {
-      const next: CatState = { ...mutator(current), version: current.version + 1 };
+      const next: CatState = sanitizeCatState({ ...mutator(current), version: current.version + 1 });
       const { data, error } = await this.client
         .from('cat_state')
         .update(toRow(next))
@@ -296,7 +335,13 @@ export class SupabaseCatStorage implements CatStorage {
         this.cached = sanitizeCatState(data);
         let entry: ActivityEntry | null = null;
         if (activity) {
-          const res = await this.client.from('activity_log').insert(activity).select('*').single();
+          const safePayload: NewActivity = {
+            player: cleanText(activity.player, 24) || 'Nico',
+            action_id: cleanText(activity.action_id, 48),
+            message: cleanText(activity.message, 160),
+            device_id: activity.device_id ? cleanText(activity.device_id, 64) : null,
+          };
+          const res = await this.client.from('activity_log').insert(safePayload).select('*').single();
           if (res.error) console.warn('[catStorage] activity insert failed', res.error);
           else entry = sanitizeActivity(res.data);
         }

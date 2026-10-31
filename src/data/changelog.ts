@@ -7,6 +7,15 @@ export interface ReleaseEntry {
 
 export const CHANGELOG: ReleaseEntry[] = [
   {
+    version: 'v0.6.0',
+    date: '2026-10-31',
+    title: 'Cozy Living Room Focus & Security Hardening',
+    changes: [
+      'Focused the home exclusively on Oli’s cozy Living Room with a cleaner top bar.',
+      'Hardened app security (strict Content Security Policy, canonical activity messages, and input sanitization).',
+    ],
+  },
+  {
     version: 'v0.5.0',
     date: '2026-10-30',
     title: 'Oli’s Favourite Treat: Churu! 🐾',

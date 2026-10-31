@@ -5,14 +5,18 @@ export const PLAYER_PRESETS = ['Nico', 'Athina'] as const;
 const PLAYER_KEY = 'ravioli:player';
 const DEVICE_KEY = 'ravioli:device-id';
 
+function sanitizePlayerName(raw: string): string {
+  return raw.replace(/[\u0000-\u001F\u007F<>`"']/g, '').trim().slice(0, 24);
+}
+
 export function loadPlayer(): string | null {
   try {
-    const p = window.localStorage.getItem(PLAYER_KEY)?.trim();
+    const p = sanitizePlayerName(window.localStorage.getItem(PLAYER_KEY) ?? '');
     if (!p) return null;
     // Migrate previous default labels if already stored on device
     if (p.toLowerCase() === 'me') return 'Nico';
     if (p.toLowerCase() === 'her') return 'Athina';
-    return p.slice(0, 24);
+    return p;
   } catch {
     return null;
   }
@@ -20,7 +24,8 @@ export function loadPlayer(): string | null {
 
 export function savePlayer(name: string): void {
   try {
-    window.localStorage.setItem(PLAYER_KEY, name.slice(0, 24));
+    const clean = sanitizePlayerName(name);
+    if (clean) window.localStorage.setItem(PLAYER_KEY, clean);
   } catch {
     /* no-op */
   }

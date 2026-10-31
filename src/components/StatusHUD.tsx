@@ -1,8 +1,8 @@
 import { motion } from 'framer-motion';
-import { CloudOff, Home, Loader2, Moon, Radio, Sun, Users, Wifi } from 'lucide-react';
+import { CloudOff, Loader2, Radio, Users, Wifi } from 'lucide-react';
 import { STAT_META } from '../data/actions';
 import { APP_VERSION } from '../data/changelog';
-import { STAT_KEYS, type LiveCat, type Mood, type SceneId, type SyncMode, type SyncStatus } from '../types';
+import { STAT_KEYS, type LiveCat, type Mood, type SyncMode, type SyncStatus } from '../types';
 import { NEED_THRESHOLD } from '../utils/decayEngine';
 import { playerColor } from '../utils/player';
 import { STAT_ICONS } from './statIcons';
@@ -23,8 +23,6 @@ const MOOD_BADGE: Record<Mood, { label: string; emoji: string }> = {
 export interface StatusHUDProps {
   live: LiveCat;
   mood: Mood;
-  scene: SceneId;
-  onSceneChange: (scene: SceneId) => void;
   player: string;
   onOpenPlayer: () => void;
   onOpenChangelog: () => void;
@@ -36,8 +34,6 @@ export interface StatusHUDProps {
 export function StatusHUD({
   live,
   mood,
-  scene,
-  onSceneChange,
   player,
   onOpenPlayer,
   onOpenChangelog,
@@ -55,14 +51,14 @@ export function StatusHUD({
 
   return (
     <header className="relative z-20 flex flex-col gap-2 px-3 pt-2.5">
-      {/* Row 1: Cat identity + scene segmented control + player pill */}
-      <div className="flex items-center justify-between gap-1.5">
+      {/* Row 1: Cat identity + player pill */}
+      <div className="flex items-center justify-between gap-2">
         <div
-          className={`flex min-w-0 items-center gap-2 rounded-2xl border px-2.5 py-1.5 shadow-sm backdrop-blur-md transition-colors duration-500 ${surface}`}
+          className={`flex min-w-0 items-center gap-2.5 rounded-2xl border px-3 py-1.5 shadow-sm backdrop-blur-md transition-colors duration-500 ${surface}`}
         >
           <span className="text-xl leading-none select-none">{badge.emoji}</span>
           <div className="min-w-0 leading-tight">
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1.5">
               <span className="font-display text-sm font-bold">{live.name}</span>
               <SyncDot mode={mode} status={status} />
               <button
@@ -87,46 +83,12 @@ export function StatusHUD({
           </div>
         </div>
 
-        {/* Scene pill: Living Room / Sunny Balcony */}
-        <div
-          className={`flex shrink-0 rounded-full border p-0.5 shadow-sm backdrop-blur-md transition-colors duration-500 ${surface}`}
-        >
-          <button
-            type="button"
-            onClick={() => onSceneChange('room')}
-            className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-extrabold transition-all ${
-              scene === 'room'
-                ? 'bg-amber-500 text-white shadow-xs'
-                : night
-                  ? 'text-indigo-200/75 hover:text-white'
-                  : 'text-amber-900/70 hover:text-amber-950'
-            }`}
-          >
-            <Home className="h-3.5 w-3.5" />
-            <span>Room</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => onSceneChange('balcony')}
-            className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-extrabold transition-all ${
-              scene === 'balcony'
-                ? 'bg-amber-500 text-white shadow-xs'
-                : night
-                  ? 'text-indigo-200/75 hover:text-white'
-                  : 'text-amber-900/70 hover:text-amber-950'
-            }`}
-          >
-            {night ? <Moon className="h-3.5 w-3.5" /> : <Sun className="h-3.5 w-3.5" />}
-            <span>Balcony</span>
-          </button>
-        </div>
-
         {/* Player selector pill */}
         <button
           type="button"
           onClick={onOpenPlayer}
           style={{ backgroundColor: pColor.bg, color: pColor.fg }}
-          className="flex shrink-0 items-center gap-1 rounded-full border border-black/5 px-2.5 py-1.5 text-[11px] font-extrabold shadow-sm transition-transform active:scale-95"
+          className="flex shrink-0 items-center gap-1.5 rounded-full border border-black/5 px-3 py-1.5 text-xs font-extrabold shadow-sm transition-transform active:scale-95"
           title="Switch player"
         >
           <Users className="h-3.5 w-3.5" />
