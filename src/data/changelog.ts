@@ -7,6 +7,14 @@ export interface ReleaseEntry {
 
 export const CHANGELOG: ReleaseEntry[] = [
   {
+    version: 'v0.10.1',
+    date: '2026-10-31',
+    title: 'Interactive Fountain Fix 💧',
+    changes: [
+      'Fixed an invisible overlay layer that was blocking taps on the living room water fountain.',
+    ],
+  },
+  {
     version: 'v0.10.0',
     date: '2026-10-31',
     title: 'Tamagotchi Rules, Laser Zoomies & Direct Petting! 🥚🐾',

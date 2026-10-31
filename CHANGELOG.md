@@ -4,6 +4,12 @@ All updates to **Oli** are listed here.
 
 ---
 
+## `v0.10.1` — 2026-10-31
+### Interactive Fountain Fix 💧
+- Fixed the center-stage wrapper catching pointer events over the Living Room background so tapping the water fountain works reliably on mobile & desktop.
+
+---
+
 ## `v0.10.0` — 2026-10-31
 ### Tamagotchi Rules, Laser Zoomies & Direct Petting! 🥚🐾
 - Streamlined the UI for single-player Tamagotchi gameplay (parked co-op UI for a future update) and reorganized the dock into **Feed · Play · Care · Rest**.

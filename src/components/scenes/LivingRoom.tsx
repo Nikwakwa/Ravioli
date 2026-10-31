@@ -321,12 +321,15 @@ export function LivingRoom({
 
       {/* White cuboid LED pet water fountain + stainless bowl by the left wall (PXL_20260321_203920849.jpg) */}
       <g
-        transform="translate(26 350)"
-        onPointerDown={onTapFountain}
+        transform="translate(36 350)"
+        onClick={onTapFountain}
+        className={onTapFountain ? 'pointer-events-auto cursor-pointer' : undefined}
         style={onTapFountain ? { pointerEvents: 'auto', cursor: 'pointer' } : undefined}
         role={onTapFountain ? 'button' : undefined}
         aria-label={onTapFountain ? 'Refresh Oli’s water fountain' : undefined}
       >
+        {/* Generous transparent touch target for mobile fingers */}
+        <rect x="-10" y="-12" width="96" height="68" fill="transparent" style={{ pointerEvents: 'all' }} />
         <ellipse cx="26" cy="46" rx="34" ry="7" fill="rgba(40,35,28,0.16)" />
         {/* White rounded-square fountain body */}
         <rect x="4" y="6" width="42" height="38" rx="7" fill={sleeping ? '#d5d2e3' : '#fbfaf7'} stroke={sleeping ? '#aba6bf' : '#d5d0c5'} strokeWidth="1.2" />

@@ -179,9 +179,9 @@ export function App() {
         </AnimatePresence>
 
         {/* Center stage: Oli sitting on the living room plush rug */}
-        <div className="relative z-10 flex flex-1 items-end justify-center pb-5">
+        <div className="pointer-events-none relative z-10 flex flex-1 items-end justify-center pb-5">
           <FloatingEffects event={event} tapHeartKey={tapHeartKey} mood={mood} />
-          <div className="relative h-56 w-56 sm:h-60 sm:w-60">
+          <div className="pointer-events-auto relative h-56 w-56 sm:h-60 sm:w-60">
             <CatAvatar
               mood={mood}
               animation={event?.animation ?? 'idle'}
