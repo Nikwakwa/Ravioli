@@ -14,7 +14,7 @@
  *   calls with the public anon key cannot inject phishing links or spoofed text.
  */
 import { createClient, type RealtimeChannel, type SupabaseClient } from '@supabase/supabase-js';
-import { actionById, formatLog, SLEEP_ACTION_ID } from '../data/actions';
+import { actionById, formatLog, PET_ACTION_ID, SLEEP_ACTION_ID } from '../data/actions';
 import type { ActivityEntry, CatState, NewActivity, SyncMode, SyncStatus } from '../types';
 import { clampStat, createDefaultCatState } from '../utils/decayEngine';
 
@@ -104,6 +104,8 @@ export function sanitizeActivity(raw: unknown): ActivityEntry | null {
   let message: string;
   if (knownAction) {
     message = formatLog(knownAction.log, 'Oli');
+  } else if (actionId === PET_ACTION_ID) {
+    message = 'Gave Oli chin scratches — purr session!';
   } else if (actionId === SLEEP_ACTION_ID) {
     const rawMsg = typeof r.message === 'string' ? r.message : '';
     message = rawMsg.toLowerCase().includes('woke')
@@ -405,23 +407,7 @@ export function isSupabaseConfigured(): boolean {
 }
 
 export async function initCatStorage(): Promise<StorageBootstrap> {
-  if (isSupabaseConfigured()) {
-    try {
-      const remote = new SupabaseCatStorage(
-        import.meta.env.VITE_SUPABASE_URL!.trim(),
-        import.meta.env.VITE_SUPABASE_ANON_KEY!.trim(),
-      );
-      const { state, log } = await remote.load();
-      return { storage: remote, state, log, fallbackReason: null };
-    } catch (err) {
-      console.warn('[catStorage] Supabase unavailable, falling back to local mode.', err);
-      const local = new LocalCatStorage();
-      const { state, log } = await local.load();
-      const reason = err instanceof Error ? err.message : 'Supabase unavailable';
-      return { storage: local, state, log, fallbackReason: reason };
-    }
-  }
-
+  // Single-player local mode (Co-op Supabase sync is parked in ROADMAP.md for a future update).
   const local = new LocalCatStorage();
   const { state, log } = await local.load();
   return { storage: local, state, log, fallbackReason: null };

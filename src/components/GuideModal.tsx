@@ -1,6 +1,14 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { Bell, BellOff, BookOpen, Moon, Sparkles, Sun, X } from 'lucide-react';
-import { CARE_ACTIONS, STAT_META } from '../data/actions';
+import {
+  AUTO_NAP_ENERGY,
+  CARE_ACTIONS,
+  MAX_SLEEP_ENERGY,
+  MAX_TREATS_IN_WINDOW,
+  MIN_WAKE_ENERGY,
+  PET_JOY_BOOST,
+  STAT_META,
+} from '../data/actions';
 import { STAT_KEYS } from '../types';
 import { DECAY_RATES, MIN_NAP_HOURS, NEED_THRESHOLD, THRIVING_THRESHOLD } from '../utils/decayEngine';
 import { CRITICAL_THRESHOLD } from '../utils/notifications';
@@ -55,7 +63,7 @@ export function GuideModal({
                     Oli Care Manual & Rules
                   </h2>
                   <p className="text-[11px] font-semibold text-amber-800/75">
-                    How stats, decay rates, naps & actions work
+                    Tamagotchi rules, fullness, tummy aches, naps & actions
                   </p>
                 </div>
               </div>
@@ -108,12 +116,65 @@ export function GuideModal({
                   <p className="text-[11px] font-semibold leading-snug text-amber-900/80">
                     When enabled, you’ll get a notification whenever a stat crosses below{' '}
                     <strong>{NEED_THRESHOLD}</strong> (low need) or <strong>{CRITICAL_THRESHOLD}</strong> (critical),
-                    when Oli wakes up from his nap, or when your partner cares for him in the background.
+                    or when Oli wakes up from his nap.
                   </p>
                 </div>
               )}
 
-              {/* Section 1: Hourly Stat Rates */}
+              {/* Section 1: Tamagotchi Rules (Fullness, Tummy Ache & Petting) */}
+              <div className="rounded-2xl border border-amber-900/8 bg-white p-3 shadow-2xs">
+                <h3 className="mb-1 font-display text-xs font-bold text-amber-950">
+                  🥚 Tamagotchi Rules: Fullness, Treats & Petting
+                </h3>
+                <ul className="flex list-disc flex-col gap-1 pl-4 text-[11px] font-semibold leading-snug text-amber-900/85">
+                  <li>
+                    <strong>Interactive Chin Scratches:</strong> Tap Oli directly on the rug anytime he’s awake to give
+                    him chin scratches (<strong className="text-pink-600">+{PET_JOY_BOOST} Joy</strong> every 20s)!
+                  </li>
+                  <li>
+                    <strong>Tap the Fountain:</strong> You can also tap the glowing blue LED fountain in the living room
+                    directly to refresh his water.
+                  </li>
+                  <li>
+                    <strong>Fullness Refusals:</strong> Oli shakes his head and refuses heavy meals (
+                    <strong>Wet Food</strong> at 85+ Hunger, <strong>Quail Egg</strong> at 90+ Hunger) when his belly is
+                    already full. Play with him first to work up an appetite!
+                  </li>
+                  <li>
+                    <strong className="text-rose-600">Tummy Ache (Overfeeding):</strong> Feeding more than{' '}
+                    <strong>{MAX_TREATS_IN_WINDOW} treats</strong> (Churu or Chicken Heart) within 15 minutes gives Oli
+                    a tummy ache (-10 Joy, -15 Energy, -10 Clean). Rub his belly, <strong>Brush</strong> him, or use{' '}
+                    <strong>Calming Mist</strong> to soothe it!
+                  </li>
+                </ul>
+              </div>
+
+              {/* Section 2: Nap Mode & Energy Rules */}
+              <div className="rounded-2xl border border-amber-900/8 bg-white p-3 shadow-2xs">
+                <h3 className="mb-1 font-display text-xs font-bold text-amber-950">🌙 Sleep, Energy & Auto-Nap</h3>
+                <ul className="flex list-disc flex-col gap-1 pl-4 text-[11px] font-semibold leading-snug text-amber-900/85">
+                  <li>
+                    In <strong>Rest → Nap Mode</strong>, Energy recharges at{' '}
+                    <strong className="text-emerald-700">+{DECAY_RATES.sleeping.energy} pts/h</strong> and Hunger &amp;
+                    Clean decay at half speed.
+                  </li>
+                  <li>
+                    <strong>Too Hyper to Nap:</strong> If Energy is <strong>{MAX_SLEEP_ENERGY}+</strong>, Oli refuses to
+                    nap — play <strong>Feather Wand</strong> or <strong>Laser Zoomies</strong> to tire him out!
+                  </li>
+                  <li>
+                    <strong>Auto-Pass-Out:</strong> If Energy drops to <strong>{AUTO_NAP_ENERGY} or below</strong>, Oli
+                    automatically curls up for an exhausted nap, and needs at least <strong>{MIN_WAKE_ENERGY}</strong>{' '}
+                    Energy before he can be woken up early.
+                  </li>
+                  <li>
+                    Once Energy hits <strong>100</strong> (after at least{' '}
+                    <strong>{MIN_NAP_HOURS * 60} minutes</strong>), Oli wakes up automatically on his own!
+                  </li>
+                </ul>
+              </div>
+
+              {/* Section 3: Hourly Stat Rates */}
               <div className="rounded-2xl border border-amber-900/8 bg-white p-3 shadow-2xs">
                 <div className="mb-1.5 flex items-center justify-between">
                   <h3 className="font-display text-xs font-bold text-amber-950">
@@ -173,29 +234,9 @@ export function GuideModal({
                 </div>
               </div>
 
-              {/* Section 2: Nap Mode & Auto-Wake */}
+              {/* Section 4: Care Actions Reference */}
               <div className="rounded-2xl border border-amber-900/8 bg-white p-3 shadow-2xs">
-                <h3 className="mb-1 font-display text-xs font-bold text-amber-950">🌙 Nap Mode & Waking Up</h3>
-                <ul className="flex list-disc flex-col gap-1 pl-4 text-[11px] font-semibold leading-snug text-amber-900/85">
-                  <li>
-                    In <strong>Comfort → Nap Mode</strong>, Oli curls up to sleep: Energy recharges at{' '}
-                    <strong className="text-emerald-700">+{DECAY_RATES.sleeping.energy} pts/h</strong> and Hunger &
-                    Clean decay at half speed.
-                  </li>
-                  <li>
-                    Once his Energy hits <strong>100</strong> (after at least{' '}
-                    <strong>{MIN_NAP_HOURS * 60} minutes</strong>), Oli wakes up automatically on his own!
-                  </li>
-                  <li>
-                    Most actions are paused while he sleeps so you don’t wake him, except{' '}
-                    <strong>Calming Mist</strong>.
-                  </li>
-                </ul>
-              </div>
-
-              {/* Section 3: Care Actions Reference */}
-              <div className="rounded-2xl border border-amber-900/8 bg-white p-3 shadow-2xs">
-                <h3 className="mb-2 font-display text-xs font-bold text-amber-950">🐾 Care Actions & Boosts</h3>
+                <h3 className="mb-2 font-display text-xs font-bold text-amber-950">🐾 Care Actions & Trade-offs</h3>
                 <div className="flex flex-col gap-1.5">
                   {CARE_ACTIONS.map((a) => (
                     <div
@@ -230,10 +271,10 @@ export function GuideModal({
                 </div>
               </div>
 
-              {/* Section 4: Moods & Co-op */}
+              {/* Section 5: Moods */}
               <div className="rounded-2xl border border-amber-900/8 bg-white p-3 shadow-2xs">
                 <h3 className="mb-1 flex items-center gap-1 font-display text-xs font-bold text-amber-950">
-                  <Sparkles className="h-3.5 w-3.5 text-amber-600" /> Mood Thresholds & Co-op
+                  <Sparkles className="h-3.5 w-3.5 text-amber-600" /> Mood Thresholds
                 </h3>
                 <ul className="flex list-disc flex-col gap-1 pl-4 text-[11px] font-semibold leading-snug text-amber-900/85">
                   <li>
@@ -244,13 +285,6 @@ export function GuideModal({
                   <li>
                     <strong className="text-amber-700">Thriving (&ge; {THRIVING_THRESHOLD})</strong>: Keep all 5 stats
                     at {THRIVING_THRESHOLD}+ to make Oli ecstatic and trigger confetti!
-                  </li>
-                  <li>
-                    <strong>Petting Oli</strong>: Tap Oli directly on the rug anytime for purrs and thought bubbles.
-                  </li>
-                  <li>
-                    <strong>Real-Time Co-op</strong>: Actions by <strong>Nico</strong> &amp; <strong>Athina</strong>{' '}
-                    sync live across both devices.
                   </li>
                 </ul>
               </div>

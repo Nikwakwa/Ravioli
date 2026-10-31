@@ -1,10 +1,9 @@
 import { motion } from 'framer-motion';
-import { Bell, BellOff, BookOpen, CloudOff, Loader2, Radio, Users, Wifi } from 'lucide-react';
+import { Bell, BellOff, BookOpen } from 'lucide-react';
 import { STAT_META } from '../data/actions';
 import { APP_VERSION } from '../data/changelog';
-import { STAT_KEYS, type LiveCat, type Mood, type SyncMode, type SyncStatus } from '../types';
+import { STAT_KEYS, type LiveCat, type Mood } from '../types';
 import { NEED_THRESHOLD } from '../utils/decayEngine';
-import { playerColor } from '../utils/player';
 import { STAT_ICONS } from './statIcons';
 
 const MOOD_BADGE: Record<Mood, { label: string; emoji: string }> = {
@@ -23,32 +22,27 @@ const MOOD_BADGE: Record<Mood, { label: string; emoji: string }> = {
 export interface StatusHUDProps {
   live: LiveCat;
   mood: Mood;
-  player: string;
-  onOpenPlayer: () => void;
+  tummyAche?: boolean;
   onOpenChangelog: () => void;
   onOpenGuide: () => void;
   notificationsOn?: boolean;
   onToggleNotifications?: () => void;
   hasUpdate?: boolean;
-  mode: SyncMode;
-  status: SyncStatus;
 }
 
 export function StatusHUD({
   live,
   mood,
-  player,
-  onOpenPlayer,
+  tummyAche,
   onOpenChangelog,
   onOpenGuide,
   notificationsOn,
   onToggleNotifications,
   hasUpdate,
-  mode,
-  status,
 }: StatusHUDProps) {
-  const badge = MOOD_BADGE[mood];
-  const pColor = playerColor(player);
+  const badge = tummyAche
+    ? { label: 'Tummy ache — pet or brush!', emoji: '🤢' }
+    : MOOD_BADGE[mood];
   const night = live.isSleeping;
 
   const surface = night
@@ -57,7 +51,7 @@ export function StatusHUD({
 
   return (
     <header className="relative z-20 flex flex-col gap-2 px-3 pt-2.5">
-      {/* Row 1: Cat identity + Rules & Player pills */}
+      {/* Row 1: Cat identity + Notifications & Rules pills */}
       <div className="flex items-center justify-between gap-2">
         <div
           className={`flex min-w-0 items-center gap-2.5 rounded-2xl border px-3 py-1.5 shadow-sm backdrop-blur-md transition-colors duration-500 ${surface}`}
@@ -66,7 +60,6 @@ export function StatusHUD({
           <div className="min-w-0 leading-tight">
             <div className="flex items-center gap-1.5">
               <span className="font-display text-sm font-bold">{live.name}</span>
-              <SyncDot mode={mode} status={status} />
               <button
                 type="button"
                 onClick={onOpenChangelog}
@@ -82,6 +75,16 @@ export function StatusHUD({
                   <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-emerald-500 ring-2 ring-white" />
                 )}
               </button>
+              {live.isCalm && !tummyAche && (
+                <span className="rounded-full bg-purple-500/15 px-1.5 py-0.5 text-[9px] font-extrabold text-purple-700 dark:text-purple-300">
+                  ✨ Zen
+                </span>
+              )}
+              {tummyAche && (
+                <span className="rounded-full bg-rose-500/15 px-1.5 py-0.5 text-[9px] font-extrabold text-rose-600 dark:text-rose-300">
+                  Stuffed
+                </span>
+              )}
             </div>
             <p className={`truncate text-[10px] font-bold ${night ? 'text-indigo-200/80' : 'text-amber-800/80'}`}>
               {badge.label}
@@ -125,18 +128,6 @@ export function StatusHUD({
           >
             <BookOpen className="h-3.5 w-3.5 text-amber-600" />
             <span>Rules</span>
-          </button>
-
-          {/* Player selector pill */}
-          <button
-            type="button"
-            onClick={onOpenPlayer}
-            style={{ backgroundColor: pColor.bg, color: pColor.fg }}
-            className="flex items-center gap-1.5 rounded-full border border-black/5 px-3 py-1.5 text-xs font-extrabold shadow-sm transition-transform active:scale-95"
-            title="Switch player"
-          >
-            <Users className="h-3.5 w-3.5" />
-            <span>{player}</span>
           </button>
         </div>
       </div>
@@ -191,44 +182,5 @@ export function StatusHUD({
         })}
       </div>
     </header>
-  );
-}
-
-function SyncDot({ mode, status }: { mode: SyncMode; status: SyncStatus }) {
-  if (status === 'live') {
-    return (
-      <span
-        className="inline-flex items-center gap-0.5 rounded-full bg-emerald-500/15 px-1.5 py-0.5 text-[9px] font-extrabold text-emerald-600 dark:text-emerald-400"
-        title="Synced live via Supabase Realtime"
-      >
-        <Wifi className="h-2.5 w-2.5" />
-        Live
-      </span>
-    );
-  }
-  if (status === 'connecting') {
-    return (
-      <span className="inline-flex items-center gap-0.5 rounded-full bg-amber-500/15 px-1.5 py-0.5 text-[9px] font-extrabold text-amber-600">
-        <Loader2 className="h-2.5 w-2.5 animate-spin" />
-        Sync
-      </span>
-    );
-  }
-  if (mode === 'local' || status === 'local') {
-    return (
-      <span
-        className="inline-flex items-center gap-0.5 rounded-full bg-sky-500/15 px-1.5 py-0.5 text-[9px] font-extrabold text-sky-600"
-        title="Local mode (localStorage + BroadcastChannel across tabs)"
-      >
-        <Radio className="h-2.5 w-2.5" />
-        Local
-      </span>
-    );
-  }
-  return (
-    <span className="inline-flex items-center gap-0.5 rounded-full bg-rose-500/15 px-1.5 py-0.5 text-[9px] font-extrabold text-rose-500">
-      <CloudOff className="h-2.5 w-2.5" />
-      Offline
-    </span>
   );
 }

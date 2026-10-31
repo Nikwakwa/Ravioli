@@ -4,6 +4,16 @@ All updates to **Oli** are listed here.
 
 ---
 
+## `v0.10.0` — 2026-10-31
+### Tamagotchi Rules, Laser Zoomies & Direct Petting! 🥚🐾
+- Streamlined the UI for single-player Tamagotchi gameplay (parked co-op UI for a future update) and reorganized the dock into **Feed · Play · Care · Rest**.
+- **Interactive Petting & Fountain:** Tapping Oli on the rug now grants **+6 Joy** chin scratches (20s cooldown), and tapping the water fountain in the room refreshes his water directly.
+- **New Play Action — Laser Zoomies:** High-energy play session (`+32 Joy, -18 Energy, -8 Hunger, -5 Water`) with a custom red laser dot animation.
+- **Fullness & Tummy Ache Mechanics:** Meals (`Wet Food`, `Quail Egg`) are refused with a head-shake animation when Oli is already full, and spamming more than 3 treats in 15 minutes causes a **Tummy Ache** that can be soothed by petting, brushing, or misting.
+- **Tamagotchi Sleep & Energy Rules:** Oli refuses naps when hyper (`85+` Energy), refuses play when tired, and automatically passes out into a nap when Energy drops to `≤ 5`.
+
+---
+
 ## `v0.9.1` — 2026-10-31
 ### Customizable Alert Preferences 🔔
 - Added a dedicated **Notification Preferences** sheet (`NotificationModal`) opened from the top-bar bell icon (or from **Rules → Choose Alerts…**).

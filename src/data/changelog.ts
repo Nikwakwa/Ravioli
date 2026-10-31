@@ -7,6 +7,18 @@ export interface ReleaseEntry {
 
 export const CHANGELOG: ReleaseEntry[] = [
   {
+    version: 'v0.10.0',
+    date: '2026-10-31',
+    title: 'Tamagotchi Rules, Laser Zoomies & Direct Petting! 🥚🐾',
+    changes: [
+      'Streamlined into a focused single-player Tamagotchi with 4 balanced tabs: Feed, Play, Care & Rest.',
+      'Tap Oli directly on the rug for Chin Scratches (+6 Joy) and tap the living room fountain directly to refresh his water!',
+      'Added Laser Zoomies in Play — watch Oli chase a glowing red laser dot across the rug.',
+      'Fullness & Tummy Aches: Oli shakes his head when too full for a meal, and eating more than 3 treats in 15 minutes gives him a tummy ache (soothe it with belly rubs, brushing, or Calming Mist).',
+      'Smart Sleep Rules: Oli refuses naps when hyper (85+ Energy), refuses play when exhausted, and curls up automatically at ≤ 5 Energy.',
+    ],
+  },
+  {
     version: 'v0.9.1',
     date: '2026-10-31',
     title: 'Customizable Alert Preferences 🔔',

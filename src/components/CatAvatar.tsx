@@ -107,9 +107,16 @@ function expressionFor(mood: Mood, animation: CatAnimation, petting: boolean) {
       mouth = 'lap';
       break;
     case 'playing':
+    case 'laser':
       eyes = 'wide';
       mouth = 'smile';
       earDroop = false;
+      break;
+    case 'refuse':
+      eyes = 'sad';
+      mouth = 'frown';
+      earDroop = true;
+      blush = false;
       break;
     case 'misting':
       eyes = 'halflid';
@@ -167,8 +174,14 @@ function headMotion(animation: CatAnimation, sec: number, sleeping: boolean): { 
         transition: { duration: sec, ease: 'easeInOut' },
       };
     case 'playing':
+    case 'laser':
       return {
         animate: { rotate: [0, -14, 14, -14, 14, -14, 14, 0], y: [0, -3, 0, -3, 0, -3, 0, 0] },
+        transition: { duration: sec, ease: 'easeInOut' },
+      };
+    case 'refuse':
+      return {
+        animate: { x: [0, -9, 9, -9, 9, -5, 5, 0], rotate: [0, -6, 6, -6, 6, -3, 3, 0] },
         transition: { duration: sec, ease: 'easeInOut' },
       };
     case 'misting':
@@ -530,6 +543,25 @@ function FeatherWand({ sec }: { sec: number }) {
   );
 }
 
+function LaserDot({ sec }: { sec: number }) {
+  return (
+    <motion.g
+      initial={{ opacity: 0 }}
+      animate={{
+        opacity: [0, 1, 1, 1, 1, 0],
+        x: [-42, 46, -34, 48, -28, 36, 0],
+        y: [2, -6, 6, -4, 4, 0, 2],
+      }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: sec, ease: 'easeInOut' }}
+    >
+      <circle cx={100} cy={205} r={8} fill="#ff1e42" opacity={0.28} />
+      <circle cx={100} cy={205} r={4.5} fill="#ff1e42" opacity={0.65} />
+      <circle cx={100} cy={205} r={2.2} fill="#fff5f7" />
+    </motion.g>
+  );
+}
+
 function Brush({ sec }: { sec: number }) {
   return (
     <motion.g
@@ -688,9 +720,11 @@ export function CatAvatar({ mood, animation, animationKey, onPet, className, x, 
       drinking: 2.8,
       purring: 3,
       playing: 3.2,
+      laser: 3.2,
       misting: 2.6,
       brushing: 2.8,
       yawning: 1.6,
+      refuse: 1.4,
     };
     const sec = durations[animation];
     setActiveAnim(animation);
@@ -754,7 +788,8 @@ export function CatAvatar({ mood, animation, animationKey, onPet, className, x, 
   const head = headMotion(anim, animSec, sleeping);
   const sad = expr.earDroop;
 
-  const tailSpeed = anim === 'playing' ? 0.7 : mood === 'ecstatic' || mood === 'happy' ? 2.2 : sad ? 5 : 3.4;
+  const tailSpeed =
+    anim === 'playing' || anim === 'laser' ? 0.6 : mood === 'ecstatic' || mood === 'happy' ? 2.2 : sad ? 5 : 3.4;
 
   const headProps = {
     eyes: expr.eyes,
@@ -764,7 +799,7 @@ export function CatAvatar({ mood, animation, animationKey, onPet, className, x, 
     blush: expr.blush,
     blinking: blinking && !sleeping,
     uid,
-    playing: anim === 'playing',
+    playing: anim === 'playing' || anim === 'laser',
   };
 
   return (
@@ -791,18 +826,20 @@ export function CatAvatar({ mood, animation, animationKey, onPet, className, x, 
         onPointerDown={handlePet}
         style={{ cursor: 'pointer' }}
         animate={
-          anim === 'playing'
-            ? { y: [0, -12, 0, -16, 0, -10, 0] }
-            : petting
-              ? { y: [0, -6, 0] }
-              : anim === 'purring'
-                ? { x: [0, -0.7, 0.7, -0.7, 0.7, 0] }
-                : { y: 0, x: 0 }
+          anim === 'laser'
+            ? { x: [0, -18, 18, -14, 16, 0], y: [0, -10, 0, -14, 0, -8, 0] }
+            : anim === 'playing'
+              ? { y: [0, -12, 0, -16, 0, -10, 0] }
+              : petting
+                ? { y: [0, -6, 0] }
+                : anim === 'purring'
+                  ? { x: [0, -0.7, 0.7, -0.7, 0.7, 0] }
+                  : { y: 0, x: 0 }
         }
         transition={
           anim === 'purring'
             ? { duration: 0.18, repeat: Math.round(animSec / 0.18) }
-            : { duration: anim === 'playing' ? animSec : 0.5, ease: 'easeInOut' }
+            : { duration: anim === 'playing' || anim === 'laser' ? animSec : 0.5, ease: 'easeInOut' }
         }
       >
         <AnimatePresence mode="wait" initial={false}>
@@ -891,6 +928,7 @@ export function CatAvatar({ mood, animation, animationKey, onPet, className, x, 
           {anim === 'churu' && <ChuruTube key="churu" sec={animSec} />}
           {anim === 'drinking' && <WaterDish key="dish" />}
           {anim === 'playing' && <FeatherWand key="wand" sec={animSec} />}
+          {anim === 'laser' && <LaserDot key="laser" sec={animSec} />}
           {anim === 'brushing' && <Brush key="brush" sec={animSec} />}
         </AnimatePresence>
       </motion.g>

@@ -1,6 +1,6 @@
 import type { CatAnimation, CatStats, StatKey } from '../types';
 
-export type ActionCategory = 'feed' | 'hydrate' | 'play' | 'comfort';
+export type ActionCategory = 'feed' | 'play' | 'care' | 'rest';
 
 export type ParticleKind = 'hearts' | 'ripples' | 'purr' | 'sparkles' | 'mist' | 'crumbs' | 'stars';
 
@@ -14,7 +14,7 @@ export interface CareAction {
   effect: Partial<CatStats>;
   animation: CatAnimation;
   particles: ParticleKind[];
-  /** Past-tense phrase for the co-op feed. `{cat}` is replaced with the cat's name. */
+  /** Past-tense phrase for logs/notices. `{cat}` is replaced with the cat's name. */
   log: string;
   /** Blocked while the cat is asleep. */
   requiresAwake: boolean;
@@ -24,71 +24,134 @@ export interface CareAction {
   calmMinutes?: number;
   /** Visual length of the animation (ms). */
   durationMs: number;
+  /** Oli refuses this meal if his Hunger is already at or above this threshold. */
+  maxHunger?: number;
+  /** Oli refuses water if his Hydration is already at or above this threshold. */
+  maxHydration?: number;
+  /** Oli refuses this play action if his Energy is below this threshold. */
+  minEnergy?: number;
+  /** Counts toward the treat-spam / tummy-ache counter. */
+  isTreat?: boolean;
+  /** Helps soothe a tummy ache when Oli overate treats. */
+  soothesTummy?: boolean;
 }
+
+/** Tamagotchi sleep & overfeeding rule constants. */
+export const MAX_SLEEP_ENERGY = 85;
+export const MIN_WAKE_ENERGY = 20;
+export const AUTO_NAP_ENERGY = 5;
+export const TREAT_WINDOW_MS = 15 * 60_000;
+export const MAX_TREATS_IN_WINDOW = 3;
+export const TUMMY_ACHE_MS = 10 * 60_000;
+export const PET_COOLDOWN_MS = 20_000;
+export const PET_JOY_BOOST = 6;
 
 export const CATEGORIES: { id: ActionCategory; label: string }[] = [
   { id: 'feed', label: 'Feed' },
-  { id: 'hydrate', label: 'Hydrate' },
   { id: 'play', label: 'Play' },
-  { id: 'comfort', label: 'Comfort' },
+  { id: 'care', label: 'Care' },
+  { id: 'rest', label: 'Rest' },
 ];
 
 export const CARE_ACTIONS: CareAction[] = [
+  // ---------------------------------------------------------------------------
+  // FEED — Differentiated meals & treats with fullness + messy whiskers trade-offs
+  // ---------------------------------------------------------------------------
   {
     id: 'wet_food',
     category: 'feed',
     name: 'Wet Food Pouch',
     short: 'Wet Food',
-    effect: { hunger: 35, hydration: 5 },
+    effect: { hunger: 38, hydration: 5, hygiene: -4 },
     animation: 'eating',
     particles: ['crumbs'],
     log: 'Served {cat} a wet food pouch',
     requiresAwake: true,
     haptic: 25,
     durationMs: 2600,
-  },
-  {
-    id: 'churu',
-    category: 'feed',
-    name: 'Churu Lickable Treat',
-    short: 'Churu Tube',
-    effect: { hunger: 10, hydration: 10, happiness: 25 },
-    animation: 'churu',
-    particles: ['hearts', 'sparkles'],
-    log: 'Fed {cat} a Churu lickable tube',
-    requiresAwake: true,
-    haptic: [25, 35, 25, 35, 40],
-    durationMs: 3000,
-  },
-  {
-    id: 'chicken_heart',
-    category: 'feed',
-    name: 'Chicken Heart Treat',
-    short: 'Chicken Heart',
-    effect: { hunger: 12, happiness: 15 },
-    animation: 'treat',
-    particles: ['hearts'],
-    log: 'Fed {cat} a freeze-dried chicken heart',
-    requiresAwake: true,
-    haptic: [20, 40, 20],
-    durationMs: 2200,
+    maxHunger: 85,
   },
   {
     id: 'quail_egg',
     category: 'feed',
     name: 'Quail Egg Topper',
     short: 'Quail Egg',
-    effect: { hunger: 15, happiness: 10 },
+    effect: { hunger: 20, energy: 10, happiness: 8 },
     animation: 'eating_egg',
     particles: ['crumbs', 'stars'],
     log: 'Topped {cat}’s bowl with a freeze-dried quail egg',
     requiresAwake: true,
     haptic: 25,
     durationMs: 2400,
+    maxHunger: 90,
   },
   {
+    id: 'chicken_heart',
+    category: 'feed',
+    name: 'Chicken Heart Treat',
+    short: 'Chicken Heart',
+    effect: { hunger: 12, happiness: 18 },
+    animation: 'treat',
+    particles: ['hearts'],
+    log: 'Fed {cat} a freeze-dried chicken heart',
+    requiresAwake: true,
+    haptic: [20, 40, 20],
+    durationMs: 2200,
+    isTreat: true,
+  },
+  {
+    id: 'churu',
+    category: 'feed',
+    name: 'Churu Lickable Treat',
+    short: 'Churu Tube',
+    effect: { hunger: 10, hydration: 12, happiness: 30 },
+    animation: 'churu',
+    particles: ['hearts', 'sparkles'],
+    log: 'Fed {cat} a Churu lickable tube',
+    requiresAwake: true,
+    haptic: [25, 35, 25, 35, 40],
+    durationMs: 3000,
+    isTreat: true,
+  },
+
+  // ---------------------------------------------------------------------------
+  // PLAY — Active workouts that boost Joy and burn Energy + Hunger
+  // ---------------------------------------------------------------------------
+  {
+    id: 'feather_wand',
+    category: 'play',
+    name: 'Feather Wand',
+    short: 'Feather Wand',
+    effect: { happiness: 22, energy: -10, hunger: -4 },
+    animation: 'playing',
+    particles: ['stars'],
+    log: 'Played the feather wand game with {cat}',
+    requiresAwake: true,
+    haptic: [30, 60, 30, 60, 30],
+    durationMs: 3200,
+    minEnergy: 15,
+  },
+  {
+    id: 'laser_pointer',
+    category: 'play',
+    name: 'Laser Zoomies',
+    short: 'Laser Zoomies',
+    effect: { happiness: 32, energy: -18, hunger: -8, hydration: -5 },
+    animation: 'laser',
+    particles: ['stars', 'sparkles'],
+    log: 'Sent {cat} on full-speed laser zoomies!',
+    requiresAwake: true,
+    haptic: [25, 40, 25, 40, 25, 40, 30],
+    durationMs: 3200,
+    minEnergy: 25,
+  },
+
+  // ---------------------------------------------------------------------------
+  // CARE — Hydration & Grooming
+  // ---------------------------------------------------------------------------
+  {
     id: 'fountain',
-    category: 'hydrate',
+    category: 'care',
     name: 'Refresh Water Fountain',
     short: 'Fresh Fountain',
     effect: { hydration: 40, happiness: 5 },
@@ -98,36 +161,29 @@ export const CARE_ACTIONS: CareAction[] = [
     requiresAwake: true,
     haptic: [15, 30, 15],
     durationMs: 2800,
+    maxHydration: 95,
   },
   {
-    id: 'chin_scratch',
-    category: 'play',
-    name: 'Chin Scratches',
-    short: 'Chin Scratches',
-    effect: { happiness: 20 },
-    animation: 'purring',
-    particles: ['purr', 'hearts'],
-    log: 'Gave {cat} chin scratches — purr session!',
+    id: 'brush',
+    category: 'care',
+    name: 'Brush Coat',
+    short: 'Brush Coat',
+    effect: { hygiene: 30, happiness: 6 },
+    animation: 'brushing',
+    particles: ['sparkles'],
+    log: 'Brushed {cat}’s fluffy ginger coat',
     requiresAwake: true,
-    haptic: [40, 30, 40, 30, 40, 30, 40, 30, 40],
-    durationMs: 3000,
+    haptic: [20, 50, 20, 50, 20],
+    durationMs: 2800,
+    soothesTummy: true,
   },
-  {
-    id: 'feather_wand',
-    category: 'play',
-    name: 'Feather Wand',
-    short: 'Feather Wand',
-    effect: { happiness: 25, energy: -10 },
-    animation: 'playing',
-    particles: ['stars'],
-    log: 'Played the feather wand game with {cat}',
-    requiresAwake: true,
-    haptic: [30, 60, 30, 60, 30],
-    durationMs: 3200,
-  },
+
+  // ---------------------------------------------------------------------------
+  // REST — Calming Pheromone Mist (+ Nap Mode button in ActionDock)
+  // ---------------------------------------------------------------------------
   {
     id: 'pheromone_mist',
-    category: 'comfort',
+    category: 'rest',
     name: 'Calming Mist',
     short: 'Calming Mist',
     effect: { happiness: 15 },
@@ -138,23 +194,12 @@ export const CARE_ACTIONS: CareAction[] = [
     haptic: 15,
     calmMinutes: 45,
     durationMs: 2600,
-  },
-  {
-    id: 'brush',
-    category: 'comfort',
-    name: 'Brush Coat',
-    short: 'Brush Coat',
-    effect: { hygiene: 30, happiness: 5 },
-    animation: 'brushing',
-    particles: ['sparkles'],
-    log: 'Brushed {cat}’s fluffy ginger coat',
-    requiresAwake: true,
-    haptic: [20, 50, 20, 50, 20],
-    durationMs: 2800,
+    soothesTummy: true,
   },
 ];
 
 export const SLEEP_ACTION_ID = 'toggle_sleep';
+export const PET_ACTION_ID = 'chin_scratch';
 
 export const STAT_META: Record<StatKey, { label: string; color: string; soft: string }> = {
   hunger: { label: 'Hunger', color: '#f08a3c', soft: '#ffe2c8' },

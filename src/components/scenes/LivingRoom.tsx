@@ -12,7 +12,15 @@ import { motion } from 'framer-motion';
  * - Fluffy off-white / cream high-pile shag rug where Oli sits
  * - White cuboid pet water fountain with glowing blue LED status light & stainless steel bowl
  */
-export function LivingRoom({ sleeping, fountainBoost }: { sleeping: boolean; fountainBoost: boolean }) {
+export function LivingRoom({
+  sleeping,
+  fountainBoost,
+  onTapFountain,
+}: {
+  sleeping: boolean;
+  fountainBoost: boolean;
+  onTapFountain?: () => void;
+}) {
   return (
     <svg viewBox="0 0 400 600" preserveAspectRatio="xMidYMid slice" className="absolute inset-0 h-full w-full">
       <defs>
@@ -312,7 +320,13 @@ export function LivingRoom({ sleeping, fountainBoost }: { sleeping: boolean; fou
       </g>
 
       {/* White cuboid LED pet water fountain + stainless bowl by the left wall (PXL_20260321_203920849.jpg) */}
-      <g transform="translate(26 350)">
+      <g
+        transform="translate(26 350)"
+        onPointerDown={onTapFountain}
+        style={onTapFountain ? { pointerEvents: 'auto', cursor: 'pointer' } : undefined}
+        role={onTapFountain ? 'button' : undefined}
+        aria-label={onTapFountain ? 'Refresh Oli’s water fountain' : undefined}
+      >
         <ellipse cx="26" cy="46" rx="34" ry="7" fill="rgba(40,35,28,0.16)" />
         {/* White rounded-square fountain body */}
         <rect x="4" y="6" width="42" height="38" rx="7" fill={sleeping ? '#d5d2e3' : '#fbfaf7'} stroke={sleeping ? '#aba6bf' : '#d5d0c5'} strokeWidth="1.2" />

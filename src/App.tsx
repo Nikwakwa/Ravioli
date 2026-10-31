@@ -2,18 +2,16 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { RefreshCw } from 'lucide-react';
 import { useCallback, useRef, useState } from 'react';
 import { ActionDock } from './components/ActionDock';
-import { ActivityFeed } from './components/ActivityFeed';
 import { CatAvatar } from './components/CatAvatar';
 import { ChangelogModal } from './components/ChangelogModal';
 import { FloatingEffects } from './components/FloatingEffects';
 import { GuideModal } from './components/GuideModal';
 import { NotificationModal } from './components/NotificationModal';
-import { PlayerSelector } from './components/PlayerSelector';
 import { LivingRoom } from './components/scenes/LivingRoom';
 import { StatusHUD } from './components/StatusHUD';
+import { actionById } from './data/actions';
 import { useCatGame, type Notice } from './hooks/useCatGame';
 import { useVersionCheck } from './hooks/useVersionCheck';
-import { vibrate } from './utils/feedback';
 import {
   loadNotificationPrefs,
   requestNotificationAccess,
@@ -21,11 +19,8 @@ import {
   sendSystemNotification,
   type NotificationPrefs,
 } from './utils/notifications';
-import { loadPlayer, playerColor, savePlayer } from './utils/player';
 
 export function App() {
-  const [player, setPlayer] = useState<string | null>(() => loadPlayer());
-  const [pickerOpen, setPickerOpen] = useState<boolean>(() => !loadPlayer());
   const [changelogOpen, setChangelogOpen] = useState(false);
   const [guideOpen, setGuideOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
@@ -40,21 +35,20 @@ export function App() {
     noticeTimer.current = window.setTimeout(() => setNotice(null), 3200);
   }, []);
 
-  const { ready, live, mood, log, mode, status, event, busy, perform, toggleSleep, now } = useCatGame(
-    player ?? 'Nico',
+  const { ready, live, mood, tummyAche, event, busy, perform, petOli, toggleSleep } = useCatGame(
+    'Nico',
     pushNotice,
   );
   const { availableVersion, reloading, applyUpdate } = useVersionCheck();
 
-  const handleSelectPlayer = (name: string) => {
-    savePlayer(name);
-    setPlayer(name);
-    setPickerOpen(false);
+  const handlePetOli = () => {
+    setTapHeartKey((k) => k + 1);
+    petOli();
   };
 
-  const handlePetOli = () => {
-    vibrate([15, 25, 15]);
-    setTapHeartKey((k) => k + 1);
+  const handleTapFountain = () => {
+    const fountain = actionById('fountain');
+    if (fountain) perform(fountain);
   };
 
   const handleChangeNotifPrefs = (next: NotificationPrefs) => {
@@ -112,7 +106,11 @@ export function App() {
       <main className="safe-shell relative flex h-full w-full max-w-[440px] flex-col justify-between overflow-hidden bg-[#fbe3cb] shadow-2xl">
         {/* Cozy Living Room background */}
         <div className="pointer-events-none absolute inset-0">
-          <LivingRoom sleeping={live.isSleeping} fountainBoost={event?.actionId === 'fountain'} />
+          <LivingRoom
+            sleeping={live.isSleeping}
+            fountainBoost={event?.actionId === 'fountain'}
+            onTapFountain={handleTapFountain}
+          />
 
           {/* Subtle sleep-mode ambient vignette */}
           <motion.div
@@ -127,15 +125,12 @@ export function App() {
         <StatusHUD
           live={live}
           mood={mood}
-          player={player ?? 'Nico'}
-          onOpenPlayer={() => setPickerOpen(true)}
+          tummyAche={tummyAche}
           onOpenChangelog={() => setChangelogOpen(true)}
           onOpenGuide={() => setGuideOpen(true)}
           notificationsOn={notifPrefs.enabled}
           onToggleNotifications={() => setNotifOpen(true)}
           hasUpdate={Boolean(availableVersion)}
-          mode={mode}
-          status={status}
         />
 
         {/* New version available banner */}
@@ -164,7 +159,7 @@ export function App() {
           )}
         </AnimatePresence>
 
-        {/* Partner / info toast */}
+        {/* Info / Refusal toast */}
         <AnimatePresence>
           {notice && (
             <motion.div
@@ -172,23 +167,19 @@ export function App() {
               initial={{ opacity: 0, y: -12, scale: 0.92 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -10, scale: 0.92 }}
-              className="pointer-events-none fixed top-28 left-1/2 z-30 -translate-x-1/2 rounded-full bg-amber-950/90 px-3.5 py-1.5 text-xs font-bold whitespace-nowrap text-amber-50 shadow-lg backdrop-blur-md"
+              className={`pointer-events-none fixed top-28 left-1/2 z-30 max-w-[92vw] -translate-x-1/2 rounded-2xl px-3.5 py-1.5 text-center text-xs font-bold shadow-lg backdrop-blur-md ${
+                notice.tone === 'warn'
+                  ? 'bg-rose-950/92 text-rose-50'
+                  : 'bg-amber-950/90 text-amber-50'
+              }`}
             >
-              {notice.player && (
-                <span
-                  style={{ backgroundColor: playerColor(notice.player).bg, color: playerColor(notice.player).fg }}
-                  className="mr-1.5 rounded-full px-2 py-0.5 text-[10px] font-extrabold"
-                >
-                  {notice.player}
-                </span>
-              )}
               {notice.text}
             </motion.div>
           )}
         </AnimatePresence>
 
         {/* Center stage: Oli sitting on the living room plush rug */}
-        <div className="relative z-10 flex flex-1 items-end justify-center pb-3">
+        <div className="relative z-10 flex flex-1 items-end justify-center pb-5">
           <FloatingEffects event={event} tapHeartKey={tapHeartKey} mood={mood} />
           <div className="relative h-56 w-56 sm:h-60 sm:w-60">
             <CatAvatar
@@ -201,13 +192,17 @@ export function App() {
           </div>
         </div>
 
-        {/* Bottom co-op pill + tactile care dock */}
+        {/* Bottom tactile care dock */}
         <div>
-          <ActivityFeed log={log} now={now} isSleeping={live.isSleeping} />
-          <ActionDock isSleeping={live.isSleeping} busy={busy} onAction={perform} onToggleSleep={toggleSleep} />
+          <ActionDock
+            live={live}
+            tummyAche={tummyAche}
+            busy={busy}
+            onAction={perform}
+            onToggleSleep={toggleSleep}
+          />
         </div>
 
-        <PlayerSelector open={pickerOpen} current={player} onSelect={handleSelectPlayer} />
         <NotificationModal
           open={notifOpen}
           onClose={() => setNotifOpen(false)}

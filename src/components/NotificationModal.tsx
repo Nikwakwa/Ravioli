@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion';
-import { AlertTriangle, Bell, BellOff, Check, Flame, Sun, Users, X } from 'lucide-react';
+import { AlertTriangle, Bell, BellOff, Check, Flame, Sun, X } from 'lucide-react';
 import { STAT_META } from '../data/actions';
 import { STAT_KEYS, type StatKey } from '../types';
 import { NEED_THRESHOLD } from '../utils/decayEngine';
@@ -142,13 +142,6 @@ export function NotificationModal({
                     subtitle="Notify when Energy hits 100 and Oli wakes up on his own"
                     checked={prefs.wakeUp}
                     onClick={() => toggleFlag('wakeUp')}
-                  />
-                  <ToggleRow
-                    icon={<Users className="h-3.5 w-3.5 text-sky-600" />}
-                    title="Partner Co-op Actions"
-                    subtitle="Notify when Nico or Athina cares for Oli in the background"
-                    checked={prefs.partner}
-                    onClick={() => toggleFlag('partner')}
                   />
                 </div>
               </div>

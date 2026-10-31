@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { actionById, CARE_ACTIONS, CATEGORIES, MAX_SLEEP_ENERGY, MIN_WAKE_ENERGY, PET_ACTION_ID } from '../data/actions';
 import { cleanText, sanitizeActivity, sanitizeCatState } from '../services/catStorage';
 import { evaluateStatThresholds, type AlertedMap } from './notifications';
 import type { CatState } from '../types';
@@ -182,6 +183,40 @@ describe('security sanitizers (catStorage)', () => {
     });
     expect(valid?.player).toBe('Athina');
     expect(valid?.message).toBe('Fed Oli a Churu lickable tube');
+
+    const petEntry = sanitizeActivity({
+      id: '3',
+      player: 'Nico',
+      action_id: PET_ACTION_ID,
+      message: 'pet',
+    });
+    expect(petEntry?.message).toBe('Gave Oli chin scratches — purr session!');
+  });
+});
+
+describe('Tamagotchi Phase 1 action & dock rules', () => {
+  it('organizes dock into 4 balanced categories (feed, play, care, rest)', () => {
+    expect(CATEGORIES.map((c) => c.id)).toEqual(['feed', 'play', 'care', 'rest']);
+    expect(CARE_ACTIONS.filter((a) => a.category === 'feed')).toHaveLength(4);
+    expect(CARE_ACTIONS.filter((a) => a.category === 'play')).toHaveLength(2);
+    expect(CARE_ACTIONS.filter((a) => a.category === 'care')).toHaveLength(2);
+    expect(CARE_ACTIONS.filter((a) => a.category === 'rest')).toHaveLength(1);
+  });
+
+  it('enforces fullness caps on meals, trade-offs on wet food, and energy thresholds on play', () => {
+    const wet = actionById('wet_food');
+    expect(wet?.maxHunger).toBe(85);
+    expect(wet?.effect.hygiene).toBe(-4);
+
+    const egg = actionById('quail_egg');
+    expect(egg?.maxHunger).toBe(90);
+    expect(egg?.effect.energy).toBe(10);
+
+    const laser = actionById('laser_pointer');
+    expect(laser?.minEnergy).toBe(25);
+    expect(laser?.effect.energy).toBe(-18);
+
+    expect(MAX_SLEEP_ENERGY).toBeGreaterThan(MIN_WAKE_ENERGY);
   });
 });
 

@@ -69,6 +69,8 @@ export type CatAnimation =
   | 'drinking'
   | 'purring'
   | 'playing'
+  | 'laser'
   | 'misting'
   | 'brushing'
-  | 'yawning';
+  | 'yawning'
+  | 'refuse';
