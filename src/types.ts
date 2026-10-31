@@ -59,6 +59,16 @@ export type NewActivity = Omit<ActivityEntry, 'id' | 'created_at'>;
 export type SyncMode = 'supabase' | 'local';
 export type SyncStatus = 'connecting' | 'live' | 'local' | 'offline' | 'error';
 
+export type MessKind = 'poop' | 'hairball';
+
+export interface RoomMess {
+  id: string;
+  kind: MessKind;
+  /** Which of the 3 floor/rug positions (0, 1, or 2) this mess occupies. */
+  slot: 0 | 1 | 2;
+  created_at: string;
+}
+
 /** Transient, purely visual animation the cat should play. */
 export type CatAnimation =
   | 'idle'

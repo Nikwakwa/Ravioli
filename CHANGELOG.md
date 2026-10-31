@@ -4,6 +4,14 @@ All updates to **Oli** are listed here.
 
 ---
 
+## `v0.11.0` — 2026-10-31
+### Poop, Hairballs & Rug Cleanup! 💩✨
+- **On-Screen Tamagotchi Messes:** Up to 3 messes (**poop swirls** and **fuzzy ginger hairballs**) can now spawn on the living room rug — after every 2nd meal, when overfed into a tummy ache, or every 2.5 hours away.
+- **Interactive Cleanup:** Tap any mess directly on the rug or use **Care → Scoop Mess** (`+15 Clean, +6 Joy`) to whisk it away with sparkles.
+- **Mess Consequences:** Uncleaned messes block `Thriving` (`ecstatic`) status and display a live `💩 Mess` counter in the top HUD and `Care` tab.
+
+---
+
 ## `v0.10.1` — 2026-10-31
 ### Interactive Fountain Fix 💧
 - Fixed the center-stage wrapper catching pointer events over the Living Room background so tapping the water fountain works reliably on mobile & desktop.

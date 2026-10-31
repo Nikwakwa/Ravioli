@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { actionById, CARE_ACTIONS, CATEGORIES, MAX_SLEEP_ENERGY, MIN_WAKE_ENERGY, PET_ACTION_ID } from '../data/actions';
+import { pickFreeMessSlot } from '../hooks/useCatGame';
 import { cleanText, sanitizeActivity, sanitizeCatState } from '../services/catStorage';
 import { evaluateStatThresholds, type AlertedMap } from './notifications';
 import type { CatState } from '../types';
@@ -194,13 +195,31 @@ describe('security sanitizers (catStorage)', () => {
   });
 });
 
-describe('Tamagotchi Phase 1 action & dock rules', () => {
+describe('Tamagotchi Phase 1 & 2 action, dock & mess rules', () => {
   it('organizes dock into 4 balanced categories (feed, play, care, rest)', () => {
     expect(CATEGORIES.map((c) => c.id)).toEqual(['feed', 'play', 'care', 'rest']);
     expect(CARE_ACTIONS.filter((a) => a.category === 'feed')).toHaveLength(4);
     expect(CARE_ACTIONS.filter((a) => a.category === 'play')).toHaveLength(2);
-    expect(CARE_ACTIONS.filter((a) => a.category === 'care')).toHaveLength(2);
+    expect(CARE_ACTIONS.filter((a) => a.category === 'care')).toHaveLength(3);
     expect(CARE_ACTIONS.filter((a) => a.category === 'rest')).toHaveLength(1);
+  });
+
+  it('allocates up to 3 room mess slots and returns null when full', () => {
+    expect(pickFreeMessSlot([])).toBe(0);
+    expect(pickFreeMessSlot([{ id: '1', kind: 'poop', slot: 0, created_at: '' }])).toBe(1);
+    expect(
+      pickFreeMessSlot([
+        { id: '1', kind: 'poop', slot: 0, created_at: '' },
+        { id: '2', kind: 'hairball', slot: 2, created_at: '' },
+      ]),
+    ).toBe(1);
+    expect(
+      pickFreeMessSlot([
+        { id: '1', kind: 'poop', slot: 0, created_at: '' },
+        { id: '2', kind: 'hairball', slot: 1, created_at: '' },
+        { id: '3', kind: 'poop', slot: 2, created_at: '' },
+      ]),
+    ).toBeNull();
   });
 
   it('enforces fullness caps on meals, trade-offs on wet food, and energy thresholds on play', () => {

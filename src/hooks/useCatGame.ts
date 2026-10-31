@@ -1,6 +1,17 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { initCatStorage, ACTIVITY_LIMIT, type CatStorage, type StorageBootstrap } from '../services/catStorage';
-import type { ActivityEntry, CatAnimation, CatState, CatStats, LiveCat, Mood, SyncMode, SyncStatus } from '../types';
+import type {
+  ActivityEntry,
+  CatAnimation,
+  CatState,
+  CatStats,
+  LiveCat,
+  MessKind,
+  Mood,
+  RoomMess,
+  SyncMode,
+  SyncStatus,
+} from '../types';
 import {
   applyEffect,
   computeLiveStats,
@@ -13,8 +24,10 @@ import {
   actionById,
   AUTO_NAP_ENERGY,
   formatLog,
+  MAX_ROOM_MESSES,
   MAX_SLEEP_ENERGY,
   MAX_TREATS_IN_WINDOW,
+  MESS_SPAWN_HOURS,
   MIN_WAKE_ENERGY,
   PET_ACTION_ID,
   PET_COOLDOWN_MS,
@@ -38,9 +51,13 @@ import { DEVICE_ID } from '../utils/player';
 
 const TICK_MS = 30_000;
 const REMOTE_EVENT_MAX_AGE_MS = 90_000;
+const MS_PER_HOUR = 3_600_000;
 
 const LS_TREATS = 'ravioli:v1:recent_treats';
 const LS_TUMMY_ACHE = 'ravioli:v1:tummy_ache_until';
+const LS_MESSES = 'ravioli:v1:room_messes';
+const LS_LAST_MESS_AT = 'ravioli:v1:last_mess_at';
+const LS_MEAL_COUNT = 'ravioli:v1:meal_count';
 
 export interface GameEvent {
   key: number;
@@ -67,6 +84,74 @@ let eventSeq = 0;
 
 function sortLog(entries: ActivityEntry[]): ActivityEntry[] {
   return [...entries].sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at)).slice(0, ACTIVITY_LIMIT);
+}
+
+export function pickFreeMessSlot(existing: RoomMess[]): 0 | 1 | 2 | null {
+  if (existing.length >= MAX_ROOM_MESSES) return null;
+  const used = new Set(existing.map((m) => m.slot));
+  for (const s of [0, 1, 2] as const) {
+    if (!used.has(s)) return s;
+  }
+  return null;
+}
+
+function loadMesses(): RoomMess[] {
+  try {
+    const raw = window.localStorage.getItem(LS_MESSES);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .filter(
+        (m): m is RoomMess =>
+          m &&
+          typeof m.id === 'string' &&
+          (m.kind === 'poop' || m.kind === 'hairball') &&
+          (m.slot === 0 || m.slot === 1 || m.slot === 2),
+      )
+      .slice(0, MAX_ROOM_MESSES);
+  } catch {
+    return [];
+  }
+}
+
+function saveMesses(messes: RoomMess[]) {
+  try {
+    window.localStorage.setItem(LS_MESSES, JSON.stringify(messes.slice(0, MAX_ROOM_MESSES)));
+  } catch {
+    // ignore
+  }
+}
+
+function loadLastMessAt(fallbackMs: number): number {
+  try {
+    const raw = window.localStorage.getItem(LS_LAST_MESS_AT);
+    const n = raw ? Number(raw) : NaN;
+    if (Number.isFinite(n) && n > 0) return n;
+    window.localStorage.setItem(LS_LAST_MESS_AT, String(fallbackMs));
+    return fallbackMs;
+  } catch {
+    return fallbackMs;
+  }
+}
+
+function saveLastMessAt(ms: number) {
+  try {
+    window.localStorage.setItem(LS_LAST_MESS_AT, String(ms));
+  } catch {
+    // ignore
+  }
+}
+
+function incrementMealCount(): number {
+  try {
+    const raw = window.localStorage.getItem(LS_MEAL_COUNT);
+    const next = (raw ? Number(raw) || 0 : 0) + 1;
+    window.localStorage.setItem(LS_MEAL_COUNT, String(next));
+    return next;
+  } catch {
+    return 1;
+  }
 }
 
 function loadRecentTreats(nowMs: number): number[] {
@@ -123,6 +208,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
   const [event, setEvent] = useState<GameEvent | null>(null);
   const [busy, setBusy] = useState(false);
   const [tummyAcheUntil, setTummyAcheUntil] = useState<number>(() => loadTummyAcheUntil());
+  const [messes, setMesses] = useState<RoomMess[]>(() => loadMesses());
   const busyTimer = useRef<number | undefined>(undefined);
   const lastPetRef = useRef<number>(0);
 
@@ -132,6 +218,32 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
     setTummyAcheUntil(0);
     saveTummyAcheUntil(0);
     saveRecentTreats([]);
+  }, []);
+
+  const spawnMess = useCallback((kind: MessKind, announce?: string): boolean => {
+    let spawned = false;
+    setMesses((prev) => {
+      const slot = pickFreeMessSlot(prev);
+      if (slot === null) return prev;
+      spawned = true;
+      const next: RoomMess[] = [
+        ...prev,
+        {
+          id: `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`,
+          kind,
+          slot,
+          created_at: new Date().toISOString(),
+        },
+      ];
+      saveMesses(next);
+      saveLastMessAt(Date.now());
+      return next;
+    });
+    if (spawned && announce) {
+      noticeRef.current({ text: announce, tone: 'warn' });
+      vibrate([25, 45, 25]);
+    }
+    return spawned;
   }, []);
 
   /** Accept a state only if it is not older than what we already have. */
@@ -248,7 +360,17 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
   }, [acceptState]);
 
   const live: LiveCat | null = useMemo(() => (base ? computeLiveStats(base, now) : null), [base, now]);
-  const mood: Mood = live ? (tummyAche && !live.isSleeping ? 'sad' : deriveMood(live)) : 'content';
+
+  // Derive mood with Tamagotchi tummy-ache & room-mess overrides (messes block 'ecstatic'!)
+  const mood: Mood = useMemo(() => {
+    if (!live) return 'content';
+    if (live.isSleeping) return 'sleeping';
+    if (tummyAche) return 'sad';
+    if (messes.length >= 2) return 'grubby';
+    const raw = deriveMood(live);
+    if (messes.length > 0 && raw === 'ecstatic') return 'happy';
+    return raw;
+  }, [live, tummyAche, messes.length]);
 
   // Schedule an exact timer for the next low-need threshold crossing so alerts fire right on time.
   useEffect(() => {
@@ -327,6 +449,43 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
     [player, acceptState, addEntry],
   );
 
+  // Passive Tamagotchi mess catch-up: spawn 1 mess per MESS_SPAWN_HOURS (2.5h) elapsed, up to 3 max.
+  useEffect(() => {
+    if (!ready || !live) return;
+    const lastMs = loadLastMessAt(now);
+    const hoursSince = (now - lastMs) / MS_PER_HOUR;
+    if (hoursSince < MESS_SPAWN_HOURS) return;
+
+    const countToSpawn = Math.min(MAX_ROOM_MESSES - messes.length, Math.floor(hoursSince / MESS_SPAWN_HOURS));
+    saveLastMessAt(now);
+    if (countToSpawn <= 0) return;
+
+    setMesses((prev) => {
+      const next = [...prev];
+      for (let i = 0; i < countToSpawn; i++) {
+        const slot = pickFreeMessSlot(next);
+        if (slot === null) break;
+        const kind: MessKind = live.hygiene < 45 || i % 2 === 1 ? 'hairball' : 'poop';
+        next.push({
+          id: `${now.toString(36)}-${i}-${Math.random().toString(36).slice(2, 5)}`,
+          kind,
+          slot,
+          created_at: new Date(now).toISOString(),
+        });
+      }
+      saveMesses(next);
+      return next;
+    });
+
+    // Apply a stink penalty for messes left while away
+    const penalty: Partial<CatStats> = {
+      hygiene: -6 * countToSpawn,
+      happiness: -4 * countToSpawn,
+    };
+    const mutator = (b: CatState): CatState => applyEffect(materialize(b, now), penalty);
+    void commit(mutator, 'scoop_mess', `Scooped up ${live.name}’s mess from the rug`);
+  }, [ready, live, now, messes.length, commit]);
+
   // Autonomous pass-out nap: if Oli's Energy drops to <= AUTO_NAP_ENERGY (5) while awake, he curls up to nap automatically.
   const autoNappingRef = useRef(false);
   useEffect(() => {
@@ -353,9 +512,63 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
     }
   }, [live, busy, player, playEvent, commit]);
 
+  /** Cleans a specific mess on the rug (by id) or the oldest mess when called from the Care dock. */
+  const cleanMess = useCallback(
+    (messId?: string) => {
+      if (!base || !live || busy) return;
+      const target = messId ? messes.find((m) => m.id === messId) : messes[0];
+      if (!target) {
+        noticeRef.current({
+          text: '✨ The living room is already spotless — no messes to scoop!',
+          tone: 'info',
+        });
+        vibrate(15);
+        return;
+      }
+
+      const scoopAction = actionById('scoop_mess')!;
+      const remaining = messes.filter((m) => m.id !== target.id);
+      setMesses(remaining);
+      saveMesses(remaining);
+      saveLastMessAt(Date.now());
+
+      vibrate(scoopAction.haptic);
+      lockFor(1000);
+      noticeRef.current({
+        text:
+          target.kind === 'poop'
+            ? `✨ Scooped up ${live.name}’s poop! The rug is fresh & clean.`
+            : `✨ Cleaned up ${live.name}’s hairball from the rug!`,
+        tone: 'info',
+      });
+      playEvent({
+        actionId: scoopAction.id,
+        player: player ?? 'Nico',
+        remote: false,
+        effect: scoopAction.effect,
+        particles: scoopAction.particles,
+        animation: live.isSleeping ? 'idle' : scoopAction.animation,
+        durationMs: scoopAction.durationMs,
+      });
+
+      const willThrive = remaining.length === 0 && isThriving(applyEffect(live, scoopAction.effect));
+      if (willThrive) window.setTimeout(celebrate, 450);
+
+      const mutator = (b: CatState): CatState => applyEffect(materialize(b, Date.now()), scoopAction.effect);
+      void commit(mutator, scoopAction.id, formatLog(scoopAction.log, live.name));
+    },
+    [base, live, busy, messes, player, playEvent, commit],
+  );
+
   const perform = useCallback(
     (action: CareAction) => {
       if (!base || !live || busy) return;
+
+      // Special case: Care -> Scoop Mess delegates to cleanMess()
+      if (action.id === 'scoop_mess') {
+        cleanMess();
+        return;
+      }
 
       // 1. Sleeping check
       if (action.requiresAwake && live.isSleeping) {
@@ -388,7 +601,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
         return;
       }
 
-      // 6. Overfeeding / Treat-spam check (4th treat in 15m triggers a Tummy Ache!)
+      // 6. Overfeeding / Treat-spam check (4th treat in 15m triggers a Tummy Ache + Hairball!)
       const nowMs = Date.now();
       if (action.isTreat) {
         const recent = loadRecentTreats(nowMs);
@@ -396,11 +609,12 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
           const until = nowMs + TUMMY_ACHE_MS;
           setTummyAcheUntil(until);
           saveTummyAcheUntil(until);
+          spawnMess('hairball');
           const achePenalty: Partial<CatStats> = { happiness: -10, energy: -15, hygiene: -10 };
           lockFor(1600);
           vibrate([40, 60, 40, 60, 40]);
           noticeRef.current({
-            text: `🤢 Uh oh! Too many treats gave ${live.name} a tummy ache! Pet or Brush him to soothe it.`,
+            text: `🤢 Too many treats gave ${live.name} a tummy ache & a hairball! Tap the hairball to clean up.`,
             tone: 'warn',
           });
           playEvent({
@@ -428,6 +642,16 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
         });
       }
 
+      // 8. Digestion: every 2nd meal (Wet Food or Quail Egg) spawns a poop mess right after Oli finishes eating!
+      if (action.id === 'wet_food' || action.id === 'quail_egg') {
+        const meals = incrementMealCount();
+        if (meals % 2 === 0) {
+          window.setTimeout(() => {
+            spawnMess('poop', `💩 Nature calls! ${live.name} left a mess on the rug — tap it to scoop!`);
+          }, action.durationMs + 200);
+        }
+      }
+
       vibrate(action.haptic);
       lockFor(Math.min(action.durationMs, 1800));
       playEvent({
@@ -440,8 +664,8 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
         durationMs: action.durationMs,
       });
 
-      const wasThriving = isThriving(live);
-      const willThrive = isThriving(applyEffect(live, action.effect));
+      const wasThriving = messes.length === 0 && isThriving(live);
+      const willThrive = messes.length === 0 && isThriving(applyEffect(live, action.effect));
       if (!wasThriving && willThrive) window.setTimeout(celebrate, 500);
 
       const mutator = (b: CatState): CatState => {
@@ -452,7 +676,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
       };
       void commit(mutator, action.id, formatLog(action.log, live.name));
     },
-    [base, live, busy, tummyAche, player, playEvent, commit, triggerRefusal, clearTummyAche],
+    [base, live, busy, tummyAche, messes.length, player, playEvent, commit, triggerRefusal, clearTummyAche, cleanMess, spawnMess],
   );
 
   /** Direct interactive petting on Oli's rug avatar (replaces the old Chin Scratches dock button). */
@@ -500,14 +724,14 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
         durationMs: 2200,
       });
 
-      const wasThriving = isThriving(live);
-      const willThrive = isThriving(applyEffect(live, boost));
+      const wasThriving = messes.length === 0 && isThriving(live);
+      const willThrive = messes.length === 0 && isThriving(applyEffect(live, boost));
       if (!wasThriving && willThrive) window.setTimeout(celebrate, 500);
 
       const mutator = (b: CatState): CatState => applyEffect(materialize(b, nowMs), boost);
       void commit(mutator, PET_ACTION_ID, `Gave ${live.name} chin scratches — purr session!`);
     }
-  }, [base, live, busy, tummyAche, player, playEvent, commit, clearTummyAche]);
+  }, [base, live, busy, tummyAche, messes.length, player, playEvent, commit, clearTummyAche]);
 
   const toggleSleep = useCallback(() => {
     if (!live || busy) return;
@@ -551,6 +775,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
     live,
     mood,
     tummyAche,
+    messes,
     log,
     mode,
     status,
@@ -559,6 +784,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
     busy,
     perform,
     petOli,
+    cleanMess,
     toggleSleep,
     now,
   };

@@ -143,8 +143,13 @@ export function GuideModal({
                   <li>
                     <strong className="text-rose-600">Tummy Ache (Overfeeding):</strong> Feeding more than{' '}
                     <strong>{MAX_TREATS_IN_WINDOW} treats</strong> (Churu or Chicken Heart) within 15 minutes gives Oli
-                    a tummy ache (-10 Joy, -15 Energy, -10 Clean). Rub his belly, <strong>Brush</strong> him, or use{' '}
-                    <strong>Calming Mist</strong> to soothe it!
+                    a tummy ache (-10 Joy, -15 Energy, -10 Clean) and spawns a hairball. Rub his belly,{' '}
+                    <strong>Brush</strong> him, or use <strong>Calming Mist</strong> to soothe it!
+                  </li>
+                  <li>
+                    <strong>💩 Poop &amp; Hairball Messes:</strong> Every 2nd meal (or every 2.5 hours away) Oli leaves
+                    a mess on the rug. Active messes block <em>Thriving</em> status — tap them directly on the rug or
+                    use <strong>Care → Scoop Mess</strong> (+15 Clean, +6 Joy)!
                   </li>
                 </ul>
               </div>

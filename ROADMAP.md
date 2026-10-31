@@ -4,7 +4,7 @@ This document tracks our gameplay evolution from a passive care toy into a full 
 
 ---
 
-## ✅ Phase 1: Core Tamagotchi Rules, Single-Player Focus & Dock Overhaul *(In Progress)*
+## ✅ Phase 1: Core Tamagotchi Rules, Single-Player Focus & Dock Overhaul *(Completed)*
 
 ### 1. Single-Player Streamlining (Co-op Temporarily Removed)
 - Remove the multi-player selector modal (`PlayerSelector`), partner HUD pill, `SyncDot`, `ActivityFeed` bar above the dock, and partner notification toggle so the screen is clean and focused entirely on Oli.
@@ -36,7 +36,7 @@ This document tracks our gameplay evolution from a passive care toy into a full 
 
 ---
 
-## 🧹 Phase 2: On-Screen Messes (Litter / Hairballs) & Interactive Room
+## ✅ Phase 2: On-Screen Messes (Litter / Hairballs) & Interactive Room *(Completed)*
 
 - **Poop / Hairball Spawns:** After meals or as `hygiene` decays over time, 1–3 messes (hairballs on the rug or a stinky litter icon) appear in `LivingRoom.tsx`.
 - **Consequences:** Active messes accelerate `hygiene` and `happiness` decay and prevent Oli from reaching `Thriving` (`ecstatic`) status.

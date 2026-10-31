@@ -23,6 +23,7 @@ export interface StatusHUDProps {
   live: LiveCat;
   mood: Mood;
   tummyAche?: boolean;
+  messCount?: number;
   onOpenChangelog: () => void;
   onOpenGuide: () => void;
   notificationsOn?: boolean;
@@ -34,6 +35,7 @@ export function StatusHUD({
   live,
   mood,
   tummyAche,
+  messCount = 0,
   onOpenChangelog,
   onOpenGuide,
   notificationsOn,
@@ -42,7 +44,9 @@ export function StatusHUD({
 }: StatusHUDProps) {
   const badge = tummyAche
     ? { label: 'Tummy ache — pet or brush!', emoji: '🤢' }
-    : MOOD_BADGE[mood];
+    : messCount > 0 && !live.isSleeping
+      ? { label: messCount === 1 ? 'Mess on the rug — tap to scoop!' : `${messCount} messes on the rug — scoop up!`, emoji: '💩' }
+      : MOOD_BADGE[mood];
   const night = live.isSleeping;
 
   const surface = night
@@ -83,6 +87,11 @@ export function StatusHUD({
               {tummyAche && (
                 <span className="rounded-full bg-rose-500/15 px-1.5 py-0.5 text-[9px] font-extrabold text-rose-600 dark:text-rose-300">
                   Stuffed
+                </span>
+              )}
+              {messCount > 0 && (
+                <span className="rounded-full bg-amber-600/15 px-1.5 py-0.5 text-[9px] font-extrabold text-amber-800 dark:text-amber-300">
+                  💩 {messCount} {messCount === 1 ? 'Mess' : 'Messes'}
                 </span>
               )}
             </div>

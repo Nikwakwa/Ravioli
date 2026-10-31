@@ -7,6 +7,16 @@ export interface ReleaseEntry {
 
 export const CHANGELOG: ReleaseEntry[] = [
   {
+    version: 'v0.11.0',
+    date: '2026-10-31',
+    title: 'Poop, Hairballs & Rug Cleanup! 💩✨',
+    changes: [
+      'Tamagotchi Messes: Every 2nd meal (or every 2.5 hours away, or after a treat tummy ache) Oli leaves a poop or ginger hairball on the living room rug!',
+      'Tap any mess directly on the rug — or use Care → Scoop Mess — to clean it up for +15 Clean & +6 Joy.',
+      'Active messes block Thriving status and show a badge on the HUD and Care tab until scooped.',
+    ],
+  },
+  {
     version: 'v0.10.1',
     date: '2026-10-31',
     title: 'Interactive Fountain Fix 💧',

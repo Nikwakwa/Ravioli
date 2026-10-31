@@ -35,7 +35,7 @@ export function App() {
     noticeTimer.current = window.setTimeout(() => setNotice(null), 3200);
   }, []);
 
-  const { ready, live, mood, tummyAche, event, busy, perform, petOli, toggleSleep } = useCatGame(
+  const { ready, live, mood, tummyAche, messes, event, busy, perform, petOli, cleanMess, toggleSleep } = useCatGame(
     'Nico',
     pushNotice,
   );
@@ -110,6 +110,8 @@ export function App() {
             sleeping={live.isSleeping}
             fountainBoost={event?.actionId === 'fountain'}
             onTapFountain={handleTapFountain}
+            messes={messes}
+            onTapMess={cleanMess}
           />
 
           {/* Subtle sleep-mode ambient vignette */}
@@ -126,6 +128,7 @@ export function App() {
           live={live}
           mood={mood}
           tummyAche={tummyAche}
+          messCount={messes.length}
           onOpenChangelog={() => setChangelogOpen(true)}
           onOpenGuide={() => setGuideOpen(true)}
           notificationsOn={notifPrefs.enabled}
@@ -197,6 +200,7 @@ export function App() {
           <ActionDock
             live={live}
             tummyAche={tummyAche}
+            messCount={messes.length}
             busy={busy}
             onAction={perform}
             onToggleSleep={toggleSleep}

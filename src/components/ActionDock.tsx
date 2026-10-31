@@ -12,6 +12,7 @@ import {
   Sparkles,
   SprayCan,
   Sun,
+  Trash2,
   Utensils,
   Zap,
   type LucideIcon,
@@ -45,17 +46,22 @@ const ACTION_ICONS: Record<string, LucideIcon> = {
   laser_pointer: Zap,
   pheromone_mist: SprayCan,
   brush: Brush,
+  scoop_mess: Trash2,
 };
 
 export interface ActionDockProps {
   live: LiveCat;
   tummyAche: boolean;
+  messCount: number;
   busy: boolean;
   onAction: (action: CareAction) => void;
   onToggleSleep: () => void;
 }
 
-function refusalHint(action: CareAction, live: LiveCat, tummyAche: boolean): string | null {
+function refusalHint(action: CareAction, live: LiveCat, tummyAche: boolean, messCount: number): string | null {
+  if (action.id === 'scoop_mess') {
+    return messCount === 0 ? '✨ Spotless' : null;
+  }
   if (live.isSleeping && action.requiresAwake) return '😴 Sleeping';
   if (tummyAche && action.category === 'feed') return '🤢 Tummy Ache';
   if (action.maxHunger !== undefined && live.hunger >= action.maxHunger) return '😋 Full';
@@ -64,7 +70,7 @@ function refusalHint(action: CareAction, live: LiveCat, tummyAche: boolean): str
   return null;
 }
 
-export function ActionDock({ live, tummyAche, busy, onAction, onToggleSleep }: ActionDockProps) {
+export function ActionDock({ live, tummyAche, messCount, busy, onAction, onToggleSleep }: ActionDockProps) {
   const [category, setCategory] = useState<ActionCategory>('feed');
   const actions = CARE_ACTIONS.filter((a) => a.category === category);
   const isSleeping = live.isSleeping;
@@ -90,6 +96,7 @@ export function ActionDock({ live, tummyAche, busy, onAction, onToggleSleep }: A
         {CATEGORIES.map((c) => {
           const Icon = CATEGORY_ICONS[c.id];
           const active = category === c.id;
+          const showBadge = c.id === 'care' && messCount > 0;
           return (
             <button
               key={c.id}
@@ -112,6 +119,11 @@ export function ActionDock({ live, tummyAche, busy, onAction, onToggleSleep }: A
               )}
               <Icon className="relative z-10 h-3.5 w-3.5" />
               <span className="relative z-10">{c.label}</span>
+              {showBadge && (
+                <span className="relative z-10 flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[9px] font-extrabold leading-none text-white">
+                  {messCount}
+                </span>
+              )}
             </button>
           );
         })}
@@ -126,13 +138,18 @@ export function ActionDock({ live, tummyAche, busy, onAction, onToggleSleep }: A
           exit={{ opacity: 0, y: -4 }}
           transition={{ duration: 0.14 }}
           className={`grid h-[92px] gap-1.5 ${
-            category === 'feed' ? 'grid-cols-2 grid-rows-2' : 'grid-cols-2'
+            category === 'feed'
+              ? 'grid-cols-2 grid-rows-2'
+              : category === 'care'
+                ? 'grid-cols-3'
+                : 'grid-cols-2'
           }`}
         >
           {actions.map((action) => {
             const Icon = ACTION_ICONS[action.id] ?? Sparkles;
-            const hint = refusalHint(action, live, tummyAche);
+            const hint = refusalHint(action, live, tummyAche, messCount);
             const muted = Boolean(hint);
+            const isUrgentScoop = action.id === 'scoop_mess' && messCount > 0;
 
             if (isCompactGrid) {
               return (
@@ -180,30 +197,44 @@ export function ActionDock({ live, tummyAche, busy, onAction, onToggleSleep }: A
                 whileTap={{ scale: 0.96 }}
                 disabled={busy}
                 onClick={() => onAction(action)}
-                className={`flex h-full flex-col justify-between rounded-2xl border p-2.5 text-left transition-all ${
-                  muted
-                    ? isSleeping
-                      ? 'border-white/5 bg-white/5 opacity-50'
-                      : 'border-amber-900/10 bg-amber-950/5 opacity-65'
-                    : isSleeping
-                      ? 'border-white/10 bg-slate-800/90 text-amber-50 shadow-xs'
-                      : 'border-amber-900/10 bg-gradient-to-b from-amber-50/95 to-orange-50/70 text-amber-950 shadow-xs active:shadow-none'
+                className={`flex h-full flex-col justify-between rounded-2xl border p-2 text-left transition-all ${
+                  isUrgentScoop
+                    ? 'border-rose-400/60 bg-gradient-to-b from-rose-50 to-amber-50 text-amber-950 shadow-xs'
+                    : muted
+                      ? isSleeping
+                        ? 'border-white/5 bg-white/5 opacity-50'
+                        : 'border-amber-900/10 bg-amber-950/5 opacity-65'
+                      : isSleeping
+                        ? 'border-white/10 bg-slate-800/90 text-amber-50 shadow-xs'
+                        : 'border-amber-900/10 bg-gradient-to-b from-amber-50/95 to-orange-50/70 text-amber-950 shadow-xs active:shadow-none'
                 }`}
               >
                 <div className="flex w-full items-center justify-between gap-1">
                   <span
                     className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-xl ${
-                      isSleeping ? 'bg-amber-400/20 text-amber-300' : 'bg-amber-500/15 text-amber-700'
+                      isUrgentScoop
+                        ? 'bg-rose-500/15 text-rose-700'
+                        : isSleeping
+                          ? 'bg-amber-400/20 text-amber-300'
+                          : 'bg-amber-500/15 text-amber-700'
                     }`}
                   >
                     <Icon className="h-3.5 w-3.5" />
                   </span>
-                  {hint ? (
+                  {isUrgentScoop ? (
+                    <span className="rounded-full bg-rose-500 px-1.5 py-0.5 text-[9px] font-extrabold text-white">
+                      💩 {messCount}
+                    </span>
+                  ) : hint ? (
                     <span className="rounded-full bg-amber-950/10 px-1.5 py-0.5 text-[9px] font-extrabold text-amber-900 dark:bg-indigo-500/20 dark:text-indigo-200">
                       {hint}
                     </span>
                   ) : (
-                    <EffectPills effect={action.effect} showLabels maxPills={2} />
+                    <EffectPills
+                      effect={action.effect}
+                      showLabels={category !== 'care'}
+                      maxPills={category === 'care' ? 1 : 2}
+                    />
                   )}
                 </div>
                 <div className="flex items-center justify-between gap-1">

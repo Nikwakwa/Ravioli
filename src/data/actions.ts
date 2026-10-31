@@ -45,6 +45,8 @@ export const MAX_TREATS_IN_WINDOW = 3;
 export const TUMMY_ACHE_MS = 10 * 60_000;
 export const PET_COOLDOWN_MS = 20_000;
 export const PET_JOY_BOOST = 6;
+export const MAX_ROOM_MESSES = 3;
+export const MESS_SPAWN_HOURS = 2.5;
 
 export const CATEGORIES: { id: ActionCategory; label: string }[] = [
   { id: 'feed', label: 'Feed' },
@@ -176,6 +178,19 @@ export const CARE_ACTIONS: CareAction[] = [
     haptic: [20, 50, 20, 50, 20],
     durationMs: 2800,
     soothesTummy: true,
+  },
+  {
+    id: 'scoop_mess',
+    category: 'care',
+    name: 'Scoop & Clean Mess',
+    short: 'Scoop Mess',
+    effect: { hygiene: 15, happiness: 6 },
+    animation: 'purring',
+    particles: ['sparkles'],
+    log: 'Scooped up {cat}’s mess from the rug',
+    requiresAwake: false,
+    haptic: [20, 35, 20],
+    durationMs: 1800,
   },
 
   // ---------------------------------------------------------------------------
