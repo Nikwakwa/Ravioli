@@ -69,6 +69,15 @@ export interface RoomMess {
   created_at: string;
 }
 
+/** Tamagotchi attention call ("Meow!" whim/craving) for a specific care action. */
+export interface CatWhim {
+  id: string;
+  actionId: string;
+  label: string;
+  emoji: string;
+  expiresAt: number;
+}
+
 /** Transient, purely visual animation the cat should play. */
 export type CatAnimation =
   | 'idle'

@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import {
+  actionById,
   CARE_ACTIONS,
   CATEGORIES,
   MAX_SLEEP_ENERGY,
@@ -53,14 +54,25 @@ export interface ActionDockProps {
   live: LiveCat;
   tummyAche: boolean;
   messCount: number;
+  churuStash: number;
+  whimActionId: string | null;
   busy: boolean;
   onAction: (action: CareAction) => void;
   onToggleSleep: () => void;
 }
 
-function refusalHint(action: CareAction, live: LiveCat, tummyAche: boolean, messCount: number): string | null {
+function refusalHint(
+  action: CareAction,
+  live: LiveCat,
+  tummyAche: boolean,
+  messCount: number,
+  churuStash: number,
+): string | null {
   if (action.id === 'scoop_mess') {
     return messCount === 0 ? '✨ Spotless' : null;
+  }
+  if (action.id === 'churu' && churuStash <= 0) {
+    return '🍬 0 Left';
   }
   if (live.isSleeping && action.requiresAwake) return '😴 Sleeping';
   if (tummyAche && action.category === 'feed') return '🤢 Tummy Ache';
@@ -70,10 +82,20 @@ function refusalHint(action: CareAction, live: LiveCat, tummyAche: boolean, mess
   return null;
 }
 
-export function ActionDock({ live, tummyAche, messCount, busy, onAction, onToggleSleep }: ActionDockProps) {
+export function ActionDock({
+  live,
+  tummyAche,
+  messCount,
+  churuStash,
+  whimActionId,
+  busy,
+  onAction,
+  onToggleSleep,
+}: ActionDockProps) {
   const [category, setCategory] = useState<ActionCategory>('feed');
   const actions = CARE_ACTIONS.filter((a) => a.category === category);
   const isSleeping = live.isSleeping;
+  const whimCategory = whimActionId ? actionById(whimActionId)?.category ?? null : null;
 
   const shellClass = isSleeping
     ? 'bg-slate-900/85 border-white/10 text-amber-50'
@@ -96,7 +118,8 @@ export function ActionDock({ live, tummyAche, messCount, busy, onAction, onToggl
         {CATEGORIES.map((c) => {
           const Icon = CATEGORY_ICONS[c.id];
           const active = category === c.id;
-          const showBadge = c.id === 'care' && messCount > 0;
+          const showMessBadge = c.id === 'care' && messCount > 0;
+          const showWhimDot = whimCategory === c.id && !showMessBadge;
           return (
             <button
               key={c.id}
@@ -119,10 +142,13 @@ export function ActionDock({ live, tummyAche, messCount, busy, onAction, onToggl
               )}
               <Icon className="relative z-10 h-3.5 w-3.5" />
               <span className="relative z-10">{c.label}</span>
-              {showBadge && (
+              {showMessBadge && (
                 <span className="relative z-10 flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[9px] font-extrabold leading-none text-white">
                   {messCount}
                 </span>
+              )}
+              {showWhimDot && (
+                <span className="relative z-10 text-[10px] leading-none">💭</span>
               )}
             </button>
           );
@@ -147,9 +173,10 @@ export function ActionDock({ live, tummyAche, messCount, busy, onAction, onToggl
         >
           {actions.map((action) => {
             const Icon = ACTION_ICONS[action.id] ?? Sparkles;
-            const hint = refusalHint(action, live, tummyAche, messCount);
+            const hint = refusalHint(action, live, tummyAche, messCount, churuStash);
             const muted = Boolean(hint);
             const isUrgentScoop = action.id === 'scoop_mess' && messCount > 0;
+            const isWhimMatch = whimActionId === action.id && !muted;
 
             if (isCompactGrid) {
               return (
@@ -160,13 +187,15 @@ export function ActionDock({ live, tummyAche, messCount, busy, onAction, onToggl
                   disabled={busy}
                   onClick={() => onAction(action)}
                   className={`flex h-full items-center gap-2 rounded-2xl border px-2.5 py-1.5 text-left transition-all ${
-                    muted
-                      ? isSleeping
-                        ? 'border-white/5 bg-white/5 opacity-50'
-                        : 'border-amber-900/10 bg-amber-950/5 opacity-65'
-                      : isSleeping
-                        ? 'border-white/10 bg-slate-800/90 text-amber-50 shadow-xs'
-                        : 'border-amber-900/10 bg-gradient-to-b from-amber-50/95 to-orange-50/70 text-amber-950 shadow-xs'
+                    isWhimMatch
+                      ? 'border-amber-400 bg-gradient-to-b from-amber-50 to-pink-50/80 text-amber-950 ring-1 ring-amber-400/50'
+                      : muted
+                        ? isSleeping
+                          ? 'border-white/5 bg-white/5 opacity-50'
+                          : 'border-amber-900/10 bg-amber-950/5 opacity-65'
+                        : isSleeping
+                          ? 'border-white/10 bg-slate-800/90 text-amber-50 shadow-xs'
+                          : 'border-amber-900/10 bg-gradient-to-b from-amber-50/95 to-orange-50/70 text-amber-950 shadow-xs'
                   }`}
                 >
                   <span
@@ -177,7 +206,19 @@ export function ActionDock({ live, tummyAche, messCount, busy, onAction, onToggl
                     <Icon className="h-3.5 w-3.5" />
                   </span>
                   <div className="flex min-w-0 flex-1 flex-col justify-center gap-0.5">
-                    <p className="font-display text-xs font-bold leading-tight">{action.short}</p>
+                    <div className="flex items-center justify-between gap-1">
+                      <p className="truncate font-display text-xs font-bold leading-tight">{action.short}</p>
+                      {action.id === 'churu' && churuStash > 0 && (
+                        <span className="shrink-0 rounded-full bg-pink-500/15 px-1.5 py-0.5 text-[9px] font-extrabold leading-none text-pink-700">
+                          ×{churuStash}
+                        </span>
+                      )}
+                      {isWhimMatch && (
+                        <span className="shrink-0 rounded-full bg-amber-400/25 px-1.5 py-0.5 text-[9px] font-extrabold leading-none text-amber-900">
+                          💭 2×
+                        </span>
+                      )}
+                    </div>
                     {hint ? (
                       <span className="w-fit rounded-full bg-amber-950/10 px-1.5 py-0.5 text-[9px] font-extrabold leading-none text-amber-900 dark:bg-indigo-500/20 dark:text-indigo-200">
                         {hint}
@@ -200,13 +241,15 @@ export function ActionDock({ live, tummyAche, messCount, busy, onAction, onToggl
                 className={`flex h-full flex-col justify-between rounded-2xl border p-2 text-left transition-all ${
                   isUrgentScoop
                     ? 'border-rose-400/60 bg-gradient-to-b from-rose-50 to-amber-50 text-amber-950 shadow-xs'
-                    : muted
-                      ? isSleeping
-                        ? 'border-white/5 bg-white/5 opacity-50'
-                        : 'border-amber-900/10 bg-amber-950/5 opacity-65'
-                      : isSleeping
-                        ? 'border-white/10 bg-slate-800/90 text-amber-50 shadow-xs'
-                        : 'border-amber-900/10 bg-gradient-to-b from-amber-50/95 to-orange-50/70 text-amber-950 shadow-xs active:shadow-none'
+                    : isWhimMatch
+                      ? 'border-amber-400 bg-gradient-to-b from-amber-50 to-pink-50/80 text-amber-950 ring-1 ring-amber-400/50'
+                      : muted
+                        ? isSleeping
+                          ? 'border-white/5 bg-white/5 opacity-50'
+                          : 'border-amber-900/10 bg-amber-950/5 opacity-65'
+                        : isSleeping
+                          ? 'border-white/10 bg-slate-800/90 text-amber-50 shadow-xs'
+                          : 'border-amber-900/10 bg-gradient-to-b from-amber-50/95 to-orange-50/70 text-amber-950 shadow-xs active:shadow-none'
                 }`}
               >
                 <div className="flex w-full items-center justify-between gap-1">
@@ -224,6 +267,10 @@ export function ActionDock({ live, tummyAche, messCount, busy, onAction, onToggl
                   {isUrgentScoop ? (
                     <span className="rounded-full bg-rose-500 px-1.5 py-0.5 text-[9px] font-extrabold text-white">
                       💩 {messCount}
+                    </span>
+                  ) : isWhimMatch ? (
+                    <span className="rounded-full bg-amber-400/30 px-1.5 py-0.5 text-[9px] font-extrabold text-amber-950">
+                      💭 2× Joy
                     </span>
                   ) : hint ? (
                     <span className="rounded-full bg-amber-950/10 px-1.5 py-0.5 text-[9px] font-extrabold text-amber-900 dark:bg-indigo-500/20 dark:text-indigo-200">

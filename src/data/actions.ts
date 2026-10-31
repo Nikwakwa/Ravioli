@@ -1,4 +1,4 @@
-import type { CatAnimation, CatStats, StatKey } from '../types';
+import type { CatAnimation, CatStats, CatWhim, LiveCat, StatKey } from '../types';
 
 export type ActionCategory = 'feed' | 'play' | 'care' | 'rest';
 
@@ -47,6 +47,10 @@ export const PET_COOLDOWN_MS = 20_000;
 export const PET_JOY_BOOST = 6;
 export const MAX_ROOM_MESSES = 3;
 export const MESS_SPAWN_HOURS = 2.5;
+export const DEFAULT_CHURU_STASH = 3;
+export const MAX_CHURU_STASH = 9;
+export const WHIM_DURATION_MS = 8 * 60_000;
+export const WHIM_COOLDOWN_MS = 35_000;
 
 export const CATEGORIES: { id: ActionCategory; label: string }[] = [
   { id: 'feed', label: 'Feed' },
@@ -230,4 +234,44 @@ export function actionById(id: string): CareAction | undefined {
 
 export function formatLog(template: string, catName: string): string {
   return template.replaceAll('{cat}', catName);
+}
+
+/**
+ * Selects a context-aware Tamagotchi whim/craving that Oli can actually perform right now
+ * (never picks a meal when he's too full or a play workout when he's too tired).
+ */
+export function pickCandidateWhim(
+  live: LiveCat,
+  seed: number = Math.random(),
+): Omit<CatWhim, 'id' | 'expiresAt'> | null {
+  if (live.isSleeping) return null;
+
+  const candidates: Omit<CatWhim, 'id' | 'expiresAt'>[] = [
+    { actionId: PET_ACTION_ID, label: 'Wants Chin Scratches!', emoji: '🐾' },
+  ];
+
+  if (live.hunger < 80) {
+    candidates.push({ actionId: 'wet_food', label: 'Craving Wet Food!', emoji: '🍖' });
+  }
+  if (live.hunger < 85) {
+    candidates.push({ actionId: 'quail_egg', label: 'Wants a Quail Egg!', emoji: '🥚' });
+  }
+  if (live.hunger < 92) {
+    candidates.push({ actionId: 'chicken_heart', label: 'Craving a Chicken Heart!', emoji: '🧡' });
+  }
+  if (live.hydration < 85) {
+    candidates.push({ actionId: 'fountain', label: 'Wants Fresh Fountain!', emoji: '💧' });
+  }
+  if (live.energy >= 20) {
+    candidates.push({ actionId: 'feather_wand', label: 'Wants Feather Wand!', emoji: '🪶' });
+  }
+  if (live.energy >= 30) {
+    candidates.push({ actionId: 'laser_pointer', label: 'Wants Laser Zoomies!', emoji: '⚡' });
+  }
+  if (live.hygiene < 92) {
+    candidates.push({ actionId: 'brush', label: 'Wants a Brush!', emoji: '🪮' });
+  }
+
+  const idx = Math.min(candidates.length - 1, Math.max(0, Math.floor(seed * candidates.length)));
+  return candidates[idx];
 }

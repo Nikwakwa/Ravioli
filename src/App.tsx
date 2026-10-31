@@ -10,6 +10,7 @@ import { NotificationModal } from './components/NotificationModal';
 import { RoomMesses } from './components/RoomMesses';
 import { LivingRoom } from './components/scenes/LivingRoom';
 import { StatusHUD } from './components/StatusHUD';
+import { WhimBubble } from './components/WhimBubble';
 import { actionById } from './data/actions';
 import { useCatGame, type Notice } from './hooks/useCatGame';
 import { useVersionCheck } from './hooks/useVersionCheck';
@@ -36,10 +37,23 @@ export function App() {
     noticeTimer.current = window.setTimeout(() => setNotice(null), 3200);
   }, []);
 
-  const { ready, live, mood, tummyAche, messes, event, busy, perform, petOli, cleanMess, toggleSleep } = useCatGame(
-    'Nico',
-    pushNotice,
-  );
+  const {
+    ready,
+    live,
+    mood,
+    tummyAche,
+    messes,
+    churuStash,
+    whim,
+    event,
+    busy,
+    perform,
+    petOli,
+    cleanMess,
+    fulfillWhim,
+    toggleSleep,
+    now,
+  } = useCatGame('Nico', pushNotice);
   const { availableVersion, reloading, applyUpdate } = useVersionCheck();
 
   const handlePetOli = () => {
@@ -128,6 +142,7 @@ export function App() {
           mood={mood}
           tummyAche={tummyAche}
           messCount={messes.length}
+          churuStash={churuStash}
           onOpenChangelog={() => setChangelogOpen(true)}
           onOpenGuide={() => setGuideOpen(true)}
           notificationsOn={notifPrefs.enabled}
@@ -183,6 +198,7 @@ export function App() {
         {/* Center stage: Oli sitting on the living room plush rug */}
         <div className="pointer-events-none relative z-10 flex flex-1 items-end justify-center pb-5">
           <FloatingEffects event={event} tapHeartKey={tapHeartKey} mood={mood} />
+          <WhimBubble whim={whim} now={now} onFulfill={fulfillWhim} />
           <div className="pointer-events-auto relative h-56 w-56 sm:h-60 sm:w-60">
             <CatAvatar
               mood={mood}
@@ -201,6 +217,8 @@ export function App() {
             live={live}
             tummyAche={tummyAche}
             messCount={messes.length}
+            churuStash={churuStash}
+            whimActionId={whim?.actionId ?? null}
             busy={busy}
             onAction={perform}
             onToggleSleep={toggleSleep}

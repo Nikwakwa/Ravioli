@@ -24,6 +24,7 @@ export interface StatusHUDProps {
   mood: Mood;
   tummyAche?: boolean;
   messCount?: number;
+  churuStash?: number;
   onOpenChangelog: () => void;
   onOpenGuide: () => void;
   notificationsOn?: boolean;
@@ -36,6 +37,7 @@ export function StatusHUD({
   mood,
   tummyAche,
   messCount = 0,
+  churuStash = 3,
   onOpenChangelog,
   onOpenGuide,
   notificationsOn,
@@ -102,6 +104,15 @@ export function StatusHUD({
         </div>
 
         <div className="flex shrink-0 items-center gap-1.5">
+          {/* Churu Treat Stash counter pill */}
+          <div
+            title="Churu Treat Stash — earn more by fulfilling Oli’s cravings or scooping messes!"
+            className={`flex items-center gap-1 rounded-full border px-2.5 py-1.5 text-xs font-extrabold shadow-sm backdrop-blur-md ${surface}`}
+          >
+            <span className="text-xs leading-none">🍬</span>
+            <span className="tabular-nums">{churuStash}</span>
+          </div>
+
           {/* Notifications bell toggle */}
           {onToggleNotifications && (
             <button

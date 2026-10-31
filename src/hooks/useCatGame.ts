@@ -5,6 +5,7 @@ import type {
   CatAnimation,
   CatState,
   CatStats,
+  CatWhim,
   LiveCat,
   MessKind,
   Mood,
@@ -23,7 +24,9 @@ import {
 import {
   actionById,
   AUTO_NAP_ENERGY,
+  DEFAULT_CHURU_STASH,
   formatLog,
+  MAX_CHURU_STASH,
   MAX_ROOM_MESSES,
   MAX_SLEEP_ENERGY,
   MAX_TREATS_IN_WINDOW,
@@ -32,9 +35,12 @@ import {
   PET_ACTION_ID,
   PET_COOLDOWN_MS,
   PET_JOY_BOOST,
+  pickCandidateWhim,
   SLEEP_ACTION_ID,
   TREAT_WINDOW_MS,
   TUMMY_ACHE_MS,
+  WHIM_COOLDOWN_MS,
+  WHIM_DURATION_MS,
   type CareAction,
   type ParticleKind,
 } from '../data/actions';
@@ -58,6 +64,10 @@ const LS_TUMMY_ACHE = 'ravioli:v1:tummy_ache_until';
 const LS_MESSES = 'ravioli:v1:room_messes';
 const LS_LAST_MESS_AT = 'ravioli:v1:last_mess_at';
 const LS_MEAL_COUNT = 'ravioli:v1:meal_count';
+const LS_SCOOP_COUNT = 'ravioli:v1:scoop_count';
+const LS_CHURU_STASH = 'ravioli:v1:churu_stash';
+const LS_ACTIVE_WHIM = 'ravioli:v1:active_whim';
+const LS_LAST_WHIM_AT = 'ravioli:v1:last_whim_at';
 
 export interface GameEvent {
   key: number;
@@ -144,14 +154,82 @@ function saveLastMessAt(ms: number) {
   }
 }
 
-function incrementMealCount(): number {
+function incrementCounter(key: string): number {
   try {
-    const raw = window.localStorage.getItem(LS_MEAL_COUNT);
+    const raw = window.localStorage.getItem(key);
     const next = (raw ? Number(raw) || 0 : 0) + 1;
-    window.localStorage.setItem(LS_MEAL_COUNT, String(next));
+    window.localStorage.setItem(key, String(next));
     return next;
   } catch {
     return 1;
+  }
+}
+
+function loadChuruStash(): number {
+  try {
+    const raw = window.localStorage.getItem(LS_CHURU_STASH);
+    if (raw === null) return DEFAULT_CHURU_STASH;
+    const n = Math.floor(Number(raw));
+    if (!Number.isFinite(n)) return DEFAULT_CHURU_STASH;
+    return Math.max(0, Math.min(MAX_CHURU_STASH, n));
+  } catch {
+    return DEFAULT_CHURU_STASH;
+  }
+}
+
+function saveChuruStash(count: number) {
+  try {
+    window.localStorage.setItem(LS_CHURU_STASH, String(Math.max(0, Math.min(MAX_CHURU_STASH, count))));
+  } catch {
+    // ignore
+  }
+}
+
+function loadActiveWhim(): CatWhim | null {
+  try {
+    const raw = window.localStorage.getItem(LS_ACTIVE_WHIM);
+    if (!raw) return null;
+    const p = JSON.parse(raw) as Partial<CatWhim>;
+    if (
+      p &&
+      typeof p.id === 'string' &&
+      typeof p.actionId === 'string' &&
+      typeof p.label === 'string' &&
+      typeof p.emoji === 'string' &&
+      typeof p.expiresAt === 'number'
+    ) {
+      return p as CatWhim;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+function saveActiveWhim(whim: CatWhim | null) {
+  try {
+    if (whim) window.localStorage.setItem(LS_ACTIVE_WHIM, JSON.stringify(whim));
+    else window.localStorage.removeItem(LS_ACTIVE_WHIM);
+  } catch {
+    // ignore
+  }
+}
+
+function loadLastWhimAt(): number {
+  try {
+    const raw = window.localStorage.getItem(LS_LAST_WHIM_AT);
+    const n = raw ? Number(raw) : 0;
+    return Number.isFinite(n) ? n : 0;
+  } catch {
+    return 0;
+  }
+}
+
+function saveLastWhimAt(ms: number) {
+  try {
+    window.localStorage.setItem(LS_LAST_WHIM_AT, String(ms));
+  } catch {
+    // ignore
   }
 }
 
@@ -210,10 +288,28 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
   const [busy, setBusy] = useState(false);
   const [tummyAcheUntil, setTummyAcheUntil] = useState<number>(() => loadTummyAcheUntil());
   const [messes, setMesses] = useState<RoomMess[]>(() => loadMesses());
+  const [churuStash, setChuruStash] = useState<number>(() => loadChuruStash());
+  const [whim, setWhim] = useState<CatWhim | null>(() => loadActiveWhim());
   const busyTimer = useRef<number | undefined>(undefined);
   const lastPetRef = useRef<number>(0);
 
   const tummyAche = tummyAcheUntil > now;
+
+  const updateChuruStash = useCallback((updater: (prev: number) => number): number => {
+    let nextVal = DEFAULT_CHURU_STASH;
+    setChuruStash((prev) => {
+      nextVal = Math.max(0, Math.min(MAX_CHURU_STASH, updater(prev)));
+      saveChuruStash(nextVal);
+      return nextVal;
+    });
+    return nextVal;
+  }, []);
+
+  const clearWhim = useCallback(() => {
+    setWhim(null);
+    saveActiveWhim(null);
+    saveLastWhimAt(Date.now());
+  }, []);
 
   const clearTummyAche = useCallback(() => {
     setTummyAcheUntil(0);
@@ -450,6 +546,62 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
     [player, acceptState, addEntry],
   );
 
+  // ---------------------------------------------------------------------------
+  // Phase 3: Attention Calls ("Meow!" Whims / Cravings) lifecycle
+  // ---------------------------------------------------------------------------
+  useEffect(() => {
+    if (!ready || !live) return;
+
+    // Clear whim if Oli falls asleep or gets a tummy ache
+    if (whim && (live.isSleeping || tummyAche)) {
+      setWhim(null);
+      saveActiveWhim(null);
+      return;
+    }
+
+    // Check if an active whim has expired
+    if (whim) {
+      const msLeft = whim.expiresAt - now;
+      if (msLeft <= 0) {
+        clearWhim();
+        noticeRef.current({
+          text: `😿 ${live.name}’s craving went unanswered… (-8 Joy)`,
+          tone: 'warn',
+        });
+        const mutator = (b: CatState): CatState => applyEffect(materialize(b, Date.now()), { happiness: -8 });
+        void commit(mutator, PET_ACTION_ID, `Gave ${live.name} chin scratches — purr session!`);
+        return;
+      }
+      const expireTimer = window.setTimeout(() => setNow(Date.now()), Math.min(msLeft + 200, 60_000));
+      return () => window.clearTimeout(expireTimer);
+    }
+
+    // Otherwise, if Oli is awake & feeling fine, schedule his next Attention Call!
+    if (live.isSleeping || tummyAche) return;
+    const elapsedSinceLast = Date.now() - loadLastWhimAt();
+    const waitMs = Math.max(8_000, WHIM_COOLDOWN_MS - elapsedSinceLast);
+
+    const spawnTimer = window.setTimeout(() => {
+      const candidate = pickCandidateWhim(live);
+      if (!candidate) return;
+      const nextWhim: CatWhim = {
+        ...candidate,
+        id: `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`,
+        expiresAt: Date.now() + WHIM_DURATION_MS,
+      };
+      setWhim(nextWhim);
+      saveActiveWhim(nextWhim);
+      saveLastWhimAt(Date.now());
+      vibrate([20, 40, 20]);
+      noticeRef.current({
+        text: `💭 Meow! ${live.name} has a craving: ${nextWhim.label}`,
+        tone: 'info',
+      });
+    }, waitMs);
+
+    return () => window.clearTimeout(spawnTimer);
+  }, [ready, live, whim, now, tummyAche, clearWhim, commit]);
+
   // Passive Tamagotchi mess catch-up: spawn 1 mess per MESS_SPAWN_HOURS (2.5h) elapsed, up to 3 max.
   useEffect(() => {
     if (!ready || !live) return;
@@ -533,11 +685,18 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
       saveMesses(remaining);
       saveLastMessAt(Date.now());
 
+      const scoops = incrementCounter(LS_SCOOP_COUNT);
+      const earnedChuru = scoops % 2 === 0 && churuStash < MAX_CHURU_STASH;
+      if (earnedChuru) {
+        updateChuruStash((c) => c + 1);
+      }
+
       vibrate(scoopAction.haptic);
       lockFor(1000);
       noticeRef.current({
-        text:
-          target.kind === 'poop'
+        text: earnedChuru
+          ? `✨ Cleaned up the rug & earned +1 Churu Tube 🍬!`
+          : target.kind === 'poop'
             ? `✨ Scooped up ${live.name}’s poop! The rug is fresh & clean.`
             : `✨ Cleaned up ${live.name}’s throw-up from the rug!`,
         tone: 'info',
@@ -558,7 +717,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
       const mutator = (b: CatState): CatState => applyEffect(materialize(b, Date.now()), scoopAction.effect);
       void commit(mutator, scoopAction.id, formatLog(scoopAction.log, live.name));
     },
-    [base, live, busy, messes, player, playEvent, commit],
+    [base, live, busy, messes, churuStash, player, playEvent, commit, updateChuruStash],
   );
 
   const perform = useCallback(
@@ -584,25 +743,31 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
         return;
       }
 
-      // 3. Fullness check on meals
+      // 3. Churu Stash check when feeding a Churu Tube
+      if (action.id === 'churu' && churuStash <= 0) {
+        triggerRefusal(`🍬 Out of Churu Tubes! Fulfill ${live.name}’s cravings or scoop messes to earn more!`);
+        return;
+      }
+
+      // 4. Fullness check on meals
       if (action.maxHunger !== undefined && live.hunger >= action.maxHunger) {
         triggerRefusal(`😋 ${live.name} is too full for ${action.short.toLowerCase()} right now! Play with him first.`);
         return;
       }
 
-      // 4. Hydration check on fountain
+      // 5. Hydration check on fountain
       if (action.maxHydration !== undefined && live.hydration >= action.maxHydration) {
         triggerRefusal(`💧 ${live.name} isn’t thirsty right now — his fountain is already fresh!`);
         return;
       }
 
-      // 5. Energy check on play actions
+      // 6. Energy check on play actions
       if (action.minEnergy !== undefined && live.energy < action.minEnergy) {
         triggerRefusal(`🥱 ${live.name} is too tired for ${action.short}! Let him nap or feed him a Quail Egg.`);
         return;
       }
 
-      // 6. Overfeeding / Treat-spam check (4th treat in 15m triggers a Tummy Ache + Throw-up!)
+      // 7. Overfeeding / Treat-spam check (4th treat in 15m triggers a Tummy Ache + Throw-up!)
       const nowMs = Date.now();
       if (action.isTreat) {
         const recent = loadRecentTreats(nowMs);
@@ -634,7 +799,26 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
         saveRecentTreats([...recent, nowMs]);
       }
 
-      // 7. Soothe tummy ache if using Brush or Calming Mist
+      // 8. Spend 1 Churu Tube if using Churu
+      if (action.id === 'churu') {
+        updateChuruStash((c) => c - 1);
+      }
+
+      // 9. Check if this action fulfills Oli's active Attention Call / Whim!
+      const matchedWhim = whim && whim.actionId === action.id;
+      const finalEffect: Partial<CatStats> = { ...action.effect };
+      if (matchedWhim) {
+        clearWhim();
+        const baseJoy = finalEffect.happiness ?? 8;
+        finalEffect.happiness = Math.max(16, baseJoy * 2);
+        updateChuruStash((c) => c + 1);
+        noticeRef.current({
+          text: `🎉 Craving fulfilled! 2× Joy (+${finalEffect.happiness}) & earned +1 Churu Tube 🍬!`,
+          tone: 'info',
+        });
+      }
+
+      // 10. Soothe tummy ache if using Brush or Calming Mist
       if (tummyAche && action.soothesTummy) {
         clearTummyAche();
         noticeRef.current({
@@ -643,9 +827,9 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
         });
       }
 
-      // 8. Digestion: every 2nd meal (Wet Food or Quail Egg) spawns a poop mess right after Oli finishes eating!
+      // 11. Digestion: every 2nd meal (Wet Food or Quail Egg) spawns a poop mess right after Oli finishes eating!
       if (action.id === 'wet_food' || action.id === 'quail_egg') {
-        const meals = incrementMealCount();
+        const meals = incrementCounter(LS_MEAL_COUNT);
         if (meals % 2 === 0) {
           window.setTimeout(() => {
             spawnMess('poop', `💩 Nature calls! ${live.name} left a mess on the rug — tap it to scoop!`);
@@ -659,25 +843,44 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
         actionId: action.id,
         player: player ?? 'Nico',
         remote: false,
-        effect: action.effect,
-        particles: action.particles,
+        effect: finalEffect,
+        particles: matchedWhim
+          ? Array.from(new Set([...action.particles, 'hearts' as const, 'sparkles' as const]))
+          : action.particles,
         animation: action.animation,
         durationMs: action.durationMs,
       });
 
       const wasThriving = messes.length === 0 && isThriving(live);
-      const willThrive = messes.length === 0 && isThriving(applyEffect(live, action.effect));
+      const willThrive = messes.length === 0 && isThriving(applyEffect(live, finalEffect));
       if (!wasThriving && willThrive) window.setTimeout(celebrate, 500);
 
       const mutator = (b: CatState): CatState => {
         const t = Date.now();
-        const next = applyEffect(materialize(b, t), action.effect);
+        const next = applyEffect(materialize(b, t), finalEffect);
         if (action.calmMinutes) next.calm_until = new Date(t + action.calmMinutes * 60_000).toISOString();
         return next;
       };
       void commit(mutator, action.id, formatLog(action.log, live.name));
     },
-    [base, live, busy, tummyAche, messes.length, player, playEvent, commit, triggerRefusal, clearTummyAche, cleanMess, spawnMess],
+    [
+      base,
+      live,
+      busy,
+      tummyAche,
+      churuStash,
+      whim,
+      messes.length,
+      player,
+      playEvent,
+      commit,
+      triggerRefusal,
+      clearTummyAche,
+      clearWhim,
+      cleanMess,
+      spawnMess,
+      updateChuruStash,
+    ],
   );
 
   /** Direct interactive petting on Oli's rug avatar (replaces the old Chin Scratches dock button). */
@@ -711,10 +914,22 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
       return;
     }
 
-    // Grant +Joy boost if off the 20s petting cooldown
-    if (nowMs - lastPetRef.current >= PET_COOLDOWN_MS && !busy) {
+    // If Oli's active whim is Chin Scratches, fulfill it immediately even if on pet cooldown!
+    const matchedWhim = whim && whim.actionId === PET_ACTION_ID;
+    if (matchedWhim || (nowMs - lastPetRef.current >= PET_COOLDOWN_MS && !busy)) {
       lastPetRef.current = nowMs;
-      const boost: Partial<CatStats> = { happiness: PET_JOY_BOOST };
+      const joyDelta = matchedWhim ? PET_JOY_BOOST * 3 : PET_JOY_BOOST;
+      const boost: Partial<CatStats> = { happiness: joyDelta };
+
+      if (matchedWhim) {
+        clearWhim();
+        updateChuruStash((c) => c + 1);
+        noticeRef.current({
+          text: `🎉 Purr-fect chin scratches! +${joyDelta} Joy & earned +1 Churu Tube 🍬!`,
+          tone: 'info',
+        });
+      }
+
       playEvent({
         actionId: PET_ACTION_ID,
         player: player ?? 'Nico',
@@ -732,7 +947,18 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
       const mutator = (b: CatState): CatState => applyEffect(materialize(b, nowMs), boost);
       void commit(mutator, PET_ACTION_ID, `Gave ${live.name} chin scratches — purr session!`);
     }
-  }, [base, live, busy, tummyAche, messes.length, player, playEvent, commit, clearTummyAche]);
+  }, [base, live, busy, tummyAche, whim, messes.length, player, playEvent, commit, clearTummyAche, clearWhim, updateChuruStash]);
+
+  /** Tapping the Whim thought bubble directly above Oli's head performs the requested action! */
+  const fulfillWhim = useCallback(() => {
+    if (!whim) return;
+    if (whim.actionId === PET_ACTION_ID) {
+      petOli();
+      return;
+    }
+    const action = actionById(whim.actionId);
+    if (action) perform(action);
+  }, [whim, petOli, perform]);
 
   const toggleSleep = useCallback(() => {
     if (!live || busy) return;
@@ -777,6 +1003,8 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
     mood,
     tummyAche,
     messes,
+    churuStash,
+    whim,
     log,
     mode,
     status,
@@ -786,6 +1014,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
     perform,
     petOli,
     cleanMess,
+    fulfillWhim,
     toggleSleep,
     now,
   };

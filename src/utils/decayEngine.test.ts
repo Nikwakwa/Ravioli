@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { actionById, CARE_ACTIONS, CATEGORIES, MAX_SLEEP_ENERGY, MIN_WAKE_ENERGY, PET_ACTION_ID } from '../data/actions';
+import {
+  actionById,
+  CARE_ACTIONS,
+  CATEGORIES,
+  MAX_SLEEP_ENERGY,
+  MIN_WAKE_ENERGY,
+  PET_ACTION_ID,
+  pickCandidateWhim,
+} from '../data/actions';
 import { pickFreeMessSlot } from '../hooks/useCatGame';
 import { cleanText, sanitizeActivity, sanitizeCatState } from '../services/catStorage';
 import { evaluateStatThresholds, type AlertedMap } from './notifications';
@@ -236,6 +244,20 @@ describe('Tamagotchi Phase 1 & 2 action, dock & mess rules', () => {
     expect(laser?.effect.energy).toBe(-18);
 
     expect(MAX_SLEEP_ENERGY).toBeGreaterThan(MIN_WAKE_ENERGY);
+  });
+
+  it('picks valid Attention Call whims that respect fullness, sleep, and energy thresholds', () => {
+    // Sleeping Oli has no whims
+    const sleepingLive = computeLiveStats(base({ is_sleeping: true }), T0);
+    expect(pickCandidateWhim(sleepingLive, 0)).toBeNull();
+
+    // Stuffed & exhausted Oli should never be asked to eat a heavy meal or play high-energy games
+    const stuffedExhausted = computeLiveStats(base({ hunger: 92, energy: 10 }), T0);
+    for (let seed = 0; seed < 10; seed++) {
+      const w = pickCandidateWhim(stuffedExhausted, seed);
+      expect(w).not.toBeNull();
+      expect(['wet_food', 'quail_egg', 'feather_wand', 'laser_pointer']).not.toContain(w?.actionId);
+    }
   });
 });
 

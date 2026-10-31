@@ -7,6 +7,16 @@ export interface ReleaseEntry {
 
 export const CHANGELOG: ReleaseEntry[] = [
   {
+    version: 'v0.12.0',
+    date: '2026-10-31',
+    title: 'Attention Calls ("Meow!" Cravings) & Churu Stash! 💭🍬',
+    changes: [
+      'Attention Calls: Oli now periodically displays a "Meow!" craving bubble above his head asking for a specific snack, game, or care action.',
+      'Tap the craving bubble directly (or the highlighted 💭 button in the dock) before the timer runs out for 2× Joy and +1 Churu Tube 🍬!',
+      'Churu Treat Stash: Churu Tubes are now a collectible stash item (tracked in the top bar, up to 9 max) — earn more by fulfilling cravings or scooping every 2nd mess.',
+    ],
+  },
+  {
     version: 'v0.11.2',
     date: '2026-10-31',
     title: 'Visible Rug Messes Fix 💩✨',

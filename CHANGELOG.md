@@ -4,6 +4,14 @@ All updates to **Oli** are listed here.
 
 ---
 
+## `v0.12.0` — 2026-10-31
+### Attention Calls ("Meow!" Cravings) & Churu Stash! 💭🍬
+- **Tamagotchi Attention Calls (`WhimBubble`):** Periodically while awake, Oli displays a thought bubble above his head requesting a specific action (e.g., *Chicken Heart*, *Feather Wand*, *Laser Zoomies*, *Brush Coat*).
+- **One-Tap Fulfill & 2× Joy Reward:** Tap the craving bubble directly (or the highlighted `💭 2× Joy` button in the dock) before it expires to grant **2× Joy** and earn **+1 Churu Tube 🍬**! Ignoring a craving leaves Oli pouty (`-8 Joy`).
+- **Churu Treat Stash Economy:** `Churu Tubes` are now tracked in a finite stash (`🍬` pill in the top HUD and `×N` badge on the Churu tile, starting with 3 and holding up to 9). Earn extra tubes by fulfilling cravings or scooping every 2nd mess on the rug.
+
+---
+
 ## `v0.11.2` — 2026-10-31
 ### Visible Rug Messes Fix 💩✨
 - Fixed a Framer Motion `<motion.g>` SVG transform bug that overwrote `transform="translate(x, y)"` and sent messes to `(0, 0)` behind the top HUD.

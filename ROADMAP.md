@@ -44,7 +44,7 @@ This document tracks our gameplay evolution from a passive care toy into a full 
 
 ---
 
-## 💭 Phase 3: Attention Calls ("Meow!" Whims) & Treat Stash
+## ✅ Phase 3: Attention Calls ("Meow!" Whims) & Treat Stash *(Completed)*
 
 - **Specific Cravings / Whims:** Periodically, Oli displays an attention bubble above his head requesting a specific action (e.g., *"Craving a Chicken Heart!"*, *"Wants Feather Wand!"*, *"Wants a Brush!"*).
 - **Reward Loop:**

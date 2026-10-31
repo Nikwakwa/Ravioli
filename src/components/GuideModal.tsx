@@ -151,6 +151,16 @@ export function GuideModal({
                     a mess on the rug. Active messes block <em>Thriving</em> status — tap them directly on the rug or
                     use <strong>Care → Scoop Mess</strong> (+15 Clean, +6 Joy)!
                   </li>
+                  <li>
+                    <strong>💭 Attention Calls (&ldquo;Meow!&rdquo; Cravings):</strong> Periodically Oli shows a craving
+                    bubble above his head. Tap the bubble (or the highlighted action in the dock) before time runs out
+                    for <strong className="text-pink-600">2× Joy + 1 Churu Tube 🍬</strong>! Ignoring a craving makes
+                    him pouty (-8 Joy).
+                  </li>
+                  <li>
+                    <strong>🍬 Churu Treat Stash:</strong> You start with <strong>3 Churu Tubes</strong> (up to 9 max).
+                    Earn more by fulfilling Oli’s cravings or scooping every 2nd mess!
+                  </li>
                 </ul>
               </div>
 
