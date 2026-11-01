@@ -25,9 +25,6 @@ import {
 import {
   actionById,
   AUTO_NAP_ENERGY,
-  CHURU_CLEAN_INTERVAL,
-  CHURU_PERFECT_MG_INTERVAL,
-  CHURU_WHIM_INTERVAL,
   computeMinigameReward,
   DEFAULT_CHURU_STASH,
   formatLog,
@@ -74,9 +71,6 @@ const LS_LAST_MESS_AT = 'ravioli:v1:last_mess_at';
 const LS_LITTER_DIRTY = 'ravioli:v1:litter_box_dirty';
 const LS_LAST_LITTER_AT = 'ravioli:v1:last_litter_at';
 const LS_MEAL_COUNT = 'ravioli:v1:meal_count';
-const LS_SCOOP_COUNT = 'ravioli:v1:scoop_count';
-const LS_WHIM_SUCCESS_COUNT = 'ravioli:v1:whim_success_count';
-const LS_PERFECT_MG_COUNT = 'ravioli:v1:perfect_mg_count';
 const LS_CHURU_STASH = 'ravioli:v1:churu_stash';
 const LS_ACTIVE_WHIM = 'ravioli:v1:active_whim';
 const LS_LAST_WHIM_AT = 'ravioli:v1:last_whim_at';
@@ -775,19 +769,10 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
     saveLitterBoxDirty(false);
     saveLastLitterAt(Date.now());
 
-    const scoops = incrementCounter(LS_SCOOP_COUNT);
-    const earnedChuru = scoops % CHURU_CLEAN_INTERVAL === 0 && churuStash < MAX_CHURU_STASH;
-    if (earnedChuru) {
-      updateChuruStash((c) => c + 1);
-    }
-
     vibrate(scoopAction.haptic);
     lockFor(1000);
-    const progressText = `${scoops % CHURU_CLEAN_INTERVAL}/${CHURU_CLEAN_INTERVAL} to Churu 🍬`;
     noticeRef.current({
-      text: earnedChuru
-        ? `✨ Cleaned Oli’s litter box! 5-Clean Milestone: earned +1 Churu Tube 🍬!`
-        : `✨ Scooped Oli’s litter box clean! (${progressText})`,
+      text: `✨ Scooped Oli’s litter box clean! Fresh & spotless.`,
       tone: 'info',
     });
     playEvent({
@@ -831,21 +816,13 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
       saveMesses(remaining);
       saveLastMessAt(Date.now());
 
-      const scoops = incrementCounter(LS_SCOOP_COUNT);
-      const earnedChuru = scoops % CHURU_CLEAN_INTERVAL === 0 && churuStash < MAX_CHURU_STASH;
-      if (earnedChuru) {
-        updateChuruStash((c) => c + 1);
-      }
-
       vibrate(scoopAction.haptic);
       lockFor(1000);
-      const progressText = `${scoops % CHURU_CLEAN_INTERVAL}/${CHURU_CLEAN_INTERVAL} to Churu 🍬`;
       noticeRef.current({
-        text: earnedChuru
-          ? `✨ Cleaned up the rug! 5-Clean Milestone: earned +1 Churu Tube 🍬!`
-          : target.kind === 'fur_clump'
-            ? `✨ Swept up ${live.name}’s ginger fur tumbleweed! (${progressText})`
-            : `✨ Cleaned up ${live.name}’s throw-up from the rug! (${progressText})`,
+        text:
+          target.kind === 'fur_clump'
+            ? `✨ Swept up ${live.name}’s ginger fur tumbleweed! The rug is nice & clean.`
+            : `✨ Cleaned up ${live.name}’s throw-up from the rug!`,
         tone: 'info',
       });
       playEvent({
@@ -987,7 +964,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
       const matchedWhim = whim && whim.actionId === action.id;
       const finalEffect: Partial<CatStats> = { ...action.effect };
       const mgReward =
-        minigameHits !== undefined ? computeMinigameReward(minigameHits, MINIGAME_ROUNDS, Boolean(matchedWhim)) : null;
+        minigameHits !== undefined ? computeMinigameReward(minigameHits, MINIGAME_ROUNDS) : null;
 
       if (mgReward && mgReward.bonusJoy > 0) {
         finalEffect.happiness = (finalEffect.happiness ?? 0) + mgReward.bonusJoy;
@@ -997,54 +974,19 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
         clearWhim();
         const baseJoy = finalEffect.happiness ?? 8;
         finalEffect.happiness = Math.max(16, baseJoy * 2);
-
-        const whimSuccesses = incrementCounter(LS_WHIM_SUCCESS_COUNT);
-        const earnedFromWhimStreak = whimSuccesses % CHURU_WHIM_INTERVAL === 0 && churuStash < MAX_CHURU_STASH;
-        const earnedFromMg = (mgReward?.churuBonus ?? 0) > 0 && churuStash < MAX_CHURU_STASH;
-        const totalEarned = (earnedFromWhimStreak ? 1 : 0) + (earnedFromMg ? 1 : 0);
-
-        if (totalEarned > 0) {
-          updateChuruStash((c) => c + totalEarned);
-        }
-
-        const progressText = `${whimSuccesses % CHURU_WHIM_INTERVAL}/${CHURU_WHIM_INTERVAL} to Churu 🍬`;
-        if (totalEarned >= 2) {
-          noticeRef.current({
-            text: `🌟 3-Craving Streak & Flawless Minigame! 2× Joy (+${finalEffect.happiness}) & earned +2 Churus 🍬!`,
-            tone: 'info',
-          });
-        } else if (earnedFromWhimStreak) {
-          noticeRef.current({
-            text: `🎉 3 Cravings Fulfilled streak! 2× Joy (+${finalEffect.happiness}) & earned +1 Churu Tube 🍬!`,
-            tone: 'info',
-          });
-        } else if (earnedFromMg) {
-          noticeRef.current({
-            text: `🏆 Flawless 3/3 Craving Minigame! 2× Joy (+${finalEffect.happiness}) & earned +1 Churu Tube 🍬!`,
-            tone: 'info',
-          });
-        } else {
-          noticeRef.current({
-            text: `🎉 Craving fulfilled! 2× Joy (+${finalEffect.happiness})! (${progressText})`,
-            tone: 'info',
-          });
-        }
+        const earnedChurus = 1 + (mgReward?.churuBonus ?? 0);
+        updateChuruStash((c) => c + earnedChurus);
+        noticeRef.current({
+          text: `🎉 Craving fulfilled! 2× Joy (+${finalEffect.happiness}) & earned +${earnedChurus} Churu Tube 🍬!`,
+          tone: 'info',
+        });
       } else if (mgReward) {
         if (mgReward.tier === 'perfect') {
-          const perfectCount = incrementCounter(LS_PERFECT_MG_COUNT);
-          const earnedChuru = perfectCount % CHURU_PERFECT_MG_INTERVAL === 0 && churuStash < MAX_CHURU_STASH;
-          if (earnedChuru) {
-            updateChuruStash((c) => c + 1);
-            noticeRef.current({
-              text: `🏆 3 Perfect Plays Milestone! +${finalEffect.happiness} Joy & earned +1 Churu Tube 🍬!`,
-              tone: 'info',
-            });
-          } else {
-            noticeRef.current({
-              text: `🏆 3/3 Flawless Play! +${finalEffect.happiness} Joy! (${perfectCount % CHURU_PERFECT_MG_INTERVAL}/${CHURU_PERFECT_MG_INTERVAL} to Churu 🍬)`,
-              tone: 'info',
-            });
-          }
+          updateChuruStash((c) => c + 1);
+          noticeRef.current({
+            text: `🏆 3/3 Perfect Play! +${finalEffect.happiness} Joy & earned +1 Churu Tube 🍬!`,
+            tone: 'info',
+          });
         } else if (mgReward.bonusJoy > 0) {
           noticeRef.current({
             text: `✨ 2/3 Great Play! +${finalEffect.happiness} Joy!`,
@@ -1169,16 +1111,9 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
 
       if (matchedWhim) {
         clearWhim();
-        const whimSuccesses = incrementCounter(LS_WHIM_SUCCESS_COUNT);
-        const earnedChuru = whimSuccesses % CHURU_WHIM_INTERVAL === 0 && churuStash < MAX_CHURU_STASH;
-        if (earnedChuru) {
-          updateChuruStash((c) => c + 1);
-        }
-        const progressText = `${whimSuccesses % CHURU_WHIM_INTERVAL}/${CHURU_WHIM_INTERVAL} to Churu 🍬`;
+        updateChuruStash((c) => c + 1);
         noticeRef.current({
-          text: earnedChuru
-            ? `🎉 Purr-fect chin scratches! 3-Craving Streak: +${joyDelta} Joy & earned +1 Churu Tube 🍬!`
-            : `🎉 Purr-fect chin scratches! +${joyDelta} Joy! (${progressText})`,
+          text: `🎉 Purr-fect chin scratches! +${joyDelta} Joy & earned +1 Churu Tube 🍬!`,
           tone: 'info',
         });
       }

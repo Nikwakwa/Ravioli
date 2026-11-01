@@ -195,20 +195,20 @@ export function GuideModal({
                   <li>
                     <strong>💭 Attention Calls (&ldquo;Meow!&rdquo; Cravings):</strong> Periodically Oli shows a craving
                     bubble above his head. Tap the bubble (or the highlighted action in the dock) before time runs out
-                    for <strong className="text-pink-600">2× Joy</strong>! Fulfilling a streak of 3 cravings also awards{' '}
-                    <strong>+1 Churu Tube 🍬</strong>! Ignoring a craving makes him pouty (-8 Joy).
+                    for <strong className="text-pink-600">2× Joy + 1 Churu Tube 🍬</strong>! Ignoring a craving makes
+                    him pouty (-8 Joy).
                   </li>
                   <li>
-                    <strong>🍬 Rare Churu Treat Stash:</strong> You start with <strong>1 Churu Tube</strong> (up to 5 max).
-                    Churus are a prized delicacy! Earn more through consistency: fulfilling a <strong>streak of 3 cravings</strong>,
-                    scoring a <strong>3/3 Perfect Play when Oli craves a game</strong>, scoring <strong>3 perfect games in a row</strong>,
-                    or reaching a <strong>5-cleanups milestone</strong>!
+                    <strong>🍬 Churu Treat Stash:</strong> You start with <strong>1 Churu Tube</strong> (you can collect as many as you want, up to 99!).
+                    Earn more Churus by fulfilling Oli’s <strong>craving thought bubbles</strong> or scoring a <strong>3/3 Perfect Play</strong> in minigames.
+                    Scooping the litter box and sweeping fur tumbleweeds keeps Oli’s home clean and happy!
                   </li>
                   <li>
                     <strong>🎮 3-Round Play Minigames:</strong> Choosing <strong>Feather Wand</strong> launches{' '}
                     <em>Feather Pounce!</em> (reflex timing) and <strong>Laser Zoomies</strong> launches{' '}
                     <em>Which Paw? Left or Right!</em> Score <strong>2/3</strong> for +8 Bonus Joy, or{' '}
-                    <strong className="text-emerald-700">3/3 Perfect Combo</strong> for +15 Bonus Joy &amp; confetti!
+                    <strong className="text-emerald-700">3/3 Perfect Combo</strong> for +15 Bonus Joy &amp;{' '}
+                    <strong>+1 Churu Tube 🍬</strong>!
                   </li>
                   <li>
                     <strong className="text-rose-700">🐾 9 Lives &amp; Severe Neglect Warning:</strong> While normal sleep

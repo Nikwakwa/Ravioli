@@ -48,10 +48,7 @@ export const PET_JOY_BOOST = 6;
 export const MAX_ROOM_MESSES = 3;
 export const MESS_SPAWN_HOURS = 2.5;
 export const DEFAULT_CHURU_STASH = 1;
-export const MAX_CHURU_STASH = 5;
-export const CHURU_CLEAN_INTERVAL = 5;
-export const CHURU_WHIM_INTERVAL = 3;
-export const CHURU_PERFECT_MG_INTERVAL = 3;
+export const MAX_CHURU_STASH = 99;
 export const WHIM_DURATION_MS = 8 * 60_000;
 export const WHIM_COOLDOWN_MS = 35_000;
 
@@ -292,13 +289,9 @@ export interface MinigameReward {
   tier: 'perfect' | 'great' | 'good';
 }
 
-export function computeMinigameReward(
-  hits: number,
-  totalRounds: number = MINIGAME_ROUNDS,
-  whimActive: boolean = false,
-): MinigameReward {
+export function computeMinigameReward(hits: number, totalRounds: number = MINIGAME_ROUNDS): MinigameReward {
   if (hits >= totalRounds) {
-    return { bonusJoy: 15, churuBonus: whimActive ? 1 : 0, tier: 'perfect' };
+    return { bonusJoy: 15, churuBonus: 1, tier: 'perfect' };
   }
   if (hits === totalRounds - 1) {
     return { bonusJoy: 8, churuBonus: 0, tier: 'great' };

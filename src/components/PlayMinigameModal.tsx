@@ -126,7 +126,7 @@ export function PlayMinigameModal({
   };
 
   const hitsSoFar = results.filter((r) => r === 'hit').length;
-  const reward = computeMinigameReward(hitsSoFar, MINIGAME_ROUNDS, whimActive);
+  const reward = computeMinigameReward(hitsSoFar, MINIGAME_ROUNDS);
   const sweetSpot = getFeatherSweetSpot(round);
 
   return (
@@ -357,9 +357,7 @@ export function PlayMinigameModal({
               </h3>
               <p className="text-xs font-extrabold text-emerald-800">
                 {reward.tier === 'perfect'
-                  ? whimActive
-                    ? `+${reward.bonusJoy} Bonus Joy & +1 Churu Tube 🍬 earned!`
-                    : `+${reward.bonusJoy} Bonus Joy for a flawless 3/3 run!`
+                  ? `+${reward.bonusJoy} Bonus Joy & +1 Churu Tube 🍬 earned!`
                   : reward.tier === 'great'
                     ? `+${reward.bonusJoy} Bonus Joy for sharp reflexes!`
                     : `${catName} had a blast chasing it around the rug!`}

@@ -4,6 +4,15 @@ All updates to **Oli** are listed here.
 
 ---
 
+## `v0.15.2` — 2026-11-01
+### Crystal-Clear Churu Treat Rules! 🍬✨
+- **Simple Stash & Cap:** You start with **1 Churu Tube**, and can collect as many as you want (capped at **99 max** for UI design).
+- **Craving Thought Bubbles:** Fulfilling any of Oli’s craving thought bubbles always awards double joy (**2× Joy**) and **+1 Churu Tube 🍬**!
+- **3/3 Minigame Mastery:** Scoring **3/3 in any minigame** awards bonus joy and **+1 Churu Tube 🍬**!
+- **Pure Clean Routine:** Scooping the litter box or sweeping fur tumbleweeds from the rug keeps Oli clean and healthy (no Churus).
+
+---
+
 ## `v0.15.1` — 2026-11-01
 ### Balanced Churu Treat Economy! 🍬⚖️
 - **Rare Delicacy Rebalance:** Churu Tubes now start at **1** (capped at **5 max**), reflecting how rare and prized lickable treats are in real life.

@@ -7,6 +7,17 @@ export interface ReleaseEntry {
 
 export const CHANGELOG: ReleaseEntry[] = [
   {
+    version: 'v0.15.2',
+    date: '2026-11-01',
+    title: 'Crystal-Clear Churu Treat Rules! 🍬✨',
+    changes: [
+      'Simple Starting Stash: Start with 1 Churu Tube, and collect as many as you want (up to 99 max).',
+      'Craving Bubbles: Fulfilling Oli’s craving thought bubbles always awards 2× Joy + 1 Churu Tube 🍬!',
+      '3/3 Minigame Mastery: Getting 3/3 in any minigame awards Joy + 1 Churu Tube 🍬!',
+      'Clean Space: Scooping the litter box or cleaning rug messes keeps Oli fresh and happy (no Churus).',
+    ],
+  },
+  {
     version: 'v0.15.1',
     date: '2026-11-01',
     title: 'Balanced Churu Treat Economy! 🍬⚖️',
