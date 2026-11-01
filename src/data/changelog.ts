@@ -7,6 +7,19 @@ export interface ReleaseEntry {
 
 export const CHANGELOG: ReleaseEntry[] = [
   {
+    version: 'v0.16.0',
+    date: '2026-11-01',
+    title: 'Where is Oli? Room Roaming & Cozy Spots! 🛋️📦✨',
+    changes: [
+      'Room Roaming & Cozy Spots: Oli now roams naturally between 4 cozy living room spots — the fluffy shag rug, his tan Bedsure bolster cat bed on the sofa chaise, an Amazon delivery cardboard box on the floor ("If it fits, I sits!"), and the sunny windowsill looking out at the sky ("Cat TV")!',
+      'Tap to Beckon: Tap any empty spot in the living room (or use the quick spot bar above) to invite Oli over with gentle spring animations!',
+      'Unique Cozy Purrs: Tapping Oli in his different spots triggers special thoughts — sweet sleepy snoozes in his sofa bed, playful fortress swats in his box, and bird chirping on the windowsill.',
+      'Sofa Bed Sleep Mode: Tucking Oli in for a nap automatically curls him up in his Bedsure bolster bed, and starting a meal or minigame brings him to the center rug.',
+      'Repositioned Corner Litter Box & Water: Shifted the enclosed litter box so it is 100% visible on all mobile screens, and moved the fresh water fountain to the opposite side of the room to respect natural cat hygiene instincts.',
+      'Coffee Table Polish: Removed the cork coaster from the modern white coffee table.',
+    ],
+  },
+  {
     version: 'v0.15.2',
     date: '2026-11-01',
     title: 'Crystal-Clear Churu Treat Rules! 🍬✨',

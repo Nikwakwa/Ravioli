@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import type { CatSpot } from '../../types';
 
 /**
  * Nico & Athina's real Living Room — crafted from the 16 photos of Oli at home:
@@ -8,9 +9,11 @@ import { motion } from 'framer-motion';
  * - Light-wood framed landscape print with wide white mat on the wall
  * - Wooden tripod floor lamp with white drum shade
  * - Dark charcoal woven L-shaped sofa with terracotta-red, sage-olive & geometric triangle cushions + tan "Bedsure" bolster cat bed
- * - Modern white coffee table with cork coaster & candle jar
+ * - Modern white coffee table with candle jar (cork coaster removed)
  * - Fluffy off-white / cream high-pile shag rug where Oli sits
- * - White cuboid pet water fountain with glowing blue LED status light & stainless steel bowl
+ * - White cuboid pet water fountain with glowing blue LED status light & stainless steel bowl (placed right of the rug)
+ * - Modern enclosed corner litter box (positioned safely in the left corner, away from water)
+ * - Empty Amazon delivery cardboard box on the floor ("If it fits, I sits!")
  */
 export function LivingRoom({
   sleeping,
@@ -18,12 +21,16 @@ export function LivingRoom({
   onTapFountain,
   litterBoxDirty = false,
   onTapLitterBox,
+  activeSpot = 'rug',
+  onSelectSpot,
 }: {
   sleeping: boolean;
   fountainBoost: boolean;
   onTapFountain?: () => void;
   litterBoxDirty?: boolean;
   onTapLitterBox?: () => void;
+  activeSpot?: CatSpot;
+  onSelectSpot?: (spot: CatSpot) => void;
 }) {
   return (
     <svg viewBox="0 0 400 600" preserveAspectRatio="xMidYMid slice" className="absolute inset-0 h-full w-full">
@@ -185,8 +192,19 @@ export function LivingRoom({
         {/* Center window mullion & handle */}
         <rect x="170.5" y="112" width="3" height="102" fill="#ffffff" />
         <rect x="174" y="160" width="2" height="9" rx="1" fill="#b8b5ad" />
-        {/* White windowsill */}
-        <rect x="115" y="218" width="114" height="6" rx="2" fill="#ffffff" stroke="#d5d0c5" strokeWidth="1" />
+        {/* White windowsill (Spot: 'window') */}
+        <g
+          onClick={() => onSelectSpot?.('window')}
+          className={onSelectSpot ? 'pointer-events-auto cursor-pointer' : undefined}
+          style={onSelectSpot ? { pointerEvents: 'auto', cursor: 'pointer' } : undefined}
+          role="button"
+          aria-current={activeSpot === 'window' ? 'true' : undefined}
+          aria-label="Sunny windowsill (cozy spot)"
+        >
+          {/* Generous touch target */}
+          <rect x="156" y="140" width="76" height="86" fill="transparent" style={{ pointerEvents: 'all' }} />
+          <rect x="115" y="218" width="114" height="6" rx="2" fill="#ffffff" stroke="#d5d0c5" strokeWidth="1" />
+        </g>
 
         {/* Potted green plant on windowsill (PXL_20260215_160817495.jpg) */}
         <ellipse cx="144" cy="213" rx="8" ry="6" fill="#5b6068" />
@@ -290,8 +308,18 @@ export function LivingRoom({
         {/* Left armrest */}
         <rect x="190" y="254" width="16" height="58" rx="7" fill="#3b414c" />
 
-        {/* Oli's tan suede "Bedsure Comfy Pet" bolster bed on the sofa chaise (PXL_20260104_123003020.jpg) */}
-        <g transform="translate(320 286)">
+        {/* Oli's tan suede "Bedsure Comfy Pet" bolster bed on the sofa chaise (Spot: 'sofa_bed') */}
+        <g
+          transform="translate(320 286)"
+          onClick={() => onSelectSpot?.('sofa_bed')}
+          className={onSelectSpot ? 'pointer-events-auto cursor-pointer' : undefined}
+          style={onSelectSpot ? { pointerEvents: 'auto', cursor: 'pointer' } : undefined}
+          role="button"
+          aria-current={activeSpot === 'sofa_bed' ? 'true' : undefined}
+          aria-label="Oli’s tan bolster bed on the sofa (cozy spot)"
+        >
+          {/* Generous touch target */}
+          <rect x="-4" y="-8" width="72" height="52" fill="transparent" style={{ pointerEvents: 'all' }} />
           {/* Cream sherpa inner cushion */}
           <rect x="6" y="4" width="52" height="28" rx="8" fill="#f5ece0" />
           {/* Tan suede bolster walls */}
@@ -307,7 +335,7 @@ export function LivingRoom({
         </g>
       </g>
 
-      {/* Modern white coffee table with cork coaster & candle jar (x: 256..396, y: 342..392) */}
+      {/* Modern white coffee table with candle jar (cork coaster removed) (x: 256..396, y: 342..392) */}
       <g>
         {/* Table shadow */}
         <polygon points="262,386 398,386 400,358 278,358" fill="rgba(35,30,22,0.14)" />
@@ -316,15 +344,14 @@ export function LivingRoom({
         <rect x="272" y="354" width="128" height="16" fill="#e6e3da" />
         {/* Crisp white tabletop */}
         <polygon points="262,354 398,354 400,334 282,334" fill="#ffffff" stroke="#dedad0" strokeWidth="1" />
-        {/* Round cork coaster (IMG_20251030_201609.jpg) */}
-        <ellipse cx="298" cy="344" rx="9" ry="3.2" fill="#b88456" stroke="#99683d" strokeWidth="0.6" />
         {/* Little glass candle jar */}
         <rect x="350" y="335" width="9" height="11" rx="2" fill="#f2efe9" stroke="#ccc7bc" strokeWidth="0.8" />
         <ellipse cx="354.5" cy="335" rx="4.5" ry="1.4" fill="#ffffff" stroke="#ccc7bc" strokeWidth="0.8" />
       </g>
 
-      {/* Oli's modern two-tone enclosed litter box in the left corner (grey drawer base, cream hood, flap door & top exit hole) */}
+      {/* Oli's modern two-tone enclosed litter box in the left corner (repositioned to x=72..132, 100% on screen, far from water) */}
       <g
+        transform="translate(62 0)"
         onClick={onTapLitterBox}
         className={onTapLitterBox ? 'pointer-events-auto cursor-pointer' : undefined}
         style={onTapLitterBox ? { pointerEvents: 'auto', cursor: 'pointer' } : undefined}
@@ -503,9 +530,54 @@ export function LivingRoom({
         )}
       </g>
 
-      {/* White cuboid LED pet water fountain + stainless bowl by the left wall (PXL_20260321_203920849.jpg) */}
+      {/* Oli's empty Amazon delivery cardboard box on the floor (Spot: 'box') */}
       <g
-        transform="translate(76 345)"
+        onClick={() => onSelectSpot?.('box')}
+        className={onSelectSpot ? 'pointer-events-auto cursor-pointer' : undefined}
+        style={onSelectSpot ? { pointerEvents: 'auto', cursor: 'pointer' } : undefined}
+        role="button"
+        aria-current={activeSpot === 'box' ? 'true' : undefined}
+        aria-label="Empty Amazon delivery box on the floor (cozy spot)"
+      >
+        {/* Generous touch target */}
+        <rect x="134" y="338" width="66" height="52" fill="transparent" style={{ pointerEvents: 'all' }} />
+        {/* Soft floor shadow */}
+        <ellipse cx="166" cy="382" rx="28" ry="6" fill="rgba(40,30,20,0.18)" />
+
+        {/* Open box interior (darker kraft brown) */}
+        <polygon points="140,356 192,356 186,378 144,378" fill="#9e7343" />
+
+        {/* Corrugated kraft cardboard exterior front panel */}
+        <polygon points="138,356 194,356 188,382 142,382" fill={sleeping ? '#8a7155' : '#c99b64'} stroke={sleeping ? '#6a543e' : '#a87c48'} strokeWidth="1" />
+        {/* Top fold crease */}
+        <line x1="138" y1="356" x2="194" y2="356" stroke="#deb888" strokeWidth="1.2" />
+
+        {/* Left and right angled open flaps */}
+        <polygon points="138,356 130,344 146,346 142,356" fill={sleeping ? '#7d664d' : '#b88b56'} stroke={sleeping ? '#6a543e' : '#a87c48'} strokeWidth="0.8" />
+        <polygon points="194,356 202,344 186,346 190,356" fill={sleeping ? '#7d664d' : '#b88b56'} stroke={sleeping ? '#6a543e' : '#a87c48'} strokeWidth="0.8" />
+
+        {/* Front hanging flaps */}
+        <polygon points="146,356 156,366 166,356" fill={sleeping ? '#786249' : '#b0824e'} stroke={sleeping ? '#6a543e' : '#9e7343'} strokeWidth="0.7" />
+        <polygon points="168,356 178,366 188,356" fill={sleeping ? '#786249' : '#b0824e'} stroke={sleeping ? '#6a543e' : '#9e7343'} strokeWidth="0.7" />
+
+        {/* White shipping barcode label */}
+        <rect x="146" y="364" width="18" height="11" rx="1.5" fill="#faf8f2" stroke="#d5d0c5" strokeWidth="0.6" />
+        <line x1="149" y1="367" x2="149" y2="372" stroke="#333" strokeWidth="0.8" />
+        <line x1="151" y1="367" x2="151" y2="372" stroke="#333" strokeWidth="0.6" />
+        <line x1="153" y1="367" x2="153" y2="372" stroke="#333" strokeWidth="1.2" />
+        <line x1="156" y1="367" x2="156" y2="372" stroke="#333" strokeWidth="0.6" />
+        <line x1="159" y1="367" x2="159" y2="372" stroke="#333" strokeWidth="1" />
+
+        {/* Red stamped logo: "FRAGILE / OLI" */}
+        <rect x="168" y="365" width="16" height="9" rx="1" fill="none" stroke="#b91c1c" strokeWidth="0.7" strokeDasharray="2 1" />
+        <text x="176" y="372" textAnchor="middle" fontSize="4.5" fontWeight="900" fill="#b91c1c" letterSpacing="0.4">
+          📦 OLI
+        </text>
+      </g>
+
+      {/* White cuboid LED pet water fountain + stainless bowl (repositioned to right side at x=252, far from litter box) */}
+      <g
+        transform="translate(252 368)"
         onClick={onTapFountain}
         className={onTapFountain ? 'pointer-events-auto cursor-pointer' : undefined}
         style={onTapFountain ? { pointerEvents: 'auto', cursor: 'pointer' } : undefined}
@@ -556,8 +628,17 @@ export function LivingRoom({
         <ellipse cx="63" cy="34" rx="11" ry="2.8" fill="#e1e7ed" stroke="#8e99a4" strokeWidth="0.8" />
       </g>
 
-      {/* Fluffy off-white / cream high-pile shag rug — centered where Oli sits (IMG_20251030_201609.jpg) */}
-      <g>
+      {/* Fluffy off-white / cream high-pile shag rug — centered where Oli sits (Spot: 'rug') */}
+      <g
+        onClick={() => onSelectSpot?.('rug')}
+        className={onSelectSpot ? 'pointer-events-auto cursor-pointer' : undefined}
+        style={onSelectSpot ? { pointerEvents: 'auto', cursor: 'pointer' } : undefined}
+        role="button"
+        aria-current={activeSpot === 'rug' ? 'true' : undefined}
+        aria-label="Fluffy living room rug (cozy spot)"
+      >
+        {/* Generous touch target */}
+        <rect x="70" y="365" width="260" height="85" fill="transparent" style={{ pointerEvents: 'all' }} />
         {/* Soft drop shadow under thick shag pile */}
         <path
           d="M42 404 Q48 368 198 366 Q348 368 362 406 Q368 442 198 444 Q36 442 42 404 Z"

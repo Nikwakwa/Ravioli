@@ -71,6 +71,9 @@ export type SyncStatus = 'connecting' | 'live' | 'local' | 'offline' | 'error';
 
 export type MessKind = 'fur_clump' | 'vomit';
 
+/** Cozy lounging spots around Nico & Athina's living room. */
+export type CatSpot = 'rug' | 'sofa_bed' | 'box' | 'window';
+
 export interface RoomMess {
   id: string;
   kind: MessKind;

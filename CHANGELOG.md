@@ -4,6 +4,21 @@ All updates to **Oli** are listed here.
 
 ---
 
+## `v0.16.0` — 2026-11-01
+### Where is Oli? Room Roaming & Cozy Spots! 🛋️📦✨
+- **Room Roaming & Cozy Spots:** Oli is no longer pinned to the center of the rug! He now roams naturally between **4 authentic cozy lounging spots** around Nico & Athina’s living room:
+  - **Fluffy Shag Rug:** The grand center stage for meals, licking Churus, and active minigames.
+  - **Bedsure Sofa Bolster Bed:** Curled up in his tan suede bolster bed on the sofa chaise — his favorite spot for cozy naps!
+  - **Amazon Delivery Cardboard Box:** Corrugated kraft cardboard box on the floor with shipping label and *"FRAGILE: OLI"* stamp. If it fits, Oli sits!
+  - **Sunny Windowsill:** Perched high on the windowsill enjoying the sky, clouds, and flying birds ("Cat TV").
+- **Tap-to-Beckon & Quick Spot Bar:** Tap any empty spot in the living room (or use the sleek quick spot switcher) to beckon Oli over with fluid spring hops.
+- **Unique Cozy Purrs & Interactions:** Petting Oli in his different lounging spots reveals unique thoughts — sleepy purrs and biscuit-making in his bed, playful box swats and fortress pride in his box, and bird chirping on the windowsill.
+- **Natural Routines:** Tucking Oli in for a nap automatically places him in his Bedsure sofa bed. Preparing a meal, treat, or play minigame brings him to the center rug.
+- **Litter Box & Water Separation:** Shifted the corner enclosed litter box fully onto the screen (100% visible on all mobile aspect ratios) and moved the LED water fountain to the opposite side of the living room so fresh water is never placed near a litter box.
+- **Coffee Table Polish:** Removed the cork coaster from the modern white coffee table.
+
+---
+
 ## `v0.15.2` — 2026-11-01
 ### Crystal-Clear Churu Treat Rules! 🍬✨
 - **Simple Stash & Cap:** You start with **1 Churu Tube**, and can collect as many as you want (capped at **99 max** for UI design).

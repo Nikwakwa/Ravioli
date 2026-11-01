@@ -3,6 +3,7 @@ import { initCatStorage, ACTIVITY_LIMIT, type CatStorage, type StorageBootstrap 
 import type {
   ActivityEntry,
   CatAnimation,
+  CatSpot,
   CatState,
   CatStats,
   CatWhim,
@@ -74,6 +75,49 @@ const LS_MEAL_COUNT = 'ravioli:v1:meal_count';
 const LS_CHURU_STASH = 'ravioli:v1:churu_stash';
 const LS_ACTIVE_WHIM = 'ravioli:v1:active_whim';
 const LS_LAST_WHIM_AT = 'ravioli:v1:last_whim_at';
+const LS_SPOT = 'ravioli:v1:cat_spot';
+const LS_LAST_ROAM_AT = 'ravioli:v1:last_roam_at';
+
+function loadCatSpot(): CatSpot {
+  try {
+    const raw = localStorage.getItem(LS_SPOT);
+    if (raw === 'rug' || raw === 'sofa_bed' || raw === 'box' || raw === 'window') {
+      return raw;
+    }
+  } catch {
+    // ignore
+  }
+  return 'rug';
+}
+
+function saveCatSpot(spot: CatSpot): void {
+  try {
+    localStorage.setItem(LS_SPOT, spot);
+  } catch {
+    // ignore
+  }
+}
+
+function loadLastRoamAt(): number {
+  try {
+    const raw = localStorage.getItem(LS_LAST_ROAM_AT);
+    if (raw) {
+      const n = Number(raw);
+      if (Number.isFinite(n)) return n;
+    }
+  } catch {
+    // ignore
+  }
+  return 0;
+}
+
+function saveLastRoamAt(timestamp: number): void {
+  try {
+    localStorage.setItem(LS_LAST_ROAM_AT, String(timestamp));
+  } catch {
+    // ignore
+  }
+}
 
 export interface GameEvent {
   key: number;
@@ -340,6 +384,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
   const [churuStash, setChuruStash] = useState<number>(() => loadChuruStash());
   const [whim, setWhim] = useState<CatWhim | null>(() => loadActiveWhim());
   const [activeMinigame, setActiveMinigame] = useState<CareAction | null>(null);
+  const [spot, setSpotState] = useState<CatSpot>(() => loadCatSpot());
   const busyTimer = useRef<number | undefined>(undefined);
   const lastPetRef = useRef<number>(0);
 
@@ -517,6 +562,50 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
   }, [acceptState]);
 
   const live: LiveCat | null = useMemo(() => (base ? computeLiveStats(base, now) : null), [base, now]);
+
+  const setSpot = useCallback(
+    (target: CatSpot, silent = false) => {
+      setSpotState(target);
+      saveCatSpot(target);
+      saveLastRoamAt(Date.now());
+      if (!silent) {
+        vibrate(20);
+        const catName = live?.name ?? 'Oli';
+        const lines: Record<CatSpot, string> = {
+          sofa_bed: `🛋️ ${catName} curled up in his Bedsure sofa bed!`,
+          box: `📦 If it fits, ${catName} sits! Trotted into his delivery box.`,
+          window: `🪟 ${catName} hopped onto the sunny windowsill to watch the birds!`,
+          rug: `🐾 ${catName} trotted back to the center of the rug.`,
+        };
+        noticeRef.current({ text: lines[target], tone: 'info' });
+      }
+    },
+    [live?.name],
+  );
+
+  // Keep Oli in his Bedsure bolster bed on the sofa while sleeping
+  useEffect(() => {
+    if (live?.isSleeping && spot !== 'sofa_bed') {
+      setSpotState('sofa_bed');
+      saveCatSpot('sofa_bed');
+    }
+  }, [live?.isSleeping, spot]);
+
+  // Spontaneous roaming when awake & idle (every ~15 minutes)
+  useEffect(() => {
+    if (!live || live.isSleeping || live.isDeceased || live.isPaused || busy) return;
+    const lastRoam = loadLastRoamAt();
+    const elapsed = now - lastRoam;
+    if (elapsed > 15 * 60_000) {
+      saveLastRoamAt(now);
+      const candidates: CatSpot[] = ['rug', 'sofa_bed', 'box', 'window'];
+      const nextSpot = candidates[Math.floor(Math.random() * candidates.length)];
+      if (nextSpot !== spot) {
+        setSpotState(nextSpot);
+        saveCatSpot(nextSpot);
+      }
+    }
+  }, [now, live, busy, spot]);
 
   // Derive mood with tummy-ache, room-mess, litter box & deceased overrides (messes block 'ecstatic'!)
   const mood: Mood = useMemo(() => {
@@ -879,6 +968,11 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
         return;
       }
 
+      // When doing an active care action, Oli trots to the center rug
+      if (action.id !== 'scoop_mess' && spot !== 'rug') {
+        setSpot('rug', true);
+      }
+
       // 1. Sleeping check
       if (action.requiresAwake && live.isSleeping) {
         noticeRef.current({ text: `Shh… ${live.name} is napping. Wake him up in Rest first.`, tone: 'info' });
@@ -1188,6 +1282,9 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
     }
 
     vibrate(target ? [20, 80, 20] : 30);
+    if (target) {
+      setSpot('sofa_bed', true);
+    }
     lockFor(1200);
     playEvent({
       actionId: SLEEP_ACTION_ID,
@@ -1299,6 +1396,8 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
     toggleSleep,
     togglePause,
     reviveOli,
+    spot,
+    setSpot,
     now,
   };
 }

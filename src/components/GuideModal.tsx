@@ -360,6 +360,45 @@ export function GuideModal({
                   </li>
                 </ul>
               </div>
+
+              {/* Section 6: Where is Oli? Room Roaming */}
+              <div className="rounded-2xl border border-amber-900/8 bg-white p-3 shadow-2xs">
+                <h3 className="mb-1.5 font-display text-xs font-bold text-amber-950">
+                  📍 Where is Oli? Cozy Lounging Spots
+                </h3>
+                <p className="mb-2 text-[11px] font-semibold leading-relaxed text-amber-900/80">
+                  Real cats never stay in one spot 24/7! Oli loves lounging around Nico &amp; Athina’s living room:
+                </p>
+                <div className="grid grid-cols-2 gap-1.5 text-[11px]">
+                  <div className="rounded-xl bg-amber-950/4 p-2">
+                    <span className="font-extrabold text-amber-950">🧶 Fluffy Shag Rug</span>
+                    <p className="mt-0.5 text-[10px] text-amber-900/70">
+                      Center stage for meals, Churu treats, and play minigames.
+                    </p>
+                  </div>
+                  <div className="rounded-xl bg-amber-950/4 p-2">
+                    <span className="font-extrabold text-amber-950">🛋️ Bedsure Sofa Bed</span>
+                    <p className="mt-0.5 text-[10px] text-amber-900/70">
+                      Tan bolster bed on the sofa chaise — his go-to nap haven.
+                    </p>
+                  </div>
+                  <div className="rounded-xl bg-amber-950/4 p-2">
+                    <span className="font-extrabold text-amber-950">📦 Delivery Box</span>
+                    <p className="mt-0.5 text-[10px] text-amber-900/70">
+                      Corrugated cardboard box on the floor: if it fits, Oli sits!
+                    </p>
+                  </div>
+                  <div className="rounded-xl bg-amber-950/4 p-2">
+                    <span className="font-extrabold text-amber-950">🪟 Sunny Windowsill</span>
+                    <p className="mt-0.5 text-[10px] text-amber-900/70">
+                      Watching clouds, birds, and stars out the window (“Cat TV”).
+                    </p>
+                  </div>
+                </div>
+                <p className="mt-2 text-[10px] font-bold text-amber-800">
+                  💡 Tap any cozy spot in the living room (or use the quick bar above) to beckon Oli there!
+                </p>
+              </div>
             </div>
           </motion.div>
         </>

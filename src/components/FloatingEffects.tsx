@@ -1,7 +1,7 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { STAT_META, type ParticleKind } from '../data/actions';
 import type { GameEvent } from '../hooks/useCatGame';
-import { STAT_KEYS, type Mood, type StatKey } from '../types';
+import { STAT_KEYS, type CatSpot, type Mood, type StatKey } from '../types';
 import { STAT_ICONS } from './statIcons';
 
 const PET_LINES: Record<Mood, string[]> = {
@@ -18,6 +18,35 @@ const PET_LINES: Record<Mood, string[]> = {
   deceased: ['Resting peacefully… 🕊️', 'Oli needs emergency vet care 💔'],
 };
 
+const SPOT_PET_LINES: Record<CatSpot, string[]> = {
+  rug: ['Purrrr… 🧡', 'Little nose boop! 🐾', 'Soft ginger floof~ ✨', 'Right under the chin~ 😺'],
+  sofa_bed: [
+    'Zzz… curled up in my Bedsure bed… 🛋️🧡',
+    'Baking biscuits on the sofa cushion~ 🐾',
+    'Soft sleepy purrs in the bolster bed… 🌙',
+    'Warm & cozy ginger cinnamon roll~ ✨',
+  ],
+  box: [
+    'If it fits, Oli sits! 📦✨',
+    'Cardboard fortress: no dogs allowed! 🐾',
+    'Playful swat from inside the box! 😼',
+    'Best delivery ever: 100% ginger floof! 📦🧡',
+  ],
+  window: [
+    'Chirp chirp! Watching the pigeons outside~ 🕊️✨',
+    'Warm sunbeam nap on the windowsill ☀️',
+    'Watching the clouds drift by… ☁️',
+    'Cat TV is on: 10/10 entertainment! 🌿',
+  ],
+};
+
+const SPOT_BUBBLE_OFFSETS: Record<CatSpot, { left: string; bottom: string }> = {
+  rug: { left: '50%', bottom: '232px' },
+  sofa_bed: { left: '77%', bottom: '315px' },
+  box: { left: '39%', bottom: '265px' },
+  window: { left: '49%', bottom: '385px' },
+};
+
 /**
  * Renders floating "+35 Hunger" stat bubbles, tap-to-pet thought bubbles, and
  * burst particles (hearts, water ripples, purr waves, calming mist, sparkles, crumbs) around Oli.
@@ -26,10 +55,12 @@ export function FloatingEffects({
   event,
   tapHeartKey,
   mood,
+  spot = 'rug',
 }: {
   event: GameEvent | null;
   tapHeartKey: number;
   mood: Mood;
+  spot?: CatSpot;
 }) {
   const deltas: { key: StatKey; delta: number }[] = event
     ? STAT_KEYS.flatMap((k) => {
@@ -39,7 +70,14 @@ export function FloatingEffects({
     : [];
 
   const petLines = PET_LINES[mood] ?? PET_LINES.content;
-  const petLine = petLines[tapHeartKey % petLines.length];
+  const spotLines = SPOT_PET_LINES[spot] ?? SPOT_PET_LINES.rug;
+  // Alternate between mood line and cozy spot line
+  const petLine =
+    tapHeartKey % 2 === 1 && spot !== 'rug'
+      ? spotLines[Math.floor(tapHeartKey / 2) % spotLines.length]
+      : petLines[tapHeartKey % petLines.length];
+
+  const pos = SPOT_BUBBLE_OFFSETS[spot];
 
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden">
@@ -51,7 +89,8 @@ export function FloatingEffects({
             initial={{ opacity: 0, y: 12, scale: 0.8 }}
             animate={{ opacity: [0, 1, 1, 0], y: -18, scale: [0.8, 1.03, 1, 0.96] }}
             transition={{ duration: 1.8, times: [0, 0.15, 0.8, 1], ease: 'easeOut' }}
-            className="absolute left-1/2 bottom-[232px] z-20 flex -translate-x-1/2 flex-col items-center"
+            style={{ left: pos.left, bottom: pos.bottom }}
+            className="absolute z-20 flex -translate-x-1/2 flex-col items-center"
           >
             <div className="rounded-2xl border border-amber-900/10 bg-white/95 px-3 py-1 text-xs font-extrabold whitespace-nowrap text-amber-950 shadow-md">
               {petLine}
@@ -66,7 +105,8 @@ export function FloatingEffects({
         {event && deltas.length > 0 && (
           <div
             key={`bubbles-${event.key}`}
-            className="absolute left-1/2 bottom-[220px] z-20 flex -translate-x-1/2 flex-col items-center gap-1.5"
+            style={{ left: pos.left, bottom: pos.bottom }}
+            className="absolute z-20 flex -translate-x-1/2 flex-col items-center gap-1.5"
           >
             {deltas.map(({ key, delta }, i) => {
               const meta = STAT_META[key];

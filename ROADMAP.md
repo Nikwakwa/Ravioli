@@ -77,6 +77,19 @@ Replace passive Play buttons with quick 10-second interactive minigames:
 
 ---
 
+## ✅ Phase 7: Where is Oli? Room Roaming & Cozy Spots *(Completed in v0.16.0)*
+
+- **Dynamic Room Roaming:** Oli dynamically lounges in 4 authentic spots around Nico & Athina's living room:
+  - Center shag rug (for meals and minigames)
+  - Tan Bedsure bolster cat bed on the sofa chaise (for naps and sleep mode)
+  - Corrugated cardboard delivery box on the floor ("If it fits, I sits!")
+  - Sunny windowsill looking at the sky & clouds ("Cat TV")
+- **Interactive Beckoning & Quick Switcher:** Tap any empty spot in the living room or use the spot bar above the dock to call Oli over with spring hop animations.
+- **Unique Spot Pet Reactions:** Distinct cozy thoughts when petted in bed, in the box, or on the windowsill.
+- **Litter Box Separation & Polish:** Shifted enclosed corner litter box 100% on screen, moved water fountain across the room, and removed the cork coaster.
+
+---
+
 ## ⏸️ Parked for Later: Co-op Mode & Progression
 
 *(Saved for future re-introduction once single-player care mechanics are complete)*

@@ -16,6 +16,7 @@ import { WhimBubble } from './components/WhimBubble';
 import { actionById } from './data/actions';
 import { useCatGame, type Notice } from './hooks/useCatGame';
 import { useVersionCheck } from './hooks/useVersionCheck';
+import type { CatSpot } from './types';
 import {
   loadNotificationPrefs,
   requestNotificationAccess,
@@ -23,6 +24,13 @@ import {
   sendSystemNotification,
   type NotificationPrefs,
 } from './utils/notifications';
+
+const SPOT_OFFSETS: Record<CatSpot, { x: string; y: string; scale: number }> = {
+  rug: { x: '0%', y: '0px', scale: 1 },
+  sofa_bed: { x: '35%', y: '-102px', scale: 0.7 },
+  box: { x: '-11%', y: '-38px', scale: 0.84 },
+  window: { x: '-1%', y: '-170px', scale: 0.52 },
+};
 
 export function App() {
   const [changelogOpen, setChangelogOpen] = useState(false);
@@ -61,6 +69,8 @@ export function App() {
     toggleSleep,
     togglePause,
     reviveOli,
+    spot,
+    setSpot,
     now,
   } = useCatGame('Nico', pushNotice);
   const { availableVersion, reloading, applyUpdate } = useVersionCheck();
@@ -140,6 +150,8 @@ export function App() {
             onTapFountain={handleTapFountain}
             litterBoxDirty={litterBoxDirty}
             onTapLitterBox={handleTapLitterBox}
+            activeSpot={spot}
+            onSelectSpot={setSpot}
           />
 
           {/* Subtle sleep-mode ambient vignette */}
@@ -243,11 +255,48 @@ export function App() {
           )}
         </AnimatePresence>
 
-        {/* Center stage: Oli sitting on the living room plush rug */}
+        {/* Cozy Spot Quick-Switch Bar ("Where is Oli?") */}
+        <div className="relative z-20 flex justify-center px-3 pt-1">
+          <div className="flex items-center gap-1 rounded-2xl border border-amber-900/10 bg-white/80 p-1 shadow-sm backdrop-blur-md">
+            {[
+              { id: 'rug' as const, label: 'Rug', emoji: '🧶' },
+              { id: 'sofa_bed' as const, label: 'Sofa Bed', emoji: '🛋️' },
+              { id: 'box' as const, label: 'Box', emoji: '📦' },
+              { id: 'window' as const, label: 'Window', emoji: '🪟' },
+            ].map((s) => {
+              const active = spot === s.id;
+              return (
+                <button
+                  key={s.id}
+                  type="button"
+                  onClick={() => setSpot(s.id)}
+                  className={`flex items-center gap-1 rounded-xl px-2.5 py-1 text-[11px] font-extrabold transition-all active:scale-95 ${
+                    active
+                      ? 'bg-amber-500 text-white shadow-xs'
+                      : 'text-amber-900/70 hover:bg-amber-100/60 hover:text-amber-950'
+                  }`}
+                  aria-pressed={active}
+                  title={`Move Oli to the ${s.label}`}
+                >
+                  <span className="text-xs leading-none">{s.emoji}</span>
+                  <span>{s.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Center stage: Oli roaming between cozy living room spots */}
         <div className="pointer-events-none relative z-10 flex flex-1 items-end justify-center pb-5">
-          <FloatingEffects event={event} tapHeartKey={tapHeartKey} mood={mood} />
-          <WhimBubble whim={whim} now={now} onFulfill={fulfillWhim} />
-          <div className="pointer-events-auto relative h-56 w-56 sm:h-60 sm:w-60">
+          <FloatingEffects event={event} tapHeartKey={tapHeartKey} mood={mood} spot={spot} />
+          <WhimBubble whim={whim} now={now} onFulfill={fulfillWhim} spot={spot} />
+          <motion.div
+            layout
+            initial={false}
+            animate={SPOT_OFFSETS[spot]}
+            transition={{ type: 'spring', stiffness: 220, damping: 24 }}
+            className="pointer-events-auto relative h-56 w-56 sm:h-60 sm:w-60 origin-bottom"
+          >
             <CatAvatar
               mood={mood}
               animation={event?.animation ?? 'idle'}
@@ -255,7 +304,73 @@ export function App() {
               onPet={handlePetOli}
               className="h-full w-full drop-shadow-md"
             />
-          </div>
+
+            {/* Front cardboard panel overlay when tucked inside the Amazon delivery box */}
+            <AnimatePresence>
+              {spot === 'box' && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.92, y: 4 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.92, y: 4 }}
+                  transition={{ duration: 0.2 }}
+                  className="pointer-events-none absolute -bottom-1 left-1/2 z-10 w-[184px] -translate-x-1/2"
+                >
+                  <svg viewBox="0 0 160 52" className="h-full w-full overflow-visible drop-shadow-sm">
+                    {/* Front exterior panel */}
+                    <polygon points="8,10 152,10 146,50 14,50" fill="#c99b64" stroke="#a87c48" strokeWidth="1.2" />
+                    {/* Fold crease */}
+                    <line x1="8" y1="10" x2="152" y2="10" stroke="#deb888" strokeWidth="1.4" />
+                    {/* Left and right angled flaps */}
+                    <polygon points="8,10 -2,-2 14,0 12,10" fill="#b88b56" stroke="#9e7343" strokeWidth="0.8" />
+                    <polygon points="152,10 162,-2 146,0 148,10" fill="#b88b56" stroke="#9e7343" strokeWidth="0.8" />
+                    {/* Front hanging flaps */}
+                    <polygon points="20,10 38,24 56,10" fill="#b0824e" stroke="#9e7343" strokeWidth="0.8" />
+                    <polygon points="80,10 98,24 116,10" fill="#b0824e" stroke="#9e7343" strokeWidth="0.8" />
+                    {/* Shipping barcode & label */}
+                    <rect x="24" y="20" width="30" height="18" rx="2" fill="#faf8f2" stroke="#d5d0c5" strokeWidth="0.8" />
+                    <line x1="28" y1="24" x2="28" y2="34" stroke="#333" strokeWidth="1.2" />
+                    <line x1="31" y1="24" x2="31" y2="34" stroke="#333" strokeWidth="0.8" />
+                    <line x1="34" y1="24" x2="34" y2="34" stroke="#333" strokeWidth="1.4" />
+                    <line x1="38" y1="24" x2="38" y2="34" stroke="#333" strokeWidth="0.8" />
+                    <line x1="42" y1="24" x2="42" y2="34" stroke="#333" strokeWidth="1.2" />
+                    <line x1="46" y1="24" x2="46" y2="34" stroke="#333" strokeWidth="0.8" />
+                    <line x1="49" y1="24" x2="49" y2="34" stroke="#333" strokeWidth="1.4" />
+                    {/* Red stamped logo: "FRAGILE / OLI" */}
+                    <rect x="68" y="22" width="38" height="14" rx="2" fill="none" stroke="#b91c1c" strokeWidth="1" strokeDasharray="3 1.5" />
+                    <text x="87" y="32" textAnchor="middle" fontSize="6.5" fontWeight="900" fill="#b91c1c" letterSpacing="0.6">
+                      📦 OLI
+                    </text>
+                  </svg>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Front bolster wall overlay when nestled in Bedsure sofa bed */}
+            <AnimatePresence>
+              {spot === 'sofa_bed' && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.92, y: 4 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.92, y: 4 }}
+                  transition={{ duration: 0.2 }}
+                  className="pointer-events-none absolute -bottom-1 left-1/2 z-10 w-[190px] -translate-x-1/2"
+                >
+                  <svg viewBox="0 0 160 36" className="h-full w-full overflow-visible drop-shadow-sm">
+                    {/* Tan suede bolster wall */}
+                    <path
+                      d="M10 6 Q10 26 32 28 H128 Q150 26 150 6 Q150 0 140 0 H20 Q10 0 10 6 Z"
+                      fill="#b89776"
+                      stroke="#9c7b5b"
+                      strokeWidth="1.2"
+                    />
+                    {/* Bedsure brown leather patch */}
+                    <rect x="28" y="12" width="16" height="11" rx="2.5" fill="#5e3a22" />
+                    <circle cx="36" cy="17.5" r="2.8" fill="none" stroke="#b89776" strokeWidth="0.8" />
+                  </svg>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.div>
           <RoomMesses messes={messes} onClean={cleanMess} />
         </div>
 
