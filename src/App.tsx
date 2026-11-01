@@ -24,9 +24,9 @@ import {
   type NotificationPrefs,
 } from './utils/notifications';
 
-const SPOT_HEAD_SVG: Record<CatSpot, { x: number; y: number }> = {
+export const SPOT_HEAD_SVG: Record<CatSpot, { x: number; y: number }> = {
   rug: { x: 200, y: 261 },
-  sofa_bed: { x: 352, y: 246 },
+  sofa_bed: { x: 290, y: 244 },
   box: { x: 166, y: 306 },
   window: { x: 196, y: 160 },
 };

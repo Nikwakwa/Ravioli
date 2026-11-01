@@ -4,6 +4,14 @@ All updates to **Oli** are listed here.
 
 ---
 
+## `v0.16.3` — 2026-11-01
+### Automated Scene Safety Tests & Full-Screen Mobile Polish 🧪📱✨
+- **Automated Scene & Layer Safety Tests:** Added 15 automated test suites that run on every build to guarantee that interactive items (like the water fountain) can never be hidden behind rugs or background layers.
+- **100% Screen-Safe Mobile Viewport:** Adjusted the sofa bolster bed and coffee table candle so that Oli, his cozy bed, and all living room items are completely visible on all narrow mobile phone screens with zero edge clipping.
+- **Cat Hygiene Enforced:** Automated tests ensure Oli’s fresh water fountain and litter box stay physically separated on opposite sides of the room.
+
+---
+
 ## `v0.16.2` — 2026-11-01
 ### Water Fountain Restored & Brought to Front 💧✨
 - **Restored Water Fountain:** Fixed an issue where the living room rug was drawn over the water fountain layer. The water fountain with its glowing blue LED status light, bubbling water arch, and stainless steel bowl is now placed in the front on the right side of the room, far from the litter box.

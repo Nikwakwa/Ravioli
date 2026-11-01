@@ -7,6 +7,16 @@ export interface ReleaseEntry {
 
 export const CHANGELOG: ReleaseEntry[] = [
   {
+    version: 'v0.16.3',
+    date: '2026-11-01',
+    title: 'Automated Scene Safety Tests & Full-Screen Mobile Polish 🧪📱✨',
+    changes: [
+      'Automated Scene & Layer Safety Tests: Added 15 automated test suites that run on every build to guarantee that interactive items (like the water fountain) can never be hidden behind rugs or background layers.',
+      '100% Screen-Safe Mobile Viewport: Adjusted the sofa bolster bed and coffee table candle so that Oli, his cozy bed, and all living room items are completely visible on all narrow mobile phone screens with zero edge clipping.',
+      'Cat Hygiene Enforced: Automated tests ensure Oli’s fresh water fountain and litter box stay physically separated on opposite sides of the room.',
+    ],
+  },
+  {
     version: 'v0.16.2',
     date: '2026-11-01',
     title: 'Water Fountain Restored & Brought to Front 💧✨',

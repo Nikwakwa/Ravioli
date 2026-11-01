@@ -342,7 +342,7 @@ export function LivingRoom({
 
         {/* Oli's tan suede "Bedsure Comfy Pet" bolster bed on the sofa chaise (Spot: 'sofa_bed') */}
         <g
-          transform="translate(320 286)"
+          transform="translate(258 284)"
           onClick={() => (activeSpot === 'sofa_bed' ? onPetCat?.() : onSelectSpot?.('sofa_bed'))}
           className="pointer-events-auto cursor-pointer"
           style={{ pointerEvents: 'auto', cursor: 'pointer' }}
@@ -401,8 +401,8 @@ export function LivingRoom({
         {/* Crisp white tabletop */}
         <polygon points="262,354 398,354 400,334 282,334" fill="#ffffff" stroke="#dedad0" strokeWidth="1" />
         {/* Little glass candle jar */}
-        <rect x="350" y="335" width="9" height="11" rx="2" fill="#f2efe9" stroke="#ccc7bc" strokeWidth="0.8" />
-        <ellipse cx="354.5" cy="335" rx="4.5" ry="1.4" fill="#ffffff" stroke="#ccc7bc" strokeWidth="0.8" />
+        <rect x="294" y="335" width="9" height="11" rx="2" fill="#f2efe9" stroke="#ccc7bc" strokeWidth="0.8" />
+        <ellipse cx="298.5" cy="335" rx="4.5" ry="1.4" fill="#ffffff" stroke="#ccc7bc" strokeWidth="0.8" />
       </g>
 
       {/* Oli's modern two-tone enclosed litter box in the left corner (repositioned to x=72..132, 100% on screen, far from water) */}
