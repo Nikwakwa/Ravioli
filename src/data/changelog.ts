@@ -7,6 +7,17 @@ export interface ReleaseEntry {
 
 export const CHANGELOG: ReleaseEntry[] = [
   {
+    version: 'v0.15.1',
+    date: '2026-11-01',
+    title: 'Balanced Churu Treat Economy! 🍬⚖️',
+    changes: [
+      'Rare Delicacy Rebalance: Starting stash is now 1 (capped at 5 max), making Churu Tubes feel like the precious, high-value delicacy they are in real life.',
+      '3-Craving Streak: Fulfilling attention calls still grants 2× Joy, but earning a Churu now requires fulfilling a streak of 3 cravings.',
+      'Milestone Cleanups: Earning a Churu from cleaning now unlocks every 5th cleanup (instead of every 2nd).',
+      'Minigame Mastery: Earning a Churu from games now requires a 3/3 Perfect Play when Oli specifically craves that game (or a 3-streak of perfect games).',
+    ],
+  },
+  {
     version: 'v0.15.0',
     date: '2026-11-01',
     title: 'Real Corner Litter Box & Ginger Fur Tumbleweeds! 📦✨',

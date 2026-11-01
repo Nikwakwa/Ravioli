@@ -267,8 +267,9 @@ describe('Core action, dock & mess rules', () => {
     }
   });
 
-  it('rewards 3-round Play minigames with bonus Joy on 2/3 and +1 Churu on 3/3', () => {
-    expect(computeMinigameReward(3, 3)).toEqual({ bonusJoy: 15, churuBonus: 1, tier: 'perfect' });
+  it('rewards 3-round Play minigames with bonus Joy on 2/3 and +1 Churu on 3/3 craving play', () => {
+    expect(computeMinigameReward(3, 3)).toEqual({ bonusJoy: 15, churuBonus: 0, tier: 'perfect' });
+    expect(computeMinigameReward(3, 3, true)).toEqual({ bonusJoy: 15, churuBonus: 1, tier: 'perfect' });
     expect(computeMinigameReward(2, 3)).toEqual({ bonusJoy: 8, churuBonus: 0, tier: 'great' });
     expect(computeMinigameReward(1, 3)).toEqual({ bonusJoy: 0, churuBonus: 0, tier: 'good' });
     expect(computeMinigameReward(0, 3)).toEqual({ bonusJoy: 0, churuBonus: 0, tier: 'good' });

@@ -4,6 +4,15 @@ All updates to **Oli** are listed here.
 
 ---
 
+## `v0.15.1` — 2026-11-01
+### Balanced Churu Treat Economy! 🍬⚖️
+- **Rare Delicacy Rebalance:** Churu Tubes now start at **1** (capped at **5 max**), reflecting how rare and prized lickable treats are in real life.
+- **3-Craving Streak Reward:** Attention Calls still award double joy (**2× Joy**), but earning a Churu Tube now requires fulfilling a **streak of 3 cravings** in a row.
+- **5-Cleanups Milestone:** Scooping the litter box or cleaning up rug messes awards a Churu every **5th cleanup** (instead of every 2nd).
+- **Minigame Mastery:** Playing casual minigames awards high bonus Joy (`+15 Joy`), but earning a Churu from a minigame now requires scoring a **3/3 Perfect Play when Oli specifically craves that game** (or a milestone of 3 perfect games in a row).
+
+---
+
 ## `v0.15.0` — 2026-11-01
 ### Real Corner Litter Box & Ginger Fur Tumbleweeds! 📦✨
 - **Real Corner Litter Box:** Modeled directly from Oli’s actual home litter box — a modern two-tone enclosed box with a warm-grey slide-out base drawer with front pull handle, an off-white hood, smoked translucent swinging flap door, and textured stepping grid with top-exit hole in the living room corner.
