@@ -7,6 +7,17 @@ export interface ReleaseEntry {
 
 export const CHANGELOG: ReleaseEntry[] = [
   {
+    version: 'v0.16.1',
+    date: '2026-11-01',
+    title: 'Pixel-Perfect Cozy Nestling & Depth Layering 🛋️📦✨',
+    changes: [
+      'True 3D Physical Nestling: Integrated Oli directly into the living room scene vector layers so he nestles naturally inside his Bedsure bolster bed and Amazon delivery box without awkward floating overlays.',
+      'Pixel-Perfect Proportions & Scale: Adjusted Oli’s size and placement to match each spot’s real-world dimensions — perched neatly on the sunny windowsill ledge, tucked inside the delivery box with head peeking over, and curled up in his sofa bolster bed.',
+      'Adaptive Thought Bubbles: Cravings and pet reaction bubbles now dynamically point directly to the top of Oli’s head on all phone screen sizes and aspect ratios.',
+      'Touch Anywhere: Tap Oli directly or any part of his bed, box, windowsill, or rug to pet him and hear his sweet cozy purrs.',
+    ],
+  },
+  {
     version: 'v0.16.0',
     date: '2026-11-01',
     title: 'Where is Oli? Room Roaming & Cozy Spots! 🛋️📦✨',

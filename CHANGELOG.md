@@ -4,6 +4,15 @@ All updates to **Oli** are listed here.
 
 ---
 
+## `v0.16.1` — 2026-11-01
+### Pixel-Perfect Cozy Nestling & Depth Layering 🛋️📦✨
+- **True Physical Nestling:** Integrated Oli directly into the living room scene vector layers so he nestles naturally inside his Bedsure bolster bed and Amazon delivery box without awkward floating overlays.
+- **Pixel-Perfect Proportions & Scale:** Adjusted Oli’s size and placement to match each spot’s real-world dimensions — perched neatly on the sunny windowsill ledge, tucked inside the delivery box with head peeking over, and curled up in his sofa bolster bed.
+- **Adaptive Thought Bubbles:** Cravings and pet reaction bubbles now dynamically point directly to the top of Oli’s head on all phone screen sizes and aspect ratios.
+- **Touch Anywhere:** Tap Oli directly or any part of his bed, box, windowsill, or rug to pet him and hear his sweet cozy purrs.
+
+---
+
 ## `v0.16.0` — 2026-11-01
 ### Where is Oli? Room Roaming & Cozy Spots! 🛋️📦✨
 - **Room Roaming & Cozy Spots:** Oli is no longer pinned to the center of the rug! He now roams naturally between **4 authentic cozy lounging spots** around Nico & Athina’s living room:

@@ -1,8 +1,7 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { Play, RefreshCw } from 'lucide-react';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActionDock } from './components/ActionDock';
-import { CatAvatar } from './components/CatAvatar';
 import { ChangelogModal } from './components/ChangelogModal';
 import { EmergencyRevivalModal } from './components/EmergencyRevivalModal';
 import { FloatingEffects } from './components/FloatingEffects';
@@ -25,11 +24,11 @@ import {
   type NotificationPrefs,
 } from './utils/notifications';
 
-const SPOT_OFFSETS: Record<CatSpot, { x: string; y: string; scale: number }> = {
-  rug: { x: '0%', y: '0px', scale: 1 },
-  sofa_bed: { x: '35%', y: '-102px', scale: 0.7 },
-  box: { x: '-11%', y: '-38px', scale: 0.84 },
-  window: { x: '-1%', y: '-170px', scale: 0.52 },
+const SPOT_HEAD_SVG: Record<CatSpot, { x: number; y: number }> = {
+  rug: { x: 200, y: 261 },
+  sofa_bed: { x: 352, y: 246 },
+  box: { x: 166, y: 306 },
+  window: { x: 196, y: 160 },
 };
 
 export function App() {
@@ -40,6 +39,28 @@ export function App() {
   const [notice, setNotice] = useState<Notice | null>(null);
   const [tapHeartKey, setTapHeartKey] = useState(0);
   const noticeTimer = useRef<number | undefined>(undefined);
+  const mainRef = useRef<HTMLElement>(null);
+  const [containerSize, setContainerSize] = useState<{ width: number; height: number }>({
+    width: 400,
+    height: 600,
+  });
+
+  useEffect(() => {
+    const el = mainRef.current;
+    if (!el) return;
+
+    const update = () => {
+      const rect = el.getBoundingClientRect();
+      if (rect.width > 0 && rect.height > 0) {
+        setContainerSize({ width: rect.width, height: rect.height });
+      }
+    };
+
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   const pushNotice = useCallback((n: Omit<Notice, 'id'>) => {
     setNotice({ ...n, id: Date.now() });
@@ -74,6 +95,17 @@ export function App() {
     now,
   } = useCatGame('Nico', pushNotice);
   const { availableVersion, reloading, applyUpdate } = useVersionCheck();
+
+  const targetHeadPos = useMemo(() => {
+    const head = SPOT_HEAD_SVG[spot] ?? SPOT_HEAD_SVG.rug;
+    const scale = Math.max(containerSize.width / 400, containerSize.height / 600);
+    const offsetX = (containerSize.width - 400 * scale) / 2;
+    const offsetY = (containerSize.height - 600 * scale) / 2;
+    return {
+      x: head.x * scale + offsetX,
+      y: head.y * scale + offsetY,
+    };
+  }, [spot, containerSize]);
 
   const handlePetOli = () => {
     setTapHeartKey((k) => k + 1);
@@ -141,8 +173,8 @@ export function App() {
   return (
     <div className="flex h-dvh w-full items-center justify-center bg-[#23170f]">
       {/* Mobile portrait frame (full-bleed on phones, phone-sized card on desktop) */}
-      <main className="safe-shell relative flex h-full w-full max-w-[440px] flex-col justify-between overflow-hidden bg-[#fbe3cb] shadow-2xl">
-        {/* Cozy Living Room background */}
+      <main ref={mainRef} className="safe-shell relative flex h-full w-full max-w-[440px] flex-col justify-between overflow-hidden bg-[#fbe3cb] shadow-2xl">
+        {/* Cozy Living Room background with Oli physically nestled inside */}
         <div className="pointer-events-none absolute inset-0">
           <LivingRoom
             sleeping={live.isSleeping}
@@ -152,6 +184,10 @@ export function App() {
             onTapLitterBox={handleTapLitterBox}
             activeSpot={spot}
             onSelectSpot={setSpot}
+            catMood={mood}
+            catAnimation={event?.animation ?? 'idle'}
+            catAnimationKey={event?.key ?? 0}
+            onPetCat={handlePetOli}
           />
 
           {/* Subtle sleep-mode ambient vignette */}
@@ -286,91 +322,22 @@ export function App() {
           </div>
         </div>
 
-        {/* Center stage: Oli roaming between cozy living room spots */}
+        {/* Center stage overlay: floating effects, whims, messes */}
         <div className="pointer-events-none relative z-10 flex flex-1 items-end justify-center pb-5">
-          <FloatingEffects event={event} tapHeartKey={tapHeartKey} mood={mood} spot={spot} />
-          <WhimBubble whim={whim} now={now} onFulfill={fulfillWhim} spot={spot} />
-          <motion.div
-            layout
-            initial={false}
-            animate={SPOT_OFFSETS[spot]}
-            transition={{ type: 'spring', stiffness: 220, damping: 24 }}
-            className="pointer-events-auto relative h-56 w-56 sm:h-60 sm:w-60 origin-bottom"
-          >
-            <CatAvatar
-              mood={mood}
-              animation={event?.animation ?? 'idle'}
-              animationKey={event?.key ?? 0}
-              onPet={handlePetOli}
-              className="h-full w-full drop-shadow-md"
-            />
-
-            {/* Front cardboard panel overlay when tucked inside the Amazon delivery box */}
-            <AnimatePresence>
-              {spot === 'box' && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.92, y: 4 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.92, y: 4 }}
-                  transition={{ duration: 0.2 }}
-                  className="pointer-events-none absolute -bottom-1 left-1/2 z-10 w-[184px] -translate-x-1/2"
-                >
-                  <svg viewBox="0 0 160 52" className="h-full w-full overflow-visible drop-shadow-sm">
-                    {/* Front exterior panel */}
-                    <polygon points="8,10 152,10 146,50 14,50" fill="#c99b64" stroke="#a87c48" strokeWidth="1.2" />
-                    {/* Fold crease */}
-                    <line x1="8" y1="10" x2="152" y2="10" stroke="#deb888" strokeWidth="1.4" />
-                    {/* Left and right angled flaps */}
-                    <polygon points="8,10 -2,-2 14,0 12,10" fill="#b88b56" stroke="#9e7343" strokeWidth="0.8" />
-                    <polygon points="152,10 162,-2 146,0 148,10" fill="#b88b56" stroke="#9e7343" strokeWidth="0.8" />
-                    {/* Front hanging flaps */}
-                    <polygon points="20,10 38,24 56,10" fill="#b0824e" stroke="#9e7343" strokeWidth="0.8" />
-                    <polygon points="80,10 98,24 116,10" fill="#b0824e" stroke="#9e7343" strokeWidth="0.8" />
-                    {/* Shipping barcode & label */}
-                    <rect x="24" y="20" width="30" height="18" rx="2" fill="#faf8f2" stroke="#d5d0c5" strokeWidth="0.8" />
-                    <line x1="28" y1="24" x2="28" y2="34" stroke="#333" strokeWidth="1.2" />
-                    <line x1="31" y1="24" x2="31" y2="34" stroke="#333" strokeWidth="0.8" />
-                    <line x1="34" y1="24" x2="34" y2="34" stroke="#333" strokeWidth="1.4" />
-                    <line x1="38" y1="24" x2="38" y2="34" stroke="#333" strokeWidth="0.8" />
-                    <line x1="42" y1="24" x2="42" y2="34" stroke="#333" strokeWidth="1.2" />
-                    <line x1="46" y1="24" x2="46" y2="34" stroke="#333" strokeWidth="0.8" />
-                    <line x1="49" y1="24" x2="49" y2="34" stroke="#333" strokeWidth="1.4" />
-                    {/* Red stamped logo: "FRAGILE / OLI" */}
-                    <rect x="68" y="22" width="38" height="14" rx="2" fill="none" stroke="#b91c1c" strokeWidth="1" strokeDasharray="3 1.5" />
-                    <text x="87" y="32" textAnchor="middle" fontSize="6.5" fontWeight="900" fill="#b91c1c" letterSpacing="0.6">
-                      📦 OLI
-                    </text>
-                  </svg>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {/* Front bolster wall overlay when nestled in Bedsure sofa bed */}
-            <AnimatePresence>
-              {spot === 'sofa_bed' && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.92, y: 4 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.92, y: 4 }}
-                  transition={{ duration: 0.2 }}
-                  className="pointer-events-none absolute -bottom-1 left-1/2 z-10 w-[190px] -translate-x-1/2"
-                >
-                  <svg viewBox="0 0 160 36" className="h-full w-full overflow-visible drop-shadow-sm">
-                    {/* Tan suede bolster wall */}
-                    <path
-                      d="M10 6 Q10 26 32 28 H128 Q150 26 150 6 Q150 0 140 0 H20 Q10 0 10 6 Z"
-                      fill="#b89776"
-                      stroke="#9c7b5b"
-                      strokeWidth="1.2"
-                    />
-                    {/* Bedsure brown leather patch */}
-                    <rect x="28" y="12" width="16" height="11" rx="2.5" fill="#5e3a22" />
-                    <circle cx="36" cy="17.5" r="2.8" fill="none" stroke="#b89776" strokeWidth="0.8" />
-                  </svg>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </motion.div>
+          <FloatingEffects
+            event={event}
+            tapHeartKey={tapHeartKey}
+            mood={mood}
+            spot={spot}
+            targetPos={targetHeadPos}
+          />
+          <WhimBubble
+            whim={whim}
+            now={now}
+            onFulfill={fulfillWhim}
+            spot={spot}
+            targetPos={targetHeadPos}
+          />
           <RoomMesses messes={messes} onClean={cleanMess} />
         </div>
 

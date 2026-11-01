@@ -55,11 +55,13 @@ export function FloatingEffects({
   event,
   tapHeartKey,
   mood,
+  targetPos,
   spot = 'rug',
 }: {
   event: GameEvent | null;
   tapHeartKey: number;
   mood: Mood;
+  targetPos?: { x: number; y: number };
   spot?: CatSpot;
 }) {
   const deltas: { key: StatKey; delta: number }[] = event
@@ -89,8 +91,14 @@ export function FloatingEffects({
             initial={{ opacity: 0, y: 12, scale: 0.8 }}
             animate={{ opacity: [0, 1, 1, 0], y: -18, scale: [0.8, 1.03, 1, 0.96] }}
             transition={{ duration: 1.8, times: [0, 0.15, 0.8, 1], ease: 'easeOut' }}
-            style={{ left: pos.left, bottom: pos.bottom }}
-            className="absolute z-20 flex -translate-x-1/2 flex-col items-center"
+            style={
+              targetPos
+                ? { left: `${targetPos.x}px`, top: `${targetPos.y - 10}px` }
+                : { left: pos.left, bottom: pos.bottom }
+            }
+            className={`absolute z-20 flex -translate-x-1/2 flex-col items-center ${
+              targetPos ? '-translate-y-full' : ''
+            }`}
           >
             <div className="rounded-2xl border border-amber-900/10 bg-white/95 px-3 py-1 text-xs font-extrabold whitespace-nowrap text-amber-950 shadow-md">
               {petLine}
@@ -105,8 +113,14 @@ export function FloatingEffects({
         {event && deltas.length > 0 && (
           <div
             key={`bubbles-${event.key}`}
-            style={{ left: pos.left, bottom: pos.bottom }}
-            className="absolute z-20 flex -translate-x-1/2 flex-col items-center gap-1.5"
+            style={
+              targetPos
+                ? { left: `${targetPos.x}px`, top: `${targetPos.y - 12}px` }
+                : { left: pos.left, bottom: pos.bottom }
+            }
+            className={`absolute z-20 flex -translate-x-1/2 flex-col items-center gap-1.5 ${
+              targetPos ? '-translate-y-full' : ''
+            }`}
           >
             {deltas.map(({ key, delta }, i) => {
               const meta = STAT_META[key];

@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
-import type { CatSpot } from '../../types';
+import { CatAvatar } from '../CatAvatar';
+import type { CatAnimation, CatSpot, Mood } from '../../types';
 
 /**
  * Nico & Athina's real Living Room — crafted from the 16 photos of Oli at home:
@@ -23,6 +24,10 @@ export function LivingRoom({
   onTapLitterBox,
   activeSpot = 'rug',
   onSelectSpot,
+  catMood = 'content',
+  catAnimation = 'idle',
+  catAnimationKey = 0,
+  onPetCat,
 }: {
   sleeping: boolean;
   fountainBoost: boolean;
@@ -31,6 +36,10 @@ export function LivingRoom({
   onTapLitterBox?: () => void;
   activeSpot?: CatSpot;
   onSelectSpot?: (spot: CatSpot) => void;
+  catMood?: Mood;
+  catAnimation?: CatAnimation;
+  catAnimationKey?: number;
+  onPetCat?: () => void;
 }) {
   return (
     <svg viewBox="0 0 400 600" preserveAspectRatio="xMidYMid slice" className="absolute inset-0 h-full w-full">
@@ -194,15 +203,38 @@ export function LivingRoom({
         <rect x="174" y="160" width="2" height="9" rx="1" fill="#b8b5ad" />
         {/* White windowsill (Spot: 'window') */}
         <g
-          onClick={() => onSelectSpot?.('window')}
-          className={onSelectSpot ? 'pointer-events-auto cursor-pointer' : undefined}
-          style={onSelectSpot ? { pointerEvents: 'auto', cursor: 'pointer' } : undefined}
+          onClick={() => (activeSpot === 'window' ? onPetCat?.() : onSelectSpot?.('window'))}
+          className="pointer-events-auto cursor-pointer"
+          style={{ pointerEvents: 'auto', cursor: 'pointer' }}
           role="button"
           aria-current={activeSpot === 'window' ? 'true' : undefined}
-          aria-label="Sunny windowsill (cozy spot)"
+          aria-label={activeSpot === 'window' ? 'Pet Oli on the sunny windowsill' : 'Sunny windowsill (cozy spot)'}
         >
           {/* Generous touch target */}
           <rect x="156" y="140" width="76" height="86" fill="transparent" style={{ pointerEvents: 'all' }} />
+
+          {/* Oli perched on the windowsill */}
+          {activeSpot === 'window' && (
+            <motion.g
+              key={`cat-window-${catAnimationKey}`}
+              initial={{ opacity: 0, scale: 0.85, y: 6 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              transition={{ type: 'spring', stiffness: 320, damping: 22 }}
+            >
+              <CatAvatar
+                x={168}
+                y={156}
+                width={56}
+                height={62}
+                mood={catMood}
+                animation={catAnimation}
+                animationKey={catAnimationKey}
+                onPet={onPetCat}
+                className="pointer-events-auto"
+              />
+            </motion.g>
+          )}
+
           <rect x="115" y="218" width="114" height="6" rx="2" fill="#ffffff" stroke="#d5d0c5" strokeWidth="1" />
         </g>
 
@@ -311,18 +343,42 @@ export function LivingRoom({
         {/* Oli's tan suede "Bedsure Comfy Pet" bolster bed on the sofa chaise (Spot: 'sofa_bed') */}
         <g
           transform="translate(320 286)"
-          onClick={() => onSelectSpot?.('sofa_bed')}
-          className={onSelectSpot ? 'pointer-events-auto cursor-pointer' : undefined}
-          style={onSelectSpot ? { pointerEvents: 'auto', cursor: 'pointer' } : undefined}
+          onClick={() => (activeSpot === 'sofa_bed' ? onPetCat?.() : onSelectSpot?.('sofa_bed'))}
+          className="pointer-events-auto cursor-pointer"
+          style={{ pointerEvents: 'auto', cursor: 'pointer' }}
           role="button"
           aria-current={activeSpot === 'sofa_bed' ? 'true' : undefined}
-          aria-label="Oli’s tan bolster bed on the sofa (cozy spot)"
+          aria-label={activeSpot === 'sofa_bed' ? 'Pet Oli curled up in his Bedsure bolster bed' : 'Oli’s tan bolster bed on the sofa (cozy spot)'}
         >
           {/* Generous touch target */}
-          <rect x="-4" y="-8" width="72" height="52" fill="transparent" style={{ pointerEvents: 'all' }} />
+          <rect x="-6" y="-36" width="76" height="74" fill="transparent" style={{ pointerEvents: 'all' }} />
+
           {/* Cream sherpa inner cushion */}
           <rect x="6" y="4" width="52" height="28" rx="8" fill="#f5ece0" />
-          {/* Tan suede bolster walls */}
+
+          {/* Oli nestled on the sherpa cushion (inside the bolster bed) */}
+          {activeSpot === 'sofa_bed' && (
+            <motion.g
+              key={`cat-sofa-bed-${catAnimationKey}`}
+              initial={{ opacity: 0, scale: 0.85, y: 6 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              transition={{ type: 'spring', stiffness: 320, damping: 22 }}
+            >
+              <CatAvatar
+                x={4}
+                y={-40}
+                width={56}
+                height={62}
+                mood={catMood}
+                animation={catAnimation}
+                animationKey={catAnimationKey}
+                onPet={onPetCat}
+                className="pointer-events-auto"
+              />
+            </motion.g>
+          )}
+
+          {/* Tan suede bolster walls (wraps right in front of Oli's paws!) */}
           <path
             d="M0 8 Q0 0 8 0 H14 Q18 0 18 8 V16 H46 V8 Q46 0 50 0 H56 Q64 0 64 8 V28 Q64 36 54 36 H10 Q0 36 0 28 Z"
             fill="#b89776"
@@ -532,29 +588,51 @@ export function LivingRoom({
 
       {/* Oli's empty Amazon delivery cardboard box on the floor (Spot: 'box') */}
       <g
-        onClick={() => onSelectSpot?.('box')}
-        className={onSelectSpot ? 'pointer-events-auto cursor-pointer' : undefined}
-        style={onSelectSpot ? { pointerEvents: 'auto', cursor: 'pointer' } : undefined}
+        onClick={() => (activeSpot === 'box' ? onPetCat?.() : onSelectSpot?.('box'))}
+        className="pointer-events-auto cursor-pointer"
+        style={{ pointerEvents: 'auto', cursor: 'pointer' }}
         role="button"
         aria-current={activeSpot === 'box' ? 'true' : undefined}
-        aria-label="Empty Amazon delivery box on the floor (cozy spot)"
+        aria-label={activeSpot === 'box' ? 'Pet Oli inside his delivery box' : 'Empty Amazon delivery box on the floor (cozy spot)'}
       >
         {/* Generous touch target */}
-        <rect x="134" y="338" width="66" height="52" fill="transparent" style={{ pointerEvents: 'all' }} />
+        <rect x="130" y="295" width="76" height="95" fill="transparent" style={{ pointerEvents: 'all' }} />
         {/* Soft floor shadow */}
         <ellipse cx="166" cy="382" rx="28" ry="6" fill="rgba(40,30,20,0.18)" />
 
         {/* Open box interior (darker kraft brown) */}
         <polygon points="140,356 192,356 186,378 144,378" fill="#9e7343" />
 
-        {/* Corrugated kraft cardboard exterior front panel */}
-        <polygon points="138,356 194,356 188,382 142,382" fill={sleeping ? '#8a7155' : '#c99b64'} stroke={sleeping ? '#6a543e' : '#a87c48'} strokeWidth="1" />
-        {/* Top fold crease */}
-        <line x1="138" y1="356" x2="194" y2="356" stroke="#deb888" strokeWidth="1.2" />
-
         {/* Left and right angled open flaps */}
         <polygon points="138,356 130,344 146,346 142,356" fill={sleeping ? '#7d664d' : '#b88b56'} stroke={sleeping ? '#6a543e' : '#a87c48'} strokeWidth="0.8" />
         <polygon points="194,356 202,344 186,346 190,356" fill={sleeping ? '#7d664d' : '#b88b56'} stroke={sleeping ? '#6a543e' : '#a87c48'} strokeWidth="0.8" />
+
+        {/* Oli nestled inside the box (behind front cardboard panel) */}
+        {activeSpot === 'box' && (
+          <motion.g
+            key={`cat-box-${catAnimationKey}`}
+            initial={{ opacity: 0, scale: 0.85, y: 6 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ type: 'spring', stiffness: 320, damping: 22 }}
+          >
+            <CatAvatar
+              x={134}
+              y={306}
+              width={64}
+              height={70}
+              mood={catMood}
+              animation={catAnimation}
+              animationKey={catAnimationKey}
+              onPet={onPetCat}
+              className="pointer-events-auto"
+            />
+          </motion.g>
+        )}
+
+        {/* Corrugated kraft cardboard exterior front panel (covers bottom of Oli) */}
+        <polygon points="138,356 194,356 188,382 142,382" fill={sleeping ? '#8a7155' : '#c99b64'} stroke={sleeping ? '#6a543e' : '#a87c48'} strokeWidth="1" />
+        {/* Top fold crease */}
+        <line x1="138" y1="356" x2="194" y2="356" stroke="#deb888" strokeWidth="1.2" />
 
         {/* Front hanging flaps */}
         <polygon points="146,356 156,366 166,356" fill={sleeping ? '#786249' : '#b0824e'} stroke={sleeping ? '#6a543e' : '#9e7343'} strokeWidth="0.7" />
@@ -630,12 +708,12 @@ export function LivingRoom({
 
       {/* Fluffy off-white / cream high-pile shag rug — centered where Oli sits (Spot: 'rug') */}
       <g
-        onClick={() => onSelectSpot?.('rug')}
-        className={onSelectSpot ? 'pointer-events-auto cursor-pointer' : undefined}
-        style={onSelectSpot ? { pointerEvents: 'auto', cursor: 'pointer' } : undefined}
+        onClick={() => (activeSpot === 'rug' ? onPetCat?.() : onSelectSpot?.('rug'))}
+        className="pointer-events-auto cursor-pointer"
+        style={{ pointerEvents: 'auto', cursor: 'pointer' }}
         role="button"
         aria-current={activeSpot === 'rug' ? 'true' : undefined}
-        aria-label="Fluffy living room rug (cozy spot)"
+        aria-label={activeSpot === 'rug' ? 'Pet Oli on the rug' : 'Fluffy living room rug (cozy spot)'}
       >
         {/* Generous touch target */}
         <rect x="70" y="365" width="260" height="85" fill="transparent" style={{ pointerEvents: 'all' }} />
@@ -671,6 +749,28 @@ export function LivingRoom({
             <path key={i} d={`M${x} ${y} l6 -2 m-2 3 l5 0`} />
           ))}
         </g>
+
+        {/* Oli sitting in all his glory in the center of the plush rug */}
+        {activeSpot === 'rug' && (
+          <motion.g
+            key={`cat-rug-${catAnimationKey}`}
+            initial={{ opacity: 0, scale: 0.88, y: 8 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 22 }}
+          >
+            <CatAvatar
+              x={130}
+              y={262}
+              width={140}
+              height={154}
+              mood={catMood}
+              animation={catAnimation}
+              animationKey={catAnimationKey}
+              onPet={onPetCat}
+              className="pointer-events-auto"
+            />
+          </motion.g>
+        )}
       </g>
     </svg>
   );

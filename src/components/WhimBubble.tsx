@@ -12,11 +12,13 @@ export function WhimBubble({
   whim,
   now,
   onFulfill,
+  targetPos,
   spot = 'rug',
 }: {
   whim: CatWhim | null;
   now: number;
   onFulfill: () => void;
+  targetPos?: { x: number; y: number };
   spot?: CatSpot;
 }) {
   const remainingMin = whim ? Math.max(1, Math.ceil((whim.expiresAt - now) / 60_000)) : 0;
@@ -33,14 +35,20 @@ export function WhimBubble({
           animate={{ opacity: 1, y: [0, -4, 0], scale: 1 }}
           exit={{ opacity: 0, y: -12, scale: 0.82 }}
           whileTap={{ scale: 0.94 }}
-          style={{ left: pos.left, bottom: pos.bottom }}
+          style={
+            targetPos
+              ? { left: `${targetPos.x}px`, top: `${targetPos.y - 12}px` }
+              : { left: pos.left, bottom: pos.bottom }
+          }
           transition={{
             opacity: { duration: 0.22 },
             scale: { type: 'spring', stiffness: 340, damping: 22 },
             y: { duration: 2.2, repeat: Infinity, ease: 'easeInOut' },
           }}
           title="Tap to fulfill Oli’s craving!"
-          className="pointer-events-auto absolute z-20 flex -translate-x-1/2 cursor-pointer flex-col items-center focus:outline-none"
+          className={`pointer-events-auto absolute z-20 flex -translate-x-1/2 cursor-pointer flex-col items-center focus:outline-none ${
+            targetPos ? '-translate-y-full' : ''
+          }`}
         >
           <div className="flex items-center gap-2 rounded-2xl border-2 border-amber-400 bg-white/96 px-3 py-1.5 text-amber-950 shadow-lg backdrop-blur-md">
             <span className="text-base leading-none">{whim.emoji}</span>
