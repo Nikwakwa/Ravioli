@@ -7,6 +7,14 @@ export interface ReleaseEntry {
 
 export const CHANGELOG: ReleaseEntry[] = [
   {
+    version: 'v0.16.2',
+    date: '2026-11-01',
+    title: 'Water Fountain Restored & Brought to Front 💧✨',
+    changes: [
+      'Restored Water Fountain: Fixed an issue where the living room rug was drawn over the water fountain layer. The water fountain with its glowing blue LED status light, bubbling water arch, and stainless steel bowl is now placed in the front on the right side of the room, far from the litter box.',
+    ],
+  },
+  {
     version: 'v0.16.1',
     date: '2026-11-01',
     title: 'Pixel-Perfect Cozy Nestling & Depth Layering 🛋️📦✨',

@@ -42,7 +42,7 @@ export function LivingRoom({
   onPetCat?: () => void;
 }) {
   return (
-    <svg viewBox="0 0 400 600" preserveAspectRatio="xMidYMid slice" className="absolute inset-0 h-full w-full">
+    <svg viewBox="0 0 400 600" preserveAspectRatio="xMidYMid slice" className="pointer-events-none absolute inset-0 h-full w-full">
       <defs>
         <linearGradient id="lr-wall" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor={sleeping ? '#232238' : '#f7f5f0'} />
@@ -653,59 +653,6 @@ export function LivingRoom({
         </text>
       </g>
 
-      {/* White cuboid LED pet water fountain + stainless bowl (repositioned to right side at x=252, far from litter box) */}
-      <g
-        transform="translate(252 368)"
-        onClick={onTapFountain}
-        className={onTapFountain ? 'pointer-events-auto cursor-pointer' : undefined}
-        style={onTapFountain ? { pointerEvents: 'auto', cursor: 'pointer' } : undefined}
-        role={onTapFountain ? 'button' : undefined}
-        aria-label={onTapFountain ? 'Refresh Oli’s water fountain' : undefined}
-      >
-        {/* Generous transparent touch target for mobile fingers */}
-        <rect x="-10" y="-12" width="96" height="68" fill="transparent" style={{ pointerEvents: 'all' }} />
-        <ellipse cx="26" cy="46" rx="34" ry="7" fill="rgba(40,35,28,0.16)" />
-        {/* White rounded-square fountain body */}
-        <rect x="4" y="6" width="42" height="38" rx="7" fill={sleeping ? '#d5d2e3' : '#fbfaf7'} stroke={sleeping ? '#aba6bf' : '#d5d0c5'} strokeWidth="1.2" />
-        {/* Top water dish recess */}
-        <ellipse cx="25" cy="8" rx="18" ry="4.5" fill="#e3ecf2" />
-        <ellipse cx="25" cy="8" rx="14.5" ry="3.4" fill="#7fd0f5" />
-        {/* Glowing blue LED status indicator on front of fountain */}
-        <circle cx="25" cy="32" r="4.5" fill="#38bdf8" opacity="0.35" />
-        <motion.circle
-          cx="25"
-          cy="32"
-          r="2.2"
-          fill="#00d2ff"
-          animate={{ opacity: [0.65, 1, 0.65] }}
-          transition={{ duration: 2, repeat: Infinity }}
-        />
-        {/* Bubbling water arch */}
-        <motion.path
-          d="M25 7 Q20 -2 17 7 M25 7 Q30 -2 33 7"
-          stroke="#bfe8fb"
-          strokeWidth="2"
-          fill="none"
-          strokeLinecap="round"
-          animate={{ opacity: [0.55, 1, 0.55] }}
-          transition={{ duration: 1.1, repeat: Infinity }}
-        />
-        {[0, 1, 2].map((i) => (
-          <motion.circle
-            key={i}
-            cx={19 + i * 6}
-            r={1.4}
-            fill="#ffffff"
-            initial={{ cy: 8, opacity: 0 }}
-            animate={{ cy: [8, -2 - (fountainBoost ? 8 : 0)], opacity: [0, 1, 0] }}
-            transition={{ duration: fountainBoost ? 0.6 : 1.2, repeat: Infinity, delay: i * 0.3 }}
-          />
-        ))}
-        {/* Little stainless steel bowl next to the fountain */}
-        <path d="M52 34 h22 l-2.5 9 h-17 Z" fill="#b8c2cc" stroke="#8e99a4" strokeWidth="0.8" />
-        <ellipse cx="63" cy="34" rx="11" ry="2.8" fill="#e1e7ed" stroke="#8e99a4" strokeWidth="0.8" />
-      </g>
-
       {/* Fluffy off-white / cream high-pile shag rug — centered where Oli sits (Spot: 'rug') */}
       <g
         onClick={() => (activeSpot === 'rug' ? onPetCat?.() : onSelectSpot?.('rug'))}
@@ -771,6 +718,59 @@ export function LivingRoom({
             />
           </motion.g>
         )}
+      </g>
+
+      {/* White cuboid LED pet water fountain + stainless bowl (foreground z-layer, far from litter box) */}
+      <g
+        transform="translate(262 404)"
+        onClick={onTapFountain}
+        className={onTapFountain ? 'pointer-events-auto cursor-pointer' : undefined}
+        style={onTapFountain ? { pointerEvents: 'auto', cursor: 'pointer' } : undefined}
+        role={onTapFountain ? 'button' : undefined}
+        aria-label={onTapFountain ? 'Refresh Oli’s water fountain' : undefined}
+      >
+        {/* Generous transparent touch target for mobile fingers */}
+        <rect x="0" y="-8" width="82" height="60" fill="transparent" style={{ pointerEvents: 'all' }} />
+        <ellipse cx="26" cy="46" rx="34" ry="7" fill="rgba(40,35,28,0.16)" />
+        {/* White rounded-square fountain body */}
+        <rect x="4" y="6" width="42" height="38" rx="7" fill={sleeping ? '#d5d2e3' : '#fbfaf7'} stroke={sleeping ? '#aba6bf' : '#d5d0c5'} strokeWidth="1.2" />
+        {/* Top water dish recess */}
+        <ellipse cx="25" cy="8" rx="18" ry="4.5" fill="#e3ecf2" />
+        <ellipse cx="25" cy="8" rx="14.5" ry="3.4" fill="#7fd0f5" />
+        {/* Glowing blue LED status indicator on front of fountain */}
+        <circle cx="25" cy="32" r="4.5" fill="#38bdf8" opacity="0.35" />
+        <motion.circle
+          cx="25"
+          cy="32"
+          r="2.2"
+          fill="#00d2ff"
+          animate={{ opacity: [0.65, 1, 0.65] }}
+          transition={{ duration: 2, repeat: Infinity }}
+        />
+        {/* Bubbling water arch */}
+        <motion.path
+          d="M25 7 Q20 -2 17 7 M25 7 Q30 -2 33 7"
+          stroke="#bfe8fb"
+          strokeWidth="2"
+          fill="none"
+          strokeLinecap="round"
+          animate={{ opacity: [0.55, 1, 0.55] }}
+          transition={{ duration: 1.1, repeat: Infinity }}
+        />
+        {[0, 1, 2].map((i) => (
+          <motion.circle
+            key={i}
+            cx={19 + i * 6}
+            r={1.4}
+            fill="#ffffff"
+            initial={{ cy: 8, opacity: 0 }}
+            animate={{ cy: [8, -2 - (fountainBoost ? 8 : 0)], opacity: [0, 1, 0] }}
+            transition={{ duration: fountainBoost ? 0.6 : 1.2, repeat: Infinity, delay: i * 0.3 }}
+          />
+        ))}
+        {/* Little stainless steel bowl next to the fountain */}
+        <path d="M52 34 h22 l-2.5 9 h-17 Z" fill="#b8c2cc" stroke="#8e99a4" strokeWidth="0.8" />
+        <ellipse cx="63" cy="34" rx="11" ry="2.8" fill="#e1e7ed" stroke="#8e99a4" strokeWidth="0.8" />
       </g>
     </svg>
   );

@@ -4,6 +4,12 @@ All updates to **Oli** are listed here.
 
 ---
 
+## `v0.16.2` — 2026-11-01
+### Water Fountain Restored & Brought to Front 💧✨
+- **Restored Water Fountain:** Fixed an issue where the living room rug was drawn over the water fountain layer. The water fountain with its glowing blue LED status light, bubbling water arch, and stainless steel bowl is now placed in the front on the right side of the room, far from the litter box.
+
+---
+
 ## `v0.16.1` — 2026-11-01
 ### Pixel-Perfect Cozy Nestling & Depth Layering 🛋️📦✨
 - **True Physical Nestling:** Integrated Oli directly into the living room scene vector layers so he nestles naturally inside his Bedsure bolster bed and Amazon delivery box without awkward floating overlays.
