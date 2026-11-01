@@ -69,6 +69,14 @@ Replace passive Play buttons with quick 10-second interactive minigames:
 
 ---
 
+## ✅ Phase 6: Real Corner Litter Box & Ginger Fur Tumbleweeds *(Completed in v0.15.0)*
+
+- **Authentic Corner Litter Box:** Modeled directly from Oli’s actual home litter box (grey slide-out drawer tray base, off-white hood, smoked translucent swinging flap door, and textured stepping grid with top-exit hole in the living room corner).
+- **Interactive Scooping & Digestion:** Every 2nd meal (or after hours away), Oli uses his litter box! Tap the litter box directly in the room (or use `Care → Scoop Box`) to scoop it clean (+15 Clean, +6 Joy, and earn +1 Churu Tube every 2 scoops).
+- **No More Poop on the Rug:** Real Oli never poops outside his litter box! Rug messes now spawn authentic ginger fur tumbleweeds from his shedding coat (and occasional throw-up when overfed treats). Tapping a fur clump vacuums/sweeps it up with floating fluff sparkles.
+
+---
+
 ## ⏸️ Parked for Later: Co-op Mode & Progression
 
 *(Saved for future re-introduction once single-player care mechanics are complete)*

@@ -45,6 +45,7 @@ export function App() {
     mood,
     tummyAche,
     messes,
+    litterBoxDirty,
     churuStash,
     whim,
     activeMinigame,
@@ -55,6 +56,7 @@ export function App() {
     cancelMinigame,
     petOli,
     cleanMess,
+    scoopLitterBox,
     fulfillWhim,
     toggleSleep,
     togglePause,
@@ -71,6 +73,10 @@ export function App() {
   const handleTapFountain = () => {
     const fountain = actionById('fountain');
     if (fountain) perform(fountain);
+  };
+
+  const handleTapLitterBox = () => {
+    scoopLitterBox();
   };
 
   const handleChangeNotifPrefs = (next: NotificationPrefs) => {
@@ -132,6 +138,8 @@ export function App() {
             sleeping={live.isSleeping}
             fountainBoost={event?.actionId === 'fountain'}
             onTapFountain={handleTapFountain}
+            litterBoxDirty={litterBoxDirty}
+            onTapLitterBox={handleTapLitterBox}
           />
 
           {/* Subtle sleep-mode ambient vignette */}
@@ -149,6 +157,7 @@ export function App() {
           mood={mood}
           tummyAche={tummyAche}
           messCount={messes.length}
+          litterBoxDirty={litterBoxDirty}
           churuStash={churuStash}
           onOpenChangelog={() => setChangelogOpen(true)}
           onOpenGuide={() => setGuideOpen(true)}
@@ -256,6 +265,7 @@ export function App() {
             live={live}
             tummyAche={tummyAche}
             messCount={messes.length}
+            litterBoxDirty={litterBoxDirty}
             churuStash={churuStash}
             whimActionId={whim?.actionId ?? null}
             busy={busy}

@@ -187,9 +187,10 @@ export function GuideModal({
                     <strong>Brush</strong> him, or use <strong>Calming Mist</strong> to soothe it!
                   </li>
                   <li>
-                    <strong>💩 Poop &amp; Throw-Up Messes:</strong> Every 2nd meal (or every 2.5 hours away) Oli leaves
-                    a mess on the rug. Active messes block <em>Thriving</em> status — tap them directly on the rug or
-                    use <strong>Care → Scoop Mess</strong> (+15 Clean, +6 Joy)!
+                    <strong>📦 Corner Litter Box &amp; Fur Tumbleweeds:</strong> Real Oli always uses his litter box!
+                    Every 2nd meal (or after hours away), Oli uses his modern two-tone litter box in the corner — tap it
+                    directly to scoop (+15 Clean, +6 Joy)! Shed ginger fur tumbleweeds (and occasional treat throw-up) appear
+                    on the rug — tap them directly or use <strong>Care → Scoop Box</strong> to clean them up.
                   </li>
                   <li>
                     <strong>💭 Attention Calls (&ldquo;Meow!&rdquo; Cravings):</strong> Periodically Oli shows a craving
@@ -200,7 +201,7 @@ export function GuideModal({
                   <li>
                     <strong>🍬 Churu Treat Stash:</strong> You start with <strong>3 Churu Tubes</strong> (up to 9 max).
                     Earn more by fulfilling Oli’s cravings, scoring a <strong>3/3 Perfect Play</strong> in minigames, or
-                    scooping every 2nd mess!
+                    scooping every 2nd litter box or mess!
                   </li>
                   <li>
                     <strong>🎮 3-Round Play Minigames:</strong> Choosing <strong>Feather Wand</strong> launches{' '}

@@ -4,6 +4,14 @@ All updates to **Oli** are listed here.
 
 ---
 
+## `v0.15.0` — 2026-11-01
+### Real Corner Litter Box & Ginger Fur Tumbleweeds! 📦✨
+- **Real Corner Litter Box:** Modeled directly from Oli’s actual home litter box — a modern two-tone enclosed box with a warm-grey slide-out base drawer with front pull handle, an off-white hood, smoked translucent swinging flap door, and textured stepping grid with top-exit hole in the living room corner.
+- **Interactive Scooping & Tap-to-Clean:** Every 2nd meal (or after hours away), Oli uses his litter box! Tap the litter box directly in the room (or choose `Care → Scoop Box`) to scoop it clean (+15 Clean, +6 Joy, and earn +1 Churu Tube every 2 scoops). Shows a pulsing alert badge whenever scooping is needed.
+- **No More Poop on the Rug:** Real Oli never poops outside his litter box! Rug messes now spawn authentic ginger fur tumbleweeds from his shedding coat (and occasional throw-up when overfed treats). Tapping a fur clump vacuums/sweeps it up with floating fluff sparkles.
+
+---
+
 ## `v0.14.0` — 2026-10-31
 ### Vacation Mode (Pause Clock) & 9 Lives! ✈️🐾
 - **Pause Care Clock (Vacation Mode):** Added a dedicated Pause/Resume toggle in the top bar (and inside the Rules manual). Tap **Pause** before taking a flight, traveling, or when you won't have your phone — Oli's stats freeze completely in time with zero decay, no mess spawns, and no expiring whims until you tap **Resume**.

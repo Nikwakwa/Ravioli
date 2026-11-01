@@ -54,6 +54,7 @@ export interface ActionDockProps {
   live: LiveCat;
   tummyAche: boolean;
   messCount: number;
+  litterBoxDirty?: boolean;
   churuStash: number;
   whimActionId: string | null;
   busy: boolean;
@@ -65,13 +66,13 @@ function refusalHint(
   action: CareAction,
   live: LiveCat,
   tummyAche: boolean,
-  messCount: number,
+  cleanNeededCount: number,
   churuStash: number,
 ): string | null {
   if (live.isDeceased) return '💔 Deceased';
   if (live.isPaused) return '✈️ Paused';
   if (action.id === 'scoop_mess') {
-    return messCount === 0 ? '✨ Spotless' : null;
+    return cleanNeededCount === 0 ? '✨ Spotless' : null;
   }
   if (action.id === 'churu' && churuStash <= 0) {
     return '🍬 0 Left';
@@ -88,6 +89,7 @@ export function ActionDock({
   live,
   tummyAche,
   messCount,
+  litterBoxDirty = false,
   churuStash,
   whimActionId,
   busy,
@@ -98,6 +100,7 @@ export function ActionDock({
   const actions = CARE_ACTIONS.filter((a) => a.category === category);
   const isSleeping = live.isSleeping;
   const whimCategory = whimActionId ? actionById(whimActionId)?.category ?? null : null;
+  const cleanNeededCount = (litterBoxDirty ? 1 : 0) + messCount;
 
   const shellClass = isSleeping
     ? 'bg-slate-900/85 border-white/10 text-amber-50'
@@ -120,7 +123,7 @@ export function ActionDock({
         {CATEGORIES.map((c) => {
           const Icon = CATEGORY_ICONS[c.id];
           const active = category === c.id;
-          const showMessBadge = c.id === 'care' && messCount > 0;
+          const showMessBadge = c.id === 'care' && cleanNeededCount > 0;
           const showWhimDot = whimCategory === c.id && !showMessBadge;
           return (
             <button
@@ -146,7 +149,7 @@ export function ActionDock({
               <span className="relative z-10">{c.label}</span>
               {showMessBadge && (
                 <span className="relative z-10 flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[9px] font-extrabold leading-none text-white">
-                  {messCount}
+                  {cleanNeededCount}
                 </span>
               )}
               {showWhimDot && (
@@ -175,9 +178,9 @@ export function ActionDock({
         >
           {actions.map((action) => {
             const Icon = ACTION_ICONS[action.id] ?? Sparkles;
-            const hint = refusalHint(action, live, tummyAche, messCount, churuStash);
+            const hint = refusalHint(action, live, tummyAche, cleanNeededCount, churuStash);
             const muted = Boolean(hint);
-            const isUrgentScoop = action.id === 'scoop_mess' && messCount > 0;
+            const isUrgentScoop = action.id === 'scoop_mess' && cleanNeededCount > 0;
             const isWhimMatch = whimActionId === action.id && !muted;
 
             if (isCompactGrid) {
@@ -268,7 +271,7 @@ export function ActionDock({
                   </span>
                   {isUrgentScoop ? (
                     <span className="rounded-full bg-rose-500 px-1.5 py-0.5 text-[9px] font-extrabold text-white">
-                      💩 {messCount}
+                      🧹 {cleanNeededCount}
                     </span>
                   ) : isWhimMatch ? (
                     <span className="rounded-full bg-amber-400/30 px-1.5 py-0.5 text-[9px] font-extrabold text-amber-950">

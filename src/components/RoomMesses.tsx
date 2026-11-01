@@ -24,7 +24,7 @@ export function RoomMesses({
       <AnimatePresence>
         {messes.map((mess) => {
           const pos = SLOT_STYLES[mess.slot] ?? SLOT_STYLES[0];
-          const isPoop = mess.kind === 'poop';
+          const isFurClump = mess.kind === 'fur_clump';
           return (
             <motion.button
               key={mess.id}
@@ -36,7 +36,7 @@ export function RoomMesses({
               transition={{ type: 'spring', stiffness: 340, damping: 20 }}
               onClick={() => onClean(mess.id)}
               style={pos}
-              aria-label={isPoop ? 'Scoop poop mess' : 'Clean up cat throw-up'}
+              aria-label={isFurClump ? 'Sweep up ginger fur tumbleweed' : 'Clean up cat throw-up'}
               title="Tap to clean up!"
               className="pointer-events-auto absolute flex h-16 w-16 cursor-pointer flex-col items-center justify-center focus:outline-none"
             >
@@ -47,8 +47,8 @@ export function RoomMesses({
                   cy="5"
                   rx="19"
                   ry="8.5"
-                  fill={isPoop ? 'rgba(180, 83, 9, 0.14)' : 'rgba(101, 163, 13, 0.18)'}
-                  stroke={isPoop ? '#b45309' : '#65a30d'}
+                  fill={isFurClump ? 'rgba(249, 115, 22, 0.13)' : 'rgba(101, 163, 13, 0.18)'}
+                  stroke={isFurClump ? '#ea580c' : '#65a30d'}
                   strokeWidth="1.5"
                   strokeDasharray="3.5 2.5"
                   animate={{ scale: [0.94, 1.12, 0.94], opacity: [0.55, 1, 0.55] }}
@@ -56,21 +56,29 @@ export function RoomMesses({
                 />
 
                 {/* Ground shadow */}
-                <ellipse cx="0" cy="6.5" rx="14" ry="4.8" fill="rgba(45,30,18,0.28)" />
+                <ellipse cx="0" cy="6.5" rx="14" ry="4.8" fill="rgba(45,30,18,0.26)" />
 
-                {isPoop ? (
-                  /* Coiled poop swirl */
+                {isFurClump ? (
+                  /* Cute fluffy ginger shed fur tumbleweed */
                   <g>
-                    <ellipse cx="0" cy="4.5" rx="12" ry="4.8" fill="#7c4722" stroke="#4f2b12" strokeWidth="1.3" />
-                    <ellipse cx="0" cy="0" rx="9" ry="4" fill="#8d532a" stroke="#4f2b12" strokeWidth="1.3" />
-                    <path
-                      d="M-5.5 -2.5 C-5 -7.5 2.5 -7.5 1.2 -11.5 C4.5 -9 6 -4 5.5 -2.5 Z"
-                      fill="#9c5e32"
-                      stroke="#4f2b12"
-                      strokeWidth="1.3"
-                      strokeLinejoin="round"
-                    />
-                    <ellipse cx="-3" cy="2.2" rx="2.5" ry="1" fill="#b67849" opacity="0.75" />
+                    {/* Fluffy ginger fur cluster */}
+                    <ellipse cx="-4" cy="3" rx="7.5" ry="5.5" fill="#d97706" />
+                    <ellipse cx="4" cy="3" rx="8" ry="6" fill="#ea580c" />
+                    <ellipse cx="0" cy="-1" rx="9" ry="6.5" fill="#f59e0b" />
+                    <ellipse cx="-2.5" cy="-2.5" rx="6.5" ry="4.5" fill="#fbbf24" />
+                    {/* Wispy loose ginger fur strands sticking out */}
+                    <g stroke="#b45309" strokeWidth="1.3" strokeLinecap="round" fill="none">
+                      <path d="M-8 0 Q-12 -3 -15 -1" />
+                      <path d="M6 -2 Q12 -6 15 -3" />
+                      <path d="M-2 -7 Q0 -13 4 -12" />
+                      <path d="M-6 4 Q-11 7 -14 5" />
+                      <path d="M5 4 Q10 8 13 6" />
+                    </g>
+                    {/* Cream chest-fluff highlight strands */}
+                    <g stroke="#fffbeb" strokeWidth="1.1" strokeLinecap="round" fill="none" opacity="0.9">
+                      <path d="M-3 -3 Q-1 -6 2 -5" />
+                      <path d="M-1 1 Q2 0 4 2" />
+                    </g>
                   </g>
                 ) : (
                   /* Cat throw-up / puke splat on the rug */
@@ -92,19 +100,35 @@ export function RoomMesses({
                   </g>
                 )}
 
-                {/* Animated stink waves rising above the mess */}
-                {[-6, 0, 6].map((dx, i) => (
-                  <motion.path
-                    key={i}
-                    d={`M${dx} -13 Q${dx - 2.5} -17.5 ${dx} -21 Q${dx + 2.5} -24.5 ${dx} -28`}
-                    stroke="#65a30d"
-                    strokeWidth="1.6"
-                    strokeLinecap="round"
-                    fill="none"
-                    animate={{ y: [0, -5, 0], opacity: [0.45, 1, 0.45] }}
-                    transition={{ duration: 1.4, repeat: Infinity, delay: i * 0.28, ease: 'easeInOut' }}
-                  />
-                ))}
+                {/* Animated rising particles above the mess */}
+                {isFurClump ? (
+                  /* Floating shed fur fluff particles */
+                  [-6, 1, 7].map((dx, i) => (
+                    <motion.circle
+                      key={i}
+                      cx={dx}
+                      cy={-14}
+                      r={1.3}
+                      fill="#f59e0b"
+                      animate={{ y: [0, -8, 0], opacity: [0.35, 0.95, 0.35], x: [0, i % 2 === 0 ? 2 : -2, 0] }}
+                      transition={{ duration: 1.8, repeat: Infinity, delay: i * 0.32, ease: 'easeInOut' }}
+                    />
+                  ))
+                ) : (
+                  /* Animated stink waves rising above throw-up */
+                  [-6, 0, 6].map((dx, i) => (
+                    <motion.path
+                      key={i}
+                      d={`M${dx} -13 Q${dx - 2.5} -17.5 ${dx} -21 Q${dx + 2.5} -24.5 ${dx} -28`}
+                      stroke="#65a30d"
+                      strokeWidth="1.6"
+                      strokeLinecap="round"
+                      fill="none"
+                      animate={{ y: [0, -5, 0], opacity: [0.45, 1, 0.45] }}
+                      transition={{ duration: 1.4, repeat: Infinity, delay: i * 0.28, ease: 'easeInOut' }}
+                    />
+                  ))
+                )}
               </svg>
             </motion.button>
           );

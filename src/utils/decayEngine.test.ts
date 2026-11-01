@@ -221,18 +221,18 @@ describe('Core action, dock & mess rules', () => {
 
   it('allocates up to 3 room mess slots and returns null when full', () => {
     expect(pickFreeMessSlot([])).toBe(0);
-    expect(pickFreeMessSlot([{ id: '1', kind: 'poop', slot: 0, created_at: '' }])).toBe(1);
+    expect(pickFreeMessSlot([{ id: '1', kind: 'fur_clump', slot: 0, created_at: '' }])).toBe(1);
     expect(
       pickFreeMessSlot([
-        { id: '1', kind: 'poop', slot: 0, created_at: '' },
+        { id: '1', kind: 'fur_clump', slot: 0, created_at: '' },
         { id: '2', kind: 'vomit', slot: 2, created_at: '' },
       ]),
     ).toBe(1);
     expect(
       pickFreeMessSlot([
-        { id: '1', kind: 'poop', slot: 0, created_at: '' },
+        { id: '1', kind: 'fur_clump', slot: 0, created_at: '' },
         { id: '2', kind: 'vomit', slot: 1, created_at: '' },
-        { id: '3', kind: 'poop', slot: 2, created_at: '' },
+        { id: '3', kind: 'fur_clump', slot: 2, created_at: '' },
       ]),
     ).toBeNull();
   });

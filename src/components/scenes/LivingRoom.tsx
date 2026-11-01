@@ -16,10 +16,14 @@ export function LivingRoom({
   sleeping,
   fountainBoost,
   onTapFountain,
+  litterBoxDirty = false,
+  onTapLitterBox,
 }: {
   sleeping: boolean;
   fountainBoost: boolean;
   onTapFountain?: () => void;
+  litterBoxDirty?: boolean;
+  onTapLitterBox?: () => void;
 }) {
   return (
     <svg viewBox="0 0 400 600" preserveAspectRatio="xMidYMid slice" className="absolute inset-0 h-full w-full">
@@ -319,9 +323,189 @@ export function LivingRoom({
         <ellipse cx="354.5" cy="335" rx="4.5" ry="1.4" fill="#ffffff" stroke="#ccc7bc" strokeWidth="0.8" />
       </g>
 
+      {/* Oli's modern two-tone enclosed litter box in the left corner (grey drawer base, cream hood, flap door & top exit hole) */}
+      <g
+        onClick={onTapLitterBox}
+        className={onTapLitterBox ? 'pointer-events-auto cursor-pointer' : undefined}
+        style={onTapLitterBox ? { pointerEvents: 'auto', cursor: 'pointer' } : undefined}
+        role={onTapLitterBox ? 'button' : undefined}
+        aria-label={onTapLitterBox ? (litterBoxDirty ? 'Scoop Oli’s litter box' : 'Oli’s litter box') : undefined}
+      >
+        {/* Generous touch target for tapping to scoop */}
+        <rect x="4" y="292" width="70" height="84" fill="transparent" style={{ pointerEvents: 'all' }} />
+
+        {/* Soft floor shadow */}
+        <ellipse cx="40" cy="372" rx="32" ry="6" fill="rgba(40,32,24,0.22)" />
+
+        {/* Grey slide-out drawer tray base (lower section) */}
+        <rect
+          x="10"
+          y="346"
+          width="60"
+          height="24"
+          rx="4"
+          fill={sleeping ? '#6a6773' : '#8e8b86'}
+          stroke={sleeping ? '#54515c' : '#76736e'}
+          strokeWidth="1"
+        />
+        {/* Bottom base lip/runners */}
+        <rect
+          x="8"
+          y="367"
+          width="64"
+          height="4"
+          rx="2"
+          fill={sleeping ? '#5a5763' : '#7b7873'}
+        />
+        {/* Recessed front pull handle on drawer face */}
+        <rect
+          x="28"
+          y="353"
+          width="24"
+          height="11"
+          rx="3"
+          fill={sleeping ? '#4c4954' : '#696662'}
+        />
+        <rect
+          x="30"
+          y="355"
+          width="20"
+          height="4"
+          rx="1.5"
+          fill={sleeping ? '#7d7a87' : '#a19e99'}
+        />
+
+        {/* Off-white / light cream enclosed upper hood */}
+        <rect
+          x="10"
+          y="318"
+          width="60"
+          height="31"
+          rx="6"
+          fill={sleeping ? '#cac6d6' : '#f5f3ec'}
+          stroke={sleeping ? '#9e9ab0' : '#dad5cb'}
+          strokeWidth="1.2"
+        />
+        {/* Split seam line between hood and drawer base */}
+        <line
+          x1="10"
+          y1="346"
+          x2="70"
+          y2="346"
+          stroke={sleeping ? '#6a6773' : '#7c7974'}
+          strokeWidth="1"
+        />
+
+        {/* Roof top panel with rounded corners */}
+        <rect
+          x="10"
+          y="316"
+          width="60"
+          height="5"
+          rx="2.5"
+          fill={sleeping ? '#bab7c7' : '#ece9e0'}
+          stroke={sleeping ? '#9e9ab0' : '#d8d4ca'}
+          strokeWidth="0.8"
+        />
+        {/* Top stepping grid pattern for litter tracking */}
+        <line
+          x1="15"
+          y1="318.5"
+          x2="43"
+          y2="318.5"
+          stroke={sleeping ? '#8a8799' : '#ccc8be'}
+          strokeWidth="0.8"
+          strokeDasharray="2 1.5"
+        />
+        {/* Top-exit opening hole in the roof */}
+        <rect
+          x="46"
+          y="317"
+          width="18"
+          height="3.5"
+          rx="1.5"
+          fill="#2b292a"
+        />
+
+        {/* Front swinging flap door opening recess */}
+        <rect
+          x="18"
+          y="323"
+          width="28"
+          height="23"
+          rx="4.5"
+          fill={sleeping ? '#383542' : '#454342'}
+        />
+        {/* Smoked translucent tinted swinging flap door */}
+        <rect
+          x="19.5"
+          y="324.5"
+          width="25"
+          height="20"
+          rx="3"
+          fill="#2d2b2f"
+          opacity="0.82"
+          stroke="#68656b"
+          strokeWidth="0.8"
+        />
+        {/* Glossy glass reflection streak across flap */}
+        <line
+          x1="22"
+          y1="342"
+          x2="38"
+          y2="326"
+          stroke="#ffffff"
+          strokeWidth="1.2"
+          strokeLinecap="round"
+          opacity="0.3"
+        />
+        {/* Top door hinge clips */}
+        <rect x="23" y="322.5" width="3.5" height="3" rx="0.8" fill="#787570" />
+        <rect x="37" y="322.5" width="3.5" height="3" rx="0.8" fill="#787570" />
+
+        {/* Animated Scoop Needed / Dirty status badge floating above */}
+        {litterBoxDirty && (
+          <g>
+            {/* Attention ping wave */}
+            <motion.circle
+              cx="40"
+              cy="305"
+              r="14"
+              fill="rgba(245, 158, 11, 0.22)"
+              stroke="#f59e0b"
+              strokeWidth="1.4"
+              strokeDasharray="3 2"
+              animate={{ scale: [0.92, 1.2, 0.92], opacity: [0.55, 1, 0.55] }}
+              transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+            />
+            {/* Badge pill */}
+            <rect
+              x="26"
+              y="294"
+              width="28"
+              height="22"
+              rx="7"
+              fill="#f59e0b"
+              stroke="#ffffff"
+              strokeWidth="1.5"
+            />
+            <text
+              x="40"
+              y="309.5"
+              textAnchor="middle"
+              fontSize="12"
+              fill="#ffffff"
+              className="select-none"
+            >
+              💩
+            </text>
+          </g>
+        )}
+      </g>
+
       {/* White cuboid LED pet water fountain + stainless bowl by the left wall (PXL_20260321_203920849.jpg) */}
       <g
-        transform="translate(36 350)"
+        transform="translate(76 345)"
         onClick={onTapFountain}
         className={onTapFountain ? 'pointer-events-auto cursor-pointer' : undefined}
         style={onTapFountain ? { pointerEvents: 'auto', cursor: 'pointer' } : undefined}

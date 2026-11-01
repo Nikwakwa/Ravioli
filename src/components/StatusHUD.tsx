@@ -25,6 +25,7 @@ export interface StatusHUDProps {
   mood: Mood;
   tummyAche?: boolean;
   messCount?: number;
+  litterBoxDirty?: boolean;
   churuStash?: number;
   onOpenChangelog: () => void;
   onOpenGuide: () => void;
@@ -39,6 +40,7 @@ export function StatusHUD({
   mood,
   tummyAche,
   messCount = 0,
+  litterBoxDirty = false,
   churuStash = 3,
   onOpenChangelog,
   onOpenGuide,
@@ -53,15 +55,19 @@ export function StatusHUD({
       ? { label: 'Care clock paused (Vacation Mode)', emoji: '✈️' }
       : tummyAche
         ? { label: 'Tummy ache — pet or brush!', emoji: '🤢' }
-        : messCount > 0 && !live.isSleeping
-          ? {
-              label:
-                messCount === 1
-                  ? 'Mess on the rug — tap to scoop!'
-                  : `${messCount} messes on the rug — scoop up!`,
-              emoji: '💩',
-            }
-          : MOOD_BADGE[mood];
+        : litterBoxDirty && messCount > 0 && !live.isSleeping
+          ? { label: 'Litter box & rug need cleaning!', emoji: '🧹' }
+          : litterBoxDirty && !live.isSleeping
+            ? { label: 'Litter box needs scooping — tap it!', emoji: '🚽' }
+            : messCount > 0 && !live.isSleeping
+              ? {
+                  label:
+                    messCount === 1
+                      ? 'Fur tumbleweed on rug — tap to clean!'
+                      : `${messCount} messes on the rug — sweep up!`,
+                  emoji: '🧹',
+                }
+              : MOOD_BADGE[mood];
   const night = live.isSleeping;
 
   const surface = night

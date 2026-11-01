@@ -7,6 +7,16 @@ export interface ReleaseEntry {
 
 export const CHANGELOG: ReleaseEntry[] = [
   {
+    version: 'v0.15.0',
+    date: '2026-11-01',
+    title: 'Real Corner Litter Box & Ginger Fur Tumbleweeds! 📦✨',
+    changes: [
+      'Real Corner Litter Box: Drawn from Oli’s actual home litter box — a modern two-tone enclosed box with grey slide-out base drawer, off-white hood, tinted swinging flap door, and top exit roof hole in the living room corner.',
+      'Tap to Scoop: Every 2nd meal (or after hours away), Oli uses his litter box! Tap the litter box directly (or choose Care → Scoop Box) to scoop it clean (+15 Clean, +6 Joy, and earn +1 Churu Tube every 2 scoops).',
+      'No More Poop on the Rug: Real Oli never poops outside his litter box! Rug messes now spawn authentic ginger fur tumbleweeds from his shedding coat (and occasional throw-up when overfed treats).',
+    ],
+  },
+  {
     version: 'v0.14.0',
     date: '2026-10-31',
     title: 'Vacation Mode (Pause Clock) & 9 Lives! ✈️🐾',
