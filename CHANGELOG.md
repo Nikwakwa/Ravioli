@@ -4,6 +4,17 @@ All updates to **Oli** are listed here.
 
 ---
 
+## `v0.16.4` — 2026-11-02
+### Comprehensive App Polish, Vacation Protection & Performance Boost 🛡️🚀✨
+- **Vacation Pause Protection:** Resuming from Vacation Mode now cleanly preserves peace and quiet — no surprise messes or penalties appear from days spent away.
+- **Auto-Update Precision:** Fixed the in-app update detector so new versions are recognized reliably across all browsers.
+- **Smoother Room Roaming:** Spritzing Calming Mist while Oli is napping in his sofa bed no longer jolts him to the rug, and launching the app keeps him resting right where you left him.
+- **Honest Activity History:** Unanswered craving bubbles and natural fur shedding no longer record misleading care actions in your history feed.
+- **Lightning-Fast Performance:** Code-split application assets so the game downloads and starts even faster on mobile connections.
+- **Rock-Solid Database Sync:** Upgraded the database schema with full support for Vacation Mode, 9 Lives rescue, and all modern care actions.
+
+---
+
 ## `v0.16.3` — 2026-11-01
 ### Automated Scene Safety Tests & Full-Screen Mobile Polish 🧪📱✨
 - **Automated Scene & Layer Safety Tests:** Added 15 automated test suites that run on every build to guarantee that interactive items (like the water fountain) can never be hidden behind rugs or background layers.

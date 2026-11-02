@@ -22,8 +22,18 @@ create table if not exists public.cat_state (
   last_updated_at timestamptz not null default now(),
   -- Optimistic-concurrency counter: clients update "where version = expected"
   -- so two phones acting at the same instant never overwrite each other.
-  version         bigint      not null default 0
+  version         bigint      not null default 0,
+  -- Vacation mode (pause care clock)
+  paused_at       timestamptz,
+  -- Neglect protection (48h consecutive zero hunger & hydration)
+  deceased_at     timestamptz,
+  -- 9 lives
+  lives_left      smallint    not null default 9 check (lives_left between 0 and 9)
 );
+
+alter table public.cat_state add column if not exists paused_at timestamptz;
+alter table public.cat_state add column if not exists deceased_at timestamptz;
+alter table public.cat_state add column if not exists lives_left smallint not null default 9 check (lives_left between 0 and 9);
 
 insert into public.cat_state (id) values (1) on conflict (id) do nothing;
 
@@ -42,9 +52,13 @@ create table if not exists public.activity_log (
       'fountain',
       'chin_scratch',
       'feather_wand',
+      'laser_pointer',
       'pheromone_mist',
       'brush',
-      'toggle_sleep'
+      'scoop_mess',
+      'toggle_sleep',
+      'toggle_pause',
+      'emergency_revive'
     )
   ),
   message    text        not null check (char_length(message) between 1 and 160 and message !~ '[<>]'),
@@ -54,6 +68,33 @@ create table if not exists public.activity_log (
 );
 
 alter table public.activity_log add column if not exists device_id text;
+
+-- Migration: ensure activity_log constraint accepts all current actions
+do $$
+begin
+  alter table public.activity_log drop constraint if exists activity_log_action_id_check;
+  alter table public.activity_log add constraint activity_log_action_id_check check (
+    action_id in (
+      'churu',
+      'wet_food',
+      'chicken_heart',
+      'quail_egg',
+      'fountain',
+      'chin_scratch',
+      'feather_wand',
+      'laser_pointer',
+      'pheromone_mist',
+      'brush',
+      'scoop_mess',
+      'toggle_sleep',
+      'toggle_pause',
+      'emergency_revive'
+    )
+  );
+exception
+  when others then null;
+end;
+$$;
 
 create index if not exists activity_log_created_at_idx
   on public.activity_log (created_at desc);

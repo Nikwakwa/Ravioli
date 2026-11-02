@@ -13,6 +13,7 @@ import {
   REVIVE_ACTION_ID,
 } from '../data/actions';
 import { pickFreeMessSlot } from '../hooks/useCatGame';
+import { normalizeVersion, VERSION_RE } from '../hooks/useVersionCheck';
 import { cleanText, sanitizeActivity, sanitizeCatState } from '../services/catStorage';
 import { evaluateStatThresholds, getNotificationAssetUrls, toAbsoluteNotificationUrl, type AlertedMap } from './notifications';
 import type { CatState } from '../types';
@@ -411,5 +412,54 @@ describe('notification threshold crossings', () => {
     expect(devAssets.badge).toMatch(/^http:\/\/localhost:5173\/.*badge-96x96\.png$/);
 
     expect(toAbsoluteNotificationUrl('/pwa-192x192.png', 'https://game.oli/')).toBe('https://game.oli/pwa-192x192.png');
+  });
+});
+
+describe('useVersionCheck — version parsing and normalization', () => {
+  it('accepts both v-prefixed and non-prefixed semantic versions', () => {
+    expect(VERSION_RE.test('v0.16.3')).toBe(true);
+    expect(VERSION_RE.test('0.16.3')).toBe(true);
+    expect(VERSION_RE.test('v1.0.0')).toBe(true);
+    expect(VERSION_RE.test('1.2.3')).toBe(true);
+    expect(VERSION_RE.test('latest')).toBe(false);
+    expect(VERSION_RE.test('beta-1')).toBe(false);
+    expect(VERSION_RE.test('')).toBe(false);
+  });
+
+  it('normalizes versions consistently to vX.Y.Z', () => {
+    expect(normalizeVersion('0.16.3')).toBe('v0.16.3');
+    expect(normalizeVersion('v0.16.3')).toBe('v0.16.3');
+    expect(normalizeVersion(' 1.2.0 ')).toBe('v1.2.0');
+    expect(normalizeVersion('invalid')).toBeNull();
+  });
+});
+
+describe('Supabase & Actions allowlist consistency', () => {
+  it('covers all care actions in sanitizeActivity and actionById', () => {
+    for (const action of CARE_ACTIONS) {
+      expect(actionById(action.id)).toBeDefined();
+      const sanitized = sanitizeActivity({
+        id: '123',
+        player: 'Nico',
+        action_id: action.id,
+        created_at: new Date().toISOString(),
+      });
+      expect(sanitized).not.toBeNull();
+      expect(sanitized?.action_id).toBe(action.id);
+    }
+  });
+
+  it('covers special non-dock actions in sanitizeActivity', () => {
+    const specialActions = [PET_ACTION_ID, 'toggle_sleep', PAUSE_ACTION_ID, REVIVE_ACTION_ID];
+    for (const act of specialActions) {
+      const sanitized = sanitizeActivity({
+        id: '456',
+        player: 'Nico',
+        action_id: act,
+        created_at: new Date().toISOString(),
+      });
+      expect(sanitized).not.toBeNull();
+      expect(sanitized?.action_id).toBe(act);
+    }
   });
 });

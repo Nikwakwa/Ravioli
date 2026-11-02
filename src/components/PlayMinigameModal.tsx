@@ -42,8 +42,21 @@ export function PlayMinigameModal({
   const [targetSide, setTargetSide] = useState<'left' | 'right'>(() => pickSide());
   const [chosenSide, setChosenSide] = useState<'left' | 'right' | null>(null);
 
+  const timersRef = useRef<number[]>([]);
+  const clearTimers = () => {
+    timersRef.current.forEach((t) => window.clearTimeout(t));
+    timersRef.current = [];
+  };
+
+  const safeTimeout = (fn: () => void, ms: number) => {
+    const id = window.setTimeout(fn, ms);
+    timersRef.current.push(id);
+    return id;
+  };
+
   // Reset state whenever a new minigame opens
   useEffect(() => {
+    clearTimers();
     if (!action) return;
     setRound(0);
     setResults([]);
@@ -54,6 +67,7 @@ export function PlayMinigameModal({
     setFeatherPos(12);
     setTargetSide(pickSide());
     setChosenSide(null);
+    return () => clearTimers();
   }, [action]);
 
   // Animate the feather back and forth at 60fps during active Feather Pounce rounds
@@ -92,15 +106,15 @@ export function PlayMinigameModal({
     setRoundFeedback(outcome);
 
     if (nextResults.length >= MINIGAME_ROUNDS) {
-      window.setTimeout(() => {
+      safeTimeout(() => {
         setFinished(true);
       }, 550);
-      window.setTimeout(() => {
+      safeTimeout(() => {
         const totalHits = nextResults.filter((r) => r === 'hit').length;
         onComplete(totalHits);
       }, 1550);
     } else {
-      window.setTimeout(() => {
+      safeTimeout(() => {
         setRound((r) => r + 1);
         setRoundFeedback(null);
         setChosenSide(null);

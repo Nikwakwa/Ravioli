@@ -7,6 +7,19 @@ export interface ReleaseEntry {
 
 export const CHANGELOG: ReleaseEntry[] = [
   {
+    version: 'v0.16.4',
+    date: '2026-11-02',
+    title: 'Comprehensive App Polish, Vacation Protection & Performance Boost 🛡️🚀✨',
+    changes: [
+      'Vacation Pause Protection: Resuming from Vacation Mode now cleanly preserves peace and quiet — no surprise messes or penalties appear from days spent away.',
+      'Auto-Update Precision: Fixed the in-app update detector so new versions are recognized reliably across all browsers.',
+      'Smoother Room Roaming: Spritzing Calming Mist while Oli is napping in his sofa bed no longer jolts him to the rug, and launching the app keeps him resting right where you left him.',
+      'Honest Activity History: Unanswered craving bubbles and natural fur shedding no longer record misleading care actions in your history feed.',
+      'Lightning-Fast Performance: Code-split application assets so the game downloads and starts even faster on mobile connections.',
+      'Rock-Solid Database Sync: Upgraded the database schema with full support for Vacation Mode, 9 Lives rescue, and all modern care actions.',
+    ],
+  },
+  {
     version: 'v0.16.3',
     date: '2026-11-01',
     title: 'Automated Scene Safety Tests & Full-Screen Mobile Polish 🧪📱✨',

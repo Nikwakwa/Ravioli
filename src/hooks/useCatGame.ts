@@ -103,12 +103,12 @@ function loadLastRoamAt(): number {
     const raw = localStorage.getItem(LS_LAST_ROAM_AT);
     if (raw) {
       const n = Number(raw);
-      if (Number.isFinite(n)) return n;
+      if (Number.isFinite(n) && n > 0) return n;
     }
   } catch {
     // ignore
   }
-  return 0;
+  return Date.now();
 }
 
 function saveLastRoamAt(timestamp: number): void {
@@ -387,6 +387,10 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
   const [spot, setSpotState] = useState<CatSpot>(() => loadCatSpot());
   const busyTimer = useRef<number | undefined>(undefined);
   const lastPetRef = useRef<number>(0);
+
+  useEffect(() => {
+    return () => window.clearTimeout(busyTimer.current);
+  }, []);
 
   const tummyAche = tummyAcheUntil > now;
 
@@ -687,14 +691,34 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
 
   /** Optimistically apply locally, then commit with conflict-safe retries. */
   const commit = useCallback(
-    async (mutator: (b: CatState) => CatState, actionId: string, message: string) => {
+    async (
+      mutator: (b: CatState) => CatState,
+      actionIdOrActivity: string | { actionId: string; message: string } | null,
+      maybeMessage?: string,
+    ) => {
       const storage = storageRef.current;
       const actor = player ?? 'Nico';
       if (!storage) return;
       setBase((prev) => (prev ? mutator(prev) : prev));
       setNow(Date.now());
       try {
-        const res = await storage.commit(mutator, { player: actor, action_id: actionId, message, device_id: DEVICE_ID });
+        let activityPayload: { player: string; action_id: string; message: string; device_id: string } | null = null;
+        if (typeof actionIdOrActivity === 'string') {
+          activityPayload = {
+            player: actor,
+            action_id: actionIdOrActivity,
+            message: maybeMessage ?? '',
+            device_id: DEVICE_ID,
+          };
+        } else if (actionIdOrActivity && typeof actionIdOrActivity === 'object') {
+          activityPayload = {
+            player: actor,
+            action_id: actionIdOrActivity.actionId,
+            message: actionIdOrActivity.message,
+            device_id: DEVICE_ID,
+          };
+        }
+        const res = await storage.commit(mutator, activityPayload);
         acceptState(res.state);
         if (res.entry) addEntry(res.entry);
         if (storage.mode === 'supabase') setStatus((s) => (s === 'offline' ? 'live' : s));
@@ -734,7 +758,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
           tone: 'warn',
         });
         const mutator = (b: CatState): CatState => applyEffect(materialize(b, Date.now()), { happiness: -8 });
-        void commit(mutator, PET_ACTION_ID, `Gave ${live.name} chin scratches — purr session!`);
+        void commit(mutator, null);
         return;
       }
       const expireTimer = window.setTimeout(() => setNow(Date.now()), Math.min(msLeft + 200, 60_000));
@@ -812,7 +836,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
       happiness: -4 * countToSpawn,
     };
     const mutator = (b: CatState): CatState => applyEffect(materialize(b, now), penalty);
-    void commit(mutator, 'scoop_mess', `Swept up ${live.name}’s shed fur tumbleweeds from the rug`);
+    void commit(mutator, null);
   }, [ready, live, now, messes.length, litterBoxDirty, commit]);
 
   // Autonomous pass-out nap: if Oli's Energy drops to <= AUTO_NAP_ENERGY (5) while awake, he curls up to nap automatically.
@@ -879,7 +903,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
 
     const mutator = (b: CatState): CatState => applyEffect(materialize(b, Date.now()), scoopAction.effect);
     void commit(mutator, scoopAction.id, formatLog(scoopAction.log, live.name));
-  }, [base, live, busy, litterBoxDirty, messes.length, churuStash, player, playEvent, commit, updateChuruStash]);
+  }, [base, live, busy, litterBoxDirty, messes.length, player, playEvent, commit]);
 
   /** Cleans a specific mess on the rug (by id) or the oldest mess when called from the Care dock. */
   const cleanMess = useCallback(
@@ -934,7 +958,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
       const mutator = (b: CatState): CatState => applyEffect(materialize(b, Date.now()), scoopAction.effect);
       void commit(mutator, scoopAction.id, logMsg);
     },
-    [base, live, busy, messes, litterBoxDirty, scoopLitterBox, churuStash, player, playEvent, commit, updateChuruStash],
+    [base, live, busy, messes, litterBoxDirty, scoopLitterBox, player, playEvent, commit],
   );
 
   const perform = useCallback(
@@ -968,8 +992,8 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
         return;
       }
 
-      // When doing an active care action, Oli trots to the center rug
-      if (action.id !== 'scoop_mess' && spot !== 'rug') {
+      // When doing an active care action, awake Oli trots to the center rug
+      if (action.id !== 'scoop_mess' && !live.isSleeping && spot !== 'rug') {
         setSpot('rug', true);
       }
 
@@ -1313,6 +1337,11 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
         paused_at: null,
         last_updated_at: nowIso,
       });
+      // Refresh passive event timestamps so hours spent on vacation do not trigger instant messes or penalties
+      saveLastMessAt(nowMs);
+      saveLastLitterAt(nowMs);
+      saveLastWhimAt(nowMs);
+      saveLastRoamAt(nowMs);
       noticeRef.current({ text: '▶️ Care clock resumed! Welcome back!', tone: 'info' });
       vibrate([20, 60, 20]);
       void commit(mutator, PAUSE_ACTION_ID, 'Resumed the care clock — welcome back!');

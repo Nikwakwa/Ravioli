@@ -87,6 +87,21 @@ export default defineConfig({
   server: {
     port: 5173,
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('framer-motion')) return 'motion';
+            if (id.includes('@supabase')) return 'supabase';
+            if (id.includes('canvas-confetti')) return 'confetti';
+            if (id.includes('lucide-react')) return 'icons';
+            return 'vendor';
+          }
+        },
+      },
+    },
+  },
   test: {
     environment: 'node',
     include: ['src/**/*.test.{ts,tsx}'],

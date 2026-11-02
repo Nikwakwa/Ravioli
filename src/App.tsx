@@ -39,6 +39,10 @@ export function App() {
   const [notice, setNotice] = useState<Notice | null>(null);
   const [tapHeartKey, setTapHeartKey] = useState(0);
   const noticeTimer = useRef<number | undefined>(undefined);
+
+  useEffect(() => {
+    return () => window.clearTimeout(noticeTimer.current);
+  }, []);
   const mainRef = useRef<HTMLElement>(null);
   const [containerSize, setContainerSize] = useState<{ width: number; height: number }>({
     width: 400,
