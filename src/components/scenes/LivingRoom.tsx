@@ -330,19 +330,20 @@ export function LivingRoom({
 
         {/* Sofa base & seat cushions */}
         <rect x="194" y="274" width="204" height="40" rx="8" fill="#353a44" />
-        <rect x="202" y="270" width="108" height="22" rx="6" fill="#525a68" />
-        <rect x="202" y="270" width="108" height="22" rx="6" fill="url(#lr-weave)" />
+        <rect x="202" y="270" width="50" height="24" rx="6" fill="#525a68" />
+        <rect x="202" y="270" width="50" height="24" rx="6" fill="url(#lr-weave)" />
 
-        {/* Chaise longue extending forward on right */}
-        <path d="M308 270 h90 v84 a10 10 0 0 1 -10 10 h-70 a10 10 0 0 1 -10 -10 Z" fill="#353a44" />
-        <rect x="312" y="270" width="82" height="72" rx="7" fill="#525a68" />
-        <rect x="312" y="270" width="82" height="72" rx="7" fill="url(#lr-weave)" />
+        {/* Chaise longue extending forward on right (fully supporting Oli's bolster bed) */}
+        <path d="M250 274 h148 v74 a10 10 0 0 1 -10 10 h-128 a10 10 0 0 1 -10 -10 Z" fill="#353a44" />
+        <rect x="252" y="270" width="142" height="78" rx="8" fill="#525a68" />
+        <rect x="252" y="270" width="142" height="78" rx="8" fill="url(#lr-weave)" />
+        <rect x="252" y="270" width="142" height="78" rx="8" fill="none" stroke="#424854" strokeWidth="0.8" />
         {/* Left armrest */}
         <rect x="190" y="254" width="16" height="58" rx="7" fill="#3b414c" />
 
-        {/* Oli's tan suede "Bedsure Comfy Pet" bolster bed on the sofa chaise (Spot: 'sofa_bed') */}
+        {/* Oli's tan suede "Bedsure Comfy Pet" bolster bed firmly resting on the sofa chaise (Spot: 'sofa_bed') */}
         <g
-          transform="translate(258 284)"
+          transform="translate(262 278)"
           onClick={() => (activeSpot === 'sofa_bed' ? onPetCat?.() : onSelectSpot?.('sofa_bed'))}
           className="pointer-events-auto cursor-pointer"
           style={{ pointerEvents: 'auto', cursor: 'pointer' }}
@@ -352,6 +353,10 @@ export function LivingRoom({
         >
           {/* Generous touch target */}
           <rect x="-6" y="-36" width="76" height="74" fill="transparent" style={{ pointerEvents: 'all' }} />
+
+          {/* Realistic contact shadow on the sofa fabric grounding the bed firmly */}
+          <ellipse cx="32" cy="35" rx="30" ry="7" fill="rgba(15,18,25,0.55)" />
+          <ellipse cx="32" cy="33" rx="26" ry="4.5" fill="rgba(10,12,18,0.4)" />
 
           {/* Cream sherpa inner cushion */}
           <rect x="6" y="4" width="52" height="28" rx="8" fill="#f5ece0" />
@@ -391,7 +396,7 @@ export function LivingRoom({
         </g>
       </g>
 
-      {/* Modern white coffee table with candle jar (cork coaster removed) (x: 256..396, y: 342..392) */}
+      {/* Modern white coffee table (x: 256..396, y: 342..392) */}
       <g>
         {/* Table shadow */}
         <polygon points="262,386 398,386 400,358 278,358" fill="rgba(35,30,22,0.14)" />
@@ -400,9 +405,6 @@ export function LivingRoom({
         <rect x="272" y="354" width="128" height="16" fill="#e6e3da" />
         {/* Crisp white tabletop */}
         <polygon points="262,354 398,354 400,334 282,334" fill="#ffffff" stroke="#dedad0" strokeWidth="1" />
-        {/* Little glass candle jar */}
-        <rect x="294" y="335" width="9" height="11" rx="2" fill="#f2efe9" stroke="#ccc7bc" strokeWidth="0.8" />
-        <ellipse cx="298.5" cy="335" rx="4.5" ry="1.4" fill="#ffffff" stroke="#ccc7bc" strokeWidth="0.8" />
       </g>
 
       {/* Oli's modern two-tone enclosed litter box in the left corner (repositioned to x=72..132, 100% on screen, far from water) */}
@@ -440,7 +442,7 @@ export function LivingRoom({
           rx="2"
           fill={sleeping ? '#5a5763' : '#7b7873'}
         />
-        {/* Recessed front pull handle on drawer face */}
+        {/* Recessed front pull handle on drawer face (centered at x=40) */}
         <rect
           x="28"
           y="353"
@@ -479,7 +481,7 @@ export function LivingRoom({
           strokeWidth="1"
         />
 
-        {/* Roof top panel with rounded corners */}
+        {/* Roof top panel with rounded corners (centered at x=40) */}
         <rect
           x="10"
           y="316"
@@ -490,38 +492,47 @@ export function LivingRoom({
           stroke={sleeping ? '#9e9ab0' : '#d8d4ca'}
           strokeWidth="0.8"
         />
-        {/* Top stepping grid pattern for litter tracking */}
+        {/* Centered top handle / carbon filter vent */}
+        <rect
+          x="31"
+          y="315"
+          width="18"
+          height="3"
+          rx="1.5"
+          fill="#2b292a"
+        />
+        {/* Symmetrical left and right ventilation / stepping grids */}
         <line
           x1="15"
           y1="318.5"
-          x2="43"
+          x2="27"
           y2="318.5"
           stroke={sleeping ? '#8a8799' : '#ccc8be'}
           strokeWidth="0.8"
           strokeDasharray="2 1.5"
         />
-        {/* Top-exit opening hole in the roof */}
-        <rect
-          x="46"
-          y="317"
-          width="18"
-          height="3.5"
-          rx="1.5"
-          fill="#2b292a"
+        <line
+          x1="53"
+          y1="318.5"
+          x2="65"
+          y2="318.5"
+          stroke={sleeping ? '#8a8799' : '#ccc8be'}
+          strokeWidth="0.8"
+          strokeDasharray="2 1.5"
         />
 
-        {/* Front swinging flap door opening recess */}
+        {/* Front swinging flap door opening recess (centered at x=40) */}
         <rect
-          x="18"
+          x="26"
           y="323"
           width="28"
           height="23"
           rx="4.5"
           fill={sleeping ? '#383542' : '#454342'}
         />
-        {/* Smoked translucent tinted swinging flap door */}
+        {/* Smoked translucent tinted swinging flap door (centered at x=40) */}
         <rect
-          x="19.5"
+          x="27.5"
           y="324.5"
           width="25"
           height="20"
@@ -533,20 +544,20 @@ export function LivingRoom({
         />
         {/* Glossy glass reflection streak across flap */}
         <line
-          x1="22"
+          x1="30"
           y1="342"
-          x2="38"
+          x2="46"
           y2="326"
           stroke="#ffffff"
           strokeWidth="1.2"
           strokeLinecap="round"
           opacity="0.3"
         />
-        {/* Top door hinge clips */}
-        <rect x="23" y="322.5" width="3.5" height="3" rx="0.8" fill="#787570" />
-        <rect x="37" y="322.5" width="3.5" height="3" rx="0.8" fill="#787570" />
+        {/* Symmetrical top door hinge clips */}
+        <rect x="29.5" y="322.5" width="3.5" height="3" rx="0.8" fill="#787570" />
+        <rect x="47" y="322.5" width="3.5" height="3" rx="0.8" fill="#787570" />
 
-        {/* Animated Scoop Needed / Dirty status badge floating above */}
+        {/* Animated Scoop Needed / Dirty status badge floating above (centered at x=40) */}
         {litterBoxDirty && (
           <g>
             {/* Attention ping wave */}

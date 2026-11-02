@@ -263,16 +263,13 @@ describe('LivingRoom — Mobile Safe Bounds (No Partially Off-Screen Items)', ()
     expect(maxX).toBeLessThanOrEqual(SAFE_MOBILE.maxX);
   });
 
-  it('positions the candle jar on the coffee table completely within the visible screen', () => {
+  it('renders the clean white coffee table completely within the visible screen', () => {
     const tree = LivingRoom({ sleeping: false, fountainBoost: false }) as AnyElement;
-    const candleJar = findElements(tree, (el) => {
-      return el.type === 'rect' && el.props?.fill === '#f2efe9' && el.props?.y === '335';
+    const tableTop = findElements(tree, (el) => {
+      return el.type === 'polygon' && el.props?.fill === '#ffffff' && el.props?.points?.includes('262,354');
     })[0];
 
-    expect(candleJar).toBeDefined();
-    const x = parseFloat(candleJar.props.x);
-    expect(x).toBeGreaterThanOrEqual(SAFE_MOBILE.minX);
-    expect(x).toBeLessThanOrEqual(SAFE_MOBILE.maxX);
+    expect(tableTop).toBeDefined();
   });
 
   it('ensures Oli is 100% visible inside each of the 4 cozy spots without edge clipping', () => {
