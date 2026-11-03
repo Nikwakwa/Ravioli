@@ -64,13 +64,11 @@ const defaultNotifPrefs = {
 };
 
 describe('MenuPage Server Rendering & Content', () => {
-  it('renders all 5 navigation tabs and rules by default', () => {
+  it('renders all 4 navigation tabs and rules by default (Cozy Spots scrapped)', () => {
     const html = renderToString(
       <MenuPage
         onClose={vi.fn()}
         live={mockLive}
-        spot="rug"
-        onSelectSpot={vi.fn()}
         onTogglePause={vi.fn()}
         notifPrefs={defaultNotifPrefs}
         onToggleMasterNotifications={vi.fn()}
@@ -82,9 +80,10 @@ describe('MenuPage Server Rendering & Content', () => {
     expect(html).toContain('Back to Oli');
     expect(html).toContain('Rules &amp; Guide');
     expect(html).toContain('Vacation Clock');
-    expect(html).toContain('Cozy Spots');
     expect(html).toContain('Alerts');
     expect(html).toContain('Oli Care Manual &amp; Rules');
+    // Cozy spots tab is scrapped
+    expect(html).not.toContain('Cozy Spots');
   });
 
   it('renders pause clock controls when initialTab is pause', () => {
@@ -93,8 +92,6 @@ describe('MenuPage Server Rendering & Content', () => {
         onClose={vi.fn()}
         initialTab="pause"
         live={mockLive}
-        spot="rug"
-        onSelectSpot={vi.fn()}
         onTogglePause={vi.fn()}
         notifPrefs={defaultNotifPrefs}
         onToggleMasterNotifications={vi.fn()}
@@ -108,37 +105,12 @@ describe('MenuPage Server Rendering & Content', () => {
     expect(html).toContain('Freeze time so Oli stays safe');
   });
 
-  it('renders spots list when initialTab is spots', () => {
-    const html = renderToString(
-      <MenuPage
-        onClose={vi.fn()}
-        initialTab="spots"
-        live={mockLive}
-        spot="rug"
-        onSelectSpot={vi.fn()}
-        onTogglePause={vi.fn()}
-        notifPrefs={defaultNotifPrefs}
-        onToggleMasterNotifications={vi.fn()}
-        onChangeNotifPrefs={vi.fn()}
-        onTestNotification={vi.fn()}
-      />
-    );
-
-    expect(html).toContain('Where Oli Hangs Out');
-    expect(html).toContain('Fluffy Living Room Rug');
-    expect(html).toContain('Sofa Bolster Bed');
-    expect(html).toContain('Amazon Delivery Box');
-    expect(html).toContain('Sunny Windowsill');
-  });
-
   it('renders changelog and version when initialTab is version', () => {
     const html = renderToString(
       <MenuPage
         onClose={vi.fn()}
         initialTab="version"
         live={mockLive}
-        spot="rug"
-        onSelectSpot={vi.fn()}
         onTogglePause={vi.fn()}
         notifPrefs={defaultNotifPrefs}
         onToggleMasterNotifications={vi.fn()}

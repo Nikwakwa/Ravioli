@@ -9,6 +9,22 @@ export function normalizeVersion(v: string): string | null {
   return match ? `v${match[1]}` : null;
 }
 
+export function parseSemver(v: string): [number, number, number] | null {
+  const match = v.trim().match(VERSION_RE);
+  if (!match) return null;
+  const parts = match[1].split('.').map((p) => parseInt(p, 10));
+  return [parts[0], parts[1], parts[2]];
+}
+
+export function isNewerVersion(remote: string, current: string): boolean {
+  const r = parseSemver(remote);
+  const c = parseSemver(current);
+  if (!r || !c) return false;
+  if (r[0] !== c[0]) return r[0] > c[0];
+  if (r[1] !== c[1]) return r[1] > c[1];
+  return r[2] > c[2];
+}
+
 export function useVersionCheck() {
   const [availableVersion, setAvailableVersion] = useState<string | null>(null);
   const [reloading, setReloading] = useState(false);
@@ -31,8 +47,10 @@ export function useVersionCheck() {
       if (typeof data.version === 'string') {
         const remote = normalizeVersion(data.version);
         const current = normalizeVersion(APP_VERSION);
-        if (remote && current && remote !== current) {
+        if (remote && current && isNewerVersion(remote, current)) {
           setAvailableVersion(remote);
+        } else {
+          setAvailableVersion(null);
         }
       }
     } catch {

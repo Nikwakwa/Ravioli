@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process';
-import { existsSync, readFileSync, unlinkSync } from 'node:fs';
+import { existsSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 const root = process.cwd();
@@ -17,6 +17,12 @@ function gitInherit(...args) {
 // 1. Read package.json version
 const pkg = JSON.parse(readFileSync(pkgPath, 'utf8'));
 const versionTag = pkg.version ? `v${pkg.version}` : null;
+
+// 1.5 Sync public/version.json to match package.json
+if (versionTag) {
+  const versionJsonPath = resolve(root, 'public', 'version.json');
+  writeFileSync(versionJsonPath, JSON.stringify({ version: versionTag }, null, 2) + '\n');
+}
 
 // 2. Stage all changes
 gitInherit('add', '-A');

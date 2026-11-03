@@ -24,7 +24,7 @@ import {
   STAT_META,
 } from '../data/actions';
 import { APP_VERSION, CHANGELOG } from '../data/changelog';
-import { STAT_KEYS, type CatSpot, type LiveCat, type StatKey } from '../types';
+import { STAT_KEYS, type LiveCat, type StatKey } from '../types';
 import {
   DECAY_RATES,
   MAX_LIVES,
@@ -36,14 +36,12 @@ import {
 import { CRITICAL_THRESHOLD, type NotificationPrefs } from '../utils/notifications';
 import { STAT_ICONS } from './statIcons';
 
-export type MenuTab = 'rules' | 'pause' | 'spots' | 'version' | 'notifications';
+export type MenuTab = 'rules' | 'pause' | 'version' | 'notifications';
 
 export interface MenuPageProps {
   onClose: () => void;
   initialTab?: MenuTab;
   live: LiveCat;
-  spot: CatSpot;
-  onSelectSpot: (spot: CatSpot) => void;
   onTogglePause: () => void;
   availableVersion?: string | null;
   reloading?: boolean;
@@ -63,8 +61,6 @@ export function MenuPage({
   onClose,
   initialTab = 'rules',
   live,
-  spot,
-  onSelectSpot,
   onTogglePause,
   availableVersion,
   reloading,
@@ -90,36 +86,8 @@ export function MenuPage({
   const tabs: Array<{ id: MenuTab; label: string; icon: string; badge?: boolean }> = [
     { id: 'rules', label: 'Rules & Guide', icon: '📖' },
     { id: 'pause', label: live.isPaused ? 'Clock Paused' : 'Vacation Clock', icon: '✈️' },
-    { id: 'spots', label: 'Cozy Spots', icon: '🛋️' },
     { id: 'version', label: APP_VERSION, icon: '✨', badge: Boolean(availableVersion) },
     { id: 'notifications', label: 'Alerts', icon: notifPrefs.enabled ? '🔔' : '🔕' },
-  ];
-
-  const spotsList: Array<{ id: CatSpot; label: string; emoji: string; desc: string }> = [
-    {
-      id: 'rug',
-      label: 'Fluffy Living Room Rug',
-      emoji: '🧶',
-      desc: 'High-pile cream shag rug in the center of the room. Perfect for chin scratches and tummy rubs.',
-    },
-    {
-      id: 'sofa_bed',
-      label: 'Sofa Bolster Bed',
-      emoji: '🛋️',
-      desc: 'Oli’s tan Bedsure bolster cat bed nestled safely on the dark sofa cushion. Warm and peaceful.',
-    },
-    {
-      id: 'box',
-      label: 'Amazon Delivery Box',
-      emoji: '📦',
-      desc: 'Empty cardboard box on the floor. If it fits, he sits! Oli loves peeking his head over the edge.',
-    },
-    {
-      id: 'window',
-      label: 'Sunny Windowsill',
-      emoji: '🪟',
-      desc: 'Perched high up on the windowsill next to the potted plant, watching the clouds and birds outside.',
-    },
   ];
 
   return (
@@ -224,8 +192,12 @@ export function MenuPage({
               </h3>
               <ul className="flex list-disc flex-col gap-2 pl-4 text-[11px] font-semibold leading-snug text-amber-900/85">
                 <li>
-                  <strong>Interactive Chin Scratches:</strong> Tap Oli directly in the living room anytime he’s awake to
-                  give him chin scratches (<strong className="text-pink-600">+{PET_JOY_BOOST} Joy</strong> every 20s)!
+                  <strong>Interactive Chin Scratches:</strong> Tap Oli directly anywhere in the living room anytime he’s
+                  awake to give him chin scratches (<strong className="text-pink-600">+{PET_JOY_BOOST} Joy</strong> every 20s)!
+                </li>
+                <li>
+                  <strong>Tap Spots Directly in the Room:</strong> Tap the sofa bolster bed, cardboard box, windowsill, or
+                  rug directly in the living room anytime to move Oli there!
                 </li>
                 <li>
                   <strong>Tap the Fountain:</strong> You can also tap the glowing blue LED water fountain in the living room
@@ -483,63 +455,7 @@ export function MenuPage({
           </div>
         )}
 
-        {/* TAB 3: COZY SPOTS */}
-        {activeTab === 'spots' && (
-          <div className="flex flex-col gap-3">
-            <div className="rounded-2xl border border-amber-900/10 bg-white p-3.5 shadow-2xs">
-              <div className="flex items-center gap-2">
-                <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-500/15 text-lg">
-                  🛋️
-                </span>
-                <div>
-                  <h2 className="font-display text-sm font-bold text-amber-950">Where Oli Hangs Out</h2>
-                  <p className="text-[11px] font-semibold text-amber-800/75">
-                    Tap a cozy spot below to move Oli there
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-2">
-              {spotsList.map((s) => {
-                const isCurrent = spot === s.id;
-                return (
-                  <button
-                    key={s.id}
-                    type="button"
-                    onClick={() => onSelectSpot(s.id)}
-                    className={`flex items-start gap-3 rounded-2xl border p-3.5 text-left transition-all active:scale-[0.99] ${
-                      isCurrent
-                        ? 'border-amber-500 bg-amber-500/10 shadow-xs'
-                        : 'border-amber-900/8 bg-white hover:bg-amber-50/50'
-                    }`}
-                  >
-                    <span className="text-2xl leading-none">{s.emoji}</span>
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between gap-1">
-                        <h3 className="font-display text-xs font-bold text-amber-950">{s.label}</h3>
-                        {isCurrent && (
-                          <span className="flex items-center gap-1 rounded-full bg-amber-500 px-2 py-0.5 text-[10px] font-black text-white">
-                            <Check className="h-3 w-3 stroke-[3]" />
-                            <span>Here now</span>
-                          </span>
-                        )}
-                      </div>
-                      <p className="mt-1 text-[11px] font-medium leading-snug text-amber-900/75">{s.desc}</p>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-
-            <div className="rounded-2xl border border-amber-900/8 bg-amber-100/50 p-3 text-[11px] font-semibold text-amber-900/85">
-              💡 <strong>Direct Touch Tip:</strong> You can also tap the sofa bolster bed, cardboard box, windowsill, or
-              rug directly in the living room anytime to move Oli there or pet him!
-            </div>
-          </div>
-        )}
-
-        {/* TAB 4: WHAT’S NEW & APP VERSION */}
+        {/* TAB 3: WHAT’S NEW & APP VERSION */}
         {activeTab === 'version' && (
           <div className="flex flex-col gap-3">
             <div className="flex items-center justify-between rounded-2xl border border-amber-900/10 bg-white p-3.5 shadow-2xs">
@@ -608,7 +524,7 @@ export function MenuPage({
           </div>
         )}
 
-        {/* TAB 5: NOTIFICATIONS & ALERTS */}
+        {/* TAB 4: NOTIFICATIONS & ALERTS */}
         {activeTab === 'notifications' && (
           <div className="flex flex-col gap-3">
             {/* Master toggle card */}

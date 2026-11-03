@@ -7,6 +7,17 @@ export interface ReleaseEntry {
 
 export const CHANGELOG: ReleaseEntry[] = [
   {
+    version: 'v0.16.7',
+    date: '2026-11-03',
+    title: 'Main Screen Update Alerts, Accurate Version Checks & Scrapped Spot Menu 🚀✨',
+    changes: [
+      'Main Screen Update Banner: Update alerts are now clearly displayed directly on the main screen so you can reload into new versions with a single tap.',
+      'Strict Semver Update Check: The version checker now accurately verifies that server releases are newer than the installed app, completely preventing false alerts from older cached versions.',
+      'Scrapped Cozy Spots Menu: Removed the redundant cozy spots section from the menu. Tapping Oli’s bed, box, windowsill, or rug directly in the room remains the clean, natural way to interact.',
+      'Version History Restored: Documented the release notes for v0.16.5 (grounded sofa bed, clean coffee table, and refined corner litter box).',
+    ],
+  },
+  {
     version: 'v0.16.6',
     date: '2026-11-03',
     title: 'Clean & Airy Room Makeover, Dedicated Settings & Guide Page 🛋️✨',
@@ -14,7 +25,16 @@ export const CHANGELOG: ReleaseEntry[] = [
       'Spacious Living Room: Removed the floating spot bar from the main room for an open, airy feel. Tap the sofa bed, delivery box, windowsill, or rug directly in the living room anytime to move Oli or pet him.',
       'Dedicated Care Guide & Settings Page: Moved the version number, Vacation Mode pause button, care rules, and notifications into a clean, slide-out page accessed via a single Menu button.',
       'Uncluttered Header: Simplified the top header so only Oli’s mood, Churu treat stash, and the Menu button are shown, giving full attention to your cozy cat.',
-      'Cozy Spots Tab: A dedicated spot switcher with descriptions is available in the Menu for quick browsing of all of Oli’s favorite hangout spots.',
+    ],
+  },
+  {
+    version: 'v0.16.5',
+    date: '2026-11-02',
+    title: 'Grounded Bolster Bed, Clean Coffee Table & Symmetrical Litter Box 🛋️✨',
+    changes: [
+      'Grounded Sofa Bolster Bed: Nestled Oli’s tan bolster bed flush onto the sofa cushion for natural perspective.',
+      'Refined Coffee Table: Cleaned up the white coffee table to keep the center of the room open and tidy.',
+      'Symmetrical Litter Box: Polished the enclosed corner litter box proportions and modern two-tone styling.',
     ],
   },
   {

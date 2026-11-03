@@ -1,4 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion';
+import { RefreshCw } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActionDock } from './components/ActionDock';
 import { EmergencyRevivalModal } from './components/EmergencyRevivalModal';
@@ -217,6 +218,32 @@ export function App() {
           hasUpdate={Boolean(availableVersion)}
         />
 
+        {/* New version available banner on main screen */}
+        <AnimatePresence>
+          {availableVersion && (
+            <motion.div
+              key="update-banner"
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="relative z-30 mx-3 mt-1"
+            >
+              <button
+                type="button"
+                onClick={() => void applyUpdate()}
+                disabled={reloading}
+                className="flex w-full items-center justify-between gap-2 rounded-2xl bg-emerald-600 px-3.5 py-2 text-xs font-extrabold text-white shadow-lg transition-transform active:scale-[0.99] hover:bg-emerald-500"
+              >
+                <span>✨ A new update ({availableVersion}) is ready!</span>
+                <span className="flex items-center gap-1 rounded-full bg-white/20 px-2.5 py-0.5 text-[11px]">
+                  <RefreshCw className={`h-3 w-3 ${reloading ? 'animate-spin' : ''}`} />
+                  {reloading ? 'Reloading…' : 'Reload'}
+                </span>
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Info / Refusal toast */}
         <AnimatePresence>
           {notice && (
@@ -281,7 +308,7 @@ export function App() {
 
         <EmergencyRevivalModal live={live} onRevive={reviveOli} />
 
-        {/* Separate Menu Page (Rules, Vacation Pause, Cozy Spots, Version/Updates, Notifications) */}
+        {/* Separate Menu Page (Rules, Vacation Pause, Version/Updates, Notifications) */}
         <AnimatePresence>
           {menuOpen && (
             <motion.div
@@ -296,11 +323,6 @@ export function App() {
                 onClose={() => setMenuOpen(false)}
                 initialTab={menuTab}
                 live={live}
-                spot={spot}
-                onSelectSpot={(s) => {
-                  setSpot(s);
-                  pushNotice({ text: `Oli moved to the ${s === 'sofa_bed' ? 'sofa bed' : s}! 🐾`, tone: 'info' });
-                }}
                 onTogglePause={togglePause}
                 availableVersion={availableVersion}
                 reloading={reloading}
