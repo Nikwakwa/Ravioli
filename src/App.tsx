@@ -1,12 +1,9 @@
 import { AnimatePresence, motion } from 'framer-motion';
-import { Play, RefreshCw } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActionDock } from './components/ActionDock';
-import { ChangelogModal } from './components/ChangelogModal';
 import { EmergencyRevivalModal } from './components/EmergencyRevivalModal';
 import { FloatingEffects } from './components/FloatingEffects';
-import { GuideModal } from './components/GuideModal';
-import { NotificationModal } from './components/NotificationModal';
+import { MenuPage, type MenuTab } from './components/MenuPage';
 import { PlayMinigameModal } from './components/PlayMinigameModal';
 import { RoomMesses } from './components/RoomMesses';
 import { LivingRoom } from './components/scenes/LivingRoom';
@@ -32,9 +29,8 @@ export const SPOT_HEAD_SVG: Record<CatSpot, { x: number; y: number }> = {
 };
 
 export function App() {
-  const [changelogOpen, setChangelogOpen] = useState(false);
-  const [guideOpen, setGuideOpen] = useState(false);
-  const [notifOpen, setNotifOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [menuTab, setMenuTab] = useState<MenuTab>('rules');
   const [notifPrefs, setNotifPrefs] = useState<NotificationPrefs>(() => loadNotificationPrefs());
   const [notice, setNotice] = useState<Notice | null>(null);
   const [tapHeartKey, setTapHeartKey] = useState(0);
@@ -111,6 +107,11 @@ export function App() {
     };
   }, [spot, containerSize]);
 
+  const handleOpenMenu = (tab: MenuTab = 'rules') => {
+    setMenuTab(tab);
+    setMenuOpen(true);
+  };
+
   const handlePetOli = () => {
     setTapHeartKey((k) => k + 1);
     petOli();
@@ -143,7 +144,7 @@ export function App() {
       pushNotice({ text: '🔔 Oli notifications enabled!', tone: 'info' });
       void sendSystemNotification(
         '🔔 Oli notifications enabled!',
-        'You can customize which alerts to receive anytime.',
+        'You can customize which alerts to receive anytime in the Menu.',
         'oli-test',
       );
     } else if (res === 'denied') {
@@ -211,70 +212,10 @@ export function App() {
           messCount={messes.length}
           litterBoxDirty={litterBoxDirty}
           churuStash={churuStash}
-          onOpenChangelog={() => setChangelogOpen(true)}
-          onOpenGuide={() => setGuideOpen(true)}
-          onTogglePause={togglePause}
-          notificationsOn={notifPrefs.enabled}
-          onToggleNotifications={() => setNotifOpen(true)}
+          onOpenMenu={() => handleOpenMenu(live.isPaused ? 'pause' : 'rules')}
+          onOpenPause={() => handleOpenMenu('pause')}
           hasUpdate={Boolean(availableVersion)}
         />
-
-        {/* Care Clock Paused (Vacation Mode) banner */}
-        <AnimatePresence>
-          {live.isPaused && (
-            <motion.div
-              key="paused-banner"
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="relative z-30 mx-3 mt-1"
-            >
-              <div className="flex items-center justify-between gap-2 rounded-2xl border border-sky-400/35 bg-sky-950/90 px-3.5 py-2 text-sky-100 shadow-lg backdrop-blur-md">
-                <div className="flex items-center gap-2">
-                  <span className="text-base">✈️</span>
-                  <div>
-                    <p className="text-xs font-bold leading-tight text-white">Care Clock Paused (Vacation Mode)</p>
-                    <p className="text-[10px] text-sky-200/80">Oli is resting safely. Stats will not decay.</p>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={togglePause}
-                  className="flex items-center gap-1 rounded-xl bg-sky-500 px-3 py-1 text-xs font-black text-white shadow-sm transition-transform active:scale-95 hover:bg-sky-400"
-                >
-                  <Play className="h-3 w-3 fill-current" />
-                  <span>Resume</span>
-                </button>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* New version available banner */}
-        <AnimatePresence>
-          {availableVersion && (
-            <motion.div
-              key="update-banner"
-              initial={{ opacity: 0, y: -12 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -12 }}
-              className="relative z-30 mx-3 mt-1"
-            >
-              <button
-                type="button"
-                onClick={() => void applyUpdate()}
-                disabled={reloading}
-                className="flex w-full items-center justify-between gap-2 rounded-2xl bg-emerald-600 px-3.5 py-2 text-xs font-extrabold text-white shadow-lg transition-transform active:scale-[0.99]"
-              >
-                <span>✨ A new update ({availableVersion}) is ready!</span>
-                <span className="flex items-center gap-1 rounded-full bg-white/20 px-2.5 py-0.5 text-[11px]">
-                  <RefreshCw className={`h-3 w-3 ${reloading ? 'animate-spin' : ''}`} />
-                  {reloading ? 'Reloading…' : 'Reload'}
-                </span>
-              </button>
-            </motion.div>
-          )}
-        </AnimatePresence>
 
         {/* Info / Refusal toast */}
         <AnimatePresence>
@@ -294,37 +235,6 @@ export function App() {
             </motion.div>
           )}
         </AnimatePresence>
-
-        {/* Cozy Spot Quick-Switch Bar ("Where is Oli?") */}
-        <div className="relative z-20 flex justify-center px-3 pt-1">
-          <div className="flex items-center gap-1 rounded-2xl border border-amber-900/10 bg-white/80 p-1 shadow-sm backdrop-blur-md">
-            {[
-              { id: 'rug' as const, label: 'Rug', emoji: '🧶' },
-              { id: 'sofa_bed' as const, label: 'Sofa Bed', emoji: '🛋️' },
-              { id: 'box' as const, label: 'Box', emoji: '📦' },
-              { id: 'window' as const, label: 'Window', emoji: '🪟' },
-            ].map((s) => {
-              const active = spot === s.id;
-              return (
-                <button
-                  key={s.id}
-                  type="button"
-                  onClick={() => setSpot(s.id)}
-                  className={`flex items-center gap-1 rounded-xl px-2.5 py-1 text-[11px] font-extrabold transition-all active:scale-95 ${
-                    active
-                      ? 'bg-amber-500 text-white shadow-xs'
-                      : 'text-amber-900/70 hover:bg-amber-100/60 hover:text-amber-950'
-                  }`}
-                  aria-pressed={active}
-                  title={`Move Oli to the ${s.label}`}
-                >
-                  <span className="text-xs leading-none">{s.emoji}</span>
-                  <span>{s.label}</span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
 
         {/* Center stage overlay: floating effects, whims, messes */}
         <div className="pointer-events-none relative z-10 flex flex-1 items-end justify-center pb-5">
@@ -360,6 +270,7 @@ export function App() {
           />
         </div>
 
+        {/* Modals & Separate Menu Page */}
         <PlayMinigameModal
           action={activeMinigame}
           catName={live.name}
@@ -367,33 +278,41 @@ export function App() {
           onComplete={completeMinigame}
           onCancel={cancelMinigame}
         />
-        <NotificationModal
-          open={notifOpen}
-          onClose={() => setNotifOpen(false)}
-          prefs={notifPrefs}
-          onToggleMaster={() => void handleToggleMasterNotifications()}
-          onChangePrefs={handleChangeNotifPrefs}
-          onTestNotification={handleTestNotification}
-        />
-        <GuideModal
-          open={guideOpen}
-          onClose={() => setGuideOpen(false)}
-          isPaused={live.isPaused}
-          onTogglePause={togglePause}
-          notificationsOn={notifPrefs.enabled}
-          onToggleNotifications={() => {
-            setGuideOpen(false);
-            setNotifOpen(true);
-          }}
-          onTestNotification={handleTestNotification}
-        />
+
         <EmergencyRevivalModal live={live} onRevive={reviveOli} />
-        <ChangelogModal
-          open={changelogOpen}
-          onClose={() => setChangelogOpen(false)}
-          availableVersion={availableVersion}
-          onReload={() => void applyUpdate()}
-        />
+
+        {/* Separate Menu Page (Rules, Vacation Pause, Cozy Spots, Version/Updates, Notifications) */}
+        <AnimatePresence>
+          {menuOpen && (
+            <motion.div
+              key="menu-page"
+              initial={{ x: '100%', opacity: 0.9 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: '100%', opacity: 0.9 }}
+              transition={{ type: 'spring', stiffness: 320, damping: 32 }}
+              className="absolute inset-0 z-50 flex flex-col bg-[#fff7ee] text-amber-950 overflow-hidden shadow-2xl"
+            >
+              <MenuPage
+                onClose={() => setMenuOpen(false)}
+                initialTab={menuTab}
+                live={live}
+                spot={spot}
+                onSelectSpot={(s) => {
+                  setSpot(s);
+                  pushNotice({ text: `Oli moved to the ${s === 'sofa_bed' ? 'sofa bed' : s}! 🐾`, tone: 'info' });
+                }}
+                onTogglePause={togglePause}
+                availableVersion={availableVersion}
+                reloading={reloading}
+                onApplyUpdate={() => void applyUpdate()}
+                notifPrefs={notifPrefs}
+                onToggleMasterNotifications={() => void handleToggleMasterNotifications()}
+                onChangeNotifPrefs={handleChangeNotifPrefs}
+                onTestNotification={handleTestNotification}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </main>
     </div>
   );

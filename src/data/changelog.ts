@@ -7,6 +7,17 @@ export interface ReleaseEntry {
 
 export const CHANGELOG: ReleaseEntry[] = [
   {
+    version: 'v0.16.6',
+    date: '2026-11-03',
+    title: 'Clean & Airy Room Makeover, Dedicated Settings & Guide Page 🛋️✨',
+    changes: [
+      'Spacious Living Room: Removed the floating spot bar from the main room for an open, airy feel. Tap the sofa bed, delivery box, windowsill, or rug directly in the living room anytime to move Oli or pet him.',
+      'Dedicated Care Guide & Settings Page: Moved the version number, Vacation Mode pause button, care rules, and notifications into a clean, slide-out page accessed via a single Menu button.',
+      'Uncluttered Header: Simplified the top header so only Oli’s mood, Churu treat stash, and the Menu button are shown, giving full attention to your cozy cat.',
+      'Cozy Spots Tab: A dedicated spot switcher with descriptions is available in the Menu for quick browsing of all of Oli’s favorite hangout spots.',
+    ],
+  },
+  {
     version: 'v0.16.4',
     date: '2026-11-02',
     title: 'Comprehensive App Polish, Vacation Protection & Performance Boost 🛡️🚀✨',
