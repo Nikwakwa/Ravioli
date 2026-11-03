@@ -78,10 +78,10 @@ describe('MenuPage Server Rendering & Content', () => {
     );
 
     expect(html).toContain('Back to Oli');
-    expect(html).toContain('Rules &amp; Guide');
-    expect(html).toContain('Vacation Clock');
+    expect(html).toContain('Rules');
+    expect(html).toContain('Vacation');
+    expect(html).toContain('Updates');
     expect(html).toContain('Alerts');
-    expect(html).toContain('Oli Care Manual &amp; Rules');
     // Cozy spots tab is scrapped
     expect(html).not.toContain('Cozy Spots');
   });
@@ -120,7 +120,7 @@ describe('MenuPage Server Rendering & Content', () => {
     );
 
     expect(html).toContain('Ravioli App Version');
-    expect(html).toContain('Release notes, features &amp; updates');
+    expect(html).toContain('Release notes &amp; updates');
   });
 });
 

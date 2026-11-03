@@ -89,7 +89,7 @@ export function StatusHUD({
                   type="button"
                   onClick={onOpenPause ?? onOpenMenu}
                   title="Care Clock Paused — tap to manage in Menu"
-                  className="rounded-full bg-sky-500/20 px-2 py-0.5 text-[9px] font-extrabold text-sky-700 dark:text-sky-300 transition-transform active:scale-95"
+                  className="rounded-full bg-sky-500/20 border border-sky-400/40 px-2 py-0.5 text-[9px] font-black text-sky-800 dark:text-sky-200 transition-transform active:scale-95 animate-pulse"
                 >
                   ✈️ Paused
                 </button>
@@ -128,10 +128,10 @@ export function StatusHUD({
           {/* Churu Treat Stash counter pill */}
           <div
             title="Churu Treat Stash — earn more by fulfilling Oli’s cravings or scooping messes!"
-            className={`flex items-center gap-1 rounded-full border px-2.5 py-1.5 text-xs font-extrabold shadow-sm backdrop-blur-md ${surface}`}
+            className={`flex h-9 items-center gap-1.5 rounded-full border px-3 text-xs font-extrabold shadow-sm backdrop-blur-md ${surface}`}
           >
-            <span className="text-xs leading-none">🍬</span>
-            <span className="tabular-nums">{churuStash}</span>
+            <span className="text-sm leading-none">🍬</span>
+            <span className="tabular-nums font-mono text-xs">{churuStash}</span>
           </div>
 
           {/* Menu / Guide button */}
@@ -140,14 +140,14 @@ export function StatusHUD({
             onClick={onOpenMenu}
             title="Menu, Vacation Clock, Care Rules & Version"
             aria-label="Open Menu, Vacation Clock, Care Rules and Version"
-            className={`relative flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-extrabold shadow-sm backdrop-blur-md transition-transform active:scale-95 ${surface}`}
+            className={`relative flex h-9 items-center gap-1.5 rounded-full border px-3.5 text-xs font-extrabold shadow-sm backdrop-blur-md transition-all hover:bg-amber-100/40 active:scale-95 ${surface}`}
           >
             <BookOpen className="h-3.5 w-3.5 text-amber-600 dark:text-amber-300" />
             <span>Menu</span>
             {hasUpdate && (
-              <span className="absolute -top-0.5 -right-0.5 flex h-2 w-2">
+              <span className="absolute -top-0.5 -right-0.5 flex h-2.5 w-2.5">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500 ring-1 ring-white" />
+                <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-white" />
               </span>
             )}
           </button>

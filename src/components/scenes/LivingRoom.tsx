@@ -731,7 +731,7 @@ export function LivingRoom({
         )}
       </g>
 
-      {/* White cuboid LED pet water fountain + stainless bowl (foreground z-layer, far from litter box) */}
+      {/* White cuboid LED pet water fountain (foreground z-layer, far from litter box) */}
       <g
         transform="translate(262 404)"
         onClick={onTapFountain}
@@ -741,8 +741,8 @@ export function LivingRoom({
         aria-label={onTapFountain ? 'Refresh Oli’s water fountain' : undefined}
       >
         {/* Generous transparent touch target for mobile fingers */}
-        <rect x="0" y="-8" width="82" height="60" fill="transparent" style={{ pointerEvents: 'all' }} />
-        <ellipse cx="26" cy="46" rx="34" ry="7" fill="rgba(40,35,28,0.16)" />
+        <rect x="0" y="-8" width="50" height="60" fill="transparent" style={{ pointerEvents: 'all' }} />
+        <ellipse cx="25" cy="45" rx="23" ry="5.5" fill="rgba(40,35,28,0.16)" />
         {/* White rounded-square fountain body */}
         <rect x="4" y="6" width="42" height="38" rx="7" fill={sleeping ? '#d5d2e3' : '#fbfaf7'} stroke={sleeping ? '#aba6bf' : '#d5d0c5'} strokeWidth="1.2" />
         {/* Top water dish recess */}
@@ -779,9 +779,6 @@ export function LivingRoom({
             transition={{ duration: fountainBoost ? 0.6 : 1.2, repeat: Infinity, delay: i * 0.3 }}
           />
         ))}
-        {/* Little stainless steel bowl next to the fountain */}
-        <path d="M52 34 h22 l-2.5 9 h-17 Z" fill="#b8c2cc" stroke="#8e99a4" strokeWidth="0.8" />
-        <ellipse cx="63" cy="34" rx="11" ry="2.8" fill="#e1e7ed" stroke="#8e99a4" strokeWidth="0.8" />
       </g>
     </svg>
   );

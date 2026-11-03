@@ -172,9 +172,9 @@ describe('LivingRoom — Mobile Safe Bounds (No Partially Off-Screen Items)', ()
     expect(fountain).toBeDefined();
     const { x, y } = parseTranslate(fountain.props.transform);
 
-    // Fountain body is 42 units wide, bowl is 22 units wide, total width = 74 units
+    // Fountain body is 42 units wide (x from 4 to 46)
     const minX = x + 4;
-    const maxX = x + 74;
+    const maxX = x + 46;
     const minY = y + 6;
     const maxY = y + 46;
 
