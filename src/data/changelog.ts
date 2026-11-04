@@ -7,6 +7,16 @@ export interface ReleaseEntry {
 
 export const CHANGELOG: ReleaseEntry[] = [
   {
+    version: 'v0.16.9',
+    date: '2026-11-04',
+    title: 'Laser Zoomies & Minigame Timers 🔴⏱️',
+    changes: [
+      'Rebuilt Laser Zoomies into an active chase where you tap a fast darting red dot across the rug.',
+      'Added a 4-second countdown timer to each round so minigames stay quick, exciting, and snappy.',
+      'Balanced Feather Pounce with a fair target zone that rewards good timing.',
+    ],
+  },
+  {
     version: 'v0.16.8',
     date: '2026-11-03',
     title: 'Clean Room & Design Polish 🛋️✨',

@@ -4,7 +4,15 @@ All updates to **Oli** are listed here.
 
 ---
 
-## `v0.16.4` — 2026-11-02
+## `v0.16.9` — 2026-11-04
+### Laser Zoomies Overhaul & Minigame Timers 🔴⏱️✨
+- **Active Laser Chase:** Rebuilt the Laser Zoomies minigame from the ground up into a true cat laser chase. Tap the fast-moving red dot as it darts and bounces across the living room rug.
+- **Round Countdown Timers:** Both Feather Pounce and Laser Zoomies now feature a 4-second round countdown timer, keeping minigames fast, energetic, and exciting.
+- **Fair & Fun Balancing:** Feather Pounce retains a comfortable target zone that rewards natural timing and rhythm.
+
+---
+
+## `v0.16.8` — 2026-11-03
 ### Comprehensive App Polish, Vacation Protection & Performance Boost 🛡️🚀✨
 - **Vacation Pause Protection:** Resuming from Vacation Mode now cleanly preserves peace and quiet — no surprise messes or penalties appear from days spent away.
 - **Auto-Update Precision:** Fixed the in-app update detector so new versions are recognized reliably across all browsers.
