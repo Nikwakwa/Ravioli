@@ -10,7 +10,7 @@ import {
 } from '../data/actions';
 import { vibrate } from '../utils/feedback';
 
-export const MINIGAME_ROUND_TIME_SEC = 4.0;
+export const MINIGAME_ROUND_TIME_SEC = 10.0;
 
 export function PlayMinigameModal({
   action,
@@ -347,7 +347,7 @@ export function PlayMinigameModal({
               {roundFeedback === null && !finished && (
                 <span
                   className={`rounded-full px-2 py-0.5 text-[10px] font-black transition-colors ${
-                    timeLeft <= 1.4
+                    timeLeft <= 3.0
                       ? 'bg-rose-500/20 text-rose-700 animate-pulse'
                       : 'bg-amber-900/10 text-amber-900'
                   }`}
@@ -393,7 +393,7 @@ export function PlayMinigameModal({
                         width: `${(Math.max(0, timeLeft) / MINIGAME_ROUND_TIME_SEC) * 100}%`,
                       }}
                       className={`h-full transition-[width] duration-75 ${
-                        timeLeft <= 1.4 ? 'bg-rose-500' : 'bg-amber-500'
+                        timeLeft <= 3.0 ? 'bg-rose-500' : 'bg-amber-500'
                       }`}
                     />
                   </div>
@@ -465,7 +465,7 @@ export function PlayMinigameModal({
                         width: `${(Math.max(0, timeLeft) / MINIGAME_ROUND_TIME_SEC) * 100}%`,
                       }}
                       className={`h-full transition-[width] duration-75 ${
-                        timeLeft <= 1.4 ? 'bg-rose-500' : 'bg-amber-500'
+                        timeLeft <= 3.0 ? 'bg-rose-500' : 'bg-amber-500'
                       }`}
                     />
                   </div>

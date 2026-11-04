@@ -4,6 +4,13 @@ All updates to **Oli** are listed here.
 
 ---
 
+## `v0.16.10` — 2026-11-04
+### 10-Second Minigame Timers ⏱️🐾✨
+- **Generous 10-Second Round Clock:** Extended the round timer from 4 to 10 seconds across Feather Pounce and Laser Zoomies, giving you plenty of time to track the motion and make your move.
+- **Low-Time Warning:** The timer pulse and countdown bar switch to a warm red alert during the final 3 seconds.
+
+---
+
 ## `v0.16.9` — 2026-11-04
 ### Laser Zoomies Overhaul & Minigame Timers 🔴⏱️✨
 - **Active Laser Chase:** Rebuilt the Laser Zoomies minigame from the ground up into a true cat laser chase. Tap the fast-moving red dot as it darts and bounces across the living room rug.

@@ -63,7 +63,7 @@ describe('PlayMinigameModal', () => {
     expect(isFeatherInSweetSpot(50, 2)).toBe(true);
   });
 
-  it('configures round time to 4.0 seconds for snappy rounds', () => {
-    expect(MINIGAME_ROUND_TIME_SEC).toBe(4.0);
+  it('configures round time to 10.0 seconds for comfortable rounds', () => {
+    expect(MINIGAME_ROUND_TIME_SEC).toBe(10.0);
   });
 });

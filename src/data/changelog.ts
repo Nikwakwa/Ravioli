@@ -7,6 +7,15 @@ export interface ReleaseEntry {
 
 export const CHANGELOG: ReleaseEntry[] = [
   {
+    version: 'v0.16.10',
+    date: '2026-11-04',
+    title: '10-Second Minigame Timers ⏱️🐾',
+    changes: [
+      'Extended the round countdown timer from 4 to 10 seconds for more relaxed, comfortable play.',
+      'Adjusted the low-time warning so you still get a clear heads-up in the final 3 seconds.',
+    ],
+  },
+  {
     version: 'v0.16.9',
     date: '2026-11-04',
     title: 'Laser Zoomies & Minigame Timers 🔴⏱️',
