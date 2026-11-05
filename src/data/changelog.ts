@@ -7,6 +7,15 @@ export interface ReleaseEntry {
 
 export const CHANGELOG: ReleaseEntry[] = [
   {
+    version: 'v0.16.11',
+    date: '2026-11-05',
+    title: 'Peaceful Sleep & Fluffy Fur Makeover 😴✨',
+    changes: [
+      'Peaceful Sleep: Oli will no longer shed fur, throw up, or dirty his litter box while he is sleeping.',
+      'Fluffy Fur Makeover: Redesigned shed fur into a light, airy puff of cream and ginger fuzz so it clearly looks like soft cat hair.',
+    ],
+  },
+  {
     version: 'v0.16.10',
     date: '2026-11-04',
     title: '10-Second Minigame Timers ⏱️🐾',

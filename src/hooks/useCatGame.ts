@@ -18,6 +18,7 @@ import {
   applyEffect,
   computeLiveStats,
   deriveMood,
+  hoursUntilNaturalWake,
   isThriving,
   materialize,
   MAX_LIVES,
@@ -675,6 +676,8 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
     if (prevSleeping.current === true && !live.isSleeping && live.wokeNaturally) {
       const msg = `${live.name} woke up from his nap, full of energy!`;
       noticeRef.current({ text: msg, tone: 'info' });
+      saveLastMessAt(Date.now());
+      saveLastLitterAt(Date.now());
       if (loadNotificationPrefs().wakeUp) {
         void sendSystemNotification(`☀️ ${live.name} woke up!`, msg, 'oli-wake');
       }
@@ -793,20 +796,40 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
 
   // Passive room mess & litter box catch-up: spawn 1 fur tumbleweed per MESS_SPAWN_HOURS (2.5h) elapsed, up to 3 max.
   // Also dirty the litter box if away for 3.5h+.
+  // Note: While Oli is sleeping, he never sheds, vomits, or dirties the litter box!
   useEffect(() => {
     if (!ready || !live || live.isPaused || live.isDeceased) return;
-    const lastMs = loadLastMessAt(now);
-    const hoursSince = (now - lastMs) / MS_PER_HOUR;
 
-    // Check litter box catch-up
-    const lastLitter = loadLastLitterAt(now);
-    const hoursSinceLitter = (now - lastLitter) / MS_PER_HOUR;
+    // While Oli is actively sleeping, do not spawn messes or dirty the litter box.
+    if (live.isSleeping) {
+      saveLastMessAt(now);
+      saveLastLitterAt(now);
+      return;
+    }
+
+    // If Oli was previously sleeping and woke naturally while away,
+    // only count the time elapsed AFTER he woke up!
+    let effectiveMessBase = loadLastMessAt(now);
+    let effectiveLitterBase = loadLastLitterAt(now);
+
+    if (base?.is_sleeping) {
+      const napHours = hoursUntilNaturalWake(base.energy);
+      const napEndMs = Date.parse(base.last_updated_at) + napHours * MS_PER_HOUR;
+      if (Number.isFinite(napEndMs)) {
+        if (effectiveMessBase < napEndMs) effectiveMessBase = napEndMs;
+        if (effectiveLitterBase < napEndMs) effectiveLitterBase = napEndMs;
+      }
+    }
+
+    // Check litter box catch-up (only while awake)
+    const hoursSinceLitter = Math.max(0, (now - effectiveLitterBase) / MS_PER_HOUR);
     if (hoursSinceLitter >= 3.5 && !litterBoxDirty) {
       setLitterBoxDirty(true);
       saveLitterBoxDirty(true);
       saveLastLitterAt(now);
     }
 
+    const hoursSince = Math.max(0, (now - effectiveMessBase) / MS_PER_HOUR);
     if (hoursSince < MESS_SPAWN_HOURS) return;
 
     const countToSpawn = Math.min(MAX_ROOM_MESSES - messes.length, Math.floor(hoursSince / MESS_SPAWN_HOURS));
@@ -837,7 +860,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
     };
     const mutator = (b: CatState): CatState => applyEffect(materialize(b, now), penalty);
     void commit(mutator, null);
-  }, [ready, live, now, messes.length, litterBoxDirty, commit]);
+  }, [ready, live, base, now, messes.length, litterBoxDirty, commit]);
 
   // Autonomous pass-out nap: if Oli's Energy drops to <= AUTO_NAP_ENERGY (5) while awake, he curls up to nap automatically.
   const autoNappingRef = useRef(false);
@@ -845,6 +868,8 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
     if (!live || live.isSleeping || live.isPaused || live.isDeceased || busy || autoNappingRef.current) return;
     if (live.energy <= AUTO_NAP_ENERGY) {
       autoNappingRef.current = true;
+      saveLastMessAt(Date.now());
+      saveLastLitterAt(Date.now());
       noticeRef.current({
         text: `😴 ${live.name} got completely exhausted and curled up for a nap!`,
         tone: 'info',
@@ -1306,6 +1331,8 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
     }
 
     vibrate(target ? [20, 80, 20] : 30);
+    saveLastMessAt(Date.now());
+    saveLastLitterAt(Date.now());
     if (target) {
       setSpot('sofa_bed', true);
     }

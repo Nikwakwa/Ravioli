@@ -4,6 +4,13 @@ All updates to **Oli** are listed here.
 
 ---
 
+## `v0.16.11` — 2026-11-05
+### Peaceful Sleep & Fluffy Fur Makeover 😴✨
+- **Peaceful Sleep Protection:** Oli no longer sheds fur, throws up, or dirties his litter box while he is asleep. Sleep is now truly restful and chore-free until he wakes up.
+- **Fluffy Fur Makeover:** Redesigned shed fur into a light, airy puff of cream and ginger fuzz with delicate wispy strands and floating fuzzies, so it clearly looks like soft cat hair.
+
+---
+
 ## `v0.16.10` — 2026-11-04
 ### 10-Second Minigame Timers ⏱️🐾✨
 - **Generous 10-Second Round Clock:** Extended the round timer from 4 to 10 seconds across Feather Pounce and Laser Zoomies, giving you plenty of time to track the motion and make your move.

@@ -36,48 +36,68 @@ export function RoomMesses({
               transition={{ type: 'spring', stiffness: 340, damping: 20 }}
               onClick={() => onClean(mess.id)}
               style={pos}
-              aria-label={isFurClump ? 'Sweep up ginger fur tumbleweed' : 'Clean up cat throw-up'}
+              aria-label={isFurClump ? 'Sweep up fluffy ginger fur clump' : 'Clean up cat throw-up'}
               title="Tap to clean up!"
               className="pointer-events-auto absolute flex h-16 w-16 cursor-pointer flex-col items-center justify-center focus:outline-none"
             >
-              <svg viewBox="-26 -32 52 48" className="h-full w-full overflow-visible drop-shadow-md">
+              <svg viewBox="-26 -32 52 48" className="h-full w-full overflow-visible drop-shadow-sm">
                 {/* Pulsing attention ring on the rug */}
                 <motion.ellipse
                   cx="0"
                   cy="5"
                   rx="19"
                   ry="8.5"
-                  fill={isFurClump ? 'rgba(249, 115, 22, 0.13)' : 'rgba(101, 163, 13, 0.18)'}
-                  stroke={isFurClump ? '#ea580c' : '#65a30d'}
+                  fill={isFurClump ? 'rgba(254, 215, 170, 0.22)' : 'rgba(101, 163, 13, 0.18)'}
+                  stroke={isFurClump ? '#f97316' : '#65a30d'}
                   strokeWidth="1.5"
                   strokeDasharray="3.5 2.5"
                   animate={{ scale: [0.94, 1.12, 0.94], opacity: [0.55, 1, 0.55] }}
                   transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
                 />
 
-                {/* Ground shadow */}
-                <ellipse cx="0" cy="6.5" rx="14" ry="4.8" fill="rgba(45,30,18,0.26)" />
+                {/* Ground shadow: soft and airy for fur, flatter & darker for throw-up */}
+                <ellipse
+                  cx="0"
+                  cy="6.5"
+                  rx={isFurClump ? 12 : 14}
+                  ry={isFurClump ? 3.6 : 4.8}
+                  fill={isFurClump ? 'rgba(180, 110, 50, 0.14)' : 'rgba(45,30,18,0.26)'}
+                />
 
                 {isFurClump ? (
-                  /* Cute fluffy ginger shed fur tumbleweed */
+                  /* Cute, airy, cloud-like ginger fur tumbleweed */
                   <g>
-                    {/* Fluffy ginger fur cluster */}
-                    <ellipse cx="-4" cy="3" rx="7.5" ry="5.5" fill="#d97706" />
-                    <ellipse cx="4" cy="3" rx="8" ry="6" fill="#ea580c" />
-                    <ellipse cx="0" cy="-1" rx="9" ry="6.5" fill="#f59e0b" />
-                    <ellipse cx="-2.5" cy="-2.5" rx="6.5" ry="4.5" fill="#fbbf24" />
-                    {/* Wispy loose ginger fur strands sticking out */}
-                    <g stroke="#b45309" strokeWidth="1.3" strokeLinecap="round" fill="none">
-                      <path d="M-8 0 Q-12 -3 -15 -1" />
-                      <path d="M6 -2 Q12 -6 15 -3" />
-                      <path d="M-2 -7 Q0 -13 4 -12" />
-                      <path d="M-6 4 Q-11 7 -14 5" />
-                      <path d="M5 4 Q10 8 13 6" />
+                    {/* Soft pillowy fluff lobes */}
+                    <circle cx="-5" cy="2" r="6.2" fill="#fed7aa" />
+                    <circle cx="5" cy="2" r="6.5" fill="#fde68a" />
+                    <circle cx="0" cy="-2.5" r="7.2" fill="#fff7ed" />
+                    <circle cx="-3.5" cy="-4" r="5.2" fill="#ffedd5" />
+                    <circle cx="3.8" cy="-3.8" r="5" fill="#fffbeb" />
+                    <circle cx="0" cy="1" r="5.5" fill="#ffffff" opacity="0.95" />
+
+                    {/* Fine wispy ginger cat hairs radiating outward like dandelion fluff */}
+                    <g stroke="#f59e0b" strokeWidth="1.1" strokeLinecap="round" fill="none">
+                      <path d="M-8 -1 Q-14 -4 -17 -1" />
+                      <path d="M-6 -6 Q-12 -11 -15 -8" />
+                      <path d="M-2 -8 Q-1 -15 3 -14" />
+                      <path d="M4 -7 Q9 -14 14 -11" />
+                      <path d="M7 -2 Q14 -5 18 -1" />
+                      <path d="M7 2 Q14 6 16 9" />
+                      <path d="M3 6 Q7 11 11 10" />
+                      <path d="M-3 6 Q-7 11 -11 9" />
+                      <path d="M-7 3 Q-13 6 -16 4" />
                     </g>
-                    {/* Cream chest-fluff highlight strands */}
-                    <g stroke="#fffbeb" strokeWidth="1.1" strokeLinecap="round" fill="none" opacity="0.9">
-                      <path d="M-3 -3 Q-1 -6 2 -5" />
-                      <path d="M-1 1 Q2 0 4 2" />
+
+                    {/* Delicate peach/cream hair accents and highlights */}
+                    <g stroke="#ea580c" strokeWidth="0.9" strokeLinecap="round" fill="none" opacity="0.75">
+                      <path d="M-10 1 Q-15 3 -16 1" />
+                      <path d="M8 0 Q15 1 17 3" />
+                      <path d="M1 -9 Q5 -12 7 -10" />
+                    </g>
+                    <g stroke="#ffffff" strokeWidth="1.2" strokeLinecap="round" fill="none">
+                      <path d="M-4 -3 Q-1 -7 3 -5" />
+                      <path d="M-3 0 Q0 3 4 1" />
+                      <path d="M-5 2 Q-2 4 1 3" />
                     </g>
                   </g>
                 ) : (
@@ -102,18 +122,34 @@ export function RoomMesses({
 
                 {/* Animated rising particles above the mess */}
                 {isFurClump ? (
-                  /* Floating shed fur fluff particles */
-                  [-6, 1, 7].map((dx, i) => (
-                    <motion.circle
-                      key={i}
-                      cx={dx}
-                      cy={-14}
-                      r={1.3}
-                      fill="#f59e0b"
-                      animate={{ y: [0, -8, 0], opacity: [0.35, 0.95, 0.35], x: [0, i % 2 === 0 ? 2 : -2, 0] }}
-                      transition={{ duration: 1.8, repeat: Infinity, delay: i * 0.32, ease: 'easeInOut' }}
+                  /* Floating shed fur dandelion seeds & sparkling fluff */
+                  <g>
+                    {/* Wisp 1: soft floating fuzz seed */}
+                    <motion.g
+                      animate={{ y: [0, -9, 0], opacity: [0.35, 1, 0.35], x: [0, 2, 0] }}
+                      transition={{ duration: 1.8, repeat: Infinity, delay: 0, ease: 'easeInOut' }}
+                    >
+                      <circle cx="-5" cy="-14" r="1.6" fill="#fffbeb" stroke="#fbbf24" strokeWidth="0.7" />
+                      <path d="M-6.5 -15.5 L-8 -17 M-3.5 -15.5 L-2 -17" stroke="#f59e0b" strokeWidth="0.6" strokeLinecap="round" />
+                    </motion.g>
+
+                    {/* Wisp 2: tiny sparkling star in the air */}
+                    <motion.path
+                      d="M1 -17 L2 -15 L4 -14 L2 -13 L1 -11 L0 -13 L-2 -14 L0 -15 Z"
+                      fill="#fde047"
+                      animate={{ y: [0, -11, 0], opacity: [0.3, 0.95, 0.3], scale: [0.85, 1.15, 0.85] }}
+                      transition={{ duration: 2.1, repeat: Infinity, delay: 0.35, ease: 'easeInOut' }}
                     />
-                  ))
+
+                    {/* Wisp 3: soft floating fluff seed */}
+                    <motion.g
+                      animate={{ y: [0, -8, 0], opacity: [0.4, 0.95, 0.4], x: [0, -2, 0] }}
+                      transition={{ duration: 1.7, repeat: Infinity, delay: 0.65, ease: 'easeInOut' }}
+                    >
+                      <circle cx="6" cy="-14" r="1.5" fill="#fef3c7" stroke="#f59e0b" strokeWidth="0.7" />
+                      <path d="M4.5 -15.5 L3.5 -17 M7.5 -15.5 L8.5 -17" stroke="#f59e0b" strokeWidth="0.6" strokeLinecap="round" />
+                    </motion.g>
+                  </g>
                 ) : (
                   /* Animated stink waves rising above throw-up */
                   [-6, 0, 6].map((dx, i) => (
