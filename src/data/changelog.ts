@@ -7,6 +7,20 @@ export interface ReleaseEntry {
 
 export const CHANGELOG: ReleaseEntry[] = [
   {
+    version: 'v0.16.12',
+    date: '2026-11-05',
+    title: 'Small-Screen Polish & Clearer Labels 📱✨',
+    changes: [
+      'Clearer Care Buttons: Effect tags now use the same little icons as the meters up top, so they fit neatly on every phone instead of spilling off the buttons.',
+      'Food Meter: The “Hunger” meter is now called “Food” — a full bar means a full tummy, so “+38 Food” reads the right way.',
+      'Craving Bubbles Point at Oli: Cravings now float right above Oli’s head in every spot and never slide off the screen edges or hide behind the top bar.',
+      'Messages Stay Out of the Way: Pop-up messages now appear just below the meters instead of covering them.',
+      'Tidier Menu & Alerts: Simpler menu header, tab names that always fit, and alert options that grey out while notifications are off.',
+      'Easier Minigames: Hint text no longer sits on top of the Pounce Zone, and the Skip and Close buttons are easier to tap.',
+      'Easier Reading at Night: “Sleeping” labels and status tags are now readable in nap mode and when your phone uses dark mode.',
+    ],
+  },
+  {
     version: 'v0.16.11',
     date: '2026-11-05',
     title: 'Peaceful Sleep & Fluffy Fur Makeover 😴✨',

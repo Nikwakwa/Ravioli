@@ -4,6 +4,18 @@ All updates to **Oli** are listed here.
 
 ---
 
+## `v0.16.12` — 2026-11-05
+### Small-Screen Polish & Clearer Labels 📱✨
+- **Clearer Care Buttons:** Effect tags now use the same little icons as the meters up top, so they fit neatly on every phone instead of spilling off the buttons.
+- **Food Meter:** The “Hunger” meter is now called “Food” — a full bar means a full tummy, so “+38 Food” reads the right way.
+- **Craving Bubbles Point at Oli:** Cravings now float right above Oli’s head in every spot and never slide off the screen edges or hide behind the top bar.
+- **Messages Stay Out of the Way:** Pop-up messages now appear just below the meters instead of covering them.
+- **Tidier Menu & Alerts:** Simpler menu header, tab names that always fit, and alert options that grey out while notifications are off.
+- **Easier Minigames:** Hint text no longer sits on top of the Pounce Zone, and the Skip and Close buttons are easier to tap.
+- **Easier Reading at Night:** “Sleeping” labels and status tags are now readable in nap mode and when your phone uses dark mode.
+
+---
+
 ## `v0.16.11` — 2026-11-05
 ### Peaceful Sleep & Fluffy Fur Makeover 😴✨
 - **Peaceful Sleep Protection:** Oli no longer sheds fur, throws up, or dirties his litter box while he is asleep. Sleep is now truly restful and chore-free until he wakes up.

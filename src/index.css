@@ -34,3 +34,9 @@ body > *:not(#root):not(script) {
   display: none !important;
 }
 
+
+/* Clear focus ring for keyboard / switch-control users (mouse & touch taps stay ring-free) */
+:where(button, [role='button'], input, a):focus-visible {
+  outline: 2px solid #f59e0b;
+  outline-offset: 2px;
+}

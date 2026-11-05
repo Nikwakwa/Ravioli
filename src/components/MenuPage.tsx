@@ -10,7 +10,6 @@ import {
   Play,
   RefreshCw,
   Sun,
-  X,
 } from 'lucide-react';
 import { useState } from 'react';
 import {
@@ -91,26 +90,17 @@ export function MenuPage({
     <div className="relative flex h-full w-full flex-col bg-[#fff7ee] text-amber-950">
       {/* Sticky Top Header */}
       <header className="sticky top-0 z-20 border-b border-amber-900/10 bg-[#fff7ee]/95 px-3 pt-3 pb-2.5 backdrop-blur-md">
-        <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-3">
           <button
             type="button"
             onClick={onClose}
-            className="flex h-9 items-center gap-1.5 rounded-full bg-amber-900/10 px-3.5 text-xs font-bold text-amber-950 transition-colors hover:bg-amber-900/15 active:scale-95"
+            className="flex h-10 shrink-0 items-center gap-1.5 rounded-full bg-amber-900/10 pr-3.5 pl-3 text-xs font-bold whitespace-nowrap text-amber-950 transition-colors hover:bg-amber-900/15 active:scale-95"
           >
             <ArrowLeft className="h-4 w-4" />
             <span>Back to Oli</span>
           </button>
 
-          <h1 className="font-display text-sm font-extrabold text-amber-950">Care Guide & Settings</h1>
-
-          <button
-            type="button"
-            onClick={onClose}
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-amber-900/10 text-amber-950 transition-colors hover:bg-amber-900/15 active:scale-95"
-            aria-label="Close menu"
-          >
-            <X className="h-4 w-4" />
-          </button>
+          <h1 className="truncate font-display text-sm font-extrabold text-amber-950">Guide & Settings</h1>
         </div>
 
         {/* 4-Column Segmented Tab Bar */}
@@ -122,17 +112,17 @@ export function MenuPage({
                 key={t.id}
                 type="button"
                 onClick={() => setActiveTab(t.id)}
-                className={`relative flex items-center justify-center gap-1 rounded-xl py-2 text-xs transition-all active:scale-95 ${
+                className={`relative flex min-w-0 flex-col items-center justify-center gap-0.5 rounded-xl py-1.5 text-[11px] transition-all active:scale-95 ${
                   active
                     ? 'bg-white text-amber-950 shadow-xs font-black'
                     : 'text-amber-900/70 hover:text-amber-950 font-bold'
                 }`}
                 aria-pressed={active}
               >
-                <span className="text-sm leading-none">{t.icon}</span>
-                <span className="truncate">{t.label}</span>
+                <span className="text-base leading-none" aria-hidden="true">{t.icon}</span>
+                <span className="max-w-full truncate">{t.label}</span>
                 {t.badge && (
-                  <span className="relative flex h-2 w-2">
+                  <span className="absolute top-1 right-2 flex h-2 w-2">
                     <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
                     <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500 ring-1 ring-white" />
                   </span>
@@ -201,8 +191,8 @@ export function MenuPage({
               </div>
               <ul className="flex list-disc flex-col gap-1.5 pl-4 text-xs font-medium leading-relaxed text-amber-900/85">
                 <li>
-                  <strong>Fullness Refusals:</strong> Oli shakes his head when full (Wet Food at 85+ Hunger, Quail Egg
-                  at 90+ Hunger). Play with him first!
+                  <strong>Fullness Refusals:</strong> Oli shakes his head at a meal when he’s already full (Food 85+ for
+                  Wet Food, 90+ for Quail Egg). Play with him first!
                 </li>
                 <li>
                   <strong className="text-rose-600">Tummy Aches:</strong> Feeding more than{' '}
@@ -398,7 +388,7 @@ export function MenuPage({
 
               <p className="mt-3 text-xs font-medium leading-relaxed opacity-90">
                 Taking a flight, studying for finals, or away from your phone? Pause the care clock! Oli’s needs
-                (Hunger, Thirst, Energy, Joy, Clean) freeze completely in time — no decay, no messes, and no cravings
+                (Food, Water, Joy, Energy, Clean) freeze completely in time — no decay, no messes, and no cravings
                 until you tap Resume.
               </p>
             </div>
@@ -524,11 +514,21 @@ export function MenuPage({
               </button>
             )}
 
+            {!notifPrefs.enabled && (
+              <p className="px-1 text-[11px] font-semibold text-amber-800/75">
+                Turn on notifications above to choose which alerts you get.
+              </p>
+            )}
+
+            <fieldset
+              disabled={!notifPrefs.enabled}
+              className={`flex flex-col gap-3 transition-opacity ${notifPrefs.enabled ? '' : 'opacity-45'}`}
+            >
             {/* Event Preferences */}
             <div className="rounded-2xl border border-amber-900/8 bg-white p-3.5 shadow-2xs">
               <h3 className="mb-2 font-display text-xs font-bold text-amber-950">Alert Events</h3>
               <div className="flex flex-col gap-2">
-                <label className="flex items-center justify-between gap-2 text-xs font-semibold text-amber-950 cursor-pointer">
+                <label className="flex min-h-9 items-center justify-between gap-2 text-xs font-semibold text-amber-950 cursor-pointer">
                   <div className="flex items-center gap-2">
                     <AlertTriangle className="h-3.5 w-3.5 text-amber-600" />
                     <span>Low need alert (below {NEED_THRESHOLD})</span>
@@ -537,10 +537,10 @@ export function MenuPage({
                     type="checkbox"
                     checked={notifPrefs.lowNeed}
                     onChange={() => toggleNotifFlag('lowNeed')}
-                    className="h-4 w-4 accent-amber-500 cursor-pointer"
+                    className="h-5 w-5 accent-amber-500 cursor-pointer"
                   />
                 </label>
-                <label className="flex items-center justify-between gap-2 text-xs font-semibold text-amber-950 cursor-pointer">
+                <label className="flex min-h-9 items-center justify-between gap-2 text-xs font-semibold text-amber-950 cursor-pointer">
                   <div className="flex items-center gap-2">
                     <Flame className="h-3.5 w-3.5 text-rose-600" />
                     <span>Critical alert (below {CRITICAL_THRESHOLD})</span>
@@ -549,10 +549,10 @@ export function MenuPage({
                     type="checkbox"
                     checked={notifPrefs.critical}
                     onChange={() => toggleNotifFlag('critical')}
-                    className="h-4 w-4 accent-amber-500 cursor-pointer"
+                    className="h-5 w-5 accent-amber-500 cursor-pointer"
                   />
                 </label>
-                <label className="flex items-center justify-between gap-2 text-xs font-semibold text-amber-950 cursor-pointer">
+                <label className="flex min-h-9 items-center justify-between gap-2 text-xs font-semibold text-amber-950 cursor-pointer">
                   <div className="flex items-center gap-2">
                     <Sun className="h-3.5 w-3.5 text-amber-500" />
                     <span>Wake up alert (after nap)</span>
@@ -561,7 +561,7 @@ export function MenuPage({
                     type="checkbox"
                     checked={notifPrefs.wakeUp}
                     onChange={() => toggleNotifFlag('wakeUp')}
-                    className="h-4 w-4 accent-amber-500 cursor-pointer"
+                    className="h-5 w-5 accent-amber-500 cursor-pointer"
                   />
                 </label>
               </div>
@@ -579,15 +579,16 @@ export function MenuPage({
                       key={k}
                       type="button"
                       onClick={() => toggleNotifStat(k)}
+                      aria-pressed={active}
                       className={`flex items-center justify-between rounded-xl border p-2.5 text-xs font-bold transition-all active:scale-95 ${
                         active
                           ? 'border-amber-500 bg-amber-50 text-amber-950'
                           : 'border-amber-900/10 text-amber-900/60'
                       }`}
                     >
-                      <div className="flex items-center gap-1.5 capitalize">
+                      <div className="flex items-center gap-1.5">
                         <Icon className="h-3.5 w-3.5" />
-                        <span>{k}</span>
+                        <span>{STAT_META[k].label}</span>
                       </div>
                       {active && <Check className="h-3 w-3 text-amber-600 stroke-[3]" />}
                     </button>
@@ -595,6 +596,7 @@ export function MenuPage({
                 })}
               </div>
             </div>
+            </fieldset>
           </div>
         )}
       </main>

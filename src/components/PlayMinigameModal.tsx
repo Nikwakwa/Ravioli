@@ -312,7 +312,8 @@ export function PlayMinigameModal({
                 <p className="text-[10px] font-bold text-amber-800/80">
                   {isFeather
                     ? 'Tap POUNCE when the feather enters the green zone!'
-                    : `Tap the darting red dot before the clock runs out!`}
+                    : `Tap the darting red dot before the clock runs out!`}{' '}
+                  <span className="whitespace-nowrap text-emerald-700">3/3 = +1 Churu 🍬</span>
                 </p>
               </div>
             </div>
@@ -321,7 +322,7 @@ export function PlayMinigameModal({
               <button
                 type="button"
                 onClick={() => onComplete(1)}
-                className="flex items-center gap-0.5 rounded-full bg-amber-900/10 px-2 py-1 text-[10px] font-extrabold text-amber-900 hover:bg-amber-900/15 active:scale-95"
+                className="flex h-8 items-center gap-0.5 rounded-full bg-amber-900/10 px-2.5 text-[11px] font-extrabold text-amber-900 hover:bg-amber-900/15 active:scale-95"
                 title="Skip minigame and play immediately"
               >
                 <FastForward className="h-3 w-3" />
@@ -331,9 +332,9 @@ export function PlayMinigameModal({
                 type="button"
                 onClick={onCancel}
                 aria-label="Cancel play"
-                className="rounded-full bg-amber-900/10 p-1 text-amber-900 hover:bg-amber-900/15"
+                className="flex h-8 w-8 items-center justify-center rounded-full bg-amber-900/10 text-amber-900 hover:bg-amber-900/15 active:scale-95"
               >
-                <X className="h-3.5 w-3.5" />
+                <X className="h-4 w-4" />
               </button>
             </div>
           </div>
@@ -341,12 +342,12 @@ export function PlayMinigameModal({
           {/* 3-Round Score Tracker with Countdown Badge */}
           <div className="mb-3 flex items-center justify-between rounded-2xl bg-amber-950/6 px-3 py-1.5">
             <div className="flex items-center gap-2">
-              <span className="text-[11px] font-extrabold text-amber-900">
+              <span className="text-[11px] font-extrabold whitespace-nowrap text-amber-900">
                 {`Round ${Math.min(MINIGAME_ROUNDS, round + 1)} of ${MINIGAME_ROUNDS}`}
               </span>
               {roundFeedback === null && !finished && (
                 <span
-                  className={`rounded-full px-2 py-0.5 text-[10px] font-black transition-colors ${
+                  className={`rounded-full px-2 py-0.5 text-[10px] font-black whitespace-nowrap tabular-nums transition-colors ${
                     timeLeft <= 3.0
                       ? 'bg-rose-500/20 text-rose-700 animate-pulse'
                       : 'bg-amber-900/10 text-amber-900'
@@ -377,7 +378,6 @@ export function PlayMinigameModal({
                 );
               })}
             </div>
-            <span className="text-[10px] font-extrabold text-emerald-700">3/3 = +1 Churu 🍬</span>
           </div>
 
           {/* Game Arena */}
@@ -385,7 +385,7 @@ export function PlayMinigameModal({
             isFeather ? (
               /* ---------------- GAME 1: FEATHER POUNCE REFLEX ---------------- */
               <div className="flex flex-col items-center gap-3">
-                <div className="relative flex h-32 w-full flex-col justify-between overflow-hidden rounded-2xl border border-amber-900/12 bg-gradient-to-b from-amber-100/70 to-amber-50 p-3 shadow-inner">
+                <div className="relative flex h-28 w-full flex-col justify-between overflow-hidden rounded-2xl border border-amber-900/12 bg-gradient-to-b from-amber-100/70 to-amber-50 p-3 shadow-inner">
                   {/* Round Countdown Progress Bar */}
                   <div className="relative z-10 h-1.5 w-full overflow-hidden rounded-full bg-amber-950/10">
                     <div
@@ -404,15 +404,15 @@ export function PlayMinigameModal({
                       left: `${sweetSpot.min}%`,
                       width: `${sweetSpot.max - sweetSpot.min}%`,
                     }}
-                    className="pointer-events-none absolute inset-y-4 rounded-xl border-2 border-dashed border-emerald-500 bg-emerald-400/25 transition-all"
+                    className="pointer-events-none absolute top-4 bottom-2 rounded-xl border-2 border-dashed border-emerald-500 bg-emerald-400/25 transition-all"
                   >
-                    <span className="absolute -top-0.5 left-1/2 -translate-x-1/2 rounded-full bg-emerald-600 px-1.5 py-0.2 text-[8px] font-black tracking-wider text-white uppercase">
+                    <span className="absolute -top-0.5 left-1/2 -translate-x-1/2 rounded-full bg-emerald-600 px-1.5 py-0.5 text-[9px] leading-none font-black tracking-wider whitespace-nowrap text-white uppercase">
                       Pounce Zone
                     </span>
                   </div>
 
                   {/* Moving feather indicator */}
-                  <div className="relative my-auto h-10 w-full">
+                  <div className="relative mt-auto mb-1 h-10 w-full">
                     <div
                       style={{ left: `${featherPos}%` }}
                       className="absolute top-1/2 -translate-x-1/2 -translate-y-1/2 transition-none"
@@ -422,20 +422,20 @@ export function PlayMinigameModal({
                       </div>
                     </div>
                   </div>
+                </div>
 
-                  {/* Oli's reaction & hunting status text */}
-                  <div className="relative z-10 flex items-center justify-center gap-1.5 text-[11px] font-extrabold text-amber-900">
-                    <span>🐱</span>
-                    <span>
-                      {roundFeedback === 'hit'
-                        ? `✨ GOT IT! ${catName} pounced right on the feather!`
-                        : roundFeedback === 'miss'
-                          ? missReason === 'timeout'
-                            ? `⏰ Time’s up! The feather fluttered away!`
-                            : `💨 Whoosh! The feather slipped past his paws!`
-                          : `${catName}’s pupils are huge… wait for the green zone!`}
-                    </span>
-                  </div>
+                {/* Oli's reaction & hunting status text */}
+                <div aria-live="polite" className="flex min-h-8 items-center justify-center gap-1.5 px-1 text-center text-[11px] font-extrabold text-amber-900">
+                  <span>🐱</span>
+                  <span>
+                    {roundFeedback === 'hit'
+                      ? `✨ GOT IT! ${catName} pounced right on the feather!`
+                      : roundFeedback === 'miss'
+                        ? missReason === 'timeout'
+                          ? `⏰ Time’s up! The feather fluttered away!`
+                          : `💨 Whoosh! The feather slipped past his paws!`
+                        : `${catName}’s pupils are huge… wait for the green zone!`}
+                  </span>
                 </div>
 
                 <button

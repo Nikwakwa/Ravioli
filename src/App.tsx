@@ -41,27 +41,14 @@ export function App() {
     return () => window.clearTimeout(noticeTimer.current);
   }, []);
   const mainRef = useRef<HTMLElement>(null);
+  const stageRef = useRef<HTMLDivElement>(null);
   const [containerSize, setContainerSize] = useState<{ width: number; height: number }>({
     width: 400,
     height: 600,
   });
-
-  useEffect(() => {
-    const el = mainRef.current;
-    if (!el) return;
-
-    const update = () => {
-      const rect = el.getBoundingClientRect();
-      if (rect.width > 0 && rect.height > 0) {
-        setContainerSize({ width: rect.width, height: rect.height });
-      }
-    };
-
-    update();
-    const ro = new ResizeObserver(update);
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
+  // Distance from the top of the screen frame to the center stage (below the HUD).
+  // Bubbles live inside the stage, so Oli's head position must be shifted by this amount.
+  const [stageTop, setStageTop] = useState(0);
 
   const pushNotice = useCallback((n: Omit<Notice, 'id'>) => {
     setNotice({ ...n, id: Date.now() });
@@ -97,6 +84,28 @@ export function App() {
   } = useCatGame('Nico', pushNotice);
   const { availableVersion, reloading, applyUpdate } = useVersionCheck();
 
+  // Re-measure once the game screen is mounted (the loading screen has no frame to measure).
+  const gameMounted = ready && Boolean(live);
+  useEffect(() => {
+    const el = mainRef.current;
+    if (!el) return;
+
+    const update = () => {
+      const rect = el.getBoundingClientRect();
+      if (rect.width > 0 && rect.height > 0) {
+        setContainerSize({ width: rect.width, height: rect.height });
+      }
+      const stage = stageRef.current;
+      if (stage) setStageTop(stage.getBoundingClientRect().top - rect.top);
+    };
+
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    if (stageRef.current) ro.observe(stageRef.current);
+    return () => ro.disconnect();
+  }, [gameMounted]);
+
   const targetHeadPos = useMemo(() => {
     const head = SPOT_HEAD_SVG[spot] ?? SPOT_HEAD_SVG.rug;
     const scale = Math.max(containerSize.width / 400, containerSize.height / 600);
@@ -104,9 +113,9 @@ export function App() {
     const offsetY = (containerSize.height - 600 * scale) / 2;
     return {
       x: head.x * scale + offsetX,
-      y: head.y * scale + offsetY,
+      y: head.y * scale + offsetY - stageTop,
     };
-  }, [spot, containerSize]);
+  }, [spot, containerSize, stageTop]);
 
   const handleOpenMenu = (tab: MenuTab = 'rules') => {
     setMenuTab(tab);
@@ -205,72 +214,81 @@ export function App() {
           />
         </div>
 
-        {/* Top HUD */}
-        <StatusHUD
-          live={live}
-          mood={mood}
-          tummyAche={tummyAche}
-          messCount={messes.length}
-          litterBoxDirty={litterBoxDirty}
-          churuStash={churuStash}
-          onOpenMenu={() => handleOpenMenu(live.isPaused ? 'pause' : 'rules')}
-          onOpenPause={() => handleOpenMenu('pause')}
-          hasUpdate={Boolean(availableVersion)}
-        />
+        {/* Top HUD + update banner; toasts drop in just below so they never cover the need meters */}
+        <div className="relative z-30">
+          {/* Top HUD */}
+          <StatusHUD
+            live={live}
+            mood={mood}
+            tummyAche={tummyAche}
+            messCount={messes.length}
+            litterBoxDirty={litterBoxDirty}
+            churuStash={churuStash}
+            onOpenMenu={() => handleOpenMenu(live.isPaused ? 'pause' : 'rules')}
+            onOpenPause={() => handleOpenMenu('pause')}
+            hasUpdate={Boolean(availableVersion)}
+          />
 
-        {/* New version available banner on main screen */}
-        <AnimatePresence>
-          {availableVersion && (
-            <motion.div
-              key="update-banner"
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="relative z-30 mx-3 mt-1"
-            >
-              <button
-                type="button"
-                onClick={() => void applyUpdate()}
-                disabled={reloading}
-                className="flex w-full items-center justify-between gap-2 rounded-2xl bg-emerald-600 px-3.5 py-2 text-xs font-extrabold text-white shadow-lg transition-transform active:scale-[0.99] hover:bg-emerald-500"
+          {/* New version available banner on main screen */}
+          <AnimatePresence>
+            {availableVersion && (
+              <motion.div
+                key="update-banner"
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="relative z-30 mx-3 mt-1"
               >
-                <span>✨ A new update ({availableVersion}) is ready!</span>
-                <span className="flex items-center gap-1 rounded-full bg-white/20 px-2.5 py-0.5 text-[11px]">
-                  <RefreshCw className={`h-3 w-3 ${reloading ? 'animate-spin' : ''}`} />
-                  {reloading ? 'Reloading…' : 'Reload'}
-                </span>
-              </button>
-            </motion.div>
-          )}
-        </AnimatePresence>
+                <button
+                  type="button"
+                  onClick={() => void applyUpdate()}
+                  disabled={reloading}
+                  className="flex w-full items-center justify-between gap-2 rounded-2xl bg-emerald-600 px-3.5 py-2 text-xs font-extrabold text-white shadow-lg transition-transform active:scale-[0.99] hover:bg-emerald-500"
+                >
+                  <span>✨ A new update ({availableVersion}) is ready!</span>
+                  <span className="flex items-center gap-1 rounded-full bg-white/20 px-2.5 py-0.5 text-[11px]">
+                    <RefreshCw className={`h-3 w-3 ${reloading ? 'animate-spin' : ''}`} />
+                    {reloading ? 'Reloading…' : 'Reload'}
+                  </span>
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-        {/* Info / Refusal toast */}
-        <AnimatePresence>
-          {notice && (
-            <motion.div
-              key={notice.id}
-              initial={{ opacity: 0, y: -12, scale: 0.92 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -10, scale: 0.92 }}
-              className={`pointer-events-none fixed top-28 left-1/2 z-30 max-w-[92vw] -translate-x-1/2 rounded-2xl px-3.5 py-1.5 text-center text-xs font-bold shadow-lg backdrop-blur-md ${
-                notice.tone === 'warn'
-                  ? 'bg-rose-950/92 text-rose-50'
-                  : 'bg-amber-950/90 text-amber-50'
-              }`}
-            >
-              {notice.text}
-            </motion.div>
-          )}
-        </AnimatePresence>
+          {/* Screen-reader announcement for toasts */}
+          <div aria-live="polite" className="sr-only">
+            {notice?.text ?? ''}
+          </div>
+
+          {/* Info / Refusal toast */}
+          <AnimatePresence>
+            {notice && (
+              <motion.div
+                key={notice.id}
+                initial={{ opacity: 0, y: -12, scale: 0.92 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -10, scale: 0.92 }}
+                className={`pointer-events-none absolute top-full left-1/2 z-30 mt-2 w-max max-w-[calc(100%-1.5rem)] -translate-x-1/2 rounded-2xl px-3.5 py-2 text-center text-xs font-bold shadow-lg backdrop-blur-md ${
+                  notice.tone === 'warn'
+                    ? 'bg-rose-950/92 text-rose-50'
+                    : 'bg-amber-950/90 text-amber-50'
+                }`}
+              >
+                {notice.text}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
 
         {/* Center stage overlay: floating effects, whims, messes */}
-        <div className="pointer-events-none relative z-10 flex flex-1 items-end justify-center pb-5">
+        <div ref={stageRef} className="pointer-events-none relative z-10 flex flex-1 items-end justify-center pb-5">
           <FloatingEffects
             event={event}
             tapHeartKey={tapHeartKey}
             mood={mood}
             spot={spot}
-            targetPos={targetHeadPos}
+            // Keep short-lived pet/stat bubbles from sliding under the HUD on short phones
+            targetPos={{ x: targetHeadPos.x, y: Math.max(targetHeadPos.y, 56) }}
           />
           <WhimBubble
             whim={whim}
@@ -278,6 +296,7 @@ export function App() {
             onFulfill={fulfillWhim}
             spot={spot}
             targetPos={targetHeadPos}
+            containerWidth={containerSize.width}
           />
           <RoomMesses messes={messes} onClean={cleanMess} />
         </div>

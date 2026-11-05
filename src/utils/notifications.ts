@@ -62,7 +62,7 @@ const DEFAULT_ALERTED: AlertedMap = {
 const LOW_MESSAGES: Record<StatKey, { title: string; body: (val: number) => string }> = {
   hunger: {
     title: '😿 Oli is getting hungry!',
-    body: (v) => `Hunger dropped below ${NEED_THRESHOLD} (now ${v}). Time for wet food or a treat!`,
+    body: (v) => `Food dropped below ${NEED_THRESHOLD} (now ${v}). Time for wet food or a treat!`,
   },
   hydration: {
     title: '💧 Oli needs fresh water!',

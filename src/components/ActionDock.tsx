@@ -29,6 +29,7 @@ import {
   type CareAction,
 } from '../data/actions';
 import { STAT_KEYS, type CatStats, type LiveCat } from '../types';
+import { STAT_ICONS } from './statIcons';
 
 const CATEGORY_ICONS: Record<ActionCategory, LucideIcon> = {
   feed: Utensils,
@@ -107,6 +108,8 @@ export function ActionDock({
     : 'bg-white/92 border-amber-900/10 text-amber-950';
 
   const isCompactGrid = category === 'feed';
+  // Readable "why not" chip in both day and night (sleep) themes
+  const hintChip = isSleeping ? 'bg-indigo-400/25 text-indigo-100' : 'bg-amber-950/10 text-amber-900';
 
   const napRefusal = !isSleeping && live.energy >= MAX_SLEEP_ENERGY
     ? '⚡ Not Tired'
@@ -196,7 +199,7 @@ export function ActionDock({
                       ? 'border-amber-400 bg-gradient-to-b from-amber-50 to-pink-50/80 text-amber-950 ring-1 ring-amber-400/50'
                       : muted
                         ? isSleeping
-                          ? 'border-white/5 bg-white/5 opacity-50'
+                          ? 'border-white/5 bg-white/5 opacity-60'
                           : 'border-amber-900/10 bg-amber-950/5 opacity-65'
                         : isSleeping
                           ? 'border-white/10 bg-slate-800/90 text-amber-50 shadow-xs'
@@ -204,13 +207,13 @@ export function ActionDock({
                   }`}
                 >
                   <span
-                    className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-xl ${
+                    className={`hidden h-7 w-7 shrink-0 items-center justify-center rounded-xl min-[360px]:flex ${
                       isSleeping ? 'bg-amber-400/20 text-amber-300' : 'bg-amber-500/15 text-amber-700'
                     }`}
                   >
                     <Icon className="h-3.5 w-3.5" />
                   </span>
-                  <div className="flex min-w-0 flex-1 flex-col justify-center gap-0.5">
+                  <div className="flex min-w-0 flex-1 flex-col justify-center gap-1">
                     <div className="flex items-center justify-between gap-1">
                       <p className="truncate font-display text-xs font-bold leading-tight">{action.short}</p>
                       {action.id === 'churu' && churuStash > 0 && (
@@ -225,11 +228,11 @@ export function ActionDock({
                       )}
                     </div>
                     {hint ? (
-                      <span className="w-fit rounded-full bg-amber-950/10 px-1.5 py-0.5 text-[9px] font-extrabold leading-none text-amber-900 dark:bg-indigo-500/20 dark:text-indigo-200">
+                      <span className={`w-fit rounded-full px-1.5 py-0.5 text-[10px] font-extrabold whitespace-nowrap leading-none ${hintChip}`}>
                         {hint}
                       </span>
                     ) : (
-                      <EffectPills effect={action.effect} showLabels maxPills={2} />
+                      <EffectPills effect={action.effect} maxPills={2} />
                     )}
                   </div>
                 </motion.button>
@@ -250,7 +253,7 @@ export function ActionDock({
                       ? 'border-amber-400 bg-gradient-to-b from-amber-50 to-pink-50/80 text-amber-950 ring-1 ring-amber-400/50'
                       : muted
                         ? isSleeping
-                          ? 'border-white/5 bg-white/5 opacity-50'
+                          ? 'border-white/5 bg-white/5 opacity-60'
                           : 'border-amber-900/10 bg-amber-950/5 opacity-65'
                         : isSleeping
                           ? 'border-white/10 bg-slate-800/90 text-amber-50 shadow-xs'
@@ -270,34 +273,30 @@ export function ActionDock({
                     <Icon className="h-3.5 w-3.5" />
                   </span>
                   {isUrgentScoop ? (
-                    <span className="rounded-full bg-rose-500 px-1.5 py-0.5 text-[9px] font-extrabold text-white">
+                    <span className="whitespace-nowrap rounded-full bg-rose-500 px-1.5 py-0.5 text-[10px] font-extrabold text-white">
                       🧹 {cleanNeededCount}
                     </span>
                   ) : isWhimMatch ? (
-                    <span className="rounded-full bg-amber-400/30 px-1.5 py-0.5 text-[9px] font-extrabold text-amber-950">
+                    <span className="whitespace-nowrap rounded-full bg-amber-400/30 px-1.5 py-0.5 text-[10px] font-extrabold text-amber-950">
                       💭 2× Joy
                     </span>
                   ) : hint ? (
-                    <span className="rounded-full bg-amber-950/10 px-1.5 py-0.5 text-[9px] font-extrabold text-amber-900 dark:bg-indigo-500/20 dark:text-indigo-200">
+                    <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-extrabold whitespace-nowrap ${hintChip}`}>
                       {hint}
                     </span>
                   ) : (
-                    <EffectPills
-                      effect={action.effect}
-                      showLabels={category !== 'care'}
-                      maxPills={category === 'care' ? 1 : 2}
-                    />
+                    <EffectPills effect={action.effect} maxPills={2} />
                   )}
                 </div>
                 <div className="flex items-center justify-between gap-1">
                   <p className="font-display text-xs font-bold leading-snug">{action.short}</p>
                   {action.soothesTummy && tummyAche ? (
-                    <span className="rounded-full bg-emerald-500/20 px-1.5 py-0.5 text-[9px] font-extrabold text-emerald-700">
+                    <span className="shrink-0 whitespace-nowrap rounded-full bg-emerald-500/20 px-1.5 py-0.5 text-[10px] font-extrabold text-emerald-700">
                       Soothes 🧡
                     </span>
                   ) : action.category === 'play' && !muted ? (
-                    <span className="rounded-full bg-amber-500/18 px-1.5 py-0.5 text-[9px] font-extrabold leading-none text-amber-800 dark:text-amber-200">
-                      🎮 3-Rd
+                    <span className="shrink-0 whitespace-nowrap rounded-full bg-amber-500/18 px-1.5 py-0.5 text-[10px] font-extrabold leading-none text-amber-800">
+                      🎮 Game
                     </span>
                   ) : null}
                 </div>
@@ -331,9 +330,9 @@ export function ActionDock({
                   {isSleeping ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}
                 </span>
                 <span
-                  className={`rounded-full px-1.5 py-0.5 text-[9px] font-extrabold leading-none ${
+                  className={`whitespace-nowrap rounded-full px-1.5 py-0.5 text-[10px] font-extrabold leading-none ${
                     napRefusal
-                      ? 'bg-amber-950/10 text-amber-900'
+                      ? hintChip
                       : isSleeping
                         ? 'bg-amber-300 text-amber-950'
                         : 'bg-indigo-100 text-indigo-900'
@@ -353,30 +352,33 @@ export function ActionDock({
   );
 }
 
-function EffectPills({
-  effect,
-  showLabels,
-  maxPills,
-}: {
-  effect: Partial<CatStats>;
-  showLabels?: boolean;
-  maxPills?: number;
-}) {
+/**
+ * Compact effect tags: stat icon + value (same icons as the HUD meters above).
+ * Icons keep the tags short enough to fit on small phones; the full stat name
+ * is still available to screen readers and on long-press via `title`.
+ */
+function EffectPills({ effect, maxPills }: { effect: Partial<CatStats>; maxPills?: number }) {
   const entries = STAT_KEYS.flatMap((k) => (effect[k] ? [{ key: k, val: effect[k]! }] : []))
     .sort((a, b) => Math.abs(b.val) - Math.abs(a.val))
     .slice(0, maxPills ?? 5);
   return (
-    <div className="flex shrink-0 items-center gap-1">
-      {entries.map(({ key, val }) => (
-        <span
-          key={key}
-          style={{ backgroundColor: STAT_META[key].soft, color: '#432818' }}
-          className="rounded-full px-1.5 py-0.5 text-[9px] font-extrabold leading-none whitespace-nowrap"
-        >
-          {val > 0 ? `+${val}` : val}
-          {showLabels ? ` ${STAT_META[key].label}` : ''}
-        </span>
-      ))}
+    <div className="flex min-w-0 items-center gap-1 overflow-hidden">
+      {entries.map(({ key, val }) => {
+        const Icon = STAT_ICONS[key];
+        const text = `${val > 0 ? `+${val}` : val} ${STAT_META[key].label}`;
+        return (
+          <span
+            key={key}
+            title={text}
+            aria-label={text}
+            style={{ backgroundColor: STAT_META[key].soft, color: '#432818' }}
+            className="flex shrink-0 items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-extrabold leading-none whitespace-nowrap"
+          >
+            <span aria-hidden="true">{val > 0 ? `+${val}` : val}</span>
+            <Icon aria-hidden="true" className="h-2.5 w-2.5" style={{ color: STAT_META[key].color }} />
+          </span>
+        );
+      })}
     </div>
   );
 }

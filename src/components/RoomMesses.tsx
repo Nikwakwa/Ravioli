@@ -38,7 +38,7 @@ export function RoomMesses({
               style={pos}
               aria-label={isFurClump ? 'Sweep up fluffy ginger fur clump' : 'Clean up cat throw-up'}
               title="Tap to clean up!"
-              className="pointer-events-auto absolute flex h-16 w-16 cursor-pointer flex-col items-center justify-center focus:outline-none"
+              className="pointer-events-auto absolute flex h-16 w-16 cursor-pointer flex-col items-center justify-center"
             >
               <svg viewBox="-26 -32 52 48" className="h-full w-full overflow-visible drop-shadow-sm">
                 {/* Pulsing attention ring on the rug */}

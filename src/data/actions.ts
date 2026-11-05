@@ -223,7 +223,7 @@ export const PAUSE_ACTION_ID = 'toggle_pause';
 export const REVIVE_ACTION_ID = 'emergency_revive';
 
 export const STAT_META: Record<StatKey, { label: string; color: string; soft: string }> = {
-  hunger: { label: 'Hunger', color: '#f08a3c', soft: '#ffe2c8' },
+  hunger: { label: 'Food', color: '#f08a3c', soft: '#ffe2c8' },
   hydration: { label: 'Water', color: '#3fa7e0', soft: '#d6eefb' },
   happiness: { label: 'Joy', color: '#ef5f8f', soft: '#fde0ea' },
   energy: { label: 'Energy', color: '#e9b123', soft: '#fcf0c8' },
