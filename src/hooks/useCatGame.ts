@@ -746,8 +746,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
 
     // Clear whim if Oli falls asleep, gets a tummy ache, or clock is paused/deceased
     if (whim && (live.isSleeping || tummyAche || live.isPaused || live.isDeceased)) {
-      setWhim(null);
-      saveActiveWhim(null);
+      clearWhim();
       return;
     }
 
@@ -997,7 +996,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
       }
 
       if (live.isPaused) {
-        triggerRefusal(`✈️ Care clock is paused. Tap "Resume" above to care for Oli!`);
+        triggerRefusal(`✈️ Care clock is paused. Tap "✈️ Paused" above or open the Menu to resume!`);
         return;
       }
 
@@ -1037,7 +1036,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
 
       // 3. Churu Stash check when feeding a Churu Tube
       if (action.id === 'churu' && churuStash <= 0) {
-        triggerRefusal(`🍬 Out of Churu Tubes! Fulfill ${live.name}’s cravings or scoop messes to earn more!`);
+        triggerRefusal(`🍬 Out of Churu Tubes! Fulfill ${live.name}’s cravings or score 3/3 in minigames to earn more!`);
         return;
       }
 
@@ -1214,7 +1213,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
     if (!base || !live || busy) return;
     if (live.isDeceased) return;
     if (live.isPaused) {
-      triggerRefusal(`✈️ Care clock is paused. Tap "Resume" above to pet Oli!`);
+      triggerRefusal(`✈️ Care clock is paused. Tap "✈️ Paused" above or open the Menu to resume!`);
       return;
     }
     vibrate([25, 25, 35, 25, 25]);
@@ -1249,14 +1248,14 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
     const matchedWhim = whim && whim.actionId === PET_ACTION_ID;
     if (matchedWhim || (nowMs - lastPetRef.current >= PET_COOLDOWN_MS && !busy)) {
       lastPetRef.current = nowMs;
-      const joyDelta = matchedWhim ? PET_JOY_BOOST * 3 : PET_JOY_BOOST;
+      const joyDelta = matchedWhim ? PET_JOY_BOOST * 2 : PET_JOY_BOOST;
       const boost: Partial<CatStats> = { happiness: joyDelta };
 
       if (matchedWhim) {
         clearWhim();
         updateChuruStash((c) => c + 1);
         noticeRef.current({
-          text: `🎉 Purr-fect chin scratches! +${joyDelta} Joy & earned +1 Churu Tube 🍬!`,
+          text: `🎉 Purr-fect chin scratches! 2× Joy (+${joyDelta}) & earned +1 Churu Tube 🍬!`,
           tone: 'info',
         });
       }
@@ -1271,14 +1270,14 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
         durationMs: 2200,
       });
 
-      const wasThriving = messes.length === 0 && isThriving(live);
-      const willThrive = messes.length === 0 && isThriving(applyEffect(live, boost));
+      const wasThriving = messes.length === 0 && !litterBoxDirty && isThriving(live);
+      const willThrive = messes.length === 0 && !litterBoxDirty && isThriving(applyEffect(live, boost));
       if (!wasThriving && willThrive) window.setTimeout(celebrate, 500);
 
       const mutator = (b: CatState): CatState => applyEffect(materialize(b, nowMs), boost);
       void commit(mutator, PET_ACTION_ID, `Gave ${live.name} chin scratches — purr session!`);
     }
-  }, [base, live, busy, tummyAche, whim, messes.length, churuStash, player, playEvent, commit, clearTummyAche, clearWhim, updateChuruStash]);
+  }, [base, live, busy, tummyAche, whim, messes.length, litterBoxDirty, churuStash, player, playEvent, commit, clearTummyAche, clearWhim, updateChuruStash, triggerRefusal]);
 
   /** Tapping the Whim thought bubble directly above Oli's head performs the requested action! */
   const fulfillWhim = useCallback(() => {
@@ -1308,7 +1307,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
   const toggleSleep = useCallback(() => {
     if (!live || busy || live.isDeceased) return;
     if (live.isPaused) {
-      triggerRefusal(`✈️ Care clock is paused. Tap "Resume" above to tuck Oli in!`);
+      triggerRefusal(`✈️ Care clock is paused. Tap "✈️ Paused" above or open the Menu to resume!`);
       return;
     }
     const target = !live.isSleeping;
@@ -1414,6 +1413,10 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
     saveMesses([]);
     setLitterBoxDirty(false);
     saveLitterBoxDirty(false);
+    saveLastMessAt(nowMs);
+    saveLastLitterAt(nowMs);
+    saveLastWhimAt(nowMs);
+    saveLastRoamAt(nowMs);
     clearWhim();
     clearTummyAche();
 

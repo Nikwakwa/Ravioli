@@ -204,7 +204,15 @@ export function LivingRoom({
         {/* White windowsill (Spot: 'window') */}
         <g
           onClick={() => (activeSpot === 'window' ? onPetCat?.() : onSelectSpot?.('window'))}
-          className="pointer-events-auto cursor-pointer"
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              if (activeSpot === 'window') onPetCat?.();
+              else onSelectSpot?.('window');
+            }
+          }}
+          tabIndex={0}
+          className="pointer-events-auto cursor-pointer focus:outline-none"
           style={{ pointerEvents: 'auto', cursor: 'pointer' }}
           role="button"
           aria-current={activeSpot === 'window' ? 'true' : undefined}
@@ -345,7 +353,15 @@ export function LivingRoom({
         <g
           transform="translate(262 278)"
           onClick={() => (activeSpot === 'sofa_bed' ? onPetCat?.() : onSelectSpot?.('sofa_bed'))}
-          className="pointer-events-auto cursor-pointer"
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              if (activeSpot === 'sofa_bed') onPetCat?.();
+              else onSelectSpot?.('sofa_bed');
+            }
+          }}
+          tabIndex={0}
+          className="pointer-events-auto cursor-pointer focus:outline-none"
           style={{ pointerEvents: 'auto', cursor: 'pointer' }}
           role="button"
           aria-current={activeSpot === 'sofa_bed' ? 'true' : undefined}
@@ -411,7 +427,14 @@ export function LivingRoom({
       <g
         transform="translate(62 0)"
         onClick={onTapLitterBox}
-        className={onTapLitterBox ? 'pointer-events-auto cursor-pointer' : undefined}
+        onKeyDown={(e) => {
+          if (onTapLitterBox && (e.key === 'Enter' || e.key === ' ')) {
+            e.preventDefault();
+            onTapLitterBox();
+          }
+        }}
+        tabIndex={onTapLitterBox ? 0 : undefined}
+        className={onTapLitterBox ? 'pointer-events-auto cursor-pointer focus:outline-none' : undefined}
         style={onTapLitterBox ? { pointerEvents: 'auto', cursor: 'pointer' } : undefined}
         role={onTapLitterBox ? 'button' : undefined}
         aria-label={onTapLitterBox ? (litterBoxDirty ? 'Scoop Oli’s litter box' : 'Oli’s litter box') : undefined}
@@ -600,7 +623,15 @@ export function LivingRoom({
       {/* Oli's empty Amazon delivery cardboard box on the floor (Spot: 'box') */}
       <g
         onClick={() => (activeSpot === 'box' ? onPetCat?.() : onSelectSpot?.('box'))}
-        className="pointer-events-auto cursor-pointer"
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            if (activeSpot === 'box') onPetCat?.();
+            else onSelectSpot?.('box');
+          }
+        }}
+        tabIndex={0}
+        className="pointer-events-auto cursor-pointer focus:outline-none"
         style={{ pointerEvents: 'auto', cursor: 'pointer' }}
         role="button"
         aria-current={activeSpot === 'box' ? 'true' : undefined}
@@ -667,7 +698,15 @@ export function LivingRoom({
       {/* Fluffy off-white / cream high-pile shag rug — centered where Oli sits (Spot: 'rug') */}
       <g
         onClick={() => (activeSpot === 'rug' ? onPetCat?.() : onSelectSpot?.('rug'))}
-        className="pointer-events-auto cursor-pointer"
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            if (activeSpot === 'rug') onPetCat?.();
+            else onSelectSpot?.('rug');
+          }
+        }}
+        tabIndex={0}
+        className="pointer-events-auto cursor-pointer focus:outline-none"
         style={{ pointerEvents: 'auto', cursor: 'pointer' }}
         role="button"
         aria-current={activeSpot === 'rug' ? 'true' : undefined}
@@ -735,7 +774,14 @@ export function LivingRoom({
       <g
         transform="translate(262 404)"
         onClick={onTapFountain}
-        className={onTapFountain ? 'pointer-events-auto cursor-pointer' : undefined}
+        onKeyDown={(e) => {
+          if (onTapFountain && (e.key === 'Enter' || e.key === ' ')) {
+            e.preventDefault();
+            onTapFountain();
+          }
+        }}
+        tabIndex={onTapFountain ? 0 : undefined}
+        className={onTapFountain ? 'pointer-events-auto cursor-pointer focus:outline-none' : undefined}
         style={onTapFountain ? { pointerEvents: 'auto', cursor: 'pointer' } : undefined}
         role={onTapFountain ? 'button' : undefined}
         aria-label={onTapFountain ? 'Refresh Oli’s water fountain' : undefined}

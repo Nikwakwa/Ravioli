@@ -24,32 +24,47 @@ if (versionTag) {
   writeFileSync(versionJsonPath, JSON.stringify({ version: versionTag }, null, 2) + '\n');
 }
 
-// 2. Stage all changes
-gitInherit('add', '-A');
-
-// 3. Check if there are staged changes to commit
-let hasStagedChanges = false;
-try {
-  execFileSync('git', ['diff', '--cached', '--quiet'], { cwd: root });
-} catch {
-  hasStagedChanges = true;
-}
-
-if (hasStagedChanges) {
+// 2. If a git rebase is currently in progress, resolve and continue it first
+const rebaseMergeDir = resolve(root, '.git', 'rebase-merge');
+const rebaseApplyDir = resolve(root, '.git', 'rebase-apply');
+if (existsSync(rebaseMergeDir) || existsSync(rebaseApplyDir)) {
   if (existsSync(commitMsgPath)) {
-    const msg = readFileSync(commitMsgPath, 'utf8').trim();
-    if (!msg) {
-      console.error('Error: .commit-msg is empty.');
-      process.exit(1);
-    }
-    gitInherit('commit', '-F', commitMsgPath);
     unlinkSync(commitMsgPath);
-  } else {
-    const fallbackMsg = versionTag ? `chore: release ${versionTag}` : 'chore: update';
-    gitInherit('commit', '-m', fallbackMsg);
   }
-} else if (existsSync(commitMsgPath)) {
-  unlinkSync(commitMsgPath);
+  gitInherit('add', '-A');
+  execFileSync('git', ['-c', 'core.editor=:', 'rebase', '--continue'], {
+    cwd: root,
+    stdio: 'inherit',
+    env: { ...process.env, GIT_EDITOR: ':' },
+  });
+} else {
+  // 2b. Stage all changes
+  gitInherit('add', '-A');
+
+  // 3. Check if there are staged changes to commit
+  let hasStagedChanges = false;
+  try {
+    execFileSync('git', ['diff', '--cached', '--quiet'], { cwd: root });
+  } catch {
+    hasStagedChanges = true;
+  }
+
+  if (hasStagedChanges) {
+    if (existsSync(commitMsgPath)) {
+      const msg = readFileSync(commitMsgPath, 'utf8').trim();
+      if (!msg) {
+        console.error('Error: .commit-msg is empty.');
+        process.exit(1);
+      }
+      gitInherit('commit', '-F', commitMsgPath);
+      unlinkSync(commitMsgPath);
+    } else {
+      const fallbackMsg = versionTag ? `chore: release ${versionTag}` : 'chore: update';
+      gitInherit('commit', '-m', fallbackMsg);
+    }
+  } else if (existsSync(commitMsgPath)) {
+    unlinkSync(commitMsgPath);
+  }
 }
 
 // 4. Create version tag if it doesn't exist yet
@@ -64,7 +79,14 @@ if (versionTag) {
   }
 }
 
-// 5. Push branch (and new tag if created)
+// 5. Pull any remote commits with rebase before pushing
+try {
+  gitInherit('pull', '--rebase', 'origin', 'main');
+} catch {
+  console.warn('Warning: git pull --rebase had issues, continuing to push...');
+}
+
+// 6. Push branch (and new tag if created)
 if (createdNewTag && versionTag) {
   gitInherit('push', 'origin', 'main', versionTag);
 } else {

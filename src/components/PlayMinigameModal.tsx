@@ -94,6 +94,22 @@ export function PlayMinigameModal({
     return () => clearTimers();
   }, [action]);
 
+  useEffect(() => {
+    if (!action) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        onCancel();
+      } else if ((e.key === ' ' || e.key === 'Enter') && isFeather && roundFeedback === null && !finished) {
+        e.preventDefault();
+        const hit = isFeatherInSweetSpot(posRef.current, round);
+        advanceRound(hit ? 'hit' : 'miss', hit ? 'caught' : 'miss_tap');
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [action, isFeather, round, roundFeedback, finished, onCancel]);
+
   // Main 60fps animation frame loop for movement & timer countdown
   useEffect(() => {
     if (!action || roundFeedback !== null || finished) return;

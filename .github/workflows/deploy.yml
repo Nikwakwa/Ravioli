@@ -35,8 +35,8 @@ jobs:
 
       - name: Build PWA
         env:
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL || 'https://jwpzgaxwlvzyxyrarcds.supabase.co' }}
-          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp3cHpnYXh3bHZ6eXh5cmFyY2RzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMzNzc5ODMsImV4cCI6MjEwODk1Mzk4M30.MHDD_FgzTPQwdSofKjRsu2GWbCe4Ge-KRjkPt1pDhvY' }}
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
         run: npm run build
 
       - name: Configure Pages
