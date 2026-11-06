@@ -23,7 +23,6 @@ import { APP_VERSION, CHANGELOG } from '../data/changelog';
 import { STAT_KEYS, type LiveCat, type StatKey } from '../types';
 import {
   DECAY_RATES,
-  MAX_LIVES,
   NEED_THRESHOLD,
   NEGLECT_DEATH_HOURS,
 } from '../utils/decayEngine';
@@ -44,11 +43,6 @@ export interface MenuPageProps {
   onToggleMasterNotifications: () => void;
   onChangeNotifPrefs: (next: NotificationPrefs) => void;
   onTestNotification: () => void;
-}
-
-function minutesPerPoint(ratePerHour: number): string {
-  const mins = Math.round((60 / Math.abs(ratePerHour)) * 10) / 10;
-  return `1 pt / ${mins}m`;
 }
 
 export function MenuPage({
@@ -135,15 +129,15 @@ export function MenuPage({
       <main className="flex-1 touch-pan-y overflow-y-auto p-4 pb-12">
         {/* TAB 1: RULES & GUIDE */}
         {activeTab === 'rules' && (
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-2.5">
             {/* Vacation Callout if clock is paused */}
             {live.isPaused && (
               <div className="flex items-center justify-between gap-2 rounded-2xl border border-sky-400/35 bg-sky-50 p-3 shadow-2xs">
                 <div className="flex items-center gap-2">
                   <span className="text-xl">✈️</span>
                   <div>
-                    <p className="text-xs font-bold text-sky-950">Care clock is currently paused</p>
-                    <p className="text-[10px] text-sky-800/80">Oli is resting safely in Vacation Mode.</p>
+                    <p className="text-xs font-bold text-sky-950">Care clock paused</p>
+                    <p className="text-[10px] text-sky-800/80">Oli is resting in Vacation Mode.</p>
                   </div>
                 </div>
                 <button
@@ -156,135 +150,67 @@ export function MenuPage({
               </div>
             )}
 
-            {/* Section 1: Touch & Room Interaction */}
-            <div className="rounded-2xl border border-amber-900/8 bg-white p-3.5 shadow-2xs">
-              <div className="mb-2 flex items-center gap-2">
-                <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-pink-500/15 text-sm">
-                  🐱
-                </span>
-                <h3 className="font-display text-xs font-bold text-amber-950">Touch & Room Interactions</h3>
+            {/* Quick Rule Cards */}
+            <div className="rounded-2xl border border-amber-900/8 bg-white p-3 shadow-2xs">
+              <div className="mb-1.5 flex items-center gap-2">
+                <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-pink-500/15 text-xs">🐱</span>
+                <h3 className="font-display text-xs font-bold text-amber-950">Touch & Spots</h3>
               </div>
-              <ul className="flex list-disc flex-col gap-1.5 pl-4 text-xs font-medium leading-relaxed text-amber-900/85">
-                <li>
-                  <strong>Chin Scratches:</strong> Tap Oli directly in the living room anytime for cuddles (
-                  <strong className="text-pink-600">+{PET_JOY_BOOST} Joy</strong> every 20s).
-                </li>
-                <li>
-                  <strong>Direct Spot Tapping:</strong> Tap the sofa bed, cardboard box, windowsill, or rug in the room
-                  to invite Oli there!
-                </li>
-                <li>
-                  <strong>Water Fountain:</strong> Tap the water fountain anytime to refresh Oli’s fresh water.
-                </li>
+              <ul className="flex list-disc flex-col gap-1 pl-4 text-xs font-medium text-amber-900/85">
+                <li><strong>Pet Oli:</strong> Tap him in the room anytime (+{PET_JOY_BOOST} Joy).</li>
+                <li><strong>Spots:</strong> Tap the bed, box, window, or rug to invite him over.</li>
+                <li><strong>Fountain:</strong> Tap to refresh his water (+40 Water).</li>
               </ul>
             </div>
 
-            {/* Section 2: Food & Treats */}
-            <div className="rounded-2xl border border-amber-900/8 bg-white p-3.5 shadow-2xs">
-              <div className="mb-2 flex items-center gap-2">
-                <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-amber-500/15 text-sm">
-                  🍗
-                </span>
-                <h3 className="font-display text-xs font-bold text-amber-950">Meals, Treats & Tummy Aches</h3>
+            <div className="rounded-2xl border border-amber-900/8 bg-white p-3 shadow-2xs">
+              <div className="mb-1.5 flex items-center gap-2">
+                <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-amber-500/15 text-xs">🍗</span>
+                <h3 className="font-display text-xs font-bold text-amber-950">Food & Treats</h3>
               </div>
-              <ul className="flex list-disc flex-col gap-1.5 pl-4 text-xs font-medium leading-relaxed text-amber-900/85">
-                <li>
-                  <strong>Fullness Refusals:</strong> Oli shakes his head at a meal when he’s already full (Food 85+ for
-                  Wet Food, 90+ for Quail Egg). Play with him first!
-                </li>
-                <li>
-                  <strong className="text-rose-600">Tummy Aches:</strong> Feeding more than{' '}
-                  <strong>{MAX_TREATS_IN_WINDOW} treats</strong> in 15 minutes causes a tummy ache (-10 Joy, -15 Energy,
-                  -10 Clean). Soothe it with belly rubs, brushing, or Calming Mist.
-                </li>
+              <ul className="flex list-disc flex-col gap-1 pl-4 text-xs font-medium text-amber-900/85">
+                <li><strong>Fullness:</strong> Oli refuses food when full. Play with him first!</li>
+                <li><strong>Tummy aches:</strong> Max {MAX_TREATS_IN_WINDOW} treats per 15 min. Soothe with belly rubs, brushing, or mist.</li>
               </ul>
             </div>
 
-            {/* Section 3: Cleaning & Litter Box */}
-            <div className="rounded-2xl border border-amber-900/8 bg-white p-3.5 shadow-2xs">
-              <div className="mb-2 flex items-center gap-2">
-                <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-purple-500/15 text-sm">
-                  🧹
-                </span>
-                <h3 className="font-display text-xs font-bold text-amber-950">Clean Home & Litter Box</h3>
+            <div className="rounded-2xl border border-amber-900/8 bg-white p-3 shadow-2xs">
+              <div className="mb-1.5 flex items-center gap-2">
+                <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-purple-500/15 text-xs">🧹</span>
+                <h3 className="font-display text-xs font-bold text-amber-950">Cleaning & Litter</h3>
               </div>
-              <ul className="flex list-disc flex-col gap-1.5 pl-4 text-xs font-medium leading-relaxed text-amber-900/85">
-                <li>
-                  <strong>Corner Litter Box:</strong> Oli uses his box every 2nd meal. Tap it directly to scoop (+15
-                  Clean, +6 Joy).
-                </li>
-                <li>
-                  <strong>Fur Tumbleweeds:</strong> Shed ginger fur tumbleweeds appear on the rug — tap them directly or
-                  use <strong>Care → Scoop Box</strong> to sweep up.
-                </li>
+              <ul className="flex list-disc flex-col gap-1 pl-4 text-xs font-medium text-amber-900/85">
+                <li><strong>Litter box:</strong> Used every 2 meals. Tap directly to scoop (+15 Clean).</li>
+                <li><strong>Rug messes:</strong> Fur clumps appear over time. Tap to clean.</li>
               </ul>
             </div>
 
-            {/* Section 4: Cravings & Minigames */}
-            <div className="rounded-2xl border border-amber-900/8 bg-white p-3.5 shadow-2xs">
-              <div className="mb-2 flex items-center gap-2">
-                <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-emerald-500/15 text-sm">
-                  🍬
-                </span>
-                <h3 className="font-display text-xs font-bold text-amber-950">Cravings & Play Minigames</h3>
+            <div className="rounded-2xl border border-amber-900/8 bg-white p-3 shadow-2xs">
+              <div className="mb-1.5 flex items-center gap-2">
+                <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-500/15 text-xs">🍬</span>
+                <h3 className="font-display text-xs font-bold text-amber-950">Cravings & Minigames</h3>
               </div>
-              <ul className="flex list-disc flex-col gap-1.5 pl-4 text-xs font-medium leading-relaxed text-amber-900/85">
-                <li>
-                  <strong>Craving Thought Bubbles:</strong> Tap his craving before time expires for{' '}
-                  <strong className="text-pink-600">2× Joy + 1 Churu Tube 🍬</strong>!
-                </li>
-                <li>
-                  <strong>3-Round Minigames:</strong> Play <em>Feather Pounce</em> or <em>Laser Zoomies</em>. Score 3/3
-                  for a Perfect Combo (+15 Joy &amp; +1 Churu tube)!
-                </li>
+              <ul className="flex list-disc flex-col gap-1 pl-4 text-xs font-medium text-amber-900/85">
+                <li><strong>Cravings:</strong> Fulfill thought bubbles for 2× Joy + 1 Churu 🍬.</li>
+                <li><strong>Minigames:</strong> Score 3/3 in Feather or Laser for +1 Churu 🍬.</li>
               </ul>
             </div>
 
-            {/* Section 5: 9 Lives & Safety */}
-            <div className="rounded-2xl border border-amber-900/8 bg-white p-3.5 shadow-2xs">
-              <div className="mb-2 flex items-center gap-2">
-                <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-rose-500/15 text-sm">
-                  🛡️
-                </span>
-                <h3 className="font-display text-xs font-bold text-amber-950">9 Lives & Vacation Safety</h3>
+            <div className="rounded-2xl border border-amber-900/8 bg-white p-3 shadow-2xs">
+              <div className="mb-1.5 flex items-center gap-2">
+                <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-indigo-500/15 text-xs">🌙</span>
+                <h3 className="font-display text-xs font-bold text-amber-950">Sleep & Safety</h3>
               </div>
-              <ul className="flex list-disc flex-col gap-1.5 pl-4 text-xs font-medium leading-relaxed text-amber-900/85">
-                <li>
-                  Oli has <strong>{MAX_LIVES} lives</strong>. Leaving him unattended for over{' '}
-                  <strong>{NEGLECT_DEATH_HOURS} hours at 0 food and water</strong> (over 2.5 days) can cause him to pass
-                  away.
-                </li>
-                <li>
-                  Always use <strong>Vacation Clock</strong> whenever traveling so Oli stays 100% safe!
-                </li>
+              <ul className="flex list-disc flex-col gap-1 pl-4 text-xs font-medium text-amber-900/85">
+                <li><strong>Naps:</strong> Auto-naps below {AUTO_NAP_ENERGY} Energy (+{DECAY_RATES.sleeping.energy}/hr, wakes at 100 Energy). Wake early at {MIN_WAKE_ENERGY}+.</li>
+                <li><strong>Vacation Mode:</strong> Pause the clock in Vacation tab when you travel.</li>
+                <li><strong>9 Lives:</strong> Extreme neglect ({NEGLECT_DEATH_HOURS}h without food/water) costs 1 life.</li>
               </ul>
             </div>
 
-            {/* Section 6: Sleep & Energy */}
-            <div className="rounded-2xl border border-amber-900/8 bg-white p-3.5 shadow-2xs">
-              <div className="mb-2 flex items-center gap-2">
-                <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-indigo-500/15 text-sm">
-                  🌙
-                </span>
-                <h3 className="font-display text-xs font-bold text-amber-950">Sleep & Naps</h3>
-              </div>
-              <ul className="flex list-disc flex-col gap-1.5 pl-4 text-xs font-medium leading-relaxed text-amber-900/85">
-                <li>
-                  Oli takes a nap when Energy drops below <strong>{AUTO_NAP_ENERGY}</strong>, recharges at{' '}
-                  <strong>+{DECAY_RATES.sleeping.energy}/hr</strong>, and wakes up naturally at <strong>100 Energy</strong>.
-                </li>
-                <li>
-                  You can gently wake him early once his Energy reaches at least <strong>{MIN_WAKE_ENERGY}</strong>.
-                </li>
-              </ul>
-            </div>
-
-            {/* Section 7: Hourly Drift Table */}
-            <div className="rounded-2xl border border-amber-900/8 bg-white p-3.5 shadow-2xs">
-              <h3 className="mb-1 font-display text-xs font-bold text-amber-950">⏱️ Hourly Drift Speeds</h3>
-              <p className="mb-2 text-[11px] font-medium text-amber-800/75">
-                Needs drift smoothly in real time — check in 2–3 times a day!
-              </p>
+            {/* Hourly Drift Table */}
+            <div className="rounded-2xl border border-amber-900/8 bg-white p-3 shadow-2xs">
+              <h3 className="mb-1.5 font-display text-xs font-bold text-amber-950">⏱️ Hourly Drift</h3>
               <div className="overflow-hidden rounded-xl border border-amber-900/10">
                 <div className="grid grid-cols-12 bg-amber-950/5 px-2.5 py-1.5 text-[10px] font-extrabold text-amber-900">
                   <span className="col-span-4">Need</span>
@@ -311,18 +237,12 @@ export function MenuPage({
                       </div>
                       <div className="col-span-4 leading-tight">
                         <span className="font-extrabold text-rose-600">{awakeRate}/h</span>
-                        <span className="block text-[9px] font-semibold text-amber-900/60">
-                          ({minutesPerPoint(awakeRate)})
-                        </span>
                       </div>
                       <div className="col-span-4 leading-tight">
                         <span
                           className={`font-extrabold ${sleepRate > 0 ? 'text-emerald-600' : 'text-indigo-900'}`}
                         >
                           {sleepRate > 0 ? `+${sleepRate}/h` : `${sleepRate}/h`}
-                        </span>
-                        <span className="block text-[9px] font-semibold text-amber-900/60">
-                          ({minutesPerPoint(sleepRate)})
                         </span>
                       </div>
                     </div>
@@ -344,7 +264,7 @@ export function MenuPage({
               }`}
             >
               <div className="flex items-center gap-3">
-                <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-sky-500/15 text-2xl">
+                <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-sky-500/15 text-xl">
                   ✈️
                 </span>
                 <div>
@@ -355,11 +275,11 @@ export function MenuPage({
                 </div>
               </div>
 
-              <div className="mt-4 flex items-center justify-between rounded-2xl bg-black/5 p-3.5">
+              <div className="mt-3.5 flex items-center justify-between rounded-2xl bg-black/5 p-3">
                 <div>
-                  <span className="text-[10px] font-extrabold tracking-wider uppercase opacity-60">Clock Status</span>
+                  <span className="text-[10px] font-extrabold tracking-wider uppercase opacity-60">Status</span>
                   <p className="font-display text-sm font-black">
-                    {live.isPaused ? '✈️ Care Clock Paused' : '🟢 Care Clock Active'}
+                    {live.isPaused ? '✈️ Paused' : '🟢 Active'}
                   </p>
                 </div>
                 <button
@@ -383,21 +303,9 @@ export function MenuPage({
                 </button>
               </div>
 
-              <p className="mt-3 text-xs font-medium leading-relaxed opacity-90">
-                Taking a flight, studying for finals, or away from your phone? Pause the care clock! Oli’s needs
-                (Food, Water, Joy, Energy, Clean) freeze completely in time — no decay, no messes, and no cravings
-                until you tap Resume.
+              <p className="mt-3 text-xs font-medium leading-relaxed opacity-85">
+                Traveling or busy? Pause the clock! Stats, messes, and cravings freeze in time until you resume.
               </p>
-            </div>
-
-            <div className="rounded-2xl border border-amber-900/8 bg-white p-3.5 shadow-2xs">
-              <h3 className="mb-2 font-display text-xs font-bold text-amber-950">🛡️ Vacation Mode Protection</h3>
-              <ul className="flex list-disc flex-col gap-1.5 pl-4 text-xs font-medium text-amber-900/85">
-                <li>Stats never drop while paused — zero hunger or thirst.</li>
-                <li>Oli’s 9 lives are completely safe from neglect while away.</li>
-                <li>No random messes or fur tumbleweeds will appear.</li>
-                <li>You can resume the clock anytime with a single tap.</li>
-              </ul>
             </div>
           </div>
         )}
@@ -485,7 +393,7 @@ export function MenuPage({
                     {notifPrefs.enabled ? 'Notifications Active' : 'Notifications Muted'}
                   </h2>
                   <p className="text-[10px] font-medium text-amber-800/75">
-                    {notifPrefs.enabled ? 'Oli care alerts will be delivered' : 'Tap enable to receive care alerts'}
+                    {notifPrefs.enabled ? 'Care alerts will be sent' : 'Turn on to get care alerts'}
                   </p>
                 </div>
               </div>
@@ -528,7 +436,7 @@ export function MenuPage({
                 <label className="flex min-h-9 items-center justify-between gap-2 text-xs font-semibold text-amber-950 cursor-pointer">
                   <div className="flex items-center gap-2">
                     <AlertTriangle className="h-3.5 w-3.5 text-amber-600" />
-                    <span>Low need alert (below {NEED_THRESHOLD})</span>
+                    <span>Low need alert (&lt; {NEED_THRESHOLD})</span>
                   </div>
                   <input
                     type="checkbox"
@@ -540,7 +448,7 @@ export function MenuPage({
                 <label className="flex min-h-9 items-center justify-between gap-2 text-xs font-semibold text-amber-950 cursor-pointer">
                   <div className="flex items-center gap-2">
                     <Flame className="h-3.5 w-3.5 text-rose-600" />
-                    <span>Critical alert (below {CRITICAL_THRESHOLD})</span>
+                    <span>Critical alert (&lt;= {CRITICAL_THRESHOLD})</span>
                   </div>
                   <input
                     type="checkbox"

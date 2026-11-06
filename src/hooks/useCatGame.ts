@@ -575,17 +575,16 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
       saveLastRoamAt(Date.now());
       if (!silent) {
         vibrate(20);
-        const catName = live?.name ?? 'Oli';
         const lines: Record<CatSpot, string> = {
-          sofa_bed: `🛋️ ${catName} curled up in his Bedsure sofa bed!`,
-          box: `📦 If it fits, ${catName} sits! Trotted into his delivery box.`,
-          window: `🪟 ${catName} hopped onto the sunny windowsill to watch the birds!`,
-          rug: `🐾 ${catName} trotted back to the center of the rug.`,
+          sofa_bed: '🛋️ Curled up on the sofa bed',
+          box: '📦 Hopped into his delivery box',
+          window: '🪟 Watching birds on the windowsill',
+          rug: '🐾 Back on the rug',
         };
         noticeRef.current({ text: lines[target], tone: 'info' });
       }
     },
-    [live?.name],
+    [],
   );
 
   // Keep Oli in his Bedsure bolster bed on the sofa while sleeping
@@ -660,8 +659,8 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
     if (live?.isDeceased && !deceasedAlertedRef.current) {
       deceasedAlertedRef.current = true;
       void sendSystemNotification(
-        '🚨 Oli needs emergency rescue!',
-        'Oli has succumbed to extreme neglect. Open the app to give him emergency vet care.',
+        '🚨 Oli needs you!',
+        'Oli was left alone too long. Open the app to revive him.',
         'oli-emergency',
       );
     } else if (live && !live.isDeceased) {
@@ -674,7 +673,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
   useEffect(() => {
     if (!live) return;
     if (prevSleeping.current === true && !live.isSleeping && live.wokeNaturally) {
-      const msg = `${live.name} woke up from his nap, full of energy!`;
+      const msg = `${live.name} woke up from his nap!`;
       noticeRef.current({ text: msg, tone: 'info' });
       saveLastMessAt(Date.now());
       saveLastLitterAt(Date.now());
@@ -756,7 +755,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
       if (msLeft <= 0) {
         clearWhim();
         noticeRef.current({
-          text: `😿 ${live.name}’s craving went unanswered… (-8 Joy)`,
+          text: '😿 Craving expired (-8 Joy)',
           tone: 'warn',
         });
         const mutator = (b: CatState): CatState => applyEffect(materialize(b, Date.now()), { happiness: -8 });
@@ -785,7 +784,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
       saveLastWhimAt(Date.now());
       vibrate([20, 40, 20]);
       noticeRef.current({
-        text: `💭 Meow! ${live.name} has a craving: ${nextWhim.label}`,
+        text: `💭 Craving: ${nextWhim.label}`,
         tone: 'info',
       });
     }, waitMs);
@@ -870,7 +869,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
       saveLastMessAt(Date.now());
       saveLastLitterAt(Date.now());
       noticeRef.current({
-        text: `😴 ${live.name} got completely exhausted and curled up for a nap!`,
+        text: `😴 ${live.name} fell asleep from exhaustion.`,
         tone: 'info',
       });
       playEvent({
@@ -894,7 +893,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
     if (!base || !live || busy) return;
     if (!litterBoxDirty) {
       noticeRef.current({
-        text: '✨ Oli’s litter box is already fresh & clean!',
+        text: '✨ Litter box is already clean.',
         tone: 'info',
       });
       vibrate(15);
@@ -909,7 +908,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
     vibrate(scoopAction.haptic);
     lockFor(1000);
     noticeRef.current({
-      text: `✨ Scooped Oli’s litter box clean! Fresh & spotless.`,
+      text: '✨ Litter box scooped clean.',
       tone: 'info',
     });
     playEvent({
@@ -940,7 +939,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
           return;
         }
         noticeRef.current({
-          text: '✨ The living room is already spotless — no messes to clean!',
+          text: '✨ Room is already spotless.',
           tone: 'info',
         });
         vibrate(15);
@@ -958,8 +957,8 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
       noticeRef.current({
         text:
           target.kind === 'fur_clump'
-            ? `✨ Swept up ${live.name}’s ginger fur tumbleweed! The rug is nice & clean.`
-            : `✨ Cleaned up ${live.name}’s throw-up from the rug!`,
+            ? '✨ Swept up fur tumbleweed.'
+            : '✨ Cleaned up mess.',
         tone: 'info',
       });
       playEvent({
@@ -977,8 +976,8 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
 
       const logMsg =
         target.kind === 'fur_clump'
-          ? `Swept up ${live.name}’s ginger fur tumbleweed from the rug`
-          : `Cleaned up ${live.name}’s throw-up from the rug`;
+          ? `Swept up ${live.name}’s fur tumbleweed`
+          : `Cleaned up ${live.name}’s mess`;
       const mutator = (b: CatState): CatState => applyEffect(materialize(b, Date.now()), scoopAction.effect);
       void commit(mutator, scoopAction.id, logMsg);
     },
@@ -990,13 +989,13 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
       if (!base || !live || busy) return;
 
       if (live.isDeceased) {
-        noticeRef.current({ text: `💔 Oli needs emergency care before you can interact with him!`, tone: 'warn' });
+        noticeRef.current({ text: '💔 Oli needs emergency revival first.', tone: 'warn' });
         vibrate([20, 40, 20]);
         return;
       }
 
       if (live.isPaused) {
-        triggerRefusal(`✈️ Care clock is paused. Tap "✈️ Paused" above or open the Menu to resume!`);
+        triggerRefusal('✈️ Care clock is paused. Resume in Menu or header.');
         return;
       }
 
@@ -1008,7 +1007,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
           cleanMess();
         } else {
           noticeRef.current({
-            text: '✨ The litter box & living room are already fresh & clean!',
+            text: '✨ Litter box and room are already clean.',
             tone: 'info',
           });
           vibrate(15);
@@ -1023,38 +1022,38 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
 
       // 1. Sleeping check
       if (action.requiresAwake && live.isSleeping) {
-        noticeRef.current({ text: `Shh… ${live.name} is napping. Wake him up in Rest first.`, tone: 'info' });
+        noticeRef.current({ text: `Shh… ${live.name} is napping. Wake him in Rest.`, tone: 'info' });
         vibrate(10);
         return;
       }
 
       // 2. Tummy ache check on food/treats
       if (tummyAche && action.category === 'feed') {
-        triggerRefusal(`🤢 ${live.name} has a tummy ache! Pet his belly, Brush him, or use Calming Mist first.`);
+        triggerRefusal(`🤢 ${live.name} has a tummy ache! Pet, brush, or mist him first.`);
         return;
       }
 
       // 3. Churu Stash check when feeding a Churu Tube
       if (action.id === 'churu' && churuStash <= 0) {
-        triggerRefusal(`🍬 Out of Churu Tubes! Fulfill ${live.name}’s cravings or score 3/3 in minigames to earn more!`);
+        triggerRefusal('🍬 Out of Churus! Win minigames or cravings to get more.');
         return;
       }
 
       // 4. Fullness check on meals
       if (action.maxHunger !== undefined && live.hunger >= action.maxHunger) {
-        triggerRefusal(`😋 ${live.name} is too full for ${action.short.toLowerCase()} right now! Play with him first.`);
+        triggerRefusal(`😋 ${live.name} is too full! Play with him first.`);
         return;
       }
 
       // 5. Hydration check on fountain
       if (action.maxHydration !== undefined && live.hydration >= action.maxHydration) {
-        triggerRefusal(`💧 ${live.name} isn’t thirsty right now — his fountain is already fresh!`);
+        triggerRefusal(`💧 ${live.name} isn’t thirsty right now.`);
         return;
       }
 
       // 6. Energy check on play actions
       if (action.minEnergy !== undefined && live.energy < action.minEnergy) {
-        triggerRefusal(`🥱 ${live.name} is too tired for ${action.short}! Let him nap or feed him a Quail Egg.`);
+        triggerRefusal(`🥱 ${live.name} is too tired! Let him nap first.`);
         return;
       }
 
@@ -1078,7 +1077,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
           lockFor(1600);
           vibrate([40, 60, 40, 60, 40]);
           noticeRef.current({
-            text: `🤢 Too many treats made ${live.name} throw up & get a tummy ache! Tap the mess to clean up.`,
+            text: '🤢 Too many treats! Clean up the mess and soothe his tummy.',
             tone: 'warn',
           });
           playEvent({
@@ -1119,19 +1118,19 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
         const earnedChurus = 1 + (mgReward?.churuBonus ?? 0);
         updateChuruStash((c) => c + earnedChurus);
         noticeRef.current({
-          text: `🎉 Craving fulfilled! 2× Joy (+${finalEffect.happiness}) & earned +${earnedChurus} Churu Tube 🍬!`,
+          text: `🎉 Craving fulfilled! +${finalEffect.happiness} Joy, +${earnedChurus} Churu 🍬`,
           tone: 'info',
         });
       } else if (mgReward) {
         if (mgReward.tier === 'perfect') {
           updateChuruStash((c) => c + 1);
           noticeRef.current({
-            text: `🏆 3/3 Perfect Play! +${finalEffect.happiness} Joy & earned +1 Churu Tube 🍬!`,
+            text: `🏆 3/3 Perfect! +${finalEffect.happiness} Joy, +1 Churu 🍬`,
             tone: 'info',
           });
         } else if (mgReward.bonusJoy > 0) {
           noticeRef.current({
-            text: `✨ 2/3 Great Play! +${finalEffect.happiness} Joy!`,
+            text: `✨ 2/3 Great! +${finalEffect.happiness} Joy`,
             tone: 'info',
           });
         }
@@ -1141,7 +1140,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
       if (tummyAche && action.soothesTummy) {
         clearTummyAche();
         noticeRef.current({
-          text: `🧡 That helped! ${live.name}’s tummy feels much better now.`,
+          text: '🧡 Tummy ache soothed!',
           tone: 'info',
         });
       }
@@ -1151,7 +1150,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
         const meals = incrementCounter(LS_MEAL_COUNT);
         if (meals % 2 === 0) {
           window.setTimeout(() => {
-            dirtyLitterBox(`🚽 Nature calls! ${live.name} used his litter box in the corner — tap it to scoop!`);
+            dirtyLitterBox('🚽 Litter box needs scooping.');
           }, action.durationMs + 200);
         }
       }
@@ -1213,7 +1212,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
     if (!base || !live || busy) return;
     if (live.isDeceased) return;
     if (live.isPaused) {
-      triggerRefusal(`✈️ Care clock is paused. Tap "✈️ Paused" above or open the Menu to resume!`);
+      triggerRefusal('✈️ Care clock is paused. Resume in Menu or header.');
       return;
     }
     vibrate([25, 25, 35, 25, 25]);
@@ -1227,7 +1226,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
       lastPetRef.current = nowMs;
       const boost: Partial<CatStats> = { happiness: PET_JOY_BOOST };
       noticeRef.current({
-        text: `🧡 Belly rubs soothed ${live.name}’s tummy ache!`,
+        text: '🧡 Belly rubs soothed his tummy!',
         tone: 'info',
       });
       playEvent({
@@ -1255,7 +1254,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
         clearWhim();
         updateChuruStash((c) => c + 1);
         noticeRef.current({
-          text: `🎉 Purr-fect chin scratches! 2× Joy (+${joyDelta}) & earned +1 Churu Tube 🍬!`,
+          text: `🎉 Craving fulfilled! +${joyDelta} Joy, +1 Churu 🍬`,
           tone: 'info',
         });
       }
@@ -1315,14 +1314,14 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
     // Sleep rules:
     // 1. Cannot force Oli to nap if he's already full of energy (>= 85)
     if (target && live.energy >= MAX_SLEEP_ENERGY) {
-      triggerRefusal(`⚡ ${live.name} has too much energy to nap right now! Play with him first.`);
+      triggerRefusal(`⚡ ${live.name} has too much energy to nap! Play with him first.`);
       return;
     }
 
     // 2. Cannot wake Oli up if he's still deeply exhausted (< 20)
     if (!target && live.energy < MIN_WAKE_ENERGY) {
       noticeRef.current({
-        text: `😴 ${live.name} is still too exhausted to wake up (Energy < ${MIN_WAKE_ENERGY}). Let him rest a bit longer!`,
+        text: `😴 Still too tired to wake up (${Math.round(live.energy)}/100 Energy).`,
         tone: 'warn',
       });
       vibrate([20, 40, 20]);
@@ -1368,9 +1367,9 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
       saveLastLitterAt(nowMs);
       saveLastWhimAt(nowMs);
       saveLastRoamAt(nowMs);
-      noticeRef.current({ text: '▶️ Care clock resumed! Welcome back!', tone: 'info' });
+      noticeRef.current({ text: '▶️ Care clock resumed.', tone: 'info' });
       vibrate([20, 60, 20]);
-      void commit(mutator, PAUSE_ACTION_ID, 'Resumed the care clock — welcome back!');
+      void commit(mutator, PAUSE_ACTION_ID, 'Resumed the care clock');
     } else {
       const mutator = (b: CatState): CatState => {
         const mat = materialize(b, nowMs);
@@ -1380,9 +1379,9 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
           last_updated_at: nowIso,
         };
       };
-      noticeRef.current({ text: '✈️ Care clock paused (Vacation Mode)! Oli is resting safely.', tone: 'info' });
+      noticeRef.current({ text: '✈️ Care clock paused (Vacation Mode).', tone: 'info' });
       vibrate(30);
-      void commit(mutator, PAUSE_ACTION_ID, 'Paused the care clock (vacation mode)');
+      void commit(mutator, PAUSE_ACTION_ID, 'Paused the care clock');
     }
   }, [base, live, commit]);
 
@@ -1421,12 +1420,12 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
     clearTummyAche();
 
     noticeRef.current({
-      text: `🩺 Oli was revived! He's weak and hungry — give him food and water right away! (${nextLives} lives left)`,
+      text: `🩺 Oli revived! (${nextLives} lives left)`,
       tone: 'info',
     });
     vibrate([40, 80, 40, 80, 40]);
     celebrate();
-    void commit(mutator, REVIVE_ACTION_ID, 'Miraculous emergency vet care revived Oli!');
+    void commit(mutator, REVIVE_ACTION_ID, 'Emergency revival brought Oli back');
   }, [base, live, clearTummyAche, clearWhim, commit]);
 
   return {

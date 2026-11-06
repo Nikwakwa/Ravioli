@@ -69,8 +69,8 @@ export function WhimBubble({
             scale: { type: 'spring', stiffness: 340, damping: 22 },
             y: { duration: 2.2, repeat: Infinity, ease: 'easeInOut' },
           }}
-          title="Tap to fulfill Oli’s craving!"
-          aria-label={`${whim.label} Tap to give it to him for double Joy and a Churu treat. ${remainingMin} minutes left.`}
+          title="Oli’s craving"
+          aria-label={`${whim.label}. ${remainingMin}m left. Tap for 2× Joy and 1 Churu.`}
           className={`pointer-events-auto absolute z-30 flex w-max -translate-x-1/2 cursor-pointer flex-col items-center focus-visible:outline-2 focus-visible:outline-amber-500 ${
             targetPos && !below ? '-translate-y-full' : ''
           }`}
@@ -86,7 +86,7 @@ export function WhimBubble({
                 </span>
               </div>
               <span className="text-[10px] font-extrabold whitespace-nowrap text-pink-600">
-                Tap me · 2× Joy + 1 Churu 🍬
+                2× Joy + 1 Churu 🍬
               </span>
             </div>
           </div>

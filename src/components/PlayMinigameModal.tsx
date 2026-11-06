@@ -14,7 +14,7 @@ export const MINIGAME_ROUND_TIME_SEC = 10.0;
 
 export function PlayMinigameModal({
   action,
-  catName,
+  catName: _catName,
   whimActive,
   onComplete,
   onCancel,
@@ -327,8 +327,8 @@ export function PlayMinigameModal({
                 </div>
                 <p className="text-[10px] font-bold text-amber-800/80">
                   {isFeather
-                    ? 'Tap POUNCE when the feather enters the green zone!'
-                    : `Tap the darting red dot before the clock runs out!`}{' '}
+                    ? 'Tap POUNCE in the green zone!'
+                    : `Tap the darting red dot!`}{' '}
                   <span className="whitespace-nowrap text-emerald-700">3/3 = +1 Churu 🍬</span>
                 </p>
               </div>
@@ -445,12 +445,12 @@ export function PlayMinigameModal({
                   <span>🐱</span>
                   <span>
                     {roundFeedback === 'hit'
-                      ? `✨ GOT IT! ${catName} pounced right on the feather!`
+                      ? 'Caught it! ✨'
                       : roundFeedback === 'miss'
                         ? missReason === 'timeout'
-                          ? `⏰ Time’s up! The feather fluttered away!`
-                          : `💨 Whoosh! The feather slipped past his paws!`
-                        : `${catName}’s pupils are huge… wait for the green zone!`}
+                          ? 'Time’s up!'
+                          : 'Missed!'
+                        : 'Wait for the green zone...'}
                   </span>
                 </div>
 
@@ -527,14 +527,14 @@ export function PlayMinigameModal({
                     <span>🐱</span>
                     <span>
                       {roundFeedback === 'hit'
-                        ? `✨ GOT IT! ${catName} trapped the red dot!`
+                        ? 'Caught it! ✨'
                         : roundFeedback === 'miss'
                           ? missReason === 'timeout'
-                            ? `⏰ Zipped away! Time ran out!`
-                            : `💨 Too fast! The laser dot zipped away!`
+                            ? 'Time’s up!'
+                            : 'Too fast!'
                           : missPaws.length > 0
-                            ? `💨 Missed pounce! Dot is still zooming!`
-                            : `Track the red dot and tap to catch it!`}
+                            ? 'Missed! Keep tapping!'
+                            : 'Track the red dot and tap to catch it!'}
                     </span>
                   </div>
                 </div>
@@ -552,17 +552,17 @@ export function PlayMinigameModal({
               </div>
               <h3 className="font-display text-base font-black text-amber-950">
                 {reward.tier === 'perfect'
-                  ? `3/3 PERFECT POUNCE! 🏆`
+                  ? '3/3 Perfect! 🏆'
                   : reward.tier === 'great'
-                    ? `2/3 GREAT PLAY! ✨`
-                    : `${hitsSoFar}/3 Fun Workout! 🐾`}
+                    ? '2/3 Great! ✨'
+                    : `${hitsSoFar}/3 Good effort! 🐾`}
               </h3>
               <p className="text-xs font-extrabold text-emerald-800">
                 {reward.tier === 'perfect'
-                  ? `+${reward.bonusJoy} Bonus Joy & +1 Churu Tube 🍬 earned!`
+                  ? `+${reward.bonusJoy} Joy & +1 Churu 🍬`
                   : reward.tier === 'great'
-                    ? `+${reward.bonusJoy} Bonus Joy for sharp reflexes!`
-                    : `${catName} had a blast chasing it around the rug!`}
+                    ? `+${reward.bonusJoy} Joy`
+                    : 'Nice try!'}
               </p>
             </motion.div>
           )}

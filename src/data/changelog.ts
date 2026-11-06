@@ -7,13 +7,23 @@ export interface ReleaseEntry {
 
 export const CHANGELOG: ReleaseEntry[] = [
   {
+    version: 'v0.16.14',
+    date: '2026-11-06',
+    title: 'Punchy & Human Text 📝✨',
+    changes: [
+      'Streamlined pop-ups, toast notices, and action refusals so they are quick and easy to read at a glance.',
+      'Crisp, simplified care guide rules and minigame instructions.',
+      'Shorter, clearer thought bubbles and alert labels.',
+    ],
+  },
+  {
     version: 'v0.16.13',
     date: '2026-11-06',
     title: 'Full App Audit, Security & Polish 🛡️✨',
     changes: [
-      'Protected emergency revival so Oli never gets hit with old messes or penalties right after waking up.',
-      'Aligned all care rules, Churu hints, and Chin Scratches rewards across the app and menu.',
-      'Strengthened app security, keyboard navigation, and cleaned up unused legacy code.',
+      'Protected emergency revival from old messes right after waking up.',
+      'Aligned all care rules and Churu rewards across the app and menu.',
+      'Strengthened app security and cleaned up unused code.',
     ],
   },
   {
@@ -21,13 +31,10 @@ export const CHANGELOG: ReleaseEntry[] = [
     date: '2026-11-05',
     title: 'Small-Screen Polish & Clearer Labels 📱✨',
     changes: [
-      'Clearer Care Buttons: Effect tags now use the same little icons as the meters up top, so they fit neatly on every phone instead of spilling off the buttons.',
-      'Food Meter: The “Hunger” meter is now called “Food” — a full bar means a full tummy, so “+38 Food” reads the right way.',
-      'Craving Bubbles Point at Oli: Cravings now float right above Oli’s head in every spot and never slide off the screen edges or hide behind the top bar.',
-      'Messages Stay Out of the Way: Pop-up messages now appear just below the meters instead of covering them.',
-      'Tidier Menu & Alerts: Simpler menu header, tab names that always fit, and alert options that grey out while notifications are off.',
-      'Easier Minigames: Hint text no longer sits on top of the Pounce Zone, and the Skip and Close buttons are easier to tap.',
-      'Easier Reading at Night: “Sleeping” labels and status tags are now readable in nap mode and when your phone uses dark mode.',
+      'Care buttons use compact icons matching top meters.',
+      'Renamed hunger meter to Food so a full bar means full tummy.',
+      'Craving bubbles stay neatly centered over Oli on all screen sizes.',
+      'Tidier menu, alerts, and night-time text readability.',
     ],
   },
   {

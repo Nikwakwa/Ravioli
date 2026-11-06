@@ -55,21 +55,20 @@ export function EmergencyRevivalModal({
           {/* Heading */}
           <div className="mb-3 text-center">
             <h2 className="font-display text-lg font-black tracking-tight text-amber-100">
-              Oli Has Passed Away 💔
+              Oli Needs You 💔
             </h2>
             <p className="mt-1 text-xs font-semibold leading-relaxed text-amber-200/80">
-              Oli was left alone without food or water for over 2 days and succumbed to severe dehydration.
+              Oli was left unattended for too long.
             </p>
           </div>
 
-          {/* Responsibility reminder card */}
+          {/* Travel reminder card */}
           <div className="mb-4 rounded-2xl border border-white/10 bg-white/5 p-3 text-left">
             <p className="text-[11px] font-medium leading-relaxed text-amber-100/90">
-              Caring for a pet is a real, heartfelt responsibility.
+              Caring for a pet takes regular attention.
             </p>
             <p className="mt-1.5 text-[10px] font-bold text-sky-300">
-              ✈️ <strong>Travel Tip:</strong> Whenever you’re taking a flight, on a long trip, or unable to check in, use{' '}
-              <strong className="underline">Vacation Mode</strong> in the Menu to pause his care clock and keep him safe!
+              ✈️ <strong>Tip:</strong> Use <strong className="underline">Vacation Mode</strong> in the Menu to pause his clock whenever you travel!
             </p>
           </div>
 
@@ -78,7 +77,7 @@ export function EmergencyRevivalModal({
             <div className="flex items-center gap-1">
               <span className="font-display text-xs font-bold text-amber-200">9 Lives of Oli:</span>
               <span className="text-xs font-black text-amber-400">
-                {livesLeft} / {MAX_LIVES} Remaining
+                {livesLeft} / {MAX_LIVES} Left
               </span>
             </div>
 
@@ -110,15 +109,15 @@ export function EmergencyRevivalModal({
             <Sparkles className="h-4 w-4" />
             <span>
               {livesLeft > 1
-                ? `🩺 Emergency Miracle Revival (Use 1 Life)`
+                ? `Revive Oli (Use 1 Life)`
                 : livesLeft === 1
-                  ? `🩺 Emergency Revival (Last Life!) 🐾`
-                  : `✨ Fresh Start: Promise to Care (Restore 9 Lives)`}
+                  ? `Revive Oli (Last Life!) 🐾`
+                  : `Fresh Start (Restore 9 Lives)`}
             </span>
           </button>
 
           <p className="mt-2.5 text-center text-[10px] font-semibold text-amber-300/60">
-            Oli will wake up hungry and thirsty — have wet food and fresh water ready!
+            He'll wake up hungry and thirsty!
           </p>
         </motion.div>
       </motion.div>

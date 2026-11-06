@@ -82,7 +82,7 @@ export function StatusHUD({
                 <button
                   type="button"
                   onClick={onOpenPause ?? onOpenMenu}
-                  title="Care Clock Paused — tap to manage in Menu"
+                  title="Clock paused"
                   className={`rounded-full bg-sky-500/20 border border-sky-400/40 px-2 py-0.5 text-[10px] font-black transition-transform active:scale-95 animate-pulse ${night ? 'text-sky-200' : 'text-sky-800'}`}
                 >
                   ✈️ Paused
@@ -116,7 +116,7 @@ export function StatusHUD({
         <div className="flex shrink-0 items-center gap-1.5">
           {/* Churu Treat Stash counter pill */}
           <div
-            title="Churu Treat Stash — earn more by fulfilling Oli’s cravings or scoring 3/3 in minigames!"
+            title="Churu Stash"
             className={`flex h-9 items-center gap-1.5 rounded-full border px-3 text-xs font-extrabold shadow-sm backdrop-blur-md ${surface}`}
           >
             <span className="text-sm leading-none">🍬</span>
@@ -127,8 +127,8 @@ export function StatusHUD({
           <button
             type="button"
             onClick={onOpenMenu}
-            title="Menu, Vacation Clock, Care Rules & Version"
-            aria-label="Open Menu, Vacation Clock, Care Rules and Version"
+            title="Menu"
+            aria-label="Open Menu"
             className={`relative flex h-9 items-center gap-1.5 rounded-full border px-3.5 text-xs font-extrabold shadow-sm backdrop-blur-md transition-all hover:bg-amber-100/40 active:scale-95 ${surface}`}
           >
             <BookOpen className={`h-3.5 w-3.5 ${night ? 'text-amber-300' : 'text-amber-600'}`} />

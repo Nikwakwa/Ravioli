@@ -249,29 +249,29 @@ export function pickCandidateWhim(
   if (live.isSleeping) return null;
 
   const candidates: Omit<CatWhim, 'id' | 'expiresAt'>[] = [
-    { actionId: PET_ACTION_ID, label: 'Wants Chin Scratches!', emoji: '🐾' },
+    { actionId: PET_ACTION_ID, label: 'Chin Scratches', emoji: '🐾' },
   ];
 
   if (live.hunger < 80) {
-    candidates.push({ actionId: 'wet_food', label: 'Craving Wet Food!', emoji: '🍖' });
+    candidates.push({ actionId: 'wet_food', label: 'Wet Food', emoji: '🍖' });
   }
   if (live.hunger < 85) {
-    candidates.push({ actionId: 'quail_egg', label: 'Wants a Quail Egg!', emoji: '🥚' });
+    candidates.push({ actionId: 'quail_egg', label: 'Quail Egg', emoji: '🥚' });
   }
   if (live.hunger < 92) {
-    candidates.push({ actionId: 'chicken_heart', label: 'Craving a Chicken Heart!', emoji: '🧡' });
+    candidates.push({ actionId: 'chicken_heart', label: 'Chicken Heart', emoji: '🧡' });
   }
   if (live.hydration < 85) {
-    candidates.push({ actionId: 'fountain', label: 'Wants Fresh Fountain!', emoji: '💧' });
+    candidates.push({ actionId: 'fountain', label: 'Fresh Water', emoji: '💧' });
   }
   if (live.energy >= 20) {
-    candidates.push({ actionId: 'feather_wand', label: 'Wants Feather Wand!', emoji: '🪶' });
+    candidates.push({ actionId: 'feather_wand', label: 'Feather Wand', emoji: '🪶' });
   }
   if (live.energy >= 30) {
-    candidates.push({ actionId: 'laser_pointer', label: 'Wants Laser Zoomies!', emoji: '⚡' });
+    candidates.push({ actionId: 'laser_pointer', label: 'Laser Pointer', emoji: '⚡' });
   }
   if (live.hygiene < 92) {
-    candidates.push({ actionId: 'brush', label: 'Wants a Brush!', emoji: '🪮' });
+    candidates.push({ actionId: 'brush', label: 'Brush Coat', emoji: '🪮' });
   }
 
   const idx = Math.min(candidates.length - 1, Math.max(0, Math.floor(seed * candidates.length)));
