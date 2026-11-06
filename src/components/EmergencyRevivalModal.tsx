@@ -69,7 +69,7 @@ export function EmergencyRevivalModal({
             </p>
             <p className="mt-1.5 text-[10px] font-bold text-sky-300">
               ✈️ <strong>Travel Tip:</strong> Whenever you’re taking a flight, on a long trip, or unable to check in, use{' '}
-              <strong className="underline">Pause Care Clock (Vacation Mode)</strong> in the top bar to keep Oli safe!
+              <strong className="underline">Pause Care Clock (Vacation Mode)</strong> in the Menu to keep Oli safe!
             </p>
           </div>
 

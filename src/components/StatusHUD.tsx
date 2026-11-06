@@ -29,12 +29,6 @@ export interface StatusHUDProps {
   onOpenMenu: () => void;
   onOpenPause?: () => void;
   hasUpdate?: boolean;
-  // Optional for backwards compatibility:
-  onOpenChangelog?: () => void;
-  onOpenGuide?: () => void;
-  onTogglePause?: () => void;
-  notificationsOn?: boolean;
-  onToggleNotifications?: () => void;
 }
 
 export function StatusHUD({
@@ -127,7 +121,7 @@ export function StatusHUD({
         <div className="flex shrink-0 items-center gap-1.5">
           {/* Churu Treat Stash counter pill */}
           <div
-            title="Churu Treat Stash — earn more by fulfilling Oli’s cravings or scooping messes!"
+            title="Churu Treat Stash — earn more by fulfilling Oli’s cravings or scoring 3/3 in minigames!"
             className={`flex h-9 items-center gap-1.5 rounded-full border px-3 text-xs font-extrabold shadow-sm backdrop-blur-md ${surface}`}
           >
             <span className="text-sm leading-none">🍬</span>

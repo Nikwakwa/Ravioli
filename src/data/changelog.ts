@@ -7,6 +7,16 @@ export interface ReleaseEntry {
 
 export const CHANGELOG: ReleaseEntry[] = [
   {
+    version: 'v0.16.12',
+    date: '2026-11-06',
+    title: 'Full App Audit, Security & Polish 🛡️✨',
+    changes: [
+      'Protected emergency revival so Oli never gets hit with old messes or penalties right after waking up.',
+      'Aligned all care rules, Churu hints, and Chin Scratches rewards across the app and menu.',
+      'Strengthened app security, keyboard navigation, and cleaned up unused legacy code.',
+    ],
+  },
+  {
     version: 'v0.16.11',
     date: '2026-11-05',
     title: 'Peaceful Sleep & Fluffy Fur Makeover 😴✨',

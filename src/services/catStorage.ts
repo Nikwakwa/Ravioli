@@ -206,6 +206,12 @@ export class LocalCatStorage implements CatStorage {
   readonly mode: SyncMode = 'local';
   private channel: BroadcastChannel | null = null;
   private listeners = new Set<StorageListeners>();
+  private onStorageBound = (ev: StorageEvent) => {
+    if (this.channel) return;
+    if (ev.key === LS_STATE && ev.newValue) {
+      this.dispatch({ type: 'state', state: sanitizeCatState(readJson(LS_STATE)) });
+    }
+  };
 
   constructor() {
     try {
@@ -216,12 +222,6 @@ export class LocalCatStorage implements CatStorage {
     } catch {
       this.channel = null;
     }
-    window.addEventListener('storage', (ev) => {
-      if (this.channel) return;
-      if (ev.key === LS_STATE && ev.newValue) {
-        this.dispatch({ type: 'state', state: sanitizeCatState(readJson(LS_STATE)) });
-      }
-    });
   }
 
   private dispatch(msg: LocalMessage) {
@@ -278,10 +278,16 @@ export class LocalCatStorage implements CatStorage {
   }
 
   subscribe(listeners: StorageListeners) {
+    if (this.listeners.size === 0 && typeof window !== 'undefined') {
+      window.addEventListener('storage', this.onStorageBound);
+    }
     this.listeners.add(listeners);
     listeners.onStatus?.('local');
     return () => {
       this.listeners.delete(listeners);
+      if (this.listeners.size === 0 && typeof window !== 'undefined') {
+        window.removeEventListener('storage', this.onStorageBound);
+      }
     };
   }
 }

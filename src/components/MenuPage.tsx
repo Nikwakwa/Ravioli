@@ -15,7 +15,6 @@ import {
 import { useState } from 'react';
 import {
   AUTO_NAP_ENERGY,
-  MAX_SLEEP_ENERGY,
   MAX_TREATS_IN_WINDOW,
   MIN_WAKE_ENERGY,
   PET_JOY_BOOST,
@@ -26,7 +25,6 @@ import { STAT_KEYS, type LiveCat, type StatKey } from '../types';
 import {
   DECAY_RATES,
   MAX_LIVES,
-  MIN_NAP_HOURS,
   NEED_THRESHOLD,
   NEGLECT_DEATH_HOURS,
 } from '../utils/decayEngine';
@@ -283,11 +281,10 @@ export function MenuPage({
               <ul className="flex list-disc flex-col gap-1.5 pl-4 text-xs font-medium leading-relaxed text-amber-900/85">
                 <li>
                   Oli takes a nap when Energy drops below <strong>{AUTO_NAP_ENERGY}</strong>, recharges at{' '}
-                  <strong>+{DECAY_RATES.sleeping.energy}/hr</strong>, and wakes up naturally at {MAX_SLEEP_ENERGY} Energy.
+                  <strong>+{DECAY_RATES.sleeping.energy}/hr</strong>, and wakes up naturally at <strong>100 Energy</strong>.
                 </li>
                 <li>
-                  You can gently wake him early after resting at least {MIN_NAP_HOURS}h with at least {MIN_WAKE_ENERGY}{' '}
-                  Energy.
+                  You can gently wake him early once his Energy reaches at least <strong>{MIN_WAKE_ENERGY}</strong>.
                 </li>
               </ul>
             </div>

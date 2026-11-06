@@ -1,5 +1,5 @@
 import { AnimatePresence, motion, type TargetAndTransition, type Transition } from 'framer-motion';
-import { useEffect, useId, useMemo, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import type { CatAnimation, Mood } from '../types';
 
 /**
@@ -781,10 +781,16 @@ export function CatAvatar({ mood, animation, animationKey, onPet, className, x, 
     };
   }, []);
 
+  const pettingTimerRef = useRef<number | undefined>(undefined);
+  useEffect(() => {
+    return () => window.clearTimeout(pettingTimerRef.current);
+  }, []);
+
   const handlePet = () => {
     if (petting) return;
     setPetting(true);
-    window.setTimeout(() => setPetting(false), 1100);
+    window.clearTimeout(pettingTimerRef.current);
+    pettingTimerRef.current = window.setTimeout(() => setPetting(false), 1100);
     onPet?.();
   };
 

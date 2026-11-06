@@ -40,6 +40,16 @@ export function App() {
   useEffect(() => {
     return () => window.clearTimeout(noticeTimer.current);
   }, []);
+
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && menuOpen) {
+        setMenuOpen(false);
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [menuOpen]);
   const mainRef = useRef<HTMLElement>(null);
   const [containerSize, setContainerSize] = useState<{ width: number; height: number }>({
     width: 400,

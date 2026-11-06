@@ -82,6 +82,7 @@ describe('MenuPage Server Rendering & Content', () => {
     expect(html).toContain('Vacation');
     expect(html).toContain('Updates');
     expect(html).toContain('Alerts');
+    expect(html).toContain('100 Energy');
     // Cozy spots tab is scrapped
     expect(html).not.toContain('Cozy Spots');
   });
