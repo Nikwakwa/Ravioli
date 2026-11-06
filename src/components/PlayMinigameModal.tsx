@@ -11,6 +11,10 @@ import {
 import { vibrate } from '../utils/feedback';
 
 export const MINIGAME_ROUND_TIME_SEC = 10.0;
+export const FEATHER_ROUND_TIME_SEC = 10.0;
+export const LASER_ROUND_TIME_SEC = 5.0;
+export const MAX_LASER_POUNCES = 3;
+export const LASER_HIT_RADIUS_PX = 26;
 
 export function PlayMinigameModal({
   action,
@@ -26,13 +30,15 @@ export function PlayMinigameModal({
   onCancel: () => void;
 }) {
   const isFeather = action?.id === 'feather_wand';
+  const roundDuration = isFeather ? FEATHER_ROUND_TIME_SEC : LASER_ROUND_TIME_SEC;
 
   const [round, setRound] = useState(0);
   const [results, setResults] = useState<('hit' | 'miss')[]>([]);
   const [roundFeedback, setRoundFeedback] = useState<'hit' | 'miss' | null>(null);
-  const [missReason, setMissReason] = useState<'caught' | 'miss_tap' | 'timeout' | null>(null);
+  const [missReason, setMissReason] = useState<'caught' | 'miss_tap' | 'timeout' | 'out_of_pounces' | null>(null);
   const [finished, setFinished] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(MINIGAME_ROUND_TIME_SEC);
+  const [timeLeft, setTimeLeft] = useState(roundDuration);
+  const [pouncesLeft, setPouncesLeft] = useState(MAX_LASER_POUNCES);
 
   // Feather Pounce position state (0..100%)
   const [featherPos, setFeatherPos] = useState(12);
@@ -47,7 +53,8 @@ export function PlayMinigameModal({
   const laserPosRef = useRef({ x: 50, y: 50 });
   const laserVelRef = useRef({ vx: 50, vy: 40 });
   const laserNextTurnRef = useRef(0);
-  const timeLeftRef = useRef(MINIGAME_ROUND_TIME_SEC);
+  const timeLeftRef = useRef(roundDuration);
+  const pouncesLeftRef = useRef(MAX_LASER_POUNCES);
   const pounceCooldownRef = useRef(false);
   const arenaRef = useRef<HTMLDivElement | null>(null);
 
@@ -67,13 +74,16 @@ export function PlayMinigameModal({
   useEffect(() => {
     clearTimers();
     if (!action) return;
+    const dur = action.id === 'feather_wand' ? FEATHER_ROUND_TIME_SEC : LASER_ROUND_TIME_SEC;
     setRound(0);
     setResults([]);
     setRoundFeedback(null);
     setMissReason(null);
     setFinished(false);
-    setTimeLeft(MINIGAME_ROUND_TIME_SEC);
-    timeLeftRef.current = MINIGAME_ROUND_TIME_SEC;
+    setTimeLeft(dur);
+    timeLeftRef.current = dur;
+    pouncesLeftRef.current = MAX_LASER_POUNCES;
+    setPouncesLeft(MAX_LASER_POUNCES);
     pounceCooldownRef.current = false;
 
     // Reset Feather state
@@ -196,7 +206,10 @@ export function PlayMinigameModal({
 
   if (!action) return null;
 
-  const advanceRound = (outcome: 'hit' | 'miss', reason?: 'caught' | 'miss_tap' | 'timeout') => {
+  const advanceRound = (
+    outcome: 'hit' | 'miss',
+    reason?: 'caught' | 'miss_tap' | 'timeout' | 'out_of_pounces',
+  ) => {
     const nextResults = [...results, outcome];
     setResults(nextResults);
     setRoundFeedback(outcome);
@@ -224,8 +237,11 @@ export function PlayMinigameModal({
         setCaughtPos(null);
         setMissPaws([]);
         pounceCooldownRef.current = false;
-        timeLeftRef.current = MINIGAME_ROUND_TIME_SEC;
-        setTimeLeft(MINIGAME_ROUND_TIME_SEC);
+        const dur = isFeather ? FEATHER_ROUND_TIME_SEC : LASER_ROUND_TIME_SEC;
+        timeLeftRef.current = dur;
+        setTimeLeft(dur);
+        pouncesLeftRef.current = MAX_LASER_POUNCES;
+        setPouncesLeft(MAX_LASER_POUNCES);
 
         // Reset feather starting side
         posRef.current = Math.random() < 0.5 ? 10 : 90;
@@ -254,6 +270,7 @@ export function PlayMinigameModal({
     if (roundFeedback !== null || finished) return;
     if (!arenaRef.current) return;
     if (pounceCooldownRef.current) return;
+    if (pouncesLeftRef.current <= 0) return;
 
     const rect = arenaRef.current.getBoundingClientRect();
     const tapX = e.clientX - rect.left;
@@ -262,13 +279,17 @@ export function PlayMinigameModal({
     const dotPxX = (laserPosRef.current.x / 100) * rect.width;
     const dotPxY = (laserPosRef.current.y / 100) * rect.height;
 
-    // Generous touch target radius: 30px (60px diameter) so tapping feels fair on phones & mice
+    // Generous touch target radius so tapping feels fair on phones & mice
     const dist = Math.hypot(tapX - dotPxX, tapY - dotPxY);
 
-    if (dist <= 30) {
+    if (dist <= LASER_HIT_RADIUS_PX) {
       setCaughtPos({ x: laserPosRef.current.x, y: laserPosRef.current.y });
       advanceRound('hit', 'caught');
     } else {
+      pouncesLeftRef.current -= 1;
+      const remaining = pouncesLeftRef.current;
+      setPouncesLeft(remaining);
+
       // Missed pounce attempt: brief cooldown so you cannot drum-roll spam
       pounceCooldownRef.current = true;
       safeTimeout(() => {
@@ -284,6 +305,10 @@ export function PlayMinigameModal({
       }, 450);
 
       vibrate(20);
+
+      if (remaining <= 0) {
+        advanceRound('miss', 'out_of_pounces');
+      }
     }
   };
 
@@ -328,7 +353,7 @@ export function PlayMinigameModal({
                 <p className="text-[10px] font-bold text-amber-800/80">
                   {isFeather
                     ? 'Tap POUNCE in the green zone!'
-                    : `Tap the darting red dot!`}{' '}
+                    : `Catch the red dot in ${MAX_LASER_POUNCES} pounces or less!`}{' '}
                   <span className="whitespace-nowrap text-emerald-700">3/3 = +1 Churu 🍬</span>
                 </p>
               </div>
@@ -364,7 +389,7 @@ export function PlayMinigameModal({
               {roundFeedback === null && !finished && (
                 <span
                   className={`rounded-full px-2 py-0.5 text-[10px] font-black whitespace-nowrap tabular-nums transition-colors ${
-                    timeLeft <= 3.0
+                    timeLeft <= (isFeather ? 3.0 : 2.0)
                       ? 'bg-rose-500/20 text-rose-700 animate-pulse'
                       : 'bg-amber-900/10 text-amber-900'
                   }`}
@@ -474,16 +499,41 @@ export function PlayMinigameModal({
                   {/* Cozy living room rug grid texture */}
                   <div className="pointer-events-none absolute inset-0 opacity-[0.06] [background-image:radial-gradient(#78350f_1px,transparent_1px)] [background-size:12px_12px]" />
 
-                  {/* Round Countdown Progress Bar */}
-                  <div className="relative z-10 h-1.5 w-full overflow-hidden rounded-full bg-amber-950/10">
-                    <div
-                      style={{
-                        width: `${(Math.max(0, timeLeft) / MINIGAME_ROUND_TIME_SEC) * 100}%`,
-                      }}
-                      className={`h-full transition-[width] duration-75 ${
-                        timeLeft <= 3.0 ? 'bg-rose-500' : 'bg-amber-500'
-                      }`}
-                    />
+                  {/* Top HUD: Round Countdown Progress Bar + Pounces Left */}
+                  <div className="relative z-10 flex flex-col gap-1.5">
+                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-amber-950/10">
+                      <div
+                        style={{
+                          width: `${(Math.max(0, timeLeft) / LASER_ROUND_TIME_SEC) * 100}%`,
+                        }}
+                        className={`h-full transition-[width] duration-75 ${
+                          timeLeft <= 2.0 ? 'bg-rose-500' : 'bg-amber-500'
+                        }`}
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between px-0.5">
+                      <span className="text-[10px] font-black tracking-wide uppercase text-amber-900/60">
+                        Pounces Left
+                      </span>
+                      <div className="flex items-center gap-1.5" aria-label={`${pouncesLeft} pounces left`}>
+                        {Array.from({ length: MAX_LASER_POUNCES }).map((_, i) => {
+                          const active = i < pouncesLeft;
+                          return (
+                            <span
+                              key={i}
+                              className={`flex h-5 w-5 items-center justify-center rounded-full text-xs transition-all duration-200 ${
+                                active
+                                  ? 'bg-amber-500/20 text-amber-900 shadow-2xs scale-100 ring-1 ring-amber-500/40'
+                                  : 'bg-amber-950/5 text-amber-950/25 scale-90 grayscale'
+                              }`}
+                            >
+                              🐾
+                            </span>
+                          );
+                        })}
+                      </div>
+                    </div>
                   </div>
 
                   {/* Temporary missed pounce paw prints on the rug */}
@@ -531,10 +581,14 @@ export function PlayMinigameModal({
                         : roundFeedback === 'miss'
                           ? missReason === 'timeout'
                             ? 'Time’s up!'
-                            : 'Too fast!'
-                          : missPaws.length > 0
-                            ? 'Missed! Keep tapping!'
-                            : 'Track the red dot and tap to catch it!'}
+                            : missReason === 'out_of_pounces'
+                              ? 'Out of pounces!'
+                              : 'Too fast!'
+                          : pouncesLeft === 1
+                            ? 'Last pounce! Make it count!'
+                            : pouncesLeft === 2
+                              ? 'Missed! 2 pounces left!'
+                              : 'Track the red dot and tap to catch it!'}
                     </span>
                   </div>
                 </div>

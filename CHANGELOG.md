@@ -4,6 +4,14 @@ All updates to **Oli** are listed here.
 
 ---
 
+## `v0.16.15` — 2026-11-06
+### Laser Zoomies Balance & Tap Limit 🔴🐾
+- **3-Pounce Limit:** Each round now gives you 3 pounces max to catch the darting red dot, ending effortless tap spamming and rewarding careful timing.
+- **Snappy 5-Second Timer:** Reduced round countdown from 10 to 5 seconds for Laser Zoomies for an exciting, fast-paced reflex challenge.
+- **Pounces Left HUD:** Live paw print badges inside the arena clearly show your remaining attempts.
+
+---
+
 ## `v0.16.12` — 2026-11-05
 ### Small-Screen Polish & Clearer Labels 📱✨
 - **Clearer Care Buttons:** Effect tags now use the same little icons as the meters up top, so they fit neatly on every phone instead of spilling off the buttons.

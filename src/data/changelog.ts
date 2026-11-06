@@ -7,6 +7,16 @@ export interface ReleaseEntry {
 
 export const CHANGELOG: ReleaseEntry[] = [
   {
+    version: 'v0.16.15',
+    date: '2026-11-06',
+    title: 'Laser Zoomies Balance & Tap Limit 🔴🐾',
+    changes: [
+      'Added a 3-pounce limit per round to Laser Zoomies to prevent effortless tap spamming.',
+      'Reduced Laser Zoomies round timer to 5 seconds for a snappy, exciting reflex challenge.',
+      'Added a live Pounces Left counter so you can easily track your remaining attempts.',
+    ],
+  },
+  {
     version: 'v0.16.14',
     date: '2026-11-06',
     title: 'Punchy & Human Text 📝✨',

@@ -1,6 +1,13 @@
 import { describe, expect, it, vi } from 'vitest';
 import { renderToString } from 'react-dom/server';
-import { PlayMinigameModal, MINIGAME_ROUND_TIME_SEC } from './PlayMinigameModal';
+import {
+  PlayMinigameModal,
+  MINIGAME_ROUND_TIME_SEC,
+  FEATHER_ROUND_TIME_SEC,
+  LASER_ROUND_TIME_SEC,
+  MAX_LASER_POUNCES,
+  LASER_HIT_RADIUS_PX,
+} from './PlayMinigameModal';
 import { actionById, getFeatherSweetSpot, isFeatherInSweetSpot } from '../data/actions';
 
 describe('PlayMinigameModal', () => {
@@ -20,10 +27,11 @@ describe('PlayMinigameModal', () => {
     expect(html).toContain('POUNCE!');
     expect(html).toContain('Round 1 of 3');
     expect(html).toContain('Pounce Zone');
+    expect(html).toContain('10.0s');
     expect(html).toContain('Skip');
   });
 
-  it('renders Laser Zoomies with chase arena and round countdown', () => {
+  it('renders Laser Zoomies with chase arena, pounce limit HUD, and faster countdown', () => {
     const laserAction = actionById('laser_pointer')!;
     const html = renderToString(
       <PlayMinigameModal
@@ -37,6 +45,10 @@ describe('PlayMinigameModal', () => {
 
     expect(html).toContain('Laser Zoomies!');
     expect(html).toContain('Round 1 of 3');
+    expect(html).toContain('Catch the red dot in 3 pounces or less!');
+    expect(html).toContain('Pounces Left');
+    expect(html).toContain('3 pounces left');
+    expect(html).toContain('5.0s');
     expect(html).toContain('Track the red dot and tap to catch it!');
     expect(html).toContain('Skip');
     // Ensure old static spoiler text/buttons are completely gone
@@ -63,7 +75,11 @@ describe('PlayMinigameModal', () => {
     expect(isFeatherInSweetSpot(50, 2)).toBe(true);
   });
 
-  it('configures round time to 10.0 seconds for comfortable rounds', () => {
+  it('configures round timers and tap limits appropriately for each game', () => {
     expect(MINIGAME_ROUND_TIME_SEC).toBe(10.0);
+    expect(FEATHER_ROUND_TIME_SEC).toBe(10.0);
+    expect(LASER_ROUND_TIME_SEC).toBe(5.0);
+    expect(MAX_LASER_POUNCES).toBe(3);
+    expect(LASER_HIT_RADIUS_PX).toBe(26);
   });
 });
