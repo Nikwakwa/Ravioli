@@ -4,6 +4,16 @@ All updates to **Oli** are listed here.
 
 ---
 
+## `v0.18.1` — 2026-11-07
+### Balcony Design Overhaul & Cozy Spot Polish 🌿🪑🐾
+- **Fixed Oli’s Balcony Positions & Layering:**
+  - **By the Cypress Pot (`planter`):** Grounded Oli on the back terrace tiles right beside the cypress pot and railing curb instead of floating in mid-air over the railing bars.
+  - **Bistro Table (`bistro_chair`):** Perched Oli cleanly on top of the wooden bistro tabletop so chair slats never cut across his face.
+  - **Sunny Balcony Tiles (`balcony_floor`):** Layered Oli in front of the bistro set so the table and legs never overlap his body or tail.
+- **Redesigned Balcony Architecture & Plants:** Extended the left apartment wall to the top of the scene, aligned all vertical railing balusters and the continuous brushed-steel handrail, gave the grey planter boxes 3D depth with detailed yellow & purple pansies, reshaped the corner conifer into a natural feathery cypress tree, and swept away the fallen leaves from the terrace tiles.
+
+---
+
 ## `v0.18.0` — 2026-11-07
 ### New Scenery: The Balcony! 🌿🌼🪑
 - **Authentic Balcony Scenery:** Modeled directly from your balcony photo — featuring the brushed stainless-steel railing, hanging grey planter boxes with yellow & purple pansies, round corner pot with the tall green conifer, weathered wooden-slat folding bistro table & chairs, warm square terrace tiles with fallen autumn leaves, and the neighboring house & trees across the street.

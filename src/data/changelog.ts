@@ -7,6 +7,15 @@ export interface ReleaseEntry {
 
 export const CHANGELOG: ReleaseEntry[] = [
   {
+    version: 'v0.18.1',
+    date: '2026-11-07',
+    title: 'Balcony Design Overhaul & Cozy Spot Polish 🌿🪑🐾',
+    changes: [
+      'Grounded Oli properly in all 3 balcony spots: sitting on the back terrace tiles beside the cypress pot watching the street, perched cleanly on top of the wooden bistro table, and lounging in the foreground on the sunny tiles without furniture overlapping him.',
+      'Rebuilt the balcony architecture and furniture: full-height left apartment wall, aligned vertical railing bars, 3D grey planter boxes with pansies along the steel handrail, a feathery corner cypress tree, and clean terrace tiles with the fallen leaves removed.',
+    ],
+  },
+  {
     version: 'v0.18.0',
     date: '2026-11-07',
     title: 'New Scenery: The Balcony! 🌿🌼🪑',

@@ -73,26 +73,34 @@ describe('Balcony — Scenery & Mobile Safe Bounds', () => {
     }
   });
 
-  it('physically nestles Oli on the wooden bistro chair seat behind the chair backrest slats', () => {
+  it('perches Oli cleanly on top of the wooden bistro table after the table and chair layers so he is never sliced by furniture slats', () => {
     const tree = Balcony({ sleeping: false, activeSpot: 'bistro_chair' }) as AnyElement;
-    const chairGroup = findElements(tree, (el) => {
+    const bistroGroup = findElements(tree, (el) => {
       const label = el.props?.['aria-label'] || '';
       return typeof label === 'string' && label.toLowerCase().includes('bistro');
     })[0];
 
-    expect(chairGroup).toBeDefined();
-    // Find the foreground chair subgroup containing both CatAvatar and the backrest slats
-    const foregroundChair = (chairGroup.props.children as AnyElement[])[3];
-    const children = foregroundChair.props.children as AnyElement[];
+    expect(bistroGroup).toBeDefined();
+    const children = bistroGroup.props.children as AnyElement[];
 
     const catIdx = children.findIndex((c) => {
       return findElements(c, (inner) => typeof inner.type === 'function' && inner.type.name === 'CatAvatar').length > 0;
     });
-    const backrestIdx = children.findIndex((c) => c.type === 'polygon' && c.props?.points === '210,352 280,334 277,343 207,361');
+    // The bistro group has: [0] touch rect, [1] shadow, [2] back chair, [3] table, [4] foreground chair, [5] CatAvatar motion.g
+    expect(catIdx).toBe(5);
+  });
 
-    expect(catIdx).toBeGreaterThan(-1);
-    expect(backrestIdx).toBeGreaterThan(-1);
-    expect(backrestIdx).toBeGreaterThan(catIdx);
+  it('renders the balcony_floor spot after the bistro table in SVG painter order so Oli is never overlapped by table legs', () => {
+    const tree = Balcony({ sleeping: false, activeSpot: 'balcony_floor' }) as AnyElement;
+    const interactiveGroups = findElements(tree, (el) => el.props?.role === 'button');
+    expect(interactiveGroups.length).toBe(3);
+
+    const labels = interactiveGroups.map((g) => (g.props?.['aria-label'] as string).toLowerCase());
+    const bistroOrder = labels.findIndex((l) => l.includes('bistro'));
+    const floorOrder = labels.findIndex((l) => l.includes('tiles') || l.includes('floor'));
+
+    expect(bistroOrder).toBeGreaterThan(-1);
+    expect(floorOrder).toBeGreaterThan(bistroOrder);
   });
 
   it('provides generous touch targets (>= 40x40) with pointer-events enabled for all 3 balcony spots', () => {
