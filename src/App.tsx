@@ -7,6 +7,7 @@ import { FloatingEffects } from './components/FloatingEffects';
 import { MenuPage, type MenuTab } from './components/MenuPage';
 import { PlayMinigameModal } from './components/PlayMinigameModal';
 import { RoomMesses } from './components/RoomMesses';
+import { Balcony } from './components/scenes/Balcony';
 import { LivingRoom } from './components/scenes/LivingRoom';
 import { StatusHUD } from './components/StatusHUD';
 import { WhimBubble } from './components/WhimBubble';
@@ -27,6 +28,9 @@ export const SPOT_HEAD_SVG: Record<CatSpot, { x: number; y: number }> = {
   sofa_bed: { x: 294, y: 244 },
   box: { x: 166, y: 306 },
   window: { x: 196, y: 160 },
+  planter: { x: 150, y: 218 },
+  bistro_chair: { x: 224, y: 324 },
+  balcony_floor: { x: 144, y: 314 },
 };
 
 export function App() {
@@ -90,6 +94,8 @@ export function App() {
     reviveOli,
     spot,
     setSpot,
+    scene,
+    setScene,
     now,
   } = useCatGame('Nico', pushNotice);
   const { availableVersion, reloading, applyUpdate } = useVersionCheck();
@@ -199,21 +205,53 @@ export function App() {
     <div className="flex h-dvh w-full items-center justify-center bg-[#23170f]">
       {/* Mobile portrait frame (full-bleed on phones, phone-sized card on desktop) */}
       <main ref={mainRef} className="safe-shell relative flex h-full w-full max-w-[440px] flex-col justify-between overflow-hidden bg-[#fbe3cb] shadow-2xl">
-        {/* Cozy Living Room background with Oli physically nestled inside */}
+        {/* Active Scenery (Living Room or Balcony) with Oli physically nestled inside */}
         <div className="pointer-events-none absolute inset-0">
-          <LivingRoom
-            sleeping={live.isSleeping}
-            fountainBoost={event?.actionId === 'fountain'}
-            onTapFountain={handleTapFountain}
-            litterBoxDirty={litterBoxDirty}
-            onTapLitterBox={handleTapLitterBox}
-            activeSpot={spot}
-            onSelectSpot={setSpot}
-            catMood={mood}
-            catAnimation={event?.animation ?? 'idle'}
-            catAnimationKey={event?.key ?? 0}
-            onPetCat={handlePetOli}
-          />
+          <AnimatePresence mode="sync" initial={false}>
+            {scene === 'balcony' ? (
+              <motion.div
+                key="scene-balcony"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.35 }}
+                className="pointer-events-none absolute inset-0"
+              >
+                <Balcony
+                  sleeping={live.isSleeping}
+                  activeSpot={spot}
+                  onSelectSpot={setSpot}
+                  catMood={mood}
+                  catAnimation={event?.animation ?? 'idle'}
+                  catAnimationKey={event?.key ?? 0}
+                  onPetCat={handlePetOli}
+                />
+              </motion.div>
+            ) : (
+              <motion.div
+                key="scene-living-room"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.35 }}
+                className="pointer-events-none absolute inset-0"
+              >
+                <LivingRoom
+                  sleeping={live.isSleeping}
+                  fountainBoost={event?.actionId === 'fountain'}
+                  onTapFountain={handleTapFountain}
+                  litterBoxDirty={litterBoxDirty}
+                  onTapLitterBox={handleTapLitterBox}
+                  activeSpot={spot}
+                  onSelectSpot={setSpot}
+                  catMood={mood}
+                  catAnimation={event?.animation ?? 'idle'}
+                  catAnimationKey={event?.key ?? 0}
+                  onPetCat={handlePetOli}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Subtle sleep-mode ambient vignette */}
           <motion.div
@@ -290,7 +328,7 @@ export function App() {
           </AnimatePresence>
         </div>
 
-        {/* Center stage overlay: floating effects, whims, messes */}
+        {/* Center stage overlay: floating effects, whims, messes & quick room switcher */}
         <div ref={stageRef} className="pointer-events-none relative z-10 flex flex-1 items-end justify-center pb-5">
           <FloatingEffects
             event={event}
@@ -308,7 +346,68 @@ export function App() {
             targetPos={targetHeadPos}
             containerWidth={containerSize.width}
           />
-          <RoomMesses messes={messes} onClean={cleanMess} />
+          {scene === 'living_room' && <RoomMesses messes={messes} onClean={cleanMess} />}
+
+          {/* Quick Room Switcher Pill (Living Room / Balcony) */}
+          <div
+            role="group"
+            aria-label="Switch scenery"
+            className={`pointer-events-auto absolute bottom-1.5 left-1/2 z-20 flex -translate-x-1/2 items-center gap-1 rounded-full border p-1 shadow-md backdrop-blur-md transition-colors ${
+              live.isSleeping
+                ? 'border-white/10 bg-slate-900/80 text-amber-50'
+                : 'border-amber-900/12 bg-white/90 text-amber-950'
+            }`}
+          >
+            <button
+              type="button"
+              onClick={() => setScene('living_room')}
+              aria-pressed={scene === 'living_room'}
+              className={`relative flex items-center gap-1 rounded-full px-3 py-1 text-[11px] font-extrabold transition-colors active:scale-95 ${
+                scene === 'living_room'
+                  ? 'text-amber-950'
+                  : live.isSleeping
+                    ? 'text-indigo-200/75 hover:text-white'
+                    : 'text-amber-900/65 hover:text-amber-950'
+              }`}
+            >
+              {scene === 'living_room' && (
+                <motion.span
+                  layoutId="scene-pill"
+                  className={`absolute inset-0 rounded-full shadow-2xs ${
+                    live.isSleeping ? 'bg-amber-300' : 'bg-amber-400/30 ring-1 ring-amber-500/40'
+                  }`}
+                  transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                />
+              )}
+              <span className="relative z-10 text-xs leading-none">🛋️</span>
+              <span className="relative z-10">Living Room</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setScene('balcony')}
+              aria-pressed={scene === 'balcony'}
+              className={`relative flex items-center gap-1 rounded-full px-3 py-1 text-[11px] font-extrabold transition-colors active:scale-95 ${
+                scene === 'balcony'
+                  ? 'text-amber-950'
+                  : live.isSleeping
+                    ? 'text-indigo-200/75 hover:text-white'
+                    : 'text-amber-900/65 hover:text-amber-950'
+              }`}
+            >
+              {scene === 'balcony' && (
+                <motion.span
+                  layoutId="scene-pill"
+                  className={`absolute inset-0 rounded-full shadow-2xs ${
+                    live.isSleeping ? 'bg-amber-300' : 'bg-emerald-400/35 ring-1 ring-emerald-600/40'
+                  }`}
+                  transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                />
+              )}
+              <span className="relative z-10 text-xs leading-none">🌿</span>
+              <span className="relative z-10">Balcony</span>
+            </button>
+          </div>
         </div>
 
         {/* Bottom tactile care dock */}

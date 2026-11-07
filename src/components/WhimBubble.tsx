@@ -6,6 +6,9 @@ const SPOT_WHIM_POS: Record<CatSpot, { left: string; bottom: string }> = {
   sofa_bed: { left: '77%', bottom: '318px' },
   box: { left: '39%', bottom: '268px' },
   window: { left: '49%', bottom: '388px' },
+  planter: { left: '38%', bottom: '338px' },
+  bistro_chair: { left: '56%', bottom: '254px' },
+  balcony_floor: { left: '36%', bottom: '238px' },
 };
 
 export function WhimBubble({

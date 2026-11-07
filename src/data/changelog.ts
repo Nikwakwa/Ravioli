@@ -7,6 +7,16 @@ export interface ReleaseEntry {
 
 export const CHANGELOG: ReleaseEntry[] = [
   {
+    version: 'v0.18.0',
+    date: '2026-11-07',
+    title: 'New Scenery: The Balcony! 🌿🌼🪑',
+    changes: [
+      'Added your real Balcony as a second scenery, complete with the stainless-steel railing, grey pansy planter boxes, corner cypress pot, wooden bistro table & chairs, square terrace tiles, and neighborhood view across the street.',
+      'Added a quick Living Room / Balcony switcher right above the care dock, plus Oli can wander outside on his own when awake.',
+      'Oli can hang out by the flower boxes & conifer pot watching the street, perch on the wooden bistro chair, or stretch out on the sunny balcony tiles.',
+    ],
+  },
+  {
     version: 'v0.17.1',
     date: '2026-11-06',
     title: 'Red Ball Sofa Rally & Smooth Tail Spin 🛋️🐾🌀',

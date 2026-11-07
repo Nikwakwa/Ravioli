@@ -71,8 +71,26 @@ export type SyncStatus = 'connecting' | 'live' | 'local' | 'offline' | 'error';
 
 export type MessKind = 'fur_clump' | 'vomit';
 
-/** Cozy lounging spots around Nico & Athina's living room. */
-export type CatSpot = 'rug' | 'sofa_bed' | 'box' | 'window';
+/** Sceneries around Nico & Athina's home. */
+export type SceneId = 'living_room' | 'balcony';
+
+/** Cozy lounging spots around Nico & Athina's living room and balcony. */
+export type CatSpot =
+  | 'rug'
+  | 'sofa_bed'
+  | 'box'
+  | 'window'
+  | 'planter'
+  | 'bistro_chair'
+  | 'balcony_floor';
+
+export function isBalconySpot(spot: CatSpot): boolean {
+  return spot === 'planter' || spot === 'bistro_chair' || spot === 'balcony_floor';
+}
+
+export function sceneForSpot(spot: CatSpot): SceneId {
+  return isBalconySpot(spot) ? 'balcony' : 'living_room';
+}
 
 export interface RoomMess {
   id: string;

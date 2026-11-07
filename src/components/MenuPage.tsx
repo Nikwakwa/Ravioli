@@ -157,8 +157,8 @@ export function MenuPage({
                 <h3 className="font-display text-xs font-bold text-amber-950">Touch & Spots</h3>
               </div>
               <ul className="flex list-disc flex-col gap-1 pl-4 text-xs font-medium text-amber-900/85">
-                <li><strong>Pet Oli:</strong> Tap him in the room anytime (+{PET_JOY_BOOST} Joy).</li>
-                <li><strong>Spots:</strong> Tap the bed, box, window, or rug to invite him over.</li>
+                <li><strong>Pet Oli:</strong> Tap him anytime (+{PET_JOY_BOOST} Joy).</li>
+                <li><strong>Living Room &amp; Balcony:</strong> Use the bottom switcher or tap any cozy spot (sofa bed, box, window, rug, flower boxes, bistro chair, or balcony tiles).</li>
                 <li><strong>Fountain:</strong> Tap to refresh his water (+40 Water).</li>
               </ul>
             </div>

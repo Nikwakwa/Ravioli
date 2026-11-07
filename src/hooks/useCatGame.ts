@@ -11,9 +11,11 @@ import type {
   MessKind,
   Mood,
   RoomMess,
+  SceneId,
   SyncMode,
   SyncStatus,
 } from '../types';
+import { isBalconySpot, sceneForSpot } from '../types';
 import {
   applyEffect,
   computeLiveStats,
@@ -79,11 +81,21 @@ const LS_LAST_WHIM_AT = 'ravioli:v1:last_whim_at';
 const LS_SPOT = 'ravioli:v1:cat_spot';
 const LS_LAST_ROAM_AT = 'ravioli:v1:last_roam_at';
 
+const VALID_SPOTS: readonly CatSpot[] = [
+  'rug',
+  'sofa_bed',
+  'box',
+  'window',
+  'planter',
+  'bistro_chair',
+  'balcony_floor',
+];
+
 function loadCatSpot(): CatSpot {
   try {
     const raw = localStorage.getItem(LS_SPOT);
-    if (raw === 'rug' || raw === 'sofa_bed' || raw === 'box' || raw === 'window') {
-      return raw;
+    if (raw && (VALID_SPOTS as readonly string[]).includes(raw)) {
+      return raw as CatSpot;
     }
   } catch {
     // ignore
@@ -568,8 +580,17 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
 
   const live: LiveCat | null = useMemo(() => (base ? computeLiveStats(base, now) : null), [base, now]);
 
+  const scene: SceneId = useMemo(() => sceneForSpot(spot), [spot]);
+
   const setSpot = useCallback(
     (target: CatSpot, silent = false) => {
+      if (live?.isSleeping && target !== 'sofa_bed') {
+        if (!silent) {
+          vibrate(15);
+          noticeRef.current({ text: `😴 Shh… ${live.name} is sleeping on the sofa.`, tone: 'info' });
+        }
+        return;
+      }
       setSpotState(target);
       saveCatSpot(target);
       saveLastRoamAt(Date.now());
@@ -579,12 +600,32 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
           sofa_bed: '🛋️ Curled up on the sofa bed',
           box: '📦 Hopped into his delivery box',
           window: '🪟 Watching birds on the windowsill',
-          rug: '🐾 Back on the rug',
+          rug: '🐾 Back on the living room rug',
+          planter: '🌼 Sniffing the pansies & watching the street',
+          bistro_chair: '🪑 Perched on the balcony bistro chair',
+          balcony_floor: '☀️ Stretching out on the sunny balcony tiles',
         };
         noticeRef.current({ text: lines[target], tone: 'info' });
       }
     },
-    [],
+    [live],
+  );
+
+  const setScene = useCallback(
+    (targetScene: SceneId) => {
+      if (targetScene === scene) return;
+      if (targetScene === 'balcony') {
+        if (live?.isSleeping) {
+          vibrate(15);
+          noticeRef.current({ text: `😴 Shh… ${live.name} is sleeping on the sofa inside.`, tone: 'info' });
+          return;
+        }
+        setSpot('planter');
+      } else {
+        setSpot(live?.isSleeping ? 'sofa_bed' : 'rug');
+      }
+    },
+    [scene, live, setSpot],
   );
 
   // Keep Oli in his Bedsure bolster bed on the sofa while sleeping
@@ -595,15 +636,14 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
     }
   }, [live?.isSleeping, spot]);
 
-  // Spontaneous roaming when awake & idle (every ~15 minutes)
+  // Spontaneous roaming when awake & idle (every ~15 minutes) across Living Room & Balcony
   useEffect(() => {
     if (!live || live.isSleeping || live.isDeceased || live.isPaused || busy) return;
     const lastRoam = loadLastRoamAt();
     const elapsed = now - lastRoam;
     if (elapsed > 15 * 60_000) {
       saveLastRoamAt(now);
-      const candidates: CatSpot[] = ['rug', 'sofa_bed', 'box', 'window'];
-      const nextSpot = candidates[Math.floor(Math.random() * candidates.length)];
+      const nextSpot = VALID_SPOTS[Math.floor(Math.random() * VALID_SPOTS.length)];
       if (nextSpot !== spot) {
         setSpotState(nextSpot);
         saveCatSpot(nextSpot);
@@ -1001,6 +1041,9 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
 
       // Special case: Care -> Scoop Box cleans either the litter box or rug mess
       if (action.id === 'scoop_mess') {
+        if ((litterBoxDirty || messes.length > 0) && isBalconySpot(spot)) {
+          setSpot('rug', true);
+        }
         if (litterBoxDirty) {
           scoopLitterBox();
         } else if (messes.length > 0) {
@@ -1015,9 +1058,16 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
         return;
       }
 
-      // When doing an active care action, awake Oli trots to the center rug
-      if (action.id !== 'scoop_mess' && !live.isSleeping && spot !== 'rug') {
-        setSpot('rug', true);
+      // When doing an active care action, awake Oli trots to the floor of his current scenery
+      // (or inside to the living room rug if using the indoor water fountain).
+      if (action.id !== 'scoop_mess' && !live.isSleeping) {
+        if (action.id === 'fountain') {
+          if (spot !== 'rug') setSpot('rug', true);
+        } else if (isBalconySpot(spot)) {
+          if (spot !== 'balcony_floor') setSpot('balcony_floor', true);
+        } else if (spot !== 'rug') {
+          setSpot('rug', true);
+        }
       }
 
       // 1. Sleeping check
@@ -1204,6 +1254,8 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
       cleanMess,
       spawnMess,
       updateChuruStash,
+      spot,
+      setSpot,
     ],
   );
 
@@ -1456,6 +1508,8 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
     reviveOli,
     spot,
     setSpot,
+    scene,
+    setScene,
     now,
   };
 }

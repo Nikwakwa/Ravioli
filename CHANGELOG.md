@@ -4,6 +4,14 @@ All updates to **Oli** are listed here.
 
 ---
 
+## `v0.18.0` — 2026-11-07
+### New Scenery: The Balcony! 🌿🌼🪑
+- **Authentic Balcony Scenery:** Modeled directly from your balcony photo — featuring the brushed stainless-steel railing, hanging grey planter boxes with yellow & purple pansies, round corner pot with the tall green conifer, weathered wooden-slat folding bistro table & chairs, warm square terrace tiles with fallen autumn leaves, and the neighboring house & trees across the street.
+- **Quick Room Switcher & Roaming:** Tap **Living Room** or **Balcony** right above the care dock to switch sceneries anytime, or let Oli wander outside on his own when awake.
+- **Outdoor Spots & Reactions:** Oli can sniff the pansies and watch the street by the flower boxes & conifer pot, perch on the wooden bistro chair, or stretch out on the sunny balcony tiles.
+
+---
+
 ## `v0.17.1` — 2026-11-06
 ### Red Ball Sofa Rally & Smooth Tail Spin 🛋️🐾🌀
 - **Red Ball Sofa Rally:** Completely redesigned the Red Ball minigame! Instead of tapping a dot like Laser Zoomies, you now control **Oli’s sliding paw** along the floor to bounce the rolling red ball back (`2` saves per round) before it rolls into the dark gap **Under the Sofa**.
