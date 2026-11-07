@@ -7,13 +7,13 @@ export interface ReleaseEntry {
 
 export const CHANGELOG: ReleaseEntry[] = [
   {
-    version: 'v0.16.16',
+    version: 'v0.16.17',
     date: '2026-11-06',
     title: 'Real Living Room Makeover 🛋️🌿✨',
     changes: [
       'Updated the rug with the real Moroccan grey diamond pattern and a cleaner shape.',
       'Replaced the generic wall print and lamp with your tropical leaf print and cream cat tree behind the sofa.',
-      'Added the sleek TV on the white-and-oak media console alongside the tall white cabinet.',
+      'Redesigned the tall white bookcase with open shelves and Shaker cabinet doors, positioned closer to the center.',
       'Updated the window with the soft white Roman blind, small windowsill lamp, and all 5 sofa cushions.',
     ],
   },
