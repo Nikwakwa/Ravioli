@@ -4,6 +4,15 @@ All updates to **Oli** are listed here.
 
 ---
 
+## `v0.16.16` — 2026-11-06
+### Real Living Room Makeover 🛋️🌿✨
+- **Moroccan Diamond Shag Rug:** Replaced the noisy yarn squiggles on the rug with a clean, realistic cream shag rug featuring your grey diamond trellis pattern.
+- **Tropical Botanical Wall Art & Cat Tree:** Replaced the generic brown mountain picture with your square tropical monstera and red flower print, plus Oli’s cream plush cat tree tucked behind the sofa corner.
+- **TV & White Bookcase:** Replaced the rainbow-book cube shelf on the left with your tall white cabinet and the flatscreen TV + soundbar on the low white-and-oak media console.
+- **Window & Sofa Details:** Added the folded white fabric Roman blind, the little white windowsill lamp, the split-top coffee table seam, and all 5 throw pillows along the charcoal sofa.
+
+---
+
 ## `v0.16.15` — 2026-11-06
 ### Laser Zoomies Balance & Tap Limit 🔴🐾
 - **3-Pounce Limit:** Each round now gives you 3 pounces max to catch the darting red dot, ending effortless tap spamming and rewarding careful timing.
