@@ -7,6 +7,15 @@ export interface ReleaseEntry {
 
 export const CHANGELOG: ReleaseEntry[] = [
   {
+    version: 'v0.17.1',
+    date: '2026-11-06',
+    title: 'Red Ball Sofa Rally & Smooth Tail Spin 🛋️🐾🌀',
+    changes: [
+      'Redesigned Red Ball into an arcade Sofa Rally: slide Oli’s paw left and right to bounce the rolling red ball back and keep it from rolling under the sofa.',
+      'Fixed Oli’s head glitching in Tail Spin when the orbiting tail indicator completes a 360° loop.',
+    ],
+  },
+  {
     version: 'v0.17.0',
     date: '2026-11-06',
     title: 'New Solo Minigames: Tail Spin & Red Ball! 🌀🔴🐾',

@@ -16,12 +16,11 @@ export const MINIGAME_ROUND_TIME_SEC = 10.0;
 export const FEATHER_ROUND_TIME_SEC = 10.0;
 export const LASER_ROUND_TIME_SEC = 5.0;
 export const TAIL_ROUND_TIME_SEC = 8.0;
-export const RED_BALL_ROUND_TIME_SEC = 7.0;
+export const RED_BALL_ROUND_TIME_SEC = 8.0;
 export const MAX_LASER_POUNCES = 3;
-export const MAX_RED_BALL_POUNCES = 4;
 export const RED_BALL_BATS_REQUIRED = 2;
+export const RED_BALL_PADDLE_HALF_WIDTH_PCT = 17;
 export const LASER_HIT_RADIUS_PX = 26;
-export const RED_BALL_HIT_RADIUS_PX = 30;
 
 function getRoundDurationSec(actionId?: string): number {
   switch (actionId) {
@@ -35,10 +34,6 @@ function getRoundDurationSec(actionId?: string): number {
     default:
       return LASER_ROUND_TIME_SEC;
   }
-}
-
-function getInitialPounces(actionId?: string): number {
-  return actionId === 'red_ball' ? MAX_RED_BALL_POUNCES : MAX_LASER_POUNCES;
 }
 
 /** Polar-to-cartesian helper for drawing the SVG circular Nab Zone arc in Tail Spin. */
@@ -72,25 +67,25 @@ export function PlayMinigameModal({
   const isFeather = action?.id === 'feather_wand';
   const isTail = action?.id === 'tail_chase';
   const isRedBall = action?.id === 'red_ball';
-  const isLaser = !isFeather && !isTail && !isRedBall;
 
   const roundDuration = getRoundDurationSec(action?.id);
-  const maxPouncesForGame = getInitialPounces(action?.id);
 
   const [round, setRound] = useState(0);
   const [results, setResults] = useState<('hit' | 'miss')[]>([]);
   const [roundFeedback, setRoundFeedback] = useState<'hit' | 'miss' | null>(null);
-  const [missReason, setMissReason] = useState<'caught' | 'miss_tap' | 'timeout' | 'out_of_pounces' | null>(null);
+  const [missReason, setMissReason] = useState<
+    'caught' | 'miss_tap' | 'timeout' | 'out_of_pounces' | 'under_sofa' | null
+  >(null);
   const [finished, setFinished] = useState(false);
   const [timeLeft, setTimeLeft] = useState(roundDuration);
-  const [pouncesLeft, setPouncesLeft] = useState(maxPouncesForGame);
+  const [pouncesLeft, setPouncesLeft] = useState(MAX_LASER_POUNCES);
 
   // Feather Pounce position state (0..100%)
   const [featherPos, setFeatherPos] = useState(12);
   const posRef = useRef(12);
   const dirRef = useRef<1 | -1>(1);
 
-  // Tail Spin angle state (0..360 deg, 0 = top 12 o'clock)
+  // Tail Spin continuous unwrapped angle (deg, 0 = top 12 o'clock; never modulo-wrapped so rotation never snaps)
   const [tailAngle, setTailAngle] = useState(180);
   const tailAngleRef = useRef(180);
   const tailDirRef = useRef<1 | -1>(1);
@@ -100,7 +95,9 @@ export function PlayMinigameModal({
   const [caughtPos, setCaughtPos] = useState<{ x: number; y: number } | null>(null);
   const [missPaws, setMissPaws] = useState<{ id: number; x: number; y: number }[]>([]);
 
-  // Red Ball 2-tap Bat & Catch combo state
+  // Red Ball "Sofa Bounce" paddle goalie state
+  const [pawX, setPawX] = useState(50);
+  const pawXRef = useRef(50);
   const [ballBats, setBallBats] = useState(0);
   const ballBatsRef = useRef(0);
   const [batBouncePos, setBatBouncePos] = useState<{ x: number; y: number } | null>(null);
@@ -111,7 +108,7 @@ export function PlayMinigameModal({
   const laserVelRef = useRef({ vx: 50, vy: 40 });
   const laserNextTurnRef = useRef(0);
   const timeLeftRef = useRef(roundDuration);
-  const pouncesLeftRef = useRef(maxPouncesForGame);
+  const pouncesLeftRef = useRef(MAX_LASER_POUNCES);
   const pounceCooldownRef = useRef(false);
   const arenaRef = useRef<HTMLDivElement | null>(null);
 
@@ -127,12 +124,22 @@ export function PlayMinigameModal({
     return id;
   };
 
+  const launchRedBallForRound = (roundIdx: number) => {
+    const startX = 26 + Math.random() * 48;
+    const startPos = { x: startX, y: 18 };
+    laserPosRef.current = startPos;
+    setLaserPos(startPos);
+    const vy = 52 + roundIdx * 13; // R1: 52%/s, R2: 65%/s, R3: 78%/s downward
+    const vxMag = 36 + roundIdx * 12;
+    const vxDir = startX < 50 ? 1 : -1;
+    laserVelRef.current = { vx: vxDir * vxMag, vy };
+  };
+
   // Reset state whenever a new minigame action opens
   useEffect(() => {
     clearTimers();
     if (!action) return;
     const dur = getRoundDurationSec(action.id);
-    const maxP = getInitialPounces(action.id);
     setRound(0);
     setResults([]);
     setRoundFeedback(null);
@@ -140,8 +147,8 @@ export function PlayMinigameModal({
     setFinished(false);
     setTimeLeft(dur);
     timeLeftRef.current = dur;
-    pouncesLeftRef.current = maxP;
-    setPouncesLeft(maxP);
+    pouncesLeftRef.current = MAX_LASER_POUNCES;
+    setPouncesLeft(MAX_LASER_POUNCES);
     pounceCooldownRef.current = false;
 
     // Reset Feather state
@@ -154,25 +161,27 @@ export function PlayMinigameModal({
     tailDirRef.current = 1;
     setTailAngle(180);
 
-    // Reset Laser / Red Ball state
-    const startPos = action.id === 'red_ball' ? { x: 26, y: 52 } : { x: 50, y: 50 };
-    laserPosRef.current = startPos;
-    setLaserPos(startPos);
+    // Reset Red Ball / Laser state
     setCaughtPos(null);
     setMissPaws([]);
+    pawXRef.current = 50;
+    setPawX(50);
     ballBatsRef.current = 0;
     setBallBats(0);
     setBatBouncePos(null);
     ballSpinRef.current = 0;
     setBallSpinDeg(0);
 
-    const angle =
-      action.id === 'red_ball'
-        ? (Math.random() * 0.5 - 0.25) * Math.PI + (Math.random() < 0.5 ? 0.45 : -0.45)
-        : Math.random() * 2 * Math.PI;
-    const initialSpeed = action.id === 'red_ball' ? 58 : 65;
-    laserVelRef.current = { vx: Math.cos(angle) * initialSpeed, vy: Math.sin(angle) * initialSpeed };
-    laserNextTurnRef.current = performance.now() + 380 + Math.random() * 400;
+    if (action.id === 'red_ball') {
+      launchRedBallForRound(0);
+    } else {
+      laserPosRef.current = { x: 50, y: 50 };
+      setLaserPos({ x: 50, y: 50 });
+      const angle = Math.random() * 2 * Math.PI;
+      const initialSpeed = 65;
+      laserVelRef.current = { vx: Math.cos(angle) * initialSpeed, vy: Math.sin(angle) * initialSpeed };
+      laserNextTurnRef.current = performance.now() + 380 + Math.random() * 400;
+    }
 
     return () => clearTimers();
   }, [action]);
@@ -193,11 +202,23 @@ export function PlayMinigameModal({
           const hit = isTailInCatchZone(tailAngleRef.current, round);
           advanceRound(hit ? 'hit' : 'miss', hit ? 'caught' : 'miss_tap');
         }
+      } else if (isRedBall && roundFeedback === null && !finished) {
+        if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
+          e.preventDefault();
+          const next = Math.max(16, pawXRef.current - 10);
+          pawXRef.current = next;
+          setPawX(next);
+        } else if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
+          e.preventDefault();
+          const next = Math.min(84, pawXRef.current + 10);
+          pawXRef.current = next;
+          setPawX(next);
+        }
       }
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [action, isFeather, isTail, round, roundFeedback, finished, onCancel]);
+  }, [action, isFeather, isTail, isRedBall, round, roundFeedback, finished, onCancel]);
 
   // Main 60fps animation frame loop for movement & timer countdown
   useEffect(() => {
@@ -238,19 +259,21 @@ export function PlayMinigameModal({
         posRef.current = next;
         setFeatherPos(next);
       } else if (isTail) {
-        const nextAngle = (((tailAngleRef.current + tailDirRef.current * tailSpeed * dt) % 360) + 360) % 360;
+        // Unwrapped continuous angle so Oli's center head & tail never glitch at 360° -> 0°
+        const nextAngle = tailAngleRef.current + tailDirRef.current * tailSpeed * dt;
         tailAngleRef.current = nextAngle;
         setTailAngle(nextAngle);
       } else if (isRedBall) {
-        const MIN_X = 12;
-        const MAX_X = 88;
-        const MIN_Y = 20;
-        const MAX_Y = 82;
+        const MIN_X = 10;
+        const MAX_X = 90;
+        const MIN_Y = 16;
+        const PAW_LINE_Y = 74;
 
+        const prevY = laserPosRef.current.y;
         let nx = laserPosRef.current.x + laserVelRef.current.vx * dt;
         let ny = laserPosRef.current.y + laserVelRef.current.vy * dt;
 
-        // Smooth wall rebounds for the rolling red ball
+        // Bounce off left and right walls
         if (nx <= MIN_X) {
           nx = MIN_X;
           laserVelRef.current.vx = Math.abs(laserVelRef.current.vx);
@@ -259,19 +282,60 @@ export function PlayMinigameModal({
           laserVelRef.current.vx = -Math.abs(laserVelRef.current.vx);
         }
 
+        // Bounce off top wall
         if (ny <= MIN_Y) {
           ny = MIN_Y;
           laserVelRef.current.vy = Math.abs(laserVelRef.current.vy);
-        } else if (ny >= MAX_Y) {
-          ny = MAX_Y;
-          laserVelRef.current.vy = -Math.abs(laserVelRef.current.vy);
+        }
+
+        // Check if ball is crossing Oli's sliding paw paddle line on its way toward the sofa
+        if (laserVelRef.current.vy > 0 && prevY <= PAW_LINE_Y + 4 && ny >= PAW_LINE_Y - 3) {
+          const offsetFromPaw = nx - pawXRef.current;
+          if (Math.abs(offsetFromPaw) <= RED_BALL_PADDLE_HALF_WIDTH_PCT) {
+            const nextBats = ballBatsRef.current + 1;
+            ballBatsRef.current = nextBats;
+            setBallBats(nextBats);
+
+            if (nextBats >= RED_BALL_BATS_REQUIRED) {
+              // Second save traps the red ball under Oli's paw!
+              laserPosRef.current = { x: nx, y: PAW_LINE_Y };
+              setLaserPos({ x: nx, y: PAW_LINE_Y });
+              setCaughtPos({ x: nx, y: PAW_LINE_Y });
+              advanceRound('hit', 'caught');
+              return;
+            }
+
+            // First save: bat the ball back up across the floor!
+            ny = PAW_LINE_Y - 3.5;
+            const bounceVy = -(56 + round * 14);
+            const deflectionVx = offsetFromPaw * 2.4 + (Math.random() - 0.5) * 18;
+            const clampedVx = Math.max(-78, Math.min(78, laserVelRef.current.vx * 0.55 + deflectionVx));
+            laserVelRef.current = {
+              vx: Math.abs(clampedVx) < 28 ? (clampedVx >= 0 ? 34 : -34) : clampedVx,
+              vy: bounceVy,
+            };
+
+            vibrate([20, 35]);
+            setBatBouncePos({ x: nx, y: PAW_LINE_Y });
+            safeTimeout(() => {
+              setBatBouncePos(null);
+            }, 380);
+          }
+        }
+
+        // Missed the paw paddle — rolled under the sofa!
+        if (ny >= 92) {
+          laserPosRef.current = { x: nx, y: 92 };
+          setLaserPos({ x: nx, y: 92 });
+          advanceRound('miss', 'under_sofa');
+          return;
         }
 
         laserPosRef.current = { x: nx, y: ny };
         setLaserPos({ x: nx, y: ny });
 
         const speedMag = Math.hypot(laserVelRef.current.vx, laserVelRef.current.vy);
-        ballSpinRef.current = (ballSpinRef.current + speedMag * dt * 4.2) % 360;
+        ballSpinRef.current += speedMag * dt * 4.2;
         setBallSpinDeg(ballSpinRef.current);
       } else {
         const MIN_X = 10;
@@ -324,7 +388,7 @@ export function PlayMinigameModal({
 
   const advanceRound = (
     outcome: 'hit' | 'miss',
-    reason?: 'caught' | 'miss_tap' | 'timeout' | 'out_of_pounces',
+    reason?: 'caught' | 'miss_tap' | 'timeout' | 'out_of_pounces' | 'under_sofa',
   ) => {
     const nextResults = [...results, outcome];
     setResults(nextResults);
@@ -359,11 +423,10 @@ export function PlayMinigameModal({
         pounceCooldownRef.current = false;
 
         const dur = getRoundDurationSec(action.id);
-        const maxP = getInitialPounces(action.id);
         timeLeftRef.current = dur;
         setTimeLeft(dur);
-        pouncesLeftRef.current = maxP;
-        setPouncesLeft(maxP);
+        pouncesLeftRef.current = MAX_LASER_POUNCES;
+        setPouncesLeft(MAX_LASER_POUNCES);
 
         // Reset feather starting side
         posRef.current = Math.random() < 0.5 ? 10 : 90;
@@ -375,14 +438,16 @@ export function PlayMinigameModal({
         tailAngleRef.current = 180;
         setTailAngle(180);
 
-        // Reset laser / red ball starting position & speed
-        const startPos = isRedBall ? { x: nextRound % 2 === 1 ? 74 : 26, y: 50 } : { x: 50, y: 50 };
-        laserPosRef.current = startPos;
-        setLaserPos(startPos);
-        const speed = isRedBall ? 58 + nextRound * 24 : 65 + nextRound * 40;
-        const angle = Math.random() * 2 * Math.PI;
-        laserVelRef.current = { vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed };
-        laserNextTurnRef.current = performance.now() + 350 + Math.random() * 400;
+        if (isRedBall) {
+          launchRedBallForRound(nextRound);
+        } else {
+          laserPosRef.current = { x: 50, y: 50 };
+          setLaserPos({ x: 50, y: 50 });
+          const speed = 65 + nextRound * 40;
+          const angle = Math.random() * 2 * Math.PI;
+          laserVelRef.current = { vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed };
+          laserNextTurnRef.current = performance.now() + 350 + Math.random() * 400;
+        }
       }, 650);
     }
   };
@@ -399,7 +464,17 @@ export function PlayMinigameModal({
     advanceRound(hit ? 'hit' : 'miss', hit ? 'caught' : 'miss_tap');
   };
 
-  const handleArenaPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+  const updateRedBallPawFromPointer = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!arenaRef.current || roundFeedback !== null || finished) return;
+    const rect = arenaRef.current.getBoundingClientRect();
+    if (rect.width <= 0) return;
+    const rawPct = ((e.clientX - rect.left) / rect.width) * 100;
+    const clamped = Math.max(16, Math.min(84, rawPct));
+    pawXRef.current = clamped;
+    setPawX(clamped);
+  };
+
+  const handleLaserArenaPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     if (roundFeedback !== null || finished) return;
     if (!arenaRef.current) return;
     if (pounceCooldownRef.current) return;
@@ -412,40 +487,9 @@ export function PlayMinigameModal({
     const dotPxX = (laserPosRef.current.x / 100) * rect.width;
     const dotPxY = (laserPosRef.current.y / 100) * rect.height;
 
-    const hitRadius = isRedBall ? RED_BALL_HIT_RADIUS_PX : LASER_HIT_RADIUS_PX;
     const dist = Math.hypot(tapX - dotPxX, tapY - dotPxY);
 
-    if (dist <= hitRadius) {
-      if (isRedBall && ballBatsRef.current + 1 < RED_BALL_BATS_REQUIRED) {
-        // First bat! Kick the red ball across the floor so Oli can chase & trap it!
-        const nextBats = ballBatsRef.current + 1;
-        ballBatsRef.current = nextBats;
-        setBallBats(nextBats);
-        vibrate([20, 35]);
-
-        const bounceOrigin = { x: laserPosRef.current.x, y: laserPosRef.current.y };
-        setBatBouncePos(bounceOrigin);
-        safeTimeout(() => {
-          setBatBouncePos(null);
-        }, 420);
-
-        // Redirect toward the opposite half of the floor at a lively batted speed
-        const targetX = bounceOrigin.x < 50 ? 75 : 25;
-        const targetY = bounceOrigin.y < 50 ? 70 : 30;
-        const baseAngle = Math.atan2(targetY - bounceOrigin.y, targetX - bounceOrigin.x);
-        const jitter = (Math.random() - 0.5) * 0.7;
-        const batSpeed = (58 + round * 24) * 1.35;
-        laserVelRef.current = {
-          vx: Math.cos(baseAngle + jitter) * batSpeed,
-          vy: Math.sin(baseAngle + jitter) * batSpeed,
-        };
-        return;
-      }
-
-      if (isRedBall) {
-        ballBatsRef.current = RED_BALL_BATS_REQUIRED;
-        setBallBats(RED_BALL_BATS_REQUIRED);
-      }
+    if (dist <= LASER_HIT_RADIUS_PX) {
       setCaughtPos({ x: laserPosRef.current.x, y: laserPosRef.current.y });
       advanceRound('hit', 'caught');
     } else {
@@ -480,29 +524,33 @@ export function PlayMinigameModal({
   const sweetSpot = getFeatherSweetSpot(round);
   const tailCatchZone = getTailCatchZone(round);
 
-  const headerEmoji = isFeather ? '🪶' : isTail ? '🌀' : isRedBall ? '🔴' : '🔴';
+  const headerEmoji = isFeather ? '🪶' : isTail ? '🌀' : '🔴';
   const headerTitle = isFeather
     ? 'Feather Pounce!'
     : isTail
       ? 'Tail Spin!'
       : isRedBall
-        ? 'Red Ball Chase!'
+        ? 'Red Ball Rally!'
         : 'Laser Zoomies!';
   const headerInstruction = isFeather
     ? 'Tap POUNCE in the green zone!'
     : isTail
       ? 'Nab his tail in the green zone!'
       : isRedBall
-        ? 'Bat the red ball, then pounce to trap it!'
+        ? 'Slide Oli’s paw to keep the ball from rolling under the sofa!'
         : `Catch the red dot in ${MAX_LASER_POUNCES} pounces or less!`;
 
-  const lowTimeThreshold = isFeather || isTail ? 2.5 : 2.0;
+  const lowTimeThreshold = isFeather || isTail || isRedBall ? 2.5 : 2.0;
 
   // Tail Spin orbit coordinates (radius = 38% around center 50%, 50%)
   const tailRad = (tailAngle * Math.PI) / 180;
   const tailOrbitX = 50 + Math.sin(tailRad) * 38;
   const tailOrbitY = 50 - Math.cos(tailRad) * 38;
   const isTailCurrentlyInZone = isTailInCatchZone(tailAngle, round);
+  // Smooth periodic head motion (sin/cos of tailRad) so Oli's head follows the tail without ever snapping at 360°
+  const headOffsetX = Math.sin(tailRad) * 2.5;
+  const headOffsetY = -Math.cos(tailRad) * 2.5;
+  const headTiltDeg = Math.sin(tailRad) * 16;
 
   return (
     <AnimatePresence>
@@ -718,11 +766,13 @@ export function PlayMinigameModal({
                       Nab Zone
                     </span>
 
-                    {/* Center Oli spinning in place */}
+                    {/* Center Oli smoothly tracking his tail without loop-wrap snaps */}
                     <div className="flex flex-col items-center justify-center rounded-full bg-white/85 px-2.5 py-1.5 shadow-xs ring-1 ring-amber-900/10">
                       <span
-                        style={{ transform: `rotate(${(tailAngle * 0.25) % 360}deg)` }}
-                        className="text-2xl leading-none select-none"
+                        style={{
+                          transform: `translate(${headOffsetX.toFixed(2)}px, ${headOffsetY.toFixed(2)}px) rotate(${headTiltDeg.toFixed(2)}deg)`,
+                        }}
+                        className="inline-block text-2xl leading-none select-none transition-none"
                       >
                         🐱
                       </span>
@@ -793,23 +843,146 @@ export function PlayMinigameModal({
                   <span>🌀 NAB TAIL!</span>
                 </button>
               </div>
+            ) : isRedBall ? (
+              /* ---------------- GAME 3: RED BALL SOFA RALLY (PADDLE GOALIE) ---------------- */
+              <div className="flex flex-col items-center gap-2.5">
+                <div
+                  ref={arenaRef}
+                  onPointerDown={updateRedBallPawFromPointer}
+                  onPointerMove={(e) => {
+                    if (e.buttons > 0 || e.pointerType === 'mouse' || e.pointerType === 'touch') {
+                      updateRedBallPawFromPointer(e);
+                    }
+                  }}
+                  className="relative flex h-52 w-full select-none flex-col justify-between overflow-hidden rounded-2xl border-2 border-amber-900/15 bg-gradient-to-b from-[#fdf6ec] to-[#f4e6d0] p-3 shadow-inner cursor-ew-resize touch-none"
+                >
+                  {/* Cozy living room rug grid texture */}
+                  <div className="pointer-events-none absolute inset-0 opacity-[0.06] [background-image:radial-gradient(#78350f_1px,transparent_1px)] [background-size:12px_12px]" />
+
+                  {/* Top HUD: Round Countdown + Save Counter */}
+                  <div className="relative z-10 flex flex-col gap-1.5">
+                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-amber-950/10">
+                      <div
+                        style={{
+                          width: `${(Math.max(0, timeLeft) / RED_BALL_ROUND_TIME_SEC) * 100}%`,
+                        }}
+                        className={`h-full transition-[width] duration-75 ${
+                          timeLeft <= 2.5 ? 'bg-rose-500' : 'bg-amber-500'
+                        }`}
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between px-0.5">
+                      <span
+                        className={`rounded-full px-2 py-0.5 text-[10px] font-black tracking-wide uppercase transition-colors ${
+                          ballBats >= 1
+                            ? 'bg-emerald-500/20 text-emerald-800 ring-1 ring-emerald-500/40'
+                            : 'bg-amber-900/10 text-amber-900/75'
+                        }`}
+                      >
+                        {`Saves: ${ballBats}/${RED_BALL_BATS_REQUIRED}`}
+                      </span>
+                      <span className="text-[10px] font-extrabold text-amber-900/70">
+                        ↔ Slide paw to block
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Bounce burst when Oli bats the ball back */}
+                  {batBouncePos && (
+                    <div
+                      style={{ left: `${batBouncePos.x}%`, top: `${batBouncePos.y}%` }}
+                      className="pointer-events-none absolute -translate-x-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-emerald-400/30 text-lg font-black text-emerald-900 ring-2 ring-emerald-400 animate-ping"
+                    >
+                      🐾
+                    </div>
+                  )}
+
+                  {/* Trapped paw stamp when caught on 2nd save */}
+                  {caughtPos && (
+                    <div
+                      style={{ left: `${caughtPos.x}%`, top: `${caughtPos.y}%` }}
+                      className="pointer-events-none absolute z-20 -translate-x-1/2 -translate-y-1/2 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500/25 text-3xl shadow-lg ring-2 ring-emerald-400 animate-bounce"
+                    >
+                      🐾
+                    </div>
+                  )}
+
+                  {/* Rolling Small Red Ball */}
+                  {!caughtPos && (
+                    <div
+                      style={{ left: `${laserPos.x}%`, top: `${laserPos.y}%` }}
+                      className="pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-1/2 transition-none"
+                    >
+                      <div className="absolute -bottom-1 left-1/2 h-2 w-6 -translate-x-1/2 rounded-full bg-amber-950/25 blur-[1px]" />
+                      <div
+                        style={{ transform: `rotate(${ballSpinDeg}deg)` }}
+                        className={`relative flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-rose-400 via-red-600 to-rose-900 shadow-md ring-2 ${
+                          ballBats >= 1 ? 'ring-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.45)]' : 'ring-red-200/80'
+                        }`}
+                      >
+                        <div className="h-4 w-4 rounded-full border border-dashed border-white/45" />
+                        <div className="absolute top-1 left-1.5 h-2 w-2 rounded-full bg-white/85" />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Oli's Sliding Paw Paddle along the defense line (y = 74%) */}
+                  <div
+                    style={{
+                      left: `${pawX}%`,
+                      top: '74%',
+                      width: `${RED_BALL_PADDLE_HALF_WIDTH_PCT * 2}%`,
+                    }}
+                    className="pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-1/2 transition-none"
+                  >
+                    <div className="flex h-7 w-full items-center justify-center gap-1 rounded-full border-2 border-amber-500 bg-gradient-to-b from-amber-300 to-amber-400 px-2 shadow-md">
+                      <span className="text-sm leading-none">🐾</span>
+                      <span className="text-[9px] font-black tracking-wider uppercase text-amber-950">
+                        Oli’s Paw
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Dark "Under the Sofa" hazard gap at the bottom edge */}
+                  <div className="pointer-events-none absolute inset-x-0 bottom-0 flex h-7 items-center justify-center border-t-2 border-dashed border-rose-500/40 bg-stone-900/85 text-[10px] font-black tracking-wider text-rose-200 uppercase">
+                    🛋️ Under the Sofa — Don’t let it roll in!
+                  </div>
+                </div>
+
+                {/* Status message below arena */}
+                <div aria-live="polite" className="flex min-h-6 items-center justify-center gap-1.5 px-1 text-center text-[11px] font-extrabold text-amber-900">
+                  <span>🐱</span>
+                  <span>
+                    {roundFeedback === 'hit'
+                      ? 'Saved & trapped the red ball! ✨'
+                      : roundFeedback === 'miss'
+                        ? missReason === 'under_sofa'
+                          ? 'Lost under the sofa! 🛋️'
+                          : 'Time’s up!'
+                        : ballBats >= 1
+                          ? 'Nice bat! Bounce it 1 more time to trap it!'
+                          : 'Slide or tap left & right to bounce the ball back!'}
+                  </span>
+                </div>
+              </div>
             ) : (
-              /* ---------------- GAME 3 & 4: LASER ZOOMIES & SMALL RED BALL ---------------- */
+              /* ---------------- GAME 4: LASER ZOOMIES CHASE ---------------- */
               <div className="flex flex-col items-center gap-3">
                 <div
                   ref={arenaRef}
-                  onPointerDown={handleArenaPointerDown}
+                  onPointerDown={handleLaserArenaPointerDown}
                   className="relative flex h-48 w-full select-none flex-col justify-between overflow-hidden rounded-2xl border-2 border-amber-900/15 bg-gradient-to-b from-[#fdf6ec] to-[#f4e6d0] p-3 shadow-inner cursor-crosshair touch-none"
                 >
                   {/* Cozy living room rug grid texture */}
                   <div className="pointer-events-none absolute inset-0 opacity-[0.06] [background-image:radial-gradient(#78350f_1px,transparent_1px)] [background-size:12px_12px]" />
 
-                  {/* Top HUD: Round Countdown Progress Bar + Combo / Pounces Left */}
+                  {/* Top HUD: Round Countdown Progress Bar + Pounces Left */}
                   <div className="relative z-10 flex flex-col gap-1.5">
                     <div className="h-1.5 w-full overflow-hidden rounded-full bg-amber-950/10">
                       <div
                         style={{
-                          width: `${(Math.max(0, timeLeft) / roundDuration) * 100}%`,
+                          width: `${(Math.max(0, timeLeft) / LASER_ROUND_TIME_SEC) * 100}%`,
                         }}
                         className={`h-full transition-[width] duration-75 ${
                           timeLeft <= 2.0 ? 'bg-rose-500' : 'bg-amber-500'
@@ -818,24 +991,11 @@ export function PlayMinigameModal({
                     </div>
 
                     <div className="flex items-center justify-between px-0.5">
-                      {isRedBall ? (
-                        <span
-                          className={`rounded-full px-2 py-0.5 text-[10px] font-black tracking-wide uppercase transition-colors ${
-                            ballBats >= 1
-                              ? 'bg-emerald-500/20 text-emerald-800 ring-1 ring-emerald-500/40'
-                              : 'bg-amber-900/10 text-amber-900/75'
-                          }`}
-                        >
-                          {ballBats >= 1 ? `🐾 Batted ${ballBats}/${RED_BALL_BATS_REQUIRED} — Trap it!` : `Bat & Trap (${ballBats}/${RED_BALL_BATS_REQUIRED})`}
-                        </span>
-                      ) : (
-                        <span className="text-[10px] font-black tracking-wide uppercase text-amber-900/60">
-                          Pounces Left
-                        </span>
-                      )}
-
-                      <div className="flex items-center gap-1" aria-label={`${pouncesLeft} pounces left`}>
-                        {Array.from({ length: maxPouncesForGame }).map((_, i) => {
+                      <span className="text-[10px] font-black tracking-wide uppercase text-amber-900/60">
+                        Pounces Left
+                      </span>
+                      <div className="flex items-center gap-1.5" aria-label={`${pouncesLeft} pounces left`}>
+                        {Array.from({ length: MAX_LASER_POUNCES }).map((_, i) => {
                           const active = i < pouncesLeft;
                           return (
                             <span
@@ -865,16 +1025,6 @@ export function PlayMinigameModal({
                     </div>
                   ))}
 
-                  {/* First-bat bounce feedback badge in Red Ball Chase */}
-                  {batBouncePos && (
-                    <div
-                      style={{ left: `${batBouncePos.x}%`, top: `${batBouncePos.y}%` }}
-                      className="pointer-events-none absolute -translate-x-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-amber-400/30 text-lg font-black text-amber-900 ring-2 ring-amber-400 animate-ping"
-                    >
-                      🐾
-                    </div>
-                  )}
-
                   {/* Trapped paw stamp when hit */}
                   {caughtPos && (
                     <div
@@ -885,65 +1035,38 @@ export function PlayMinigameModal({
                     </div>
                   )}
 
-                  {/* Active moving target: Small Red Ball OR Laser Dot */}
-                  {!caughtPos &&
-                    (isRedBall ? (
-                      <div
-                        style={{ left: `${laserPos.x}%`, top: `${laserPos.y}%` }}
-                        className="pointer-events-none absolute -translate-x-1/2 -translate-y-1/2 transition-none"
-                      >
-                        {/* Floor shadow beneath the rolling red ball */}
-                        <div className="absolute -bottom-1 left-1/2 h-2 w-6 -translate-x-1/2 rounded-full bg-amber-950/25 blur-[1px]" />
-                        {/* Glossy small red toy ball */}
-                        <div
-                          style={{ transform: `rotate(${ballSpinDeg}deg)` }}
-                          className={`relative flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-rose-400 via-red-600 to-rose-900 shadow-md ring-2 ${
-                            ballBats >= 1 ? 'ring-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.5)]' : 'ring-red-200/80'
-                          }`}
-                        >
-                          {/* Curved ball seam */}
-                          <div className="h-4 w-4 rounded-full border border-dashed border-white/45" />
-                          {/* Specular highlight */}
-                          <div className="absolute top-1 left-1.5 h-2 w-2 rounded-full bg-white/85" />
-                        </div>
+                  {/* Fast darting red laser dot with glowing halo */}
+                  {!caughtPos && (
+                    <div
+                      style={{ left: `${laserPos.x}%`, top: `${laserPos.y}%` }}
+                      className="pointer-events-none absolute -translate-x-1/2 -translate-y-1/2 transition-none"
+                    >
+                      {/* Pulsing red halo */}
+                      <div className="absolute -inset-3 rounded-full bg-rose-500/30 blur-xs animate-ping" />
+                      {/* Bright laser core with shadow glow */}
+                      <div className="relative flex h-5 w-5 items-center justify-center rounded-full bg-rose-500 shadow-[0_0_10px_#ef4444,0_0_20px_#f43f5e] ring-2 ring-rose-200">
+                        <div className="h-1.5 w-1.5 rounded-full bg-white shadow-xs" />
                       </div>
-                    ) : (
-                      <div
-                        style={{ left: `${laserPos.x}%`, top: `${laserPos.y}%` }}
-                        className="pointer-events-none absolute -translate-x-1/2 -translate-y-1/2 transition-none"
-                      >
-                        {/* Pulsing red halo */}
-                        <div className="absolute -inset-3 rounded-full bg-rose-500/30 blur-xs animate-ping" />
-                        {/* Bright laser core with shadow glow */}
-                        <div className="relative flex h-5 w-5 items-center justify-center rounded-full bg-rose-500 shadow-[0_0_10px_#ef4444,0_0_20px_#f43f5e] ring-2 ring-rose-200">
-                          <div className="h-1.5 w-1.5 rounded-full bg-white shadow-xs" />
-                        </div>
-                      </div>
-                    ))}
+                    </div>
+                  )}
 
                   {/* Arena status message */}
                   <div className="relative z-10 flex items-center justify-center gap-1.5 text-[11px] font-extrabold text-amber-900">
                     <span>🐱</span>
                     <span>
                       {roundFeedback === 'hit'
-                        ? isRedBall
-                          ? 'Trapped the red ball! ✨'
-                          : 'Caught it! ✨'
+                        ? 'Caught it! ✨'
                         : roundFeedback === 'miss'
                           ? missReason === 'timeout'
                             ? 'Time’s up!'
                             : missReason === 'out_of_pounces'
                               ? 'Out of pounces!'
                               : 'Too fast!'
-                          : isRedBall
-                            ? ballBats >= 1
-                              ? 'Batted! Tap the red ball again to trap it!'
-                              : 'Tap the rolling red ball to bat it!'
-                            : pouncesLeft === 1
-                              ? 'Last pounce! Make it count!'
-                              : pouncesLeft === 2 && isLaser
-                                ? 'Missed! 2 pounces left!'
-                                : 'Track the red dot and tap to catch it!'}
+                          : pouncesLeft === 1
+                            ? 'Last pounce! Make it count!'
+                            : pouncesLeft === 2
+                              ? 'Missed! 2 pounces left!'
+                              : 'Track the red dot and tap to catch it!'}
                     </span>
                   </div>
                 </div>

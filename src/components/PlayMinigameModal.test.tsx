@@ -8,10 +8,9 @@ import {
   TAIL_ROUND_TIME_SEC,
   RED_BALL_ROUND_TIME_SEC,
   MAX_LASER_POUNCES,
-  MAX_RED_BALL_POUNCES,
   RED_BALL_BATS_REQUIRED,
+  RED_BALL_PADDLE_HALF_WIDTH_PCT,
   LASER_HIT_RADIUS_PX,
-  RED_BALL_HIT_RADIUS_PX,
 } from './PlayMinigameModal';
 import {
   actionById,
@@ -83,7 +82,7 @@ describe('PlayMinigameModal', () => {
     expect(html).toContain('8.0s');
   });
 
-  it('renders Red Ball Chase with rolling red ball, 2-tap Bat & Trap combo HUD, and 4 pounces', () => {
+  it('renders Red Ball Rally with sliding Oli’s Paw goalie paddle and Under the Sofa hazard zone', () => {
     const ballAction = actionById('red_ball')!;
     const html = renderToString(
       <PlayMinigameModal
@@ -95,15 +94,15 @@ describe('PlayMinigameModal', () => {
       />
     );
 
-    expect(html).toContain('Red Ball Chase!');
-    expect(html).toContain('Bat the red ball, then pounce to trap it!');
-    expect(html).toContain('Bat &amp; Trap (0/2)');
-    expect(html).toContain('4 pounces left');
-    expect(html).toContain('7.0s');
-    expect(html).toContain('Tap the rolling red ball to bat it!');
+    expect(html).toContain('Red Ball Rally!');
+    expect(html).toContain('Slide Oli’s paw to keep the ball from rolling under the sofa!');
+    expect(html).toContain('Saves: 0/2');
+    expect(html).toContain('Oli’s Paw');
+    expect(html).toContain('Under the Sofa');
+    expect(html).toContain('8.0s');
   });
 
-  it('maintains fair target zones in Feather Pounce and Tail Spin across all 3 rounds', () => {
+  it('maintains fair target zones in Feather Pounce and Tail Spin across all 3 rounds (including unwrapped angles)', () => {
     // Feather Pounce
     const r1 = getFeatherSweetSpot(0);
     expect(r1.max - r1.min).toBe(36);
@@ -113,10 +112,13 @@ describe('PlayMinigameModal', () => {
     expect(r3.max - r3.min).toBe(24);
     expect(isFeatherInSweetSpot(50, 2)).toBe(true);
 
-    // Tail Spin (0° / 360° top arc)
+    // Tail Spin (0° / 360° / 720° top arc)
     const t1 = getTailCatchZone(0);
     expect(t1.halfSpanDeg).toBe(38);
     expect(isTailInCatchZone(0, 0)).toBe(true);
+    expect(isTailInCatchZone(360, 0)).toBe(true);
+    expect(isTailInCatchZone(720, 0)).toBe(true);
+    expect(isTailInCatchZone(-20, 0)).toBe(true);
     expect(isTailInCatchZone(330, 0)).toBe(true);
     expect(isTailInCatchZone(180, 0)).toBe(false);
 
@@ -126,16 +128,15 @@ describe('PlayMinigameModal', () => {
     expect(isTailInCatchZone(326, 2)).toBe(false);
   });
 
-  it('configures round timers and tap limits appropriately for each game', () => {
+  it('configures round timers and paddle / tap limits appropriately for each game', () => {
     expect(MINIGAME_ROUND_TIME_SEC).toBe(10.0);
     expect(FEATHER_ROUND_TIME_SEC).toBe(10.0);
     expect(TAIL_ROUND_TIME_SEC).toBe(8.0);
-    expect(RED_BALL_ROUND_TIME_SEC).toBe(7.0);
+    expect(RED_BALL_ROUND_TIME_SEC).toBe(8.0);
     expect(LASER_ROUND_TIME_SEC).toBe(5.0);
     expect(MAX_LASER_POUNCES).toBe(3);
-    expect(MAX_RED_BALL_POUNCES).toBe(4);
     expect(RED_BALL_BATS_REQUIRED).toBe(2);
+    expect(RED_BALL_PADDLE_HALF_WIDTH_PCT).toBe(17);
     expect(LASER_HIT_RADIUS_PX).toBe(26);
-    expect(RED_BALL_HIT_RADIUS_PX).toBe(30);
   });
 });

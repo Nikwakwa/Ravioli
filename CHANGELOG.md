@@ -4,6 +4,13 @@ All updates to **Oli** are listed here.
 
 ---
 
+## `v0.17.1` — 2026-11-06
+### Red Ball Sofa Rally & Smooth Tail Spin 🛋️🐾🌀
+- **Red Ball Sofa Rally:** Completely redesigned the Red Ball minigame! Instead of tapping a dot like Laser Zoomies, you now control **Oli’s sliding paw** along the floor to bounce the rolling red ball back (`2` saves per round) before it rolls into the dark gap **Under the Sofa**.
+- **Smooth Tail Spin Loop:** Fixed Oli’s center head snapping when the tail indicator completed a full 360° loop around the ring.
+
+---
+
 ## `v0.17.0` — 2026-11-06
 ### New Solo Minigames: Tail Spin & Red Ball! 🌀🔴🐾
 - **Tail Spin (`Chase Tail`):** Inspired by Oli spinning solo after his own tail! Watch his striped ginger tail and white tip orbit around the circle and tap **NAB TAIL!** when it enters the green Nab Zone (with alternating clockwise and counter-clockwise spins).
