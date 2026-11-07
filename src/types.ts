@@ -102,6 +102,8 @@ export type CatAnimation =
   | 'purring'
   | 'playing'
   | 'laser'
+  | 'tail_chase'
+  | 'red_ball'
   | 'misting'
   | 'brushing'
   | 'yawning'

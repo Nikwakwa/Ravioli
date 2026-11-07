@@ -4,6 +4,14 @@ All updates to **Oli** are listed here.
 
 ---
 
+## `v0.17.0` — 2026-11-06
+### New Solo Minigames: Tail Spin & Red Ball! 🌀🔴🐾
+- **Tail Spin (`Chase Tail`):** Inspired by Oli spinning solo after his own tail! Watch his striped ginger tail and white tip orbit around the circle and tap **NAB TAIL!** when it enters the green Nab Zone (with alternating clockwise and counter-clockwise spins).
+- **Red Ball Chase (`Red Ball`):** Inspired by Oli chasing his favorite small red ball on the floor! Tap the rolling red ball once to bat it across the rug, then chase where it bounces and pounce a second time to trap it under his paws.
+- **4-Game Play Tab & Animations:** Expanded the `Play` tab into a 2×2 grid alongside `Feather Wand` and `Laser Zoomies`, complete with new animations on the living room rug and spontaneous cravings.
+
+---
+
 ## `v0.16.17` — 2026-11-06
 ### Real Living Room Makeover 🛋️🌿✨
 - **Moroccan Diamond Shag Rug:** Replaced the noisy yarn squiggles on the rug with a clean, realistic cream shag rug featuring your grey diamond trellis pattern.

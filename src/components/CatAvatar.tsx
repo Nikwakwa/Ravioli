@@ -113,6 +113,8 @@ function expressionFor(mood: Mood, animation: CatAnimation, petting: boolean) {
       break;
     case 'playing':
     case 'laser':
+    case 'tail_chase':
+    case 'red_ball':
       eyes = 'wide';
       mouth = 'smile';
       earDroop = false;
@@ -182,6 +184,24 @@ function headMotion(animation: CatAnimation, sec: number, sleeping: boolean): { 
     case 'laser':
       return {
         animate: { rotate: [0, -14, 14, -14, 14, -14, 14, 0], y: [0, -3, 0, -3, 0, -3, 0, 0] },
+        transition: { duration: sec, ease: 'easeInOut' },
+      };
+    case 'tail_chase':
+      return {
+        animate: {
+          x: [0, 12, -10, 14, -8, 12, 0],
+          y: [0, 5, -2, 6, -2, 4, 0],
+          rotate: [0, 18, -14, 20, -12, 16, 0],
+        },
+        transition: { duration: sec, ease: 'easeInOut' },
+      };
+    case 'red_ball':
+      return {
+        animate: {
+          x: [0, -10, 12, -12, 10, -6, 0],
+          y: [0, 8, -4, 10, -4, 6, 0],
+          rotate: [0, -12, 12, -14, 12, -8, 0],
+        },
         transition: { duration: sec, ease: 'easeInOut' },
       };
     case 'refuse':
@@ -567,6 +587,53 @@ function LaserDot({ sec }: { sec: number }) {
   );
 }
 
+function RedBallToy({ sec }: { sec: number }) {
+  return (
+    <motion.g
+      initial={{ opacity: 0 }}
+      animate={{
+        opacity: [0, 1, 1, 1, 1, 1, 0],
+        x: [-36, 38, -28, 34, -18, 12, 0],
+        y: [0, -16, 0, -14, 0, -8, 0],
+      }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: sec, ease: 'easeInOut' }}
+    >
+      {/* Floor shadow */}
+      <ellipse cx={100} cy={211} rx={9} ry={3} fill="rgba(40,20,10,0.22)" />
+      {/* Glossy small red ball */}
+      <circle cx={100} cy={202} r={9.5} fill="#e11d48" stroke="#9f1239" strokeWidth={1.2} />
+      <path d="M93 197 Q100 202 107 197" stroke="#fb7185" strokeWidth={1.2} fill="none" strokeLinecap="round" opacity={0.85} />
+      <circle cx={96.5} cy={198} r={2.6} fill="#fff1f2" opacity={0.9} />
+    </motion.g>
+  );
+}
+
+function TailSpinSwirl({ sec }: { sec: number }) {
+  return (
+    <motion.g
+      initial={{ opacity: 0 }}
+      animate={{ opacity: [0, 0.9, 0.9, 0] }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: sec, ease: 'easeInOut' }}
+    >
+      <motion.ellipse
+        cx={112}
+        cy={175}
+        rx={58}
+        ry={18}
+        fill="none"
+        stroke="#fbbf24"
+        strokeWidth={2.2}
+        strokeDasharray="12 10"
+        strokeLinecap="round"
+        animate={{ strokeDashoffset: [0, -64] }}
+        transition={{ duration: 0.7, repeat: Infinity, ease: 'linear' }}
+      />
+    </motion.g>
+  );
+}
+
 function Brush({ sec }: { sec: number }) {
   return (
     <motion.g
@@ -726,6 +793,8 @@ export function CatAvatar({ mood, animation, animationKey, onPet, className, x, 
       purring: 3,
       playing: 3.2,
       laser: 3.2,
+      tail_chase: 3.0,
+      red_ball: 3.2,
       misting: 2.6,
       brushing: 2.8,
       yawning: 1.6,
@@ -799,8 +868,9 @@ export function CatAvatar({ mood, animation, animationKey, onPet, className, x, 
   const head = headMotion(anim, animSec, sleeping);
   const sad = expr.earDroop;
 
+  const isPlayAnim = anim === 'playing' || anim === 'laser' || anim === 'tail_chase' || anim === 'red_ball';
   const tailSpeed =
-    anim === 'playing' || anim === 'laser' ? 0.6 : mood === 'ecstatic' || mood === 'happy' ? 2.2 : sad ? 5 : 3.4;
+    anim === 'tail_chase' ? 0.32 : isPlayAnim ? 0.6 : mood === 'ecstatic' || mood === 'happy' ? 2.2 : sad ? 5 : 3.4;
 
   const headProps = {
     eyes: expr.eyes,
@@ -810,7 +880,7 @@ export function CatAvatar({ mood, animation, animationKey, onPet, className, x, 
     blush: expr.blush,
     blinking: blinking && !sleeping,
     uid,
-    playing: anim === 'playing' || anim === 'laser',
+    playing: isPlayAnim,
   };
 
   return (
@@ -837,20 +907,22 @@ export function CatAvatar({ mood, animation, animationKey, onPet, className, x, 
         onPointerDown={handlePet}
         style={{ cursor: 'pointer' }}
         animate={
-          anim === 'laser'
+          anim === 'laser' || anim === 'red_ball'
             ? { x: [0, -18, 18, -14, 16, 0], y: [0, -10, 0, -14, 0, -8, 0] }
-            : anim === 'playing'
-              ? { y: [0, -12, 0, -16, 0, -10, 0] }
-              : petting
-                ? { y: [0, -6, 0] }
-                : anim === 'purring'
-                  ? { x: [0, -0.7, 0.7, -0.7, 0.7, 0] }
-                  : { y: 0, x: 0 }
+            : anim === 'tail_chase'
+              ? { x: [0, 14, -14, 14, -14, 0], y: [0, -10, 0, -12, 0, -8, 0], rotate: [0, 8, -8, 8, -8, 0] }
+              : anim === 'playing'
+                ? { y: [0, -12, 0, -16, 0, -10, 0] }
+                : petting
+                  ? { y: [0, -6, 0] }
+                  : anim === 'purring'
+                    ? { x: [0, -0.7, 0.7, -0.7, 0.7, 0] }
+                    : { y: 0, x: 0, rotate: 0 }
         }
         transition={
           anim === 'purring'
             ? { duration: 0.18, repeat: Math.round(animSec / 0.18) }
-            : { duration: anim === 'playing' || anim === 'laser' ? animSec : 0.5, ease: 'easeInOut' }
+            : { duration: isPlayAnim ? animSec : 0.5, ease: 'easeInOut' }
         }
       >
         <AnimatePresence mode="wait" initial={false}>
@@ -887,7 +959,7 @@ export function CatAvatar({ mood, animation, animationKey, onPet, className, x, 
               {/* Tail */}
               <motion.g
                 style={{ originX: 0.05, originY: 0.95 }}
-                animate={sad ? { rotate: [18, 22, 18] } : { rotate: [-7, 10, -7] }}
+                animate={sad ? { rotate: [18, 22, 18] } : anim === 'tail_chase' ? { rotate: [-24, 24, -24] } : { rotate: [-7, 10, -7] }}
                 transition={{ duration: tailSpeed, repeat: Infinity, ease: 'easeInOut' }}
               >
                 <TailStripes d="M140 197 C172 197 188 172 182 142 C179 126 170 117 160 120" width={15} />
@@ -950,6 +1022,8 @@ export function CatAvatar({ mood, animation, animationKey, onPet, className, x, 
           {anim === 'drinking' && <WaterDish key="dish" />}
           {anim === 'playing' && <FeatherWand key="wand" sec={animSec} />}
           {anim === 'laser' && <LaserDot key="laser" sec={animSec} />}
+          {anim === 'tail_chase' && <TailSpinSwirl key="tail-swirl" sec={animSec} />}
+          {anim === 'red_ball' && <RedBallToy key="red-ball" sec={animSec} />}
           {anim === 'brushing' && <Brush key="brush" sec={animSec} />}
         </AnimatePresence>
       </motion.g>

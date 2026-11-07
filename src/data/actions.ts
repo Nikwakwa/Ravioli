@@ -151,6 +151,34 @@ export const CARE_ACTIONS: CareAction[] = [
     durationMs: 3200,
     minEnergy: 25,
   },
+  {
+    id: 'tail_chase',
+    category: 'play',
+    name: 'Tail Spin Chase',
+    short: 'Chase Tail',
+    effect: { happiness: 18, energy: -8, hunger: -3 },
+    animation: 'tail_chase',
+    particles: ['stars'],
+    log: 'Watched {cat} spin in circles chasing his own tail!',
+    requiresAwake: true,
+    haptic: [20, 40, 20, 40, 25],
+    durationMs: 3000,
+    minEnergy: 12,
+  },
+  {
+    id: 'red_ball',
+    category: 'play',
+    name: 'Small Red Ball',
+    short: 'Red Ball',
+    effect: { happiness: 26, energy: -14, hunger: -6, hydration: -3 },
+    animation: 'red_ball',
+    particles: ['stars', 'sparkles'],
+    log: 'Chased the small red ball across the floor with {cat}!',
+    requiresAwake: true,
+    haptic: [25, 45, 25, 45, 30],
+    durationMs: 3200,
+    minEnergy: 20,
+  },
 
   // ---------------------------------------------------------------------------
   // CARE — Hydration & Grooming
@@ -264,8 +292,14 @@ export function pickCandidateWhim(
   if (live.hydration < 85) {
     candidates.push({ actionId: 'fountain', label: 'Fresh Water', emoji: '💧' });
   }
+  if (live.energy >= 18) {
+    candidates.push({ actionId: 'tail_chase', label: 'Chase Tail', emoji: '🌀' });
+  }
   if (live.energy >= 20) {
     candidates.push({ actionId: 'feather_wand', label: 'Feather Wand', emoji: '🪶' });
+  }
+  if (live.energy >= 25) {
+    candidates.push({ actionId: 'red_ball', label: 'Red Ball', emoji: '🔴' });
   }
   if (live.energy >= 30) {
     candidates.push({ actionId: 'laser_pointer', label: 'Laser Pointer', emoji: '⚡' });
@@ -279,7 +313,7 @@ export function pickCandidateWhim(
 }
 
 // ---------------------------------------------------------------------------
-// Phase 4: Play Micro-Minigame helpers (Feather Pounce & Left/Right Paw Guess)
+// Phase 4: Play Micro-Minigame helpers (Feather Pounce, Laser, Tail Spin, Red Ball)
 // ---------------------------------------------------------------------------
 export const MINIGAME_ROUNDS = 3;
 
@@ -308,4 +342,18 @@ export function getFeatherSweetSpot(roundIndex: number): { min: number; max: num
 export function isFeatherInSweetSpot(positionPct: number, roundIndex: number): boolean {
   const { min, max } = getFeatherSweetSpot(roundIndex);
   return positionPct >= min && positionPct <= max;
+}
+
+export function getTailCatchZone(roundIndex: number): { centerDeg: number; halfSpanDeg: number } {
+  // Top of the circle (0°) where Oli's paws wait; slightly tighter arc each round (R1: ±38°, R2: ±33°, R3: ±28°)
+  const shrink = Math.min(2, Math.max(0, roundIndex)) * 5;
+  return { centerDeg: 0, halfSpanDeg: 38 - shrink };
+}
+
+export function isTailInCatchZone(angleDeg: number, roundIndex: number): boolean {
+  const { centerDeg, halfSpanDeg } = getTailCatchZone(roundIndex);
+  const norm = ((angleDeg % 360) + 360) % 360;
+  const rawDiff = Math.abs(norm - centerDeg);
+  const angularDist = Math.min(rawDiff, 360 - rawDiff);
+  return angularDist <= halfSpanDeg;
 }

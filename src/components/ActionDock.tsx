@@ -9,6 +9,7 @@ import {
   Heart,
   IceCreamCone,
   Moon,
+  RefreshCw,
   Sparkles,
   SprayCan,
   Sun,
@@ -17,7 +18,7 @@ import {
   Zap,
   type LucideIcon,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, type ComponentType } from 'react';
 import {
   actionById,
   CARE_ACTIONS,
@@ -31,6 +32,16 @@ import {
 import { STAT_KEYS, type CatStats, type LiveCat } from '../types';
 import { STAT_ICONS } from './statIcons';
 
+function RedBallIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M6.5 6.5c3.5 2.5 7.5 2.5 11 0" />
+      <circle cx="9" cy="9" r="1" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
 const CATEGORY_ICONS: Record<ActionCategory, LucideIcon> = {
   feed: Utensils,
   play: Feather,
@@ -38,7 +49,7 @@ const CATEGORY_ICONS: Record<ActionCategory, LucideIcon> = {
   rest: BedDouble,
 };
 
-const ACTION_ICONS: Record<string, LucideIcon> = {
+const ACTION_ICONS: Record<string, ComponentType<{ className?: string }>> = {
   churu: IceCreamCone,
   wet_food: Drumstick,
   chicken_heart: Heart,
@@ -46,6 +57,8 @@ const ACTION_ICONS: Record<string, LucideIcon> = {
   fountain: Droplets,
   feather_wand: Feather,
   laser_pointer: Zap,
+  tail_chase: RefreshCw,
+  red_ball: RedBallIcon,
   pheromone_mist: SprayCan,
   brush: Brush,
   scoop_mess: Trash2,
@@ -107,7 +120,7 @@ export function ActionDock({
     ? 'bg-slate-900/85 border-white/10 text-amber-50'
     : 'bg-white/92 border-amber-900/10 text-amber-950';
 
-  const isCompactGrid = category === 'feed';
+  const isCompactGrid = category === 'feed' || category === 'play';
   // Readable "why not" chip in both day and night (sleep) themes
   const hintChip = isSleeping ? 'bg-indigo-400/25 text-indigo-100' : 'bg-amber-950/10 text-amber-900';
 
@@ -172,7 +185,7 @@ export function ActionDock({
           exit={{ opacity: 0, y: -4 }}
           transition={{ duration: 0.14 }}
           className={`grid h-[92px] gap-1.5 ${
-            category === 'feed'
+            category === 'feed' || category === 'play'
               ? 'grid-cols-2 grid-rows-2'
               : category === 'care'
                 ? 'grid-cols-3'
@@ -221,11 +234,15 @@ export function ActionDock({
                           ×{churuStash}
                         </span>
                       )}
-                      {isWhimMatch && (
+                      {isWhimMatch ? (
                         <span className="shrink-0 rounded-full bg-amber-400/25 px-1.5 py-0.5 text-[9px] font-extrabold leading-none text-amber-900">
                           💭 2×
                         </span>
-                      )}
+                      ) : action.category === 'play' && !muted ? (
+                        <span className="shrink-0 rounded-full bg-amber-500/18 px-1.5 py-0.5 text-[9px] font-extrabold leading-none text-amber-800">
+                          🎮
+                        </span>
+                      ) : null}
                     </div>
                     {hint ? (
                       <span className={`w-fit rounded-full px-1.5 py-0.5 text-[10px] font-extrabold whitespace-nowrap leading-none ${hintChip}`}>
