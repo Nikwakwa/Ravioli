@@ -70,6 +70,12 @@ describe('Balcony — Scenery & Mobile Safe Bounds', () => {
       expect(maxX, `Oli right edge in ${spot}`).toBeLessThanOrEqual(SAFE_MOBILE.maxX);
       expect(minY, `Oli top edge in ${spot}`).toBeGreaterThanOrEqual(SAFE_MOBILE.minY);
       expect(maxY, `Oli bottom edge in ${spot}`).toBeLessThanOrEqual(SAFE_MOBILE.maxY);
+
+      if (spot === 'planter') {
+        expect(avatar.props.pose).toBe('look_out');
+      } else if (spot === 'balcony_floor') {
+        expect(avatar.props.pose).toBe('belly_up');
+      }
     }
   });
 

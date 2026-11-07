@@ -39,10 +39,10 @@ const SPOT_PET_LINES: Record<CatSpot, string[]> = {
     'Cat TV is on: 10/10 entertainment! 🌿',
   ],
   planter: [
-    'Sniffing the yellow & purple pansies~ 🌼✨',
-    'Watching the street & trees below! 🌲🐾',
-    'Inspecting the little cypress pot~ 🌿',
+    'Watching the street from my cozy corner~ 👀🏘️',
+    'Paws tucked, looking down at the street! 🐾',
     'Fresh balcony breeze in my whiskers! 🍃🧡',
+    'Checking out everyone walking below~ 😺',
   ],
   bistro_chair: [
     'King of the sunny bistro table! 🪑😼',
@@ -51,10 +51,10 @@ const SPOT_PET_LINES: Record<CatSpot, string[]> = {
     'Sunbathing on the wooden slats~ ☀️🐾',
   ],
   balcony_floor: [
-    'Warm balcony tiles on my belly~ ☀️🧡',
-    'Basking in the golden sunbeam~ ☀️🐾',
-    'Stretching out in the fresh air~ 🌿✨',
-    'Rolling on the sunny terrace! 😺',
+    'Warm tiles on my exposed tummy~ ☀️🧡',
+    'Rolling belly up in pure bliss! 🐾✨',
+    'Belly rubs on the warm sunlit tiles~ 😻',
+    'Wiggling and sunbathing! ☀️🐾',
   ],
 };
 

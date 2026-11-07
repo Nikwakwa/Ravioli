@@ -611,9 +611,9 @@ export function Balcony({
     return { zB, zF, color: tableSlatColors[i] };
   });
 
-  // Cypress pot 3D coordinates (on sunny back-left terrace tiles, safely inside SAFE_MOBILE >= 62)
-  const [potBaseCx, potBaseCy] = proj(-138, 0, 260);
-  const [potRimCx, potRimCy] = proj(-138, 39, 260);
+  // Cypress pot 3D coordinates (placed under the left planter box edge, leaving the left corner open for street watch)
+  const [potBaseCx, potBaseCy] = proj(-84, 0, 260);
+  const [potRimCx, potRimCy] = proj(-84, 39, 260);
 
   return (
     <svg
@@ -1006,8 +1006,8 @@ export function Balcony({
         aria-current={activeSpot === 'planter' ? 'true' : undefined}
         aria-label={
           activeSpot === 'planter'
-            ? 'Pet Oli by the cypress pot and pansy flower boxes'
-            : 'Pansy flower boxes & cypress pot (cozy spot)'
+            ? 'Pet Oli watching the street in the left corner'
+            : 'Left balcony corner overlooking the street (cozy spot)'
         }
       >
         <rect x="62" y="185" width="250" height="152" fill="transparent" style={{ pointerEvents: 'all' }} />
@@ -1105,7 +1105,7 @@ export function Balcony({
           </g>
         </g>
 
-        {/* Oli sitting on the open sunny back terrace tiles right beside the cypress pot (zero chair overlap!) */}
+        {/* Oli in the left corner looking out and down at the quiet street below */}
         {activeSpot === 'planter' && (
           <motion.g
             key={`cat-planter-${catAnimationKey}`}
@@ -1114,10 +1114,11 @@ export function Balcony({
             transition={{ type: 'spring', stiffness: 320, damping: 22 }}
           >
             <CatAvatar
-              x={100}
-              y={258}
-              width={66}
-              height={73}
+              x={72}
+              y={252}
+              width={68}
+              height={75}
+              pose="look_out"
               mood={catMood}
               animation={catAnimation}
               animationKey={catAnimationKey}
@@ -1310,7 +1311,7 @@ export function Balcony({
             : 'Sunny balcony floor tiles (cozy spot)'
         }
       >
-        <rect x="68" y="346" width="138" height="124" fill="transparent" style={{ pointerEvents: 'all' }} />
+        <rect x="68" y="324" width="154" height="152" fill="transparent" style={{ pointerEvents: 'all' }} />
 
         {activeSpot === 'balcony_floor' && (
           <motion.g
@@ -1320,10 +1321,11 @@ export function Balcony({
             transition={{ type: 'spring', stiffness: 300, damping: 22 }}
           >
             <CatAvatar
-              x={76}
-              y={312}
-              width={130}
-              height={143}
+              x={72}
+              y={324}
+              width={146}
+              height={148}
+              pose="belly_up"
               mood={catMood}
               animation={catAnimation}
               animationKey={catAnimationKey}

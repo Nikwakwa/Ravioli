@@ -601,9 +601,9 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
           box: '📦 Hopped into his delivery box',
           window: '🪟 Watching birds on the windowsill',
           rug: '🐾 Back on the living room rug',
-          planter: '🌼 Sniffing the pansies & watching the street',
+          planter: '👀 Watching the street in the cozy left corner',
           bistro_chair: '🪑 Perched on the sunny bistro table',
-          balcony_floor: '☀️ Stretching out on the sunny balcony tiles',
+          balcony_floor: '☀️ Rolling on the warm balcony tiles (belly up!)',
         };
         noticeRef.current({ text: lines[target], tone: 'info' });
       }

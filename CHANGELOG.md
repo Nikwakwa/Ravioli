@@ -4,6 +4,14 @@ All updates to **Oli** are listed here.
 
 ---
 
+## `v0.18.3` — 2026-11-07
+### Balcony Street Watch & Sunny Belly Rolls ☀️👀🐾
+- **Left Corner Street Watch (`planter`):** Oli now sits in his favorite left corner against the railing looking out and down at the quiet street below with his back to us, perked ears, swishing tail, and tucked white paws.
+- **Warm Tile Belly-Up Roll (`balcony_floor`):** Oli rolls happily on the sunlit terrace tiles in pure bliss, exposing his soft cream belly for pets, with four curled paws, sweet blushing smile, and crescent eyes.
+- **Opened Left Corner:** Placed the cypress pot neatly under the edge of the planter box so the corner is wide open for Oli's street surveillance.
+
+---
+
 ## `v0.18.2` — 2026-11-07
 ### True 3D Balcony Perspective & Café Set Redesign 🌿🪑✨
 - **Unified Straight-On Balcony Camera:** Replaced the distorted wide-angle diagonal view from the reference photo with a clean, welcoming 1-point perspective matching the Living Room — every floor tile seam, parapet curb, railing bar, planter box, tabletop plank, and chair frame now converges to one exact 3D horizon.

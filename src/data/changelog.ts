@@ -7,6 +7,16 @@ export interface ReleaseEntry {
 
 export const CHANGELOG: ReleaseEntry[] = [
   {
+    version: 'v0.18.3',
+    date: '2026-11-07',
+    title: 'Balcony Street Watch & Sunny Belly Rolls ☀️👀🐾',
+    changes: [
+      'Added Oli’s favorite balcony corner spot: Oli now sits in the cozy left corner looking out and down at the quiet street below through the railing, with his back to us and alert forward-pointing ears.',
+      'Added Oli’s warm tile belly-up roll: Oli rolls happily on the sunlit terrace floor with his soft cream belly up in the air, front paws curled like mittens, and blushing smiling face enjoying the sun.',
+      'Adjusted the corner cypress pot slightly so the left corner is wide open for Oli to watch the neighborhood street.',
+    ],
+  },
+  {
     version: 'v0.18.2',
     date: '2026-11-07',
     title: 'True 3D Balcony Perspective & Café Set Redesign 🌿🪑✨',
