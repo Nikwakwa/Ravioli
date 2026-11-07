@@ -192,7 +192,7 @@ export function MenuPage({
               </div>
               <ul className="flex list-disc flex-col gap-1 pl-4 text-xs font-medium text-amber-900/85">
                 <li><strong>Cravings:</strong> Fulfill thought bubbles for 2× Joy + 1 Churu 🍬.</li>
-                <li><strong>Minigames:</strong> Score 3/3 in Feather or Laser for +1 Churu 🍬.</li>
+                <li><strong>Minigames:</strong> Score 3/3 in Feather, Laser, Tail Spin, or Red Ball for +1 Churu 🍬.</li>
               </ul>
             </div>
 

@@ -7,6 +7,16 @@ export interface ReleaseEntry {
 
 export const CHANGELOG: ReleaseEntry[] = [
   {
+    version: 'v0.17.0',
+    date: '2026-11-06',
+    title: 'New Solo Minigames: Tail Spin & Red Ball! 🌀🔴🐾',
+    changes: [
+      'Added Tail Spin (Chase Tail): help Oli nab his own striped, white-tipped tail as he spins in circles.',
+      'Added Red Ball Chase (Red Ball): bat Oli’s favorite small red ball across the floor and pounce to trap it.',
+      'Updated the Play tab into a 2×2 grid of 4 interactive games, plus new living room animations and cravings.',
+    ],
+  },
+  {
     version: 'v0.16.17',
     date: '2026-11-06',
     title: 'Real Living Room Makeover 🛋️🌿✨',

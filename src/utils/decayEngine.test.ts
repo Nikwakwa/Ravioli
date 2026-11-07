@@ -215,7 +215,7 @@ describe('Core action, dock & mess rules', () => {
   it('organizes dock into 4 balanced categories (feed, play, care, rest)', () => {
     expect(CATEGORIES.map((c) => c.id)).toEqual(['feed', 'play', 'care', 'rest']);
     expect(CARE_ACTIONS.filter((a) => a.category === 'feed')).toHaveLength(4);
-    expect(CARE_ACTIONS.filter((a) => a.category === 'play')).toHaveLength(2);
+    expect(CARE_ACTIONS.filter((a) => a.category === 'play')).toHaveLength(4);
     expect(CARE_ACTIONS.filter((a) => a.category === 'care')).toHaveLength(3);
     expect(CARE_ACTIONS.filter((a) => a.category === 'rest')).toHaveLength(1);
   });
@@ -251,6 +251,14 @@ describe('Core action, dock & mess rules', () => {
     expect(laser?.minEnergy).toBe(25);
     expect(laser?.effect.energy).toBe(-18);
 
+    const tail = actionById('tail_chase');
+    expect(tail?.minEnergy).toBe(12);
+    expect(tail?.effect.happiness).toBe(18);
+
+    const redBall = actionById('red_ball');
+    expect(redBall?.minEnergy).toBe(20);
+    expect(redBall?.effect.happiness).toBe(26);
+
     expect(MAX_SLEEP_ENERGY).toBeGreaterThan(MIN_WAKE_ENERGY);
   });
 
@@ -264,7 +272,9 @@ describe('Core action, dock & mess rules', () => {
     for (let seed = 0; seed < 10; seed++) {
       const w = pickCandidateWhim(stuffedExhausted, seed);
       expect(w).not.toBeNull();
-      expect(['wet_food', 'quail_egg', 'feather_wand', 'laser_pointer']).not.toContain(w?.actionId);
+      expect(['wet_food', 'quail_egg', 'feather_wand', 'laser_pointer', 'tail_chase', 'red_ball']).not.toContain(
+        w?.actionId,
+      );
     }
   });
 
