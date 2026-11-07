@@ -5,7 +5,7 @@ import type { CatAnimation, CatSpot, Mood } from '../../types';
 /**
  * Nico & Athina's real Living Room — crafted from their living room photos:
  * - Crisp warm-white walls & large-format cream/beige travertine floor tiles + tile baseboard
- * - Tall white bookcase (open upper shelves + lower Shaker doors) & low white-and-oak TV console with flatscreen TV and soundbar
+ * - Tall white bookcase (open upper shelves with grey storage box & trailing pothos + lower Shaker doors) on the left
  * - White-framed window with folded white Roman blind, neighboring building view, windowsill plant, small white lamp & white ribbed radiator below
  * - Square tropical botanical print (monstera leaves & red flowers) in a light-wood frame
  * - Cream plush cat tree / scratching post with sisal posts, cube condo & top bolster perch behind the sofa corner
@@ -99,113 +99,96 @@ export function LivingRoom({
         <line key={i} x1={x1} y1={y1} x2={x1 - 12} y2={y2} stroke={sleeping ? '#2b2736' : '#c5b8a1'} strokeWidth="1" opacity="0.48" />
       ))}
 
-      {/* Tall white bookcase + low white & oak TV console on left (PXL_20261101_155116231.jpg) */}
+      {/* Tall white bookcase / cabinet on left, positioned closer to center (x: 32..108, y: 112..312) */}
       <g>
-        {/* Tall white bookcase on far left (x: 4..58, y: 112..312) */}
+        {/* Outer white frame */}
         <rect
-          x="4"
+          x="32"
           y="112"
-          width="54"
+          width="76"
           height="200"
           rx="2"
           fill={sleeping ? '#c7c4d4' : '#f9f8f5'}
           stroke={sleeping ? '#9e9ab0' : '#dcd8ce'}
-          strokeWidth="1.2"
+          strokeWidth="1.4"
         />
-        {/* Open upper shelf recesses */}
-        <rect x="8" y="118" width="46" height="28" fill={sleeping ? '#8d899e' : '#e8e4da'} />
-        <rect x="8" y="150" width="46" height="30" fill={sleeping ? '#8d899e' : '#e8e4da'} />
-        <rect x="8" y="184" width="46" height="30" fill={sleeping ? '#8d899e' : '#e8e4da'} />
-        <rect x="8" y="218" width="46" height="26" fill={sleeping ? '#8d899e' : '#e8e4da'} />
-        {/* Grey storage box on top shelf */}
-        <rect x="24" y="124" width="26" height="20" rx="1.5" fill={sleeping ? '#5e5c6e' : '#7a7875'} />
-        <ellipse cx="37" cy="134" rx="4" ry="2" fill="none" stroke={sleeping ? '#8d899e' : '#b5b2ac'} strokeWidth="1" />
-        {/* Minimal keepsakes & warm wooden box on lower shelves */}
-        <rect x="12" y="228" width="22" height="14" rx="1" fill="#cfa372" />
-        <rect x="44" y="220" width="6" height="22" rx="1" fill="#b84a39" />
-        {/* Lower Shaker-style double cabinet doors with dark round knobs */}
+        {/* 4 Open horizontal upper shelf recesses */}
+        <rect x="37" y="118" width="66" height="28" fill={sleeping ? '#8d899e' : '#e8e4da'} />
+        <rect x="37" y="150" width="66" height="30" fill={sleeping ? '#8d899e' : '#e8e4da'} />
+        <rect x="37" y="184" width="66" height="30" fill={sleeping ? '#8d899e' : '#e8e4da'} />
+        <rect x="37" y="218" width="66" height="26" fill={sleeping ? '#8d899e' : '#e8e4da'} />
+
+        {/* Shelf 1 (top): Grey storage box with oval handle */}
+        <rect x="64" y="124" width="36" height="22" rx="1.5" fill={sleeping ? '#5e5c6e' : '#7a7875'} />
+        <rect x="63" y="123" width="38" height="4" rx="1" fill={sleeping ? '#6b697c' : '#8a8884'} />
+        <ellipse cx="82" cy="135" rx="4.5" ry="2" fill="none" stroke={sleeping ? '#8d899e' : '#b5b2ac'} strokeWidth="1" />
+
+        {/* Shelf 2: Glass jar & photo collage board */}
+        <rect x="42" y="158" width="14" height="22" rx="3" fill={sleeping ? '#b8c2cc' : '#dce6ed'} opacity="0.75" />
+        <rect x="62" y="156" width="34" height="24" rx="1" fill={sleeping ? '#d5d2e0' : '#faf8f4'} stroke={sleeping ? '#9e9ab0' : '#d5d0c5'} strokeWidth="0.8" />
+        <rect x="66" y="160" width="11" height="8" fill="#8b99a1" />
+        <rect x="80" y="160" width="12" height="8" fill="#c9ab84" />
+        <rect x="66" y="170" width="26" height="7" fill="#7a8b7b" />
+
+        {/* Shelf 3: Minimal ceramic & keepsakes */}
+        <ellipse cx="52" cy="211" rx="6" ry="3" fill="#f2efe9" />
+        <rect x="70" y="202" width="10" height="12" rx="2" fill="#8c6246" />
+        <rect x="88" y="203" width="10" height="11" rx="1.5" fill="#d97b54" />
+
+        {/* Shelf 4: Warm wooden box & tall terracotta tin on right */}
+        <rect x="40" y="230" width="30" height="14" rx="1" fill="#cfa372" stroke="#b58958" strokeWidth="0.8" />
+        <rect x="73" y="226" width="16" height="18" rx="1" fill="#6b5848" />
+        <rect x="92" y="220" width="8" height="24" rx="1" fill="#b84a39" />
+
+        {/* Lower Shaker-style double cabinet doors with recessed panels & dark round knobs */}
         <rect
-          x="8"
+          x="37"
           y="248"
-          width="22"
+          width="32"
           height="60"
           fill={sleeping ? '#bab6c9' : '#f4f2ed'}
           stroke={sleeping ? '#9e9ab0' : '#dad5ca'}
           strokeWidth="1"
         />
         <rect
-          x="32"
+          x="41"
+          y="253"
+          width="24"
+          height="50"
+          fill="none"
+          stroke={sleeping ? '#a6a2b8' : '#e2ded4'}
+          strokeWidth="0.8"
+        />
+        <rect
+          x="71"
           y="248"
-          width="22"
+          width="32"
           height="60"
           fill={sleeping ? '#bab6c9' : '#f4f2ed'}
           stroke={sleeping ? '#9e9ab0' : '#dad5ca'}
           strokeWidth="1"
         />
-        <circle cx="26.5" cy="276" r="1.4" fill="#3a3835" />
-        <circle cx="35.5" cy="276" r="1.4" fill="#3a3835" />
-        {/* Trailing green pothos plant on top-left of bookcase */}
-        <rect x="10" y="102" width="14" height="10" rx="2" fill="#6b706b" />
+        <rect
+          x="75"
+          y="253"
+          width="24"
+          height="50"
+          fill="none"
+          stroke={sleeping ? '#a6a2b8' : '#e2ded4'}
+          strokeWidth="0.8"
+        />
+        <circle cx="65" cy="276" r="1.6" fill="#3a3835" />
+        <circle cx="75" cy="276" r="1.6" fill="#3a3835" />
+
+        {/* Trailing green pothos plant on top of bookcase */}
+        <rect x="44" y="101" width="16" height="11" rx="2" fill="#6b706b" />
         <g fill="#3d7344">
-          <circle cx="17" cy="99" r="6" />
-          <circle cx="23" cy="103" r="5" fill="#4c8753" />
-          <circle cx="27" cy="110" r="4.5" />
-          <circle cx="29" cy="118" r="3.8" fill="#4c8753" />
-          <circle cx="28" cy="125" r="3" />
+          <circle cx="52" cy="98" r="6.5" />
+          <circle cx="59" cy="102" r="5.5" fill="#4c8753" />
+          <circle cx="64" cy="109" r="4.8" />
+          <circle cx="67" cy="117" r="4" fill="#4c8753" />
+          <circle cx="66" cy="125" r="3.2" />
         </g>
-
-        {/* Low light-oak & white TV media console (x: 60..116, y: 268..312) */}
-        <rect
-          x="60"
-          y="268"
-          width="56"
-          height="44"
-          rx="1.5"
-          fill={sleeping ? '#b8b4c7' : '#f7f5f0'}
-          stroke={sleeping ? '#9490a6' : '#d8d3c8'}
-          strokeWidth="1"
-        />
-        {/* Warm light-oak top surface */}
-        <rect x="60" y="267" width="56" height="4" rx="1" fill={sleeping ? '#8a7660' : '#c9ab84'} />
-        {/* Center open oak shelf */}
-        <rect x="79" y="272" width="18" height="36" fill={sleeping ? '#6e5e4d' : '#b59670'} />
-        <line x1="79" y1="290" x2="97" y2="290" stroke={sleeping ? '#8a7660' : '#c9ab84'} strokeWidth="2" />
-        <rect x="82" y="284" width="12" height="4" rx="0.8" fill="#d94e3b" />
-        {/* White left and right console doors */}
-        <rect
-          x="62"
-          y="272"
-          width="16"
-          height="36"
-          fill={sleeping ? '#cac6d8' : '#fbfaf7'}
-          stroke={sleeping ? '#9e9ab0' : '#dfdbd0'}
-          strokeWidth="0.8"
-        />
-        <rect
-          x="98"
-          y="272"
-          width="16"
-          height="36"
-          fill={sleeping ? '#cac6d8' : '#fbfaf7'}
-          stroke={sleeping ? '#9e9ab0' : '#dfdbd0'}
-          strokeWidth="0.8"
-        />
-
-        {/* Flatscreen TV & sleek black soundbar (x: 63..113, y: 206..268) */}
-        <rect
-          x="63"
-          y="206"
-          width="50"
-          height="56"
-          rx="2"
-          fill="#181a1f"
-          stroke="#2d3139"
-          strokeWidth="1.2"
-        />
-        {/* Subtle glossy screen reflection */}
-        <polygon points="66,209 92,209 76,259 66,259" fill="#ffffff" opacity={sleeping ? 0.03 : 0.06} />
-        {/* Black soundbar in front of TV */}
-        <rect x="68" y="263" width="40" height="5" rx="1.5" fill="#23262d" stroke="#3a3f4a" strokeWidth="0.6" />
       </g>
 
       {/* Window with white Roman blind, sunny windowsill & white ribbed radiator below (x: 118..226) */}
