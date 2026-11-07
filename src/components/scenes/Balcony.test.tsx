@@ -86,8 +86,14 @@ describe('Balcony — Scenery & Mobile Safe Bounds', () => {
     const catIdx = children.findIndex((c) => {
       return findElements(c, (inner) => typeof inner.type === 'function' && inner.type.name === 'CatAvatar').length > 0;
     });
-    // The bistro group has: [0] touch rect, [1] shadow, [2] back chair, [3] table, [4] foreground chair, [5] CatAvatar motion.g
+    // The bistro group has: [0] touch rect, [1] shadow, [2] right chair, [3] left chair, [4] table, [5] CatAvatar motion.g
     expect(catIdx).toBe(5);
+
+    const chairs = findElements(bistroGroup, (el) => typeof el.type === 'function' && el.type.name === 'FoldingBistroChair');
+    expect(chairs.length).toBe(2);
+
+    const planters = findElements(tree, (el) => typeof el.type === 'function' && el.type.name === 'HangingPlanterBox');
+    expect(planters.length).toBe(2);
   });
 
   it('renders the balcony_floor spot after the bistro table in SVG painter order so Oli is never overlapped by table legs', () => {

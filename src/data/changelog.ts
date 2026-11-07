@@ -7,6 +7,15 @@ export interface ReleaseEntry {
 
 export const CHANGELOG: ReleaseEntry[] = [
   {
+    version: 'v0.18.2',
+    date: '2026-11-07',
+    title: 'True 3D Balcony Perspective & Café Set Redesign 🌿🪑✨',
+    changes: [
+      'Re-imagined the Balcony from a clean, inviting straight-on perspective matching the Living Room, so the floor tiles, railing, hanging pots, bistro table, and folding chairs all share one natural camera angle.',
+      'Redesigned the wooden bistro table (with crossed X-legs) flanked by two matching folding bistro chairs facing each other, plus horizontal 3D grey planter boxes with curved rail hooks and blooming pansies.',
+    ],
+  },
+  {
     version: 'v0.18.1',
     date: '2026-11-07',
     title: 'Balcony Design Overhaul & Cozy Spot Polish 🌿🪑🐾',

@@ -4,6 +4,14 @@ All updates to **Oli** are listed here.
 
 ---
 
+## `v0.18.2` — 2026-11-07
+### True 3D Balcony Perspective & Café Set Redesign 🌿🪑✨
+- **Unified Straight-On Balcony Camera:** Replaced the distorted wide-angle diagonal view from the reference photo with a clean, welcoming 1-point perspective matching the Living Room — every floor tile seam, parapet curb, railing bar, planter box, tabletop plank, and chair frame now converges to one exact 3D horizon.
+- **Redesigned Bistro Table & Folding Chairs:** Replaced the skewed diagonal furniture with a classic French bistro table (complete with crossed wrought-iron X-legs and 6 horizontal weathered wood slats) flanked symmetrically by two matching folding bistro chairs facing each other in 3/4 view.
+- **Horizontal 3D Hanging Planter Boxes:** Mounted both matte-grey planter troughs horizontally along the stainless-steel handrail with compact curved metal hooks, trailing foliage, and blooming yellow & purple pansies.
+
+---
+
 ## `v0.18.1` — 2026-11-07
 ### Balcony Design Overhaul & Cozy Spot Polish 🌿🪑🐾
 - **Fixed Oli’s Balcony Positions & Layering:**

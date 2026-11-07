@@ -602,7 +602,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
           window: '🪟 Watching birds on the windowsill',
           rug: '🐾 Back on the living room rug',
           planter: '🌼 Sniffing the pansies & watching the street',
-          bistro_chair: '🪑 Perched on the balcony bistro chair',
+          bistro_chair: '🪑 Perched on the sunny bistro table',
           balcony_floor: '☀️ Stretching out on the sunny balcony tiles',
         };
         noticeRef.current({ text: lines[target], tone: 'info' });

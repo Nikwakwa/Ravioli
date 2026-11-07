@@ -45,14 +45,14 @@ const SPOT_PET_LINES: Record<CatSpot, string[]> = {
     'Fresh balcony breeze in my whiskers! 🍃🧡',
   ],
   bistro_chair: [
-    'King of the wooden bistro chair! 🪑😼',
+    'King of the sunny bistro table! 🪑😼',
     'Best café seat on the balcony~ ☕🧡',
     'Perched high for neighborhood watch! 👀✨',
     'Sunbathing on the wooden slats~ ☀️🐾',
   ],
   balcony_floor: [
     'Warm balcony tiles on my belly~ ☀️🧡',
-    'Chasing a fallen autumn leaf! 🍂🐾',
+    'Basking in the golden sunbeam~ ☀️🐾',
     'Stretching out in the fresh air~ 🌿✨',
     'Rolling on the sunny terrace! 😺',
   ],
@@ -63,9 +63,9 @@ const SPOT_BUBBLE_OFFSETS: Record<CatSpot, { left: string; bottom: string }> = {
   sofa_bed: { left: '77%', bottom: '315px' },
   box: { left: '39%', bottom: '265px' },
   window: { left: '49%', bottom: '385px' },
-  planter: { left: '38%', bottom: '335px' },
-  bistro_chair: { left: '56%', bottom: '250px' },
-  balcony_floor: { left: '36%', bottom: '235px' },
+  planter: { left: '33%', bottom: '335px' },
+  bistro_chair: { left: '65%', bottom: '380px' },
+  balcony_floor: { left: '35%', bottom: '280px' },
 };
 
 /**
