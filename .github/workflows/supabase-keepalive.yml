@@ -1,0 +1,34 @@
+name: Keep Supabase awake
+
+# Supabase pauses free-tier projects after ~7 days without activity.
+# Co-op sync is parked (see ROADMAP.md), so the app itself no longer talks to
+# Supabase. This tiny scheduled read keeps the project active until co-op returns.
+
+on:
+  schedule:
+    # Every 3 days at 09:17 UTC (odd minute avoids GitHub's busy top-of-hour slot).
+    - cron: '17 9 */3 * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Read Oli's row from Supabase
+        env:
+          SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+        run: |
+          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_KEY" ]; then
+            echo "::error::Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY under Settings → Secrets and variables → Actions."
+            exit 1
+          fi
+          curl --fail --silent --show-error --max-time 30 \
+            "${SUPABASE_URL%/}/rest/v1/cat_state?select=id&limit=1" \
+            -H "apikey: $SUPABASE_KEY" \
+            -H "Authorization: Bearer $SUPABASE_KEY"
+          echo
+          echo "Supabase responded — project stays active."
