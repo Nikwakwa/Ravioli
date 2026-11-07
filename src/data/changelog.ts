@@ -7,6 +7,17 @@ export interface ReleaseEntry {
 
 export const CHANGELOG: ReleaseEntry[] = [
   {
+    version: 'v0.16.16',
+    date: '2026-11-06',
+    title: 'Real Living Room Makeover 🛋️🌿✨',
+    changes: [
+      'Updated the rug with the real Moroccan grey diamond pattern and a cleaner shape.',
+      'Replaced the generic wall print and lamp with your tropical leaf print and cream cat tree behind the sofa.',
+      'Added the sleek TV on the white-and-oak media console alongside the tall white cabinet.',
+      'Updated the window with the soft white Roman blind, small windowsill lamp, and all 5 sofa cushions.',
+    ],
+  },
+  {
     version: 'v0.16.15',
     date: '2026-11-06',
     title: 'Laser Zoomies Balance & Tap Limit 🔴🐾',
