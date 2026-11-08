@@ -7,6 +7,14 @@ export interface ReleaseEntry {
 
 export const CHANGELOG: ReleaseEntry[] = [
   {
+    version: 'v0.18.5',
+    date: '2026-11-08',
+    title: 'No More Surprise Messes When Petting 🐾🧹',
+    changes: [
+      'Petting Oli (for example in his cardboard box) no longer makes a waiting fur clump or throw-up pop out at that exact moment. Messes that build up over time now only appear on the game’s own clock, when the app opens, or when you come back to it.',
+    ],
+  },
+  {
     version: 'v0.18.4',
     date: '2026-11-08',
     title: 'Cuter Balcony Oli: Street Watch & Belly Rolls Redrawn 🐾💕',

@@ -4,6 +4,12 @@ All updates to **Oli** are listed here.
 
 ---
 
+## `v0.18.5` — 2026-11-08
+### No More Surprise Messes When Petting 🐾🧹
+- **Messes Follow the Clock, Not Your Taps:** Petting Oli (e.g. in his cardboard box) no longer makes a waiting fur clump or throw-up appear at that exact moment. Messes that build up over time now only show up on the game's own clock, when the app opens, or when you come back to it.
+
+---
+
 ## `v0.18.4` — 2026-11-08
 ### Cuter Balcony Oli: Street Watch & Belly Rolls Redrawn 🐾💕
 - **Street Watch From Behind (`planter`):** Redrew Oli's back view — furry backs of the ears instead of pink insides, round haunches with tiny hind toes peeking out, tabby stripes down his back, and his striped tail curled on the tiles with a flicking white tip. Pet him and he turns around to smile at you.
