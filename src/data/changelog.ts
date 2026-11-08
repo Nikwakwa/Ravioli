@@ -7,6 +7,15 @@ export interface ReleaseEntry {
 
 export const CHANGELOG: ReleaseEntry[] = [
   {
+    version: 'v0.19.1',
+    date: '2026-11-08',
+    title: 'Close-Up Rooms Are Back 🛋️🔍',
+    changes: [
+      'The living room and balcony fill the screen at full size again, so you’re close to Oli instead of looking at a small, far-away room.',
+      'On shorter screens the room only slides up a little, just enough that Oli’s paws never hide behind the room switcher or the care buttons.',
+    ],
+  },
+  {
     version: 'v0.19.0',
     date: '2026-11-08',
     title: 'Churu Points, Calmer Cravings & a Roomier Screen 🍬🐾',

@@ -4,6 +4,13 @@ All updates to **Oli** are listed here.
 
 ---
 
+## `v0.19.1` — 2026-11-08
+### Close-Up Rooms Are Back 🛋️🔍
+- **Full-Size Scenery:** The living room and balcony fill the screen at full size again (v0.19.0 had shrunk them on every phone, which felt small and far away on tall phones).
+- **Smart Slide-Up on Short Screens:** Only when Oli's paws would end up behind the room switcher or care dock does the room slide up, by just the amount needed.
+
+---
+
 ## `v0.19.0` — 2026-11-08
 ### Churu Points, Calmer Cravings & a Roomier Screen 🍬🐾
 - **Churu Points:** Cravings and perfect 3/3 minigames now earn churu points; 3 points = 1 Churu tube, up to 3 tubes per day. Progress dots sit next to 🍬 in the header. Chin-scratch cravings give extra Joy but no points.

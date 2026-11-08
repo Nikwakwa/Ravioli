@@ -33,6 +33,9 @@ export const SPOT_HEAD_SVG: Record<CatSpot, { x: number; y: number }> = {
   balcony_floor: { x: 136, y: 380 },
 };
 
+/** Lowest point (in scene units) where Oli can lie in each scene: his paws on the rug / the belly-up roll. */
+const SCENE_FLOOR_FOCUS_Y = { living_room: 418, balcony: 458 } as const;
+
 export function App() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [menuTab, setMenuTab] = useState<MenuTab>('rules');
@@ -57,13 +60,15 @@ export function App() {
   const mainRef = useRef<HTMLElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const dockRef = useRef<HTMLDivElement>(null);
-  // Size of the scenery box. The room is fitted into the space ABOVE the care dock
-  // (plus a small overlap under its rounded top) so Oli is never hidden behind it.
+  const switcherRef = useRef<HTMLDivElement>(null);
+  // The room fills the whole screen at full size (close-up). Only on short screens, where Oli's
+  // paws would end up behind the room switcher / care dock, the room slides up just enough.
   const [containerSize, setContainerSize] = useState<{ width: number; height: number }>({
     width: 400,
     height: 600,
   });
-  const [sceneBottom, setSceneBottom] = useState(0);
+  // Top of the room switcher, measured from the top of the screen frame.
+  const [switcherTop, setSwitcherTop] = useState<number | null>(null);
   // Distance from the top of the screen frame to the center stage (below the HUD).
   // Bubbles live inside the stage, so Oli's head position must be shifted by this amount.
   const [stageTop, setStageTop] = useState(0);
@@ -113,13 +118,11 @@ export function App() {
 
     const update = () => {
       const rect = el.getBoundingClientRect();
-      const dock = dockRef.current?.getBoundingClientRect();
-      // Let the floor run ~20px under the dock's rounded top edge
-      const bottom = dock ? Math.max(0, rect.bottom - dock.top - 20) : 0;
-      setSceneBottom(bottom);
-      if (rect.width > 0 && rect.height - bottom > 0) {
-        setContainerSize({ width: rect.width, height: rect.height - bottom });
+      if (rect.width > 0 && rect.height > 0) {
+        setContainerSize({ width: rect.width, height: rect.height });
       }
+      const switcher = switcherRef.current?.getBoundingClientRect();
+      if (switcher) setSwitcherTop(switcher.top - rect.top);
       const stage = stageRef.current;
       if (stage) setStageTop(stage.getBoundingClientRect().top - rect.top);
     };
@@ -132,6 +135,17 @@ export function App() {
     return () => ro.disconnect();
   }, [gameMounted]);
 
+  // How far (px) to slide the room up so the lowest spot where Oli lies (rug / sunny balcony tiles)
+  // stays just above the room switcher. Zero on most phones: the room stays full-size and close-up.
+  const sceneShift = useMemo(() => {
+    if (switcherTop === null) return 0;
+    const scale = Math.max(containerSize.width / 400, containerSize.height / 600);
+    const offsetY = (containerSize.height - 600 * scale) / 2;
+    const lowestOliY = scene === 'balcony' ? SCENE_FLOOR_FOCUS_Y.balcony : SCENE_FLOOR_FOCUS_Y.living_room;
+    const paws = offsetY + lowestOliY * scale;
+    return Math.max(0, Math.round(paws + 6 - switcherTop));
+  }, [scene, containerSize, switcherTop]);
+
   const targetHeadPos = useMemo(() => {
     const head = SPOT_HEAD_SVG[spot] ?? SPOT_HEAD_SVG.rug;
     const scale = Math.max(containerSize.width / 400, containerSize.height / 600);
@@ -139,9 +153,9 @@ export function App() {
     const offsetY = (containerSize.height - 600 * scale) / 2;
     return {
       x: head.x * scale + offsetX,
-      y: head.y * scale + offsetY - stageTop,
+      y: head.y * scale + offsetY - sceneShift - stageTop,
     };
-  }, [spot, containerSize, stageTop]);
+  }, [spot, containerSize, sceneShift, stageTop]);
 
   const handleOpenMenu = (tab: MenuTab = 'rules') => {
     setMenuTab(tab);
@@ -215,12 +229,12 @@ export function App() {
     <div className="flex h-dvh w-full items-center justify-center bg-[#23170f]">
       {/* Mobile portrait frame (full-bleed on phones, phone-sized card on desktop) */}
       <main ref={mainRef} className="safe-shell relative flex h-full w-full max-w-[440px] flex-col justify-between overflow-hidden bg-[#fbe3cb] shadow-2xl">
-        {/* Floor colour behind the care dock, continuing the room's floor below the scenery */}
+        {/* Floor colour behind the care dock, filling the strip uncovered when the room slides up */}
         <div
           aria-hidden="true"
           className="pointer-events-none absolute inset-x-0 bottom-0 transition-colors duration-500"
           style={{
-            height: sceneBottom + 4,
+            height: sceneShift > 0 ? sceneShift + 4 : 0,
             backgroundColor: live.isSleeping
               ? scene === 'balcony'
                 ? '#2f2b3b'
@@ -232,7 +246,10 @@ export function App() {
         />
 
         {/* Active Scenery (Living Room or Balcony) with Oli physically nestled inside */}
-        <div className="pointer-events-none absolute inset-x-0 top-0" style={{ bottom: sceneBottom }}>
+        <div
+          className="pointer-events-none absolute inset-x-0 transition-[top] duration-300"
+          style={{ top: -sceneShift, height: containerSize.height }}
+        >
           <AnimatePresence mode="sync" initial={false}>
             {scene === 'balcony' ? (
               <motion.div
@@ -377,6 +394,7 @@ export function App() {
 
           {/* Quick Room Switcher Pill (Living Room / Balcony) */}
           <div
+            ref={switcherRef}
             role="group"
             aria-label="Switch scenery"
             className={`pointer-events-auto absolute bottom-1.5 left-1/2 z-20 flex -translate-x-1/2 items-center gap-1 rounded-full border p-1 shadow-md backdrop-blur-md transition-colors ${
