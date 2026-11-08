@@ -120,7 +120,6 @@ export function ActionDock({
     ? 'bg-slate-900/85 border-white/10 text-amber-50'
     : 'bg-white/92 border-amber-900/10 text-amber-950';
 
-  const isCompactGrid = category === 'feed' || category === 'play';
   // Readable "why not" chip in both day and night (sleep) themes
   const hintChip = isSleeping ? 'bg-indigo-400/25 text-indigo-100' : 'bg-amber-950/10 text-amber-900';
 
@@ -129,6 +128,12 @@ export function ActionDock({
     : isSleeping && live.energy < MIN_WAKE_ENERGY
       ? '😴 Exhausted'
       : null;
+
+  // Every tab uses the same 2×2 slot so switching tabs never jumps the layout.
+  // Tabs with fewer cards let them stretch across the full row.
+  const spanFull = (index: number, count: number) =>
+    count === 2 || (count === 3 && index === 2) ? 'col-span-2' : '';
+  const cardCount = actions.length + (category === 'rest' ? 1 : 0);
 
   return (
     <section
@@ -146,6 +151,7 @@ export function ActionDock({
               key={c.id}
               type="button"
               onClick={() => setCategory(c.id)}
+              aria-pressed={active}
               className={`relative flex items-center justify-center gap-1.5 rounded-xl py-1.5 text-xs font-extrabold transition-colors ${
                 active
                   ? 'text-amber-950'
@@ -176,7 +182,6 @@ export function ActionDock({
         })}
       </div>
 
-      {/* Fixed-height action slot (h-[92px]) so switching tabs never jumps the layout */}
       <AnimatePresence mode="wait" initial={false}>
         <motion.div
           key={category}
@@ -184,77 +189,36 @@ export function ActionDock({
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -4 }}
           transition={{ duration: 0.14 }}
-          className={`grid h-[92px] gap-1.5 ${
-            category === 'feed' || category === 'play'
-              ? 'grid-cols-2 grid-rows-2'
-              : category === 'care'
-                ? 'grid-cols-3'
-                : 'grid-cols-2'
-          }`}
+          className="grid h-[92px] grid-cols-2 grid-rows-2 gap-1.5"
         >
-          {actions.map((action) => {
+          {actions.map((action, index) => {
             const Icon = ACTION_ICONS[action.id] ?? Sparkles;
             const hint = refusalHint(action, live, tummyAche, cleanNeededCount, churuStash);
             const muted = Boolean(hint);
             const isUrgentScoop = action.id === 'scoop_mess' && cleanNeededCount > 0;
             const isWhimMatch = whimActionId === action.id && !muted;
 
-            if (isCompactGrid) {
-              return (
-                <motion.button
-                  key={action.id}
-                  type="button"
-                  whileTap={{ scale: 0.96 }}
-                  disabled={busy}
-                  onClick={() => onAction(action)}
-                  className={`flex h-full items-center gap-2 rounded-2xl border px-2.5 py-1.5 text-left transition-all ${
-                    isWhimMatch
-                      ? 'border-amber-400 bg-gradient-to-b from-amber-50 to-pink-50/80 text-amber-950 ring-1 ring-amber-400/50'
-                      : muted
-                        ? isSleeping
-                          ? 'border-white/5 bg-white/5 opacity-60'
-                          : 'border-amber-900/10 bg-amber-950/5 opacity-65'
-                        : isSleeping
-                          ? 'border-white/10 bg-slate-800/90 text-amber-50 shadow-xs'
-                          : 'border-amber-900/10 bg-gradient-to-b from-amber-50/95 to-orange-50/70 text-amber-950 shadow-xs'
-                  }`}
-                >
-                  <span
-                    className={`hidden h-7 w-7 shrink-0 items-center justify-center rounded-xl min-[360px]:flex ${
-                      isSleeping ? 'bg-amber-400/20 text-amber-300' : 'bg-amber-500/15 text-amber-700'
-                    }`}
-                  >
-                    <Icon className="h-3.5 w-3.5" />
-                  </span>
-                  <div className="flex min-w-0 flex-1 flex-col justify-center gap-1">
-                    <div className="flex items-center justify-between gap-1">
-                      <p className="truncate font-display text-xs font-bold leading-tight">{action.short}</p>
-                      {action.id === 'churu' && churuStash > 0 && (
-                        <span className="shrink-0 rounded-full bg-pink-500/15 px-1.5 py-0.5 text-[9px] font-extrabold leading-none text-pink-700">
-                          ×{churuStash}
-                        </span>
-                      )}
-                      {isWhimMatch ? (
-                        <span className="shrink-0 rounded-full bg-amber-400/25 px-1.5 py-0.5 text-[9px] font-extrabold leading-none text-amber-900">
-                          💭 2×
-                        </span>
-                      ) : action.category === 'play' && !muted ? (
-                        <span className="shrink-0 rounded-full bg-amber-500/18 px-1.5 py-0.5 text-[9px] font-extrabold leading-none text-amber-800">
-                          🎮
-                        </span>
-                      ) : null}
-                    </div>
-                    {hint ? (
-                      <span className={`w-fit rounded-full px-1.5 py-0.5 text-[10px] font-extrabold whitespace-nowrap leading-none ${hintChip}`}>
-                        {hint}
-                      </span>
-                    ) : (
-                      <EffectPills effect={action.effect} maxPills={2} />
-                    )}
-                  </div>
-                </motion.button>
-              );
-            }
+            const badge = isUrgentScoop ? (
+              <span className="shrink-0 whitespace-nowrap rounded-full bg-rose-500 px-1.5 py-0.5 text-[9px] font-extrabold leading-none text-white">
+                🧹 {cleanNeededCount} to tidy
+              </span>
+            ) : isWhimMatch ? (
+              <span className="shrink-0 rounded-full bg-amber-400/25 px-1.5 py-0.5 text-[9px] font-extrabold leading-none text-amber-900">
+                💭 2×
+              </span>
+            ) : action.soothesTummy && tummyAche ? (
+              <span className="shrink-0 whitespace-nowrap rounded-full bg-emerald-500/20 px-1.5 py-0.5 text-[9px] font-extrabold leading-none text-emerald-700">
+                Soothes 🧡
+              </span>
+            ) : action.id === 'churu' && churuStash > 0 ? (
+              <span className="shrink-0 rounded-full bg-pink-500/15 px-1.5 py-0.5 text-[9px] font-extrabold leading-none text-pink-700">
+                ×{churuStash}
+              </span>
+            ) : action.category === 'play' && !muted ? (
+              <span className="shrink-0 rounded-full bg-amber-500/18 px-1.5 py-0.5 text-[9px] font-extrabold leading-none text-amber-800">
+                🎮
+              </span>
+            ) : null;
 
             return (
               <motion.button
@@ -263,7 +227,7 @@ export function ActionDock({
                 whileTap={{ scale: 0.96 }}
                 disabled={busy}
                 onClick={() => onAction(action)}
-                className={`flex h-full flex-col justify-between rounded-2xl border p-2 text-left transition-all ${
+                className={`flex h-full min-w-0 items-center gap-2 rounded-2xl border px-2.5 py-1.5 text-left transition-all ${spanFull(index, cardCount)} ${
                   isUrgentScoop
                     ? 'border-rose-400/60 bg-gradient-to-b from-rose-50 to-amber-50 text-amber-950 shadow-xs'
                     : isWhimMatch
@@ -274,48 +238,32 @@ export function ActionDock({
                           : 'border-amber-900/10 bg-amber-950/5 opacity-65'
                         : isSleeping
                           ? 'border-white/10 bg-slate-800/90 text-amber-50 shadow-xs'
-                          : 'border-amber-900/10 bg-gradient-to-b from-amber-50/95 to-orange-50/70 text-amber-950 shadow-xs active:shadow-none'
+                          : 'border-amber-900/10 bg-gradient-to-b from-amber-50/95 to-orange-50/70 text-amber-950 shadow-xs'
                 }`}
               >
-                <div className="flex w-full items-center justify-between gap-1">
-                  <span
-                    className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-xl ${
-                      isUrgentScoop
-                        ? 'bg-rose-500/15 text-rose-700'
-                        : isSleeping
-                          ? 'bg-amber-400/20 text-amber-300'
-                          : 'bg-amber-500/15 text-amber-700'
-                    }`}
-                  >
-                    <Icon className="h-3.5 w-3.5" />
-                  </span>
-                  {isUrgentScoop ? (
-                    <span className="whitespace-nowrap rounded-full bg-rose-500 px-1.5 py-0.5 text-[10px] font-extrabold text-white">
-                      🧹 {cleanNeededCount}
-                    </span>
-                  ) : isWhimMatch ? (
-                    <span className="whitespace-nowrap rounded-full bg-amber-400/30 px-1.5 py-0.5 text-[10px] font-extrabold text-amber-950">
-                      💭 2× Joy
-                    </span>
-                  ) : hint ? (
-                    <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-extrabold whitespace-nowrap ${hintChip}`}>
+                <span
+                  className={`hidden h-7 w-7 shrink-0 items-center justify-center rounded-xl min-[360px]:flex ${
+                    isUrgentScoop
+                      ? 'bg-rose-500/15 text-rose-700'
+                      : isSleeping
+                        ? 'bg-amber-400/20 text-amber-300'
+                        : 'bg-amber-500/15 text-amber-700'
+                  }`}
+                >
+                  <Icon className="h-3.5 w-3.5" />
+                </span>
+                <div className="flex min-w-0 flex-1 flex-col justify-center gap-1">
+                  <div className="flex items-center justify-between gap-1">
+                    <p className="truncate font-display text-xs font-bold leading-tight">{action.short}</p>
+                    {badge}
+                  </div>
+                  {hint ? (
+                    <span className={`w-fit rounded-full px-1.5 py-0.5 text-[10px] font-extrabold whitespace-nowrap leading-none ${hintChip}`}>
                       {hint}
                     </span>
                   ) : (
                     <EffectPills effect={action.effect} maxPills={2} />
                   )}
-                </div>
-                <div className="flex items-center justify-between gap-1">
-                  <p className="font-display text-xs font-bold leading-snug">{action.short}</p>
-                  {action.soothesTummy && tummyAche ? (
-                    <span className="shrink-0 whitespace-nowrap rounded-full bg-emerald-500/20 px-1.5 py-0.5 text-[10px] font-extrabold text-emerald-700">
-                      Soothes 🧡
-                    </span>
-                  ) : action.category === 'play' && !muted ? (
-                    <span className="shrink-0 whitespace-nowrap rounded-full bg-amber-500/18 px-1.5 py-0.5 text-[10px] font-extrabold leading-none text-amber-800">
-                      🎮 Game
-                    </span>
-                  ) : null}
                 </div>
               </motion.button>
             );
@@ -328,7 +276,7 @@ export function ActionDock({
               whileTap={{ scale: 0.96 }}
               disabled={busy}
               onClick={onToggleSleep}
-              className={`flex h-full flex-col justify-between rounded-2xl border p-2.5 text-left transition-all ${
+              className={`col-span-2 flex h-full min-w-0 items-center gap-2 rounded-2xl border px-2.5 py-1.5 text-left transition-all ${
                 napRefusal
                   ? isSleeping
                     ? 'border-white/5 bg-white/5 opacity-55'
@@ -338,16 +286,19 @@ export function ActionDock({
                     : 'border-indigo-900/15 bg-gradient-to-b from-indigo-50/90 to-amber-50/60 text-amber-950 shadow-xs'
               }`}
             >
-              <div className="flex w-full items-center justify-between gap-1">
+              <span
+                className={`hidden h-7 w-7 shrink-0 items-center justify-center rounded-xl min-[360px]:flex ${
+                  isSleeping ? 'bg-amber-300/25 text-amber-200' : 'bg-indigo-500/15 text-indigo-700'
+                }`}
+              >
+                {isSleeping ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}
+              </span>
+              <div className="flex min-w-0 flex-1 flex-col justify-center gap-1">
+                <p className="truncate font-display text-xs font-bold leading-tight">
+                  {isSleeping ? 'Wake Oli Up' : 'Nap Mode'}
+                </p>
                 <span
-                  className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-xl ${
-                    isSleeping ? 'bg-amber-300/25 text-amber-200' : 'bg-indigo-500/15 text-indigo-700'
-                  }`}
-                >
-                  {isSleeping ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}
-                </span>
-                <span
-                  className={`whitespace-nowrap rounded-full px-1.5 py-0.5 text-[10px] font-extrabold leading-none ${
+                  className={`w-fit whitespace-nowrap rounded-full px-1.5 py-0.5 text-[10px] font-extrabold leading-none ${
                     napRefusal
                       ? hintChip
                       : isSleeping
@@ -355,12 +306,9 @@ export function ActionDock({
                         : 'bg-indigo-100 text-indigo-900'
                   }`}
                 >
-                  {napRefusal ?? (isSleeping ? 'Wake' : '+15 Energy/h')}
+                  {napRefusal ?? (isSleeping ? '☀️ Wake' : '+15 Energy/h')}
                 </span>
               </div>
-              <p className="font-display text-xs font-bold leading-snug">
-                {isSleeping ? 'Wake Oli Up' : 'Nap Mode'}
-              </p>
             </motion.button>
           )}
         </motion.div>

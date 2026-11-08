@@ -4,6 +4,15 @@ All updates to **Oli** are listed here.
 
 ---
 
+## `v0.19.0` — 2026-11-08
+### Churu Points, Calmer Cravings & a Roomier Screen 🍬🐾
+- **Churu Points:** Cravings and perfect 3/3 minigames now earn churu points; 3 points = 1 Churu tube, up to 3 tubes per day. Progress dots sit next to 🍬 in the header. Chin-scratch cravings give extra Joy but no points.
+- **Calmer Cravings:** A new craving every 12–20 minutes (was ~35 seconds), no new cravings while the app is in the background, and no Joy penalty for cravings that expired while the app was closed.
+- **Roomier Screen:** The room is fitted above the care dock so Oli is never hidden behind it on smaller phones; the Living Room / Balcony switch no longer wraps.
+- **Tidier Care Dock:** Care and Rest use the same card layout as Feed and Play, so effect chips are never cut off.
+
+---
+
 ## `v0.18.5` — 2026-11-08
 ### No More Surprise Messes When Petting 🐾🧹
 - **Messes Follow the Clock, Not Your Taps:** Petting Oli (e.g. in his cardboard box) no longer makes a waiting fur clump or throw-up appear at that exact moment. Messes that build up over time now only show up on the game's own clock, when the app opens, or when you come back to it.

@@ -14,6 +14,8 @@ import {
 import { useState } from 'react';
 import {
   AUTO_NAP_ENERGY,
+  CHURU_POINTS_PER_TUBE,
+  MAX_CHURUS_EARNED_PER_DAY,
   MAX_TREATS_IN_WINDOW,
   MIN_WAKE_ENERGY,
   PET_JOY_BOOST,
@@ -181,7 +183,7 @@ export function MenuPage({
               </div>
               <ul className="flex list-disc flex-col gap-1 pl-4 text-xs font-medium text-amber-900/85">
                 <li><strong>Litter box:</strong> Used every 2 meals. Tap directly to scoop (+15 Clean).</li>
-                <li><strong>Rug messes:</strong> Fur clumps appear over time. Tap to clean.</li>
+                <li><strong>Rug messes:</strong> Fur clumps appear every few hours (throw-up when he’s grubby or ate too many treats). Tap to clean.</li>
               </ul>
             </div>
 
@@ -191,8 +193,9 @@ export function MenuPage({
                 <h3 className="font-display text-xs font-bold text-amber-950">Cravings & Minigames</h3>
               </div>
               <ul className="flex list-disc flex-col gap-1 pl-4 text-xs font-medium text-amber-900/85">
-                <li><strong>Cravings:</strong> Fulfill thought bubbles for 2× Joy + 1 Churu 🍬.</li>
-                <li><strong>Minigames:</strong> Score 3/3 in Feather, Laser, Tail Spin, or Red Ball for +1 Churu 🍬.</li>
+                <li><strong>Cravings:</strong> Every 12–20 min Oli wants something. Fulfill it for 2× Joy + 1 churu point 🍬 (chin scratches give Joy only).</li>
+                <li><strong>Minigames:</strong> Score 3/3 in Feather, Laser, Tail Spin, or Red Ball for +1 churu point 🍬.</li>
+                <li><strong>Churus:</strong> {CHURU_POINTS_PER_TUBE} points = 1 Churu tube (the dots next to 🍬 at the top). Up to {MAX_CHURUS_EARNED_PER_DAY} tubes per day.</li>
               </ul>
             </div>
 

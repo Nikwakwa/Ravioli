@@ -7,6 +7,17 @@ export interface ReleaseEntry {
 
 export const CHANGELOG: ReleaseEntry[] = [
   {
+    version: 'v0.19.0',
+    date: '2026-11-08',
+    title: 'Churu Points, Calmer Cravings & a Roomier Screen 🍬🐾',
+    changes: [
+      'Churus are now a real treat: cravings and perfect 3/3 minigames earn churu points, 3 points make 1 Churu tube, and you can earn up to 3 tubes per day. The dots next to 🍬 at the top show your progress. Chin-scratch cravings give extra Joy but no points.',
+      'Oli asks for something every 12–20 minutes instead of every half-minute, and he no longer sulks (−Joy) about cravings that ran out while the app was closed.',
+      'The room now fits above the care buttons, so Oli is never hidden behind them on smaller phones, and the Living Room / Balcony switch stays on one line.',
+      'Care and Rest buttons now match the Feed and Play layout, so nothing gets cut off.',
+    ],
+  },
+  {
     version: 'v0.18.5',
     date: '2026-11-08',
     title: 'No More Surprise Messes When Petting 🐾🧹',

@@ -588,7 +588,7 @@ export function PlayMinigameModal({
                 </div>
                 <p className="text-[10px] font-bold text-amber-800/80">
                   {headerInstruction}{' '}
-                  <span className="whitespace-nowrap text-emerald-700">3/3 = +1 Churu 🍬</span>
+                  <span className="whitespace-nowrap text-emerald-700">3/3 = +1 🍬 point</span>
                 </p>
               </div>
             </div>
@@ -1091,7 +1091,7 @@ export function PlayMinigameModal({
               </h3>
               <p className="text-xs font-extrabold text-emerald-800">
                 {reward.tier === 'perfect'
-                  ? `+${reward.bonusJoy} Joy & +1 Churu 🍬`
+                  ? `+${reward.bonusJoy} Joy & +1 churu point 🍬`
                   : reward.tier === 'great'
                     ? `+${reward.bonusJoy} Joy`
                     : 'Nice try!'}

@@ -56,10 +56,14 @@ export function App() {
   }, [menuOpen]);
   const mainRef = useRef<HTMLElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
+  const dockRef = useRef<HTMLDivElement>(null);
+  // Size of the scenery box. The room is fitted into the space ABOVE the care dock
+  // (plus a small overlap under its rounded top) so Oli is never hidden behind it.
   const [containerSize, setContainerSize] = useState<{ width: number; height: number }>({
     width: 400,
     height: 600,
   });
+  const [sceneBottom, setSceneBottom] = useState(0);
   // Distance from the top of the screen frame to the center stage (below the HUD).
   // Bubbles live inside the stage, so Oli's head position must be shifted by this amount.
   const [stageTop, setStageTop] = useState(0);
@@ -78,6 +82,7 @@ export function App() {
     messes,
     litterBoxDirty,
     churuStash,
+    churuProgress,
     whim,
     activeMinigame,
     event,
@@ -108,8 +113,12 @@ export function App() {
 
     const update = () => {
       const rect = el.getBoundingClientRect();
-      if (rect.width > 0 && rect.height > 0) {
-        setContainerSize({ width: rect.width, height: rect.height });
+      const dock = dockRef.current?.getBoundingClientRect();
+      // Let the floor run ~20px under the dock's rounded top edge
+      const bottom = dock ? Math.max(0, rect.bottom - dock.top - 20) : 0;
+      setSceneBottom(bottom);
+      if (rect.width > 0 && rect.height - bottom > 0) {
+        setContainerSize({ width: rect.width, height: rect.height - bottom });
       }
       const stage = stageRef.current;
       if (stage) setStageTop(stage.getBoundingClientRect().top - rect.top);
@@ -119,6 +128,7 @@ export function App() {
     const ro = new ResizeObserver(update);
     ro.observe(el);
     if (stageRef.current) ro.observe(stageRef.current);
+    if (dockRef.current) ro.observe(dockRef.current);
     return () => ro.disconnect();
   }, [gameMounted]);
 
@@ -205,8 +215,24 @@ export function App() {
     <div className="flex h-dvh w-full items-center justify-center bg-[#23170f]">
       {/* Mobile portrait frame (full-bleed on phones, phone-sized card on desktop) */}
       <main ref={mainRef} className="safe-shell relative flex h-full w-full max-w-[440px] flex-col justify-between overflow-hidden bg-[#fbe3cb] shadow-2xl">
+        {/* Floor colour behind the care dock, continuing the room's floor below the scenery */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-x-0 bottom-0 transition-colors duration-500"
+          style={{
+            height: sceneBottom + 4,
+            backgroundColor: live.isSleeping
+              ? scene === 'balcony'
+                ? '#2f2b3b'
+                : '#3a3446'
+              : scene === 'balcony'
+                ? '#c9b9a2'
+                : '#e4d6c1',
+          }}
+        />
+
         {/* Active Scenery (Living Room or Balcony) with Oli physically nestled inside */}
-        <div className="pointer-events-none absolute inset-0">
+        <div className="pointer-events-none absolute inset-x-0 top-0" style={{ bottom: sceneBottom }}>
           <AnimatePresence mode="sync" initial={false}>
             {scene === 'balcony' ? (
               <motion.div
@@ -272,6 +298,7 @@ export function App() {
             messCount={messes.length}
             litterBoxDirty={litterBoxDirty}
             churuStash={churuStash}
+            churuPoints={churuProgress.points}
             onOpenMenu={() => handleOpenMenu(live.isPaused ? 'pause' : 'rules')}
             onOpenPause={() => handleOpenMenu('pause')}
             hasUpdate={Boolean(availableVersion)}
@@ -362,7 +389,7 @@ export function App() {
               type="button"
               onClick={() => setScene('living_room')}
               aria-pressed={scene === 'living_room'}
-              className={`relative flex items-center gap-1 rounded-full px-3 py-1 text-[11px] font-extrabold transition-colors active:scale-95 ${
+              className={`relative flex items-center gap-1 whitespace-nowrap rounded-full px-3 py-1 text-[11px] font-extrabold transition-colors active:scale-95 ${
                 scene === 'living_room'
                   ? 'text-amber-950'
                   : live.isSleeping
@@ -387,7 +414,7 @@ export function App() {
               type="button"
               onClick={() => setScene('balcony')}
               aria-pressed={scene === 'balcony'}
-              className={`relative flex items-center gap-1 rounded-full px-3 py-1 text-[11px] font-extrabold transition-colors active:scale-95 ${
+              className={`relative flex items-center gap-1 whitespace-nowrap rounded-full px-3 py-1 text-[11px] font-extrabold transition-colors active:scale-95 ${
                 scene === 'balcony'
                   ? 'text-amber-950'
                   : live.isSleeping
@@ -411,7 +438,7 @@ export function App() {
         </div>
 
         {/* Bottom tactile care dock */}
-        <div>
+        <div ref={dockRef}>
           <ActionDock
             live={live}
             tummyAche={tummyAche}
