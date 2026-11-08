@@ -50,7 +50,62 @@ export const MESS_SPAWN_HOURS = 2.5;
 export const DEFAULT_CHURU_STASH = 1;
 export const MAX_CHURU_STASH = 99;
 export const WHIM_DURATION_MS = 8 * 60_000;
-export const WHIM_COOLDOWN_MS = 35_000;
+/** A new craving comes 12–20 minutes after the last one ended (so they feel special, not spammy). */
+export const WHIM_COOLDOWN_MS = 12 * 60_000;
+export const WHIM_COOLDOWN_JITTER_MS = 8 * 60_000;
+/** A craving that ran out more than this long ago expired while nobody was looking: no Joy penalty. */
+export const WHIM_UNSEEN_GRACE_MS = 2 * 60_000;
+
+/** Churus are earned in points: 3 points = 1 Churu tube, and at most 3 tubes can be earned per day. */
+export const CHURU_POINTS_PER_TUBE = 3;
+export const MAX_CHURUS_EARNED_PER_DAY = 3;
+
+/** Milliseconds to wait after the last craving before Oli asks for something new. */
+export function whimCooldownAfter(lastWhimAt: number): number {
+  // Stable pseudo-random jitter derived from the timestamp, so reloads don't reshuffle it.
+  const jitter = Math.abs(Math.floor(lastWhimAt)) % WHIM_COOLDOWN_JITTER_MS;
+  return WHIM_COOLDOWN_MS + jitter;
+}
+
+export interface ChuruProgress {
+  /** Points collected toward the next tube (0–2). */
+  points: number;
+  /** Tubes earned on `day`. */
+  earnedToday: number;
+  /** Local calendar day (YYYY-MM-DD) that `earnedToday` belongs to. */
+  day: string;
+}
+
+export function localDayKey(ms: number): string {
+  const d = new Date(ms);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+/**
+ * Adds churu points and converts every full set of points into a tube, respecting the daily limit.
+ * Pure function: returns the new progress plus how many tubes were just earned.
+ */
+export function addChuruPoints(
+  progress: ChuruProgress,
+  points: number,
+  nowMs: number,
+): { progress: ChuruProgress; tubesEarned: number; dailyLimitReached: boolean } {
+  const day = localDayKey(nowMs);
+  let next: ChuruProgress = progress.day === day ? { ...progress } : { points: progress.points, earnedToday: 0, day };
+  if (next.earnedToday >= MAX_CHURUS_EARNED_PER_DAY) {
+    return { progress: { ...next, points: 0 }, tubesEarned: 0, dailyLimitReached: true };
+  }
+  let tubesEarned = 0;
+  next.points += Math.max(0, Math.floor(points));
+  while (next.points >= CHURU_POINTS_PER_TUBE && next.earnedToday < MAX_CHURUS_EARNED_PER_DAY) {
+    next.points -= CHURU_POINTS_PER_TUBE;
+    next.earnedToday += 1;
+    tubesEarned += 1;
+  }
+  const dailyLimitReached = next.earnedToday >= MAX_CHURUS_EARNED_PER_DAY;
+  if (dailyLimitReached) next = { ...next, points: 0 };
+  return { progress: next, tubesEarned, dailyLimitReached };
+}
 
 export const CATEGORIES: { id: ActionCategory; label: string }[] = [
   { id: 'feed', label: 'Feed' },
@@ -319,18 +374,19 @@ export const MINIGAME_ROUNDS = 3;
 
 export interface MinigameReward {
   bonusJoy: number;
-  churuBonus: number;
+  /** Churu points (not whole tubes) earned. */
+  churuPoints: number;
   tier: 'perfect' | 'great' | 'good';
 }
 
 export function computeMinigameReward(hits: number, totalRounds: number = MINIGAME_ROUNDS): MinigameReward {
   if (hits >= totalRounds) {
-    return { bonusJoy: 15, churuBonus: 1, tier: 'perfect' };
+    return { bonusJoy: 15, churuPoints: 1, tier: 'perfect' };
   }
   if (hits === totalRounds - 1) {
-    return { bonusJoy: 8, churuBonus: 0, tier: 'great' };
+    return { bonusJoy: 8, churuPoints: 0, tier: 'great' };
   }
-  return { bonusJoy: 0, churuBonus: 0, tier: 'good' };
+  return { bonusJoy: 0, churuPoints: 0, tier: 'good' };
 }
 
 export function getFeatherSweetSpot(roundIndex: number): { min: number; max: number } {

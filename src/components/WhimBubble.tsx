@@ -1,5 +1,6 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import type { CatSpot, CatWhim } from '../types';
+import { PET_ACTION_ID } from '../data/actions';
 
 const SPOT_WHIM_POS: Record<CatSpot, { left: string; bottom: string }> = {
   rug: { left: '50%', bottom: '236px' },
@@ -27,6 +28,8 @@ export function WhimBubble({
   /** Width of the play area, used to keep the bubble fully on screen. */
   containerWidth?: number;
 }) {
+  // Chin-scratch cravings are a single tap, so they don't earn churu points.
+  const givesChuruPoint = whim ? whim.actionId !== PET_ACTION_ID : false;
   const remainingMin = whim ? Math.max(1, Math.ceil((whim.expiresAt - now) / 60_000)) : 0;
   const pos = SPOT_WHIM_POS[spot];
 
@@ -73,7 +76,7 @@ export function WhimBubble({
             y: { duration: 2.2, repeat: Infinity, ease: 'easeInOut' },
           }}
           title="Oli’s craving"
-          aria-label={`${whim.label}. ${remainingMin}m left. Tap for 2× Joy and 1 Churu.`}
+          aria-label={`${whim.label}. ${remainingMin}m left. Tap for 2× Joy${givesChuruPoint ? ' and a churu point' : ''}.`}
           className={`pointer-events-auto absolute z-30 flex w-max -translate-x-1/2 cursor-pointer flex-col items-center focus-visible:outline-2 focus-visible:outline-amber-500 ${
             targetPos && !below ? '-translate-y-full' : ''
           }`}
@@ -89,7 +92,7 @@ export function WhimBubble({
                 </span>
               </div>
               <span className="text-[10px] font-extrabold whitespace-nowrap text-pink-600">
-                2× Joy + 1 Churu 🍬
+                {givesChuruPoint ? '2× Joy + 🍬 point' : '2× Joy'}
               </span>
             </div>
           </div>

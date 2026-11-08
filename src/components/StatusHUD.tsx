@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { BookOpen } from 'lucide-react';
-import { STAT_META } from '../data/actions';
+import { CHURU_POINTS_PER_TUBE, STAT_META } from '../data/actions';
 import { STAT_KEYS, type LiveCat, type Mood } from '../types';
 import { NEED_THRESHOLD } from '../utils/decayEngine';
 import { STAT_ICONS } from './statIcons';
@@ -26,6 +26,8 @@ export interface StatusHUDProps {
   messCount?: number;
   litterBoxDirty?: boolean;
   churuStash?: number;
+  /** Churu points collected toward the next tube (0–2). */
+  churuPoints?: number;
   onOpenMenu: () => void;
   onOpenPause?: () => void;
   hasUpdate?: boolean;
@@ -38,6 +40,7 @@ export function StatusHUD({
   messCount = 0,
   litterBoxDirty = false,
   churuStash = 3,
+  churuPoints = 0,
   onOpenMenu,
   onOpenPause,
   hasUpdate,
@@ -116,11 +119,23 @@ export function StatusHUD({
         <div className="flex shrink-0 items-center gap-1.5">
           {/* Churu Treat Stash counter pill */}
           <div
-            title="Churu Stash"
+            title={`Churu stash: ${churuStash}. ${churuPoints}/${CHURU_POINTS_PER_TUBE} points toward the next one.`}
+            aria-label={`${churuStash} Churu tubes, ${churuPoints} of ${CHURU_POINTS_PER_TUBE} points toward the next one`}
             className={`flex h-9 items-center gap-1.5 rounded-full border px-3 text-xs font-extrabold shadow-sm backdrop-blur-md ${surface}`}
           >
             <span className="text-sm leading-none">🍬</span>
             <span className="tabular-nums font-mono text-xs">{churuStash}</span>
+            {/* Progress toward the next tube */}
+            <span aria-hidden="true" className="flex items-center gap-0.5">
+              {Array.from({ length: CHURU_POINTS_PER_TUBE }, (_, i) => (
+                <span
+                  key={i}
+                  className={`h-1.5 w-1.5 rounded-full ${
+                    i < churuPoints ? 'bg-pink-500' : night ? 'bg-white/20' : 'bg-amber-950/15'
+                  }`}
+                />
+              ))}
+            </span>
           </div>
 
           {/* Menu / Guide button */}

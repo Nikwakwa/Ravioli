@@ -28,6 +28,7 @@ import {
 } from '../utils/decayEngine';
 import {
   actionById,
+  addChuruPoints,
   AUTO_NAP_ENERGY,
   computeMinigameReward,
   DEFAULT_CHURU_STASH,
@@ -35,6 +36,7 @@ import {
   MAX_CHURU_STASH,
   MAX_ROOM_MESSES,
   MAX_SLEEP_ENERGY,
+  CHURU_POINTS_PER_TUBE,
   MAX_TREATS_IN_WINDOW,
   MESS_SPAWN_HOURS,
   MINIGAME_ROUNDS,
@@ -48,9 +50,12 @@ import {
   SLEEP_ACTION_ID,
   TREAT_WINDOW_MS,
   TUMMY_ACHE_MS,
-  WHIM_COOLDOWN_MS,
   WHIM_DURATION_MS,
+  WHIM_UNSEEN_GRACE_MS,
+  whimCooldownAfter,
+  localDayKey,
   type CareAction,
+  type ChuruProgress,
   type ParticleKind,
 } from '../data/actions';
 import { celebrate, vibrate } from '../utils/feedback';
@@ -76,6 +81,7 @@ const LS_LITTER_DIRTY = 'ravioli:v1:litter_box_dirty';
 const LS_LAST_LITTER_AT = 'ravioli:v1:last_litter_at';
 const LS_MEAL_COUNT = 'ravioli:v1:meal_count';
 const LS_CHURU_STASH = 'ravioli:v1:churu_stash';
+const LS_CHURU_PROGRESS = 'ravioli:v1:churu_progress';
 const LS_ACTIVE_WHIM = 'ravioli:v1:active_whim';
 const LS_LAST_WHIM_AT = 'ravioli:v1:last_whim_at';
 const LS_SPOT = 'ravioli:v1:cat_spot';
@@ -290,6 +296,27 @@ function saveChuruStash(count: number) {
   }
 }
 
+function loadChuruProgress(): ChuruProgress {
+  const fresh: ChuruProgress = { points: 0, earnedToday: 0, day: localDayKey(Date.now()) };
+  try {
+    const raw = window.localStorage.getItem(LS_CHURU_PROGRESS);
+    if (!raw) return fresh;
+    const p = JSON.parse(raw) as Partial<ChuruProgress>;
+    if (typeof p.points !== 'number' || typeof p.earnedToday !== 'number' || typeof p.day !== 'string') return fresh;
+    return { points: Math.max(0, Math.floor(p.points)), earnedToday: Math.max(0, Math.floor(p.earnedToday)), day: p.day };
+  } catch {
+    return fresh;
+  }
+}
+
+function saveChuruProgress(progress: ChuruProgress) {
+  try {
+    window.localStorage.setItem(LS_CHURU_PROGRESS, JSON.stringify(progress));
+  } catch {
+    // ignore
+  }
+}
+
 function loadActiveWhim(): CatWhim | null {
   try {
     const raw = window.localStorage.getItem(LS_ACTIVE_WHIM);
@@ -399,6 +426,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
   const [messes, setMesses] = useState<RoomMess[]>(() => loadMesses());
   const [litterBoxDirty, setLitterBoxDirty] = useState<boolean>(() => loadLitterBoxDirty());
   const [churuStash, setChuruStash] = useState<number>(() => loadChuruStash());
+  const [churuProgress, setChuruProgress] = useState<ChuruProgress>(() => loadChuruProgress());
   const [whim, setWhim] = useState<CatWhim | null>(() => loadActiveWhim());
   const [activeMinigame, setActiveMinigame] = useState<CareAction | null>(null);
   const [spot, setSpotState] = useState<CatSpot>(() => loadCatSpot());
@@ -430,6 +458,25 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
     });
     return nextVal;
   }, []);
+
+  /**
+   * Adds churu points (3 points = 1 Churu tube, max 3 tubes earned per day).
+   * Returns a short text for the toast, e.g. "🍬 2/3" or "+1 Churu 🍬!".
+   */
+  const earnChuruPoints = useCallback(
+    (points: number): string => {
+      const result = addChuruPoints(loadChuruProgress(), points, Date.now());
+      saveChuruProgress(result.progress);
+      setChuruProgress(result.progress);
+      if (result.tubesEarned > 0) {
+        updateChuruStash((c) => c + result.tubesEarned);
+        return `+${result.tubesEarned} Churu 🍬!${result.dailyLimitReached ? ' (last one today)' : ''}`;
+      }
+      if (result.dailyLimitReached) return 'Churu limit reached for today 🍬';
+      return `🍬 ${result.progress.points}/${CHURU_POINTS_PER_TUBE}`;
+    },
+    [updateChuruStash],
+  );
 
   const clearWhim = useCallback(() => {
     setWhim(null);
@@ -805,6 +852,8 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
       const msLeft = whim.expiresAt - now;
       if (msLeft <= 0) {
         clearWhim();
+        // Only sulk about cravings we actually saw run out — not ones that expired while the app was closed.
+        if (-msLeft > WHIM_UNSEEN_GRACE_MS) return;
         noticeRef.current({
           text: '😿 Craving expired (-8 Joy)',
           tone: 'warn',
@@ -819,10 +868,13 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
 
     // Otherwise, if Oli is awake & feeling fine, schedule his next Attention Call!
     if (live.isSleeping || tummyAche || live.isPaused || live.isDeceased) return;
-    const elapsedSinceLast = Date.now() - loadLastWhimAt();
-    const waitMs = Math.max(8_000, WHIM_COOLDOWN_MS - elapsedSinceLast);
+    const lastWhimAt = loadLastWhimAt();
+    const elapsedSinceLast = Date.now() - lastWhimAt;
+    const waitMs = Math.max(8_000, whimCooldownAfter(lastWhimAt) - elapsedSinceLast);
 
     const spawnTimer = window.setTimeout(() => {
+      // Never start a craving while the app is in the background — nobody would see it.
+      if (document.visibilityState !== 'visible') return;
       const candidate = pickCandidateWhim(live);
       if (!candidate) return;
       const nextWhim: CatWhim = {
@@ -1176,17 +1228,16 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
         clearWhim();
         const baseJoy = finalEffect.happiness ?? 8;
         finalEffect.happiness = Math.max(16, baseJoy * 2);
-        const earnedChurus = 1 + (mgReward?.churuBonus ?? 0);
-        updateChuruStash((c) => c + earnedChurus);
+        const churuText = earnChuruPoints(1 + (mgReward?.churuPoints ?? 0));
         noticeRef.current({
-          text: `🎉 Craving fulfilled! +${finalEffect.happiness} Joy, +${earnedChurus} Churu 🍬`,
+          text: `🎉 Craving fulfilled! +${finalEffect.happiness} Joy · ${churuText}`,
           tone: 'info',
         });
       } else if (mgReward) {
         if (mgReward.tier === 'perfect') {
-          updateChuruStash((c) => c + 1);
+          const churuText = earnChuruPoints(mgReward.churuPoints);
           noticeRef.current({
-            text: `🏆 3/3 Perfect! +${finalEffect.happiness} Joy, +1 Churu 🍬`,
+            text: `🏆 3/3 Perfect! +${finalEffect.happiness} Joy · ${churuText}`,
             tone: 'info',
           });
         } else if (mgReward.bonusJoy > 0) {
@@ -1265,6 +1316,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
       cleanMess,
       spawnMess,
       updateChuruStash,
+      earnChuruPoints,
       spot,
       setSpot,
     ],
@@ -1314,10 +1366,10 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
       const boost: Partial<CatStats> = { happiness: joyDelta };
 
       if (matchedWhim) {
+        // Chin scratches are just one tap, so they give extra Joy but no churu points.
         clearWhim();
-        updateChuruStash((c) => c + 1);
         noticeRef.current({
-          text: `🎉 Craving fulfilled! +${joyDelta} Joy, +1 Churu 🍬`,
+          text: `🎉 Craving fulfilled! +${joyDelta} Joy`,
           tone: 'info',
         });
       }
@@ -1339,7 +1391,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
       const mutator = (b: CatState): CatState => applyEffect(materialize(b, nowMs), boost);
       void commit(mutator, PET_ACTION_ID, `Gave ${live.name} chin scratches — purr session!`);
     }
-  }, [base, live, busy, tummyAche, whim, messes.length, litterBoxDirty, churuStash, player, playEvent, commit, clearTummyAche, clearWhim, updateChuruStash, triggerRefusal]);
+  }, [base, live, busy, tummyAche, whim, messes.length, litterBoxDirty, player, playEvent, commit, clearTummyAche, clearWhim, triggerRefusal]);
 
   /** Tapping the Whim thought bubble directly above Oli's head performs the requested action! */
   const fulfillWhim = useCallback(() => {
@@ -1499,6 +1551,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
     messes,
     litterBoxDirty,
     churuStash,
+    churuProgress,
     whim,
     activeMinigame,
     log,

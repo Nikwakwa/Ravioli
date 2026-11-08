@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import {
   actionById,
+  addChuruPoints,
+  CHURU_POINTS_PER_TUBE,
+  localDayKey,
+  MAX_CHURUS_EARNED_PER_DAY,
+  whimCooldownAfter,
   CARE_ACTIONS,
   CATEGORIES,
   computeMinigameReward,
@@ -278,11 +283,11 @@ describe('Core action, dock & mess rules', () => {
     }
   });
 
-  it('rewards 3-round Play minigames with bonus Joy on 2/3 and +1 Churu on 3/3', () => {
-    expect(computeMinigameReward(3, 3)).toEqual({ bonusJoy: 15, churuBonus: 1, tier: 'perfect' });
-    expect(computeMinigameReward(2, 3)).toEqual({ bonusJoy: 8, churuBonus: 0, tier: 'great' });
-    expect(computeMinigameReward(1, 3)).toEqual({ bonusJoy: 0, churuBonus: 0, tier: 'good' });
-    expect(computeMinigameReward(0, 3)).toEqual({ bonusJoy: 0, churuBonus: 0, tier: 'good' });
+  it('rewards 3-round Play minigames with bonus Joy on 2/3 and a churu point on 3/3', () => {
+    expect(computeMinigameReward(3, 3)).toEqual({ bonusJoy: 15, churuPoints: 1, tier: 'perfect' });
+    expect(computeMinigameReward(2, 3)).toEqual({ bonusJoy: 8, churuPoints: 0, tier: 'great' });
+    expect(computeMinigameReward(1, 3)).toEqual({ bonusJoy: 0, churuPoints: 0, tier: 'good' });
+    expect(computeMinigameReward(0, 3)).toEqual({ bonusJoy: 0, churuPoints: 0, tier: 'good' });
 
     expect(isFeatherInSweetSpot(50, 0)).toBe(true);
     expect(isFeatherInSweetSpot(10, 0)).toBe(false);
@@ -470,6 +475,49 @@ describe('Supabase & Actions allowlist consistency', () => {
       });
       expect(sanitized).not.toBeNull();
       expect(sanitized?.action_id).toBe(act);
+    }
+  });
+});
+
+describe('Churu economy (points, daily limit) & craving pacing', () => {
+  const day1 = new Date(2026, 10, 8, 10, 0).getTime();
+  const day2 = new Date(2026, 10, 9, 9, 0).getTime();
+  const start = { points: 0, earnedToday: 0, day: localDayKey(day1) };
+
+  it('needs 3 points for one Churu tube', () => {
+    let r = addChuruPoints(start, 1, day1);
+    expect(r.tubesEarned).toBe(0);
+    expect(r.progress.points).toBe(1);
+    r = addChuruPoints(r.progress, 1, day1);
+    expect(r.progress.points).toBe(2);
+    r = addChuruPoints(r.progress, 1, day1);
+    expect(r.tubesEarned).toBe(1);
+    expect(r.progress.points).toBe(0);
+    expect(r.progress.earnedToday).toBe(1);
+  });
+
+  it('stops earning after the daily limit and resets the next day', () => {
+    let r = addChuruPoints(start, CHURU_POINTS_PER_TUBE * 5, day1);
+    expect(r.tubesEarned).toBe(MAX_CHURUS_EARNED_PER_DAY);
+    expect(r.dailyLimitReached).toBe(true);
+    expect(r.progress.points).toBe(0);
+
+    r = addChuruPoints(r.progress, 2, day1);
+    expect(r.tubesEarned).toBe(0);
+    expect(r.dailyLimitReached).toBe(true);
+    expect(r.progress.points).toBe(0);
+
+    r = addChuruPoints(r.progress, 1, day2);
+    expect(r.dailyLimitReached).toBe(false);
+    expect(r.progress.earnedToday).toBe(0);
+    expect(r.progress.points).toBe(1);
+  });
+
+  it('spaces cravings 12 to 20 minutes apart', () => {
+    for (const t of [0, 1, 123_456_789, day1, day2]) {
+      const wait = whimCooldownAfter(t);
+      expect(wait).toBeGreaterThanOrEqual(12 * 60_000);
+      expect(wait).toBeLessThan(20 * 60_000);
     }
   });
 });
