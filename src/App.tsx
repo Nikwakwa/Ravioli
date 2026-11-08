@@ -28,9 +28,9 @@ export const SPOT_HEAD_SVG: Record<CatSpot, { x: number; y: number }> = {
   sofa_bed: { x: 294, y: 244 },
   box: { x: 166, y: 306 },
   window: { x: 196, y: 160 },
-  planter: { x: 106, y: 256 },
+  planter: { x: 98, y: 258 },
   bistro_chair: { x: 259, y: 218 },
-  balcony_floor: { x: 145, y: 340 },
+  balcony_floor: { x: 136, y: 380 },
 };
 
 export function App() {
