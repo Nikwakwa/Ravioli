@@ -90,10 +90,6 @@ Replace passive Play buttons with quick 10-second interactive minigames:
 
 ---
 
-## ⏸️ Parked for Later: Co-op Mode & Progression
+## ⏸️ Parked for Later
 
-*(Saved for future re-introduction once single-player care mechanics are complete)*
-- **Live Partner Co-op:** Nico & Athina player switcher (`PlayerSelector`), live Supabase WebSocket sync (`catStorage.ts`), partner activity feed (`ActivityFeed`), and background partner notifications.
-- **Double Love Combo:** If both partners care for Oli within 15 minutes of each other, trigger a 2-hour slow-decay buff.
-- **Care Streak & Bond Level:** Track consecutive days Oli stays above critical thresholds without neglect.
-- **Unlockable Keepsakes & Collars:** Leveling up Bond unlocks visual items in `LivingRoom.tsx` (cardboard box, sunbeam spot, catnip mouse) and accessories on `CatAvatar.tsx` (bowtie collar, bandana).
+Ideas saved for later (growing up from baby to adult, notifications when the app is closed, co-op mode & progression) now live in [IDEAS.md](IDEAS.md).
