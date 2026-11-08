@@ -102,6 +102,23 @@ describe('Balcony — Scenery & Mobile Safe Bounds', () => {
     expect(planters.length).toBe(2);
   });
 
+  it('draws Oli in the street-watch corner behind the closer planter boxes and cypress pot', () => {
+    const tree = Balcony({ sleeping: false, activeSpot: 'planter' }) as AnyElement;
+    const cornerGroup = findElements(tree, (el) => el.props?.role === 'button' && el.props?.['aria-current'] === 'true')[0];
+    expect(cornerGroup).toBeDefined();
+    const children = cornerGroup.props.children as AnyElement[];
+    const hasAvatar = (c: unknown) =>
+      findElements(c, (inner) => typeof inner.type === 'function' && inner.type.name === 'CatAvatar').length > 0;
+    const isPlanter = (c: AnyElement) => typeof c?.type === 'function' && c.type.name === 'HangingPlanterBox';
+
+    const catIdx = children.findIndex(hasAvatar);
+    const firstPlanterIdx = children.findIndex(isPlanter);
+    expect(catIdx).toBeGreaterThan(-1);
+    expect(catIdx).toBeLessThan(firstPlanterIdx);
+    // The cypress pot group is the last thing drawn in the corner, in front of Oli
+    expect(catIdx).toBeLessThan(children.length - 1);
+  });
+
   it('renders the balcony_floor spot after the bistro table in SVG painter order so Oli is never overlapped by table legs', () => {
     const tree = Balcony({ sleeping: false, activeSpot: 'balcony_floor' }) as AnyElement;
     const interactiveGroups = findElements(tree, (el) => el.props?.role === 'button');

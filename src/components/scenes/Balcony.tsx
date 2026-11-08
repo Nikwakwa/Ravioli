@@ -566,9 +566,9 @@ function FoldingBistroChair({
  * - Tapered cylindrical matte-grey corner pot with a lush feathery cypress tree
  * - Classic French wooden-slat folding bistro table (with crossed X-legs!) flanked by two folding chairs
  * - 3 grounded, occlusion-free cozy spots for Oli:
- *     1. 'planter'       — Sitting on the open sunny back tiles beside the cypress pot & pansy planters
+ *     1. 'planter'       — Sitting in the open left corner with his back to us, watching the street
  *     2. 'bistro_chair'  — Perched proudly in the center of the wooden bistro tabletop
- *     3. 'balcony_floor' — Lounging in the sunny foreground on the warm sandstone tiles
+ *     3. 'balcony_floor' — Rolling belly-up in the sunny foreground on the warm sandstone tiles
  */
 export function Balcony({
   sleeping,
@@ -611,9 +611,27 @@ export function Balcony({
     return { zB, zF, color: tableSlatColors[i] };
   });
 
-  // Cypress pot 3D coordinates (placed under the left planter box edge, leaving the left corner open for street watch)
-  const [potBaseCx, potBaseCy] = proj(-84, 0, 260);
-  const [potRimCx, potRimCy] = proj(-84, 39, 260);
+  // Cypress pot 3D coordinates (under the left planter box, leaving the left corner open for street watch)
+  const [potBaseCx, potBaseCy] = proj(-70, 0, 262);
+  const [potRimCx, potRimCy] = proj(-70, 39, 262);
+
+  // Stand Oli's avatar on the tiles at world point (X, Z): footY is where his paws touch the
+  // ground inside the 200x220 avatar drawing. Widths are picked so he stays the same-sized cat
+  // in every spot once perspective is taken into account.
+  const placeOli = (X: number, Z: number, footY: number, width: number) => {
+    const height = Math.round(width * 1.1 * 10) / 10;
+    const [cx, floorY] = proj(X, 0, Z);
+    return {
+      x: Math.round((cx - width / 2) * 10) / 10,
+      y: Math.round((floorY - (footY / 220) * height) * 10) / 10,
+      width,
+      height,
+    };
+  };
+  // Street watch: sitting on the tiles right against the railing curb in the open left corner
+  const lookOutBox = placeOli(-130, 278, 207, 66);
+  // Belly-up roll in the sunny foreground, clear of the café set
+  const bellyUpBox = placeOli(-36, 160, 200, 150);
 
   return (
     <svg
@@ -785,10 +803,10 @@ export function Balcony({
         <g stroke={sleeping ? '#282436' : '#a69682'} strokeWidth="1.15" opacity="0.58">
           {[-148, -110, -72, -34, 4, 42, 80].map((tileX) => {
             const [x1, y1] = proj(tileX, 0, zRailBack);
-            const [x2, y2] = proj(tileX, 0, 112);
+            const [x2, y2] = proj(tileX, 0, 92);
             return <line key={tileX} x1={x1} y1={y1} x2={x2} y2={y2} />;
           })}
-          {[258, 228, 198, 168, 138].map((tileZ) => {
+          {[252, 214, 176, 138, 100].map((tileZ) => {
             const [xL, yRow] = proj(xWallLeft - 15, 0, tileZ);
             const [xR] = proj(xCornerRight, 0, tileZ);
             return <line key={tileZ} x1={Math.max(0, xL)} y1={yRow} x2={Math.min(400, xR)} y2={yRow} />;
@@ -1012,6 +1030,30 @@ export function Balcony({
       >
         <rect x="62" y="185" width="250" height="152" fill="transparent" style={{ pointerEvents: 'all' }} />
 
+        {/* Oli in the left corner with his back to us, watching the quiet street below.
+            Drawn before the planter boxes and pot because they are closer to the camera. */}
+        {activeSpot === 'planter' && (
+          <motion.g
+            key={`cat-planter-${catAnimationKey}`}
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: 'spring', stiffness: 320, damping: 22 }}
+          >
+            <CatAvatar
+              x={lookOutBox.x}
+              y={lookOutBox.y}
+              width={lookOutBox.width}
+              height={lookOutBox.height}
+              pose="look_out"
+              mood={catMood}
+              animation={catAnimation}
+              animationKey={catAnimationKey}
+              onPet={onPetCat}
+              className="pointer-events-auto"
+            />
+          </motion.g>
+        )}
+
         {/* Left Hanging Grey Planter Box */}
         <HangingPlanterBox
           xLeft={-92}
@@ -1105,28 +1147,6 @@ export function Balcony({
           </g>
         </g>
 
-        {/* Oli in the left corner looking out and down at the quiet street below */}
-        {activeSpot === 'planter' && (
-          <motion.g
-            key={`cat-planter-${catAnimationKey}`}
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ type: 'spring', stiffness: 320, damping: 22 }}
-          >
-            <CatAvatar
-              x={72}
-              y={252}
-              width={68}
-              height={75}
-              pose="look_out"
-              mood={catMood}
-              animation={catAnimation}
-              animationKey={catAnimationKey}
-              onPet={onPetCat}
-              className="pointer-events-auto"
-            />
-          </motion.g>
-        )}
       </g>
 
       {/* 10. 3D Wooden-Slat Folding Bistro Table & Two Matching Folding Chairs (Cozy Spot 2: 'bistro_chair') */}
@@ -1311,7 +1331,7 @@ export function Balcony({
             : 'Sunny balcony floor tiles (cozy spot)'
         }
       >
-        <rect x="68" y="324" width="154" height="152" fill="transparent" style={{ pointerEvents: 'all' }} />
+        <rect x="76" y="330" width="166" height="145" fill="transparent" style={{ pointerEvents: 'all' }} />
 
         {activeSpot === 'balcony_floor' && (
           <motion.g
@@ -1321,10 +1341,10 @@ export function Balcony({
             transition={{ type: 'spring', stiffness: 300, damping: 22 }}
           >
             <CatAvatar
-              x={72}
-              y={324}
-              width={146}
-              height={148}
+              x={bellyUpBox.x}
+              y={bellyUpBox.y}
+              width={bellyUpBox.width}
+              height={bellyUpBox.height}
               pose="belly_up"
               mood={catMood}
               animation={catAnimation}

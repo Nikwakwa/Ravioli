@@ -7,6 +7,16 @@ export interface ReleaseEntry {
 
 export const CHANGELOG: ReleaseEntry[] = [
   {
+    version: 'v0.18.4',
+    date: '2026-11-08',
+    title: 'Cuter Balcony Oli: Street Watch & Belly Rolls Redrawn 🐾💕',
+    changes: [
+      'Redrew Oli from behind for his street-watch corner: furry backs of the ears (no more pink insides showing), round haunches with tiny toes peeking out, tabby stripes down his back, and his striped tail curled on the tiles with a flicking white tip. Pet him and he turns around to give you a happy little smile!',
+      'Redrew the belly-up roll so Oli really lies on his back on the warm tiles: long fluffy tummy facing the sky, pink toe beans up in the air, mitten paws kneading, head tilted back with a blissful face, and a gentle happy wiggle when you rub his belly.',
+      'Fixed perspective & overlapping on the balcony: Oli is now the same size in every spot, sits behind the closer cypress pot instead of on top of it, and the floor tiles are true squares all the way to the bottom of the screen.',
+    ],
+  },
+  {
     version: 'v0.18.3',
     date: '2026-11-07',
     title: 'Balcony Street Watch & Sunny Belly Rolls ☀️👀🐾',

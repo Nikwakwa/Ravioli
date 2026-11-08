@@ -4,6 +4,14 @@ All updates to **Oli** are listed here.
 
 ---
 
+## `v0.18.4` — 2026-11-08
+### Cuter Balcony Oli: Street Watch & Belly Rolls Redrawn 🐾💕
+- **Street Watch From Behind (`planter`):** Redrew Oli's back view — furry backs of the ears instead of pink insides, round haunches with tiny hind toes peeking out, tabby stripes down his back, and his striped tail curled on the tiles with a flicking white tip. Pet him and he turns around to smile at you.
+- **True Belly-Up Roll (`balcony_floor`):** Oli now actually lies on his back: fluffy cream tummy to the sky, pink toe beans in the air, kneading mitten paws, head tilted back with a blissful face, and a happy wiggle when you rub his belly.
+- **Perspective & Overlap Fixes:** Oli is the same size in all three balcony spots, sits behind the closer cypress pot instead of on top of it, and the terrace tiles are proper squares all the way down.
+
+---
+
 ## `v0.18.3` — 2026-11-07
 ### Balcony Street Watch & Sunny Belly Rolls ☀️👀🐾
 - **Left Corner Street Watch (`planter`):** Oli now sits in his favorite left corner against the railing looking out and down at the quiet street below with his back to us, perked ears, swishing tail, and tucked white paws.
