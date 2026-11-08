@@ -4,6 +4,14 @@ All updates to **Oli** are listed here.
 
 ---
 
+## `v0.19.2` — 2026-11-08
+### No More Leftover Water Bowls 💧🐾
+- **Animations End When They End:** After drinking, eating or playing, moving Oli to another spot no longer replays the finished animation, so the water bowl / food bowl / toy no longer reappears next to him (e.g. behind his back in the street-watch corner or on the bistro table).
+- **Facing-Away Pose Stays Clean:** Bowls and toys never appear while Oli watches the street with his back to you.
+- **Fountain Bubbles:** The fountain only bubbles faster while Oli is actually drinking.
+
+---
+
 ## `v0.19.1` — 2026-11-08
 ### Close-Up Rooms Are Back 🛋️🔍
 - **Full-Size Scenery:** The living room and balcony fill the screen at full size again (v0.19.0 had shrunk them on every phone, which felt small and far away on tall phones).

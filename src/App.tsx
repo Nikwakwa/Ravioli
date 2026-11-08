@@ -91,6 +91,8 @@ export function App() {
     whim,
     activeMinigame,
     event,
+    catAnimation,
+    eventPlaying,
     busy,
     perform,
     completeMinigame,
@@ -265,7 +267,7 @@ export function App() {
                   activeSpot={spot}
                   onSelectSpot={setSpot}
                   catMood={mood}
-                  catAnimation={event?.animation ?? 'idle'}
+                  catAnimation={catAnimation}
                   catAnimationKey={event?.key ?? 0}
                   onPetCat={handlePetOli}
                 />
@@ -281,14 +283,14 @@ export function App() {
               >
                 <LivingRoom
                   sleeping={live.isSleeping}
-                  fountainBoost={event?.actionId === 'fountain'}
+                  fountainBoost={eventPlaying && event?.actionId === 'fountain'}
                   onTapFountain={handleTapFountain}
                   litterBoxDirty={litterBoxDirty}
                   onTapLitterBox={handleTapLitterBox}
                   activeSpot={spot}
                   onSelectSpot={setSpot}
                   catMood={mood}
-                  catAnimation={event?.animation ?? 'idle'}
+                  catAnimation={catAnimation}
                   catAnimationKey={event?.key ?? 0}
                   onPetCat={handlePetOli}
                 />

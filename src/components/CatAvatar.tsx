@@ -935,6 +935,7 @@ export function CatAvatar({ mood, animation, animationKey, onPet, className, x, 
   const head = headMotion(anim, animSec, sleeping);
   const sad = expr.earDroop;
 
+  const showProps = !(pose === 'look_out' && !sleeping);
   const isPlayAnim = anim === 'playing' || anim === 'laser' || anim === 'tail_chase' || anim === 'red_ball';
   const tailSpeed =
     anim === 'tail_chase' ? 0.32 : isPlayAnim ? 0.6 : mood === 'ecstatic' || mood === 'happy' ? 2.2 : sad ? 5 : 3.4;
@@ -1300,18 +1301,18 @@ export function CatAvatar({ mood, animation, animationKey, onPet, className, x, 
           );
         })()}
 
-        {/* Props */}
+        {/* Props (never in front of Oli while he faces away, watching the street) */}
         <AnimatePresence>
-          {(anim === 'eating' || anim === 'eating_egg' || anim === 'treat') && (
+          {showProps && (anim === 'eating' || anim === 'eating_egg' || anim === 'treat') && (
             <FoodBowl key="bowl" kind={anim === 'treat' ? 'heart' : anim === 'eating_egg' ? 'egg' : 'wet'} sec={animSec} />
           )}
-          {anim === 'churu' && <ChuruTube key="churu" sec={animSec} />}
-          {anim === 'drinking' && <WaterDish key="dish" />}
-          {anim === 'playing' && <FeatherWand key="wand" sec={animSec} />}
-          {anim === 'laser' && <LaserDot key="laser" sec={animSec} />}
-          {anim === 'tail_chase' && <TailSpinSwirl key="tail-swirl" sec={animSec} />}
-          {anim === 'red_ball' && <RedBallToy key="red-ball" sec={animSec} />}
-          {anim === 'brushing' && <Brush key="brush" sec={animSec} />}
+          {showProps && anim === 'churu' && <ChuruTube key="churu" sec={animSec} />}
+          {showProps && anim === 'drinking' && <WaterDish key="dish" />}
+          {showProps && anim === 'playing' && <FeatherWand key="wand" sec={animSec} />}
+          {showProps && anim === 'laser' && <LaserDot key="laser" sec={animSec} />}
+          {showProps && anim === 'tail_chase' && <TailSpinSwirl key="tail-swirl" sec={animSec} />}
+          {showProps && anim === 'red_ball' && <RedBallToy key="red-ball" sec={animSec} />}
+          {showProps && anim === 'brushing' && <Brush key="brush" sec={animSec} />}
         </AnimatePresence>
       </motion.g>
     </svg>

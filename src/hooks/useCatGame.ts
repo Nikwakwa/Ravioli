@@ -526,8 +526,17 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
     setLog((prev) => (prev.some((e) => e.id === entry.id) ? prev : sortLog([entry, ...prev])));
   }, []);
 
+  // True only while the latest animation is actually playing. Once it ends, Oli goes back to idle,
+  // so moving him to another spot never replays an old animation (like a water bowl appearing again).
+  const [eventPlaying, setEventPlaying] = useState(false);
+  const eventTimer = useRef<number | undefined>(undefined);
+  useEffect(() => () => window.clearTimeout(eventTimer.current), []);
+
   const playEvent = useCallback((ev: Omit<GameEvent, 'key'>) => {
     setEvent({ ...ev, key: ++eventSeq });
+    setEventPlaying(true);
+    window.clearTimeout(eventTimer.current);
+    eventTimer.current = window.setTimeout(() => setEventPlaying(false), ev.durationMs + 100);
   }, []);
 
   const triggerRefusal = useCallback(
@@ -1559,6 +1568,9 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
     status,
     fallbackReason,
     event,
+    /** The animation Oli should be playing right now ('idle' once the latest one has finished). */
+    catAnimation: (eventPlaying && event ? event.animation : 'idle') as CatAnimation,
+    eventPlaying,
     busy,
     perform,
     completeMinigame,

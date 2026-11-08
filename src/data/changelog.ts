@@ -7,6 +7,16 @@ export interface ReleaseEntry {
 
 export const CHANGELOG: ReleaseEntry[] = [
   {
+    version: 'v0.19.2',
+    date: '2026-11-08',
+    title: 'No More Leftover Water Bowls 💧🐾',
+    changes: [
+      'After Oli drinks, eats or plays, moving him to another spot (like the balcony corner or the bistro table) no longer replays the old animation, so no water bowl, food bowl or toy pops up next to him anymore.',
+      'While he watches the street with his back to you, bowls and toys never appear in front of him.',
+      'The fountain only bubbles faster while he’s actually drinking.',
+    ],
+  },
+  {
     version: 'v0.19.1',
     date: '2026-11-08',
     title: 'Close-Up Rooms Are Back 🛋️🔍',
