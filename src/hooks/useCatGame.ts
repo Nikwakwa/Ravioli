@@ -389,6 +389,10 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
   const [status, setStatus] = useState<SyncStatus>('connecting');
   const [fallbackReason, setFallbackReason] = useState<string | null>(null);
   const [now, setNow] = useState(() => Date.now());
+  // Separate clock for messes that pile up over time. It only moves on the background
+  // tick, at app start and when the app comes back to the foreground — never because
+  // someone tapped Oli — so a due mess never seems to be caused by petting him.
+  const [messClock, setMessClock] = useState(() => Date.now());
   const [event, setEvent] = useState<GameEvent | null>(null);
   const [busy, setBusy] = useState(false);
   const [tummyAcheUntil, setTummyAcheUntil] = useState<number>(() => loadTummyAcheUntil());
@@ -512,6 +516,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
         setBase(boot.state);
         setLog(sortLog(boot.log));
         setNow(Date.now());
+        setMessClock(Date.now());
         setReady(true);
 
         unsubscribe = boot.storage.subscribe({
@@ -563,10 +568,16 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
   // Pet care clock: 30 s tick + foreground refresh
   // ---------------------------------------------------------------------------
   useEffect(() => {
-    const id = window.setInterval(() => setNow(Date.now()), TICK_MS);
+    const id = window.setInterval(() => {
+      const t = Date.now();
+      setNow(t);
+      setMessClock(t);
+    }, TICK_MS);
     const onForeground = () => {
       if (document.visibilityState !== 'visible') return;
-      setNow(Date.now());
+      const t = Date.now();
+      setNow(t);
+      setMessClock(t);
       void storageRef.current?.refresh().then((s) => s && acceptState(s));
     };
     document.addEventListener('visibilitychange', onForeground);
@@ -840,15 +851,15 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
 
     // While Oli is actively sleeping, do not spawn messes or dirty the litter box.
     if (live.isSleeping) {
-      saveLastMessAt(now);
-      saveLastLitterAt(now);
+      saveLastMessAt(messClock);
+      saveLastLitterAt(messClock);
       return;
     }
 
     // If Oli was previously sleeping and woke naturally while away,
     // only count the time elapsed AFTER he woke up!
-    let effectiveMessBase = loadLastMessAt(now);
-    let effectiveLitterBase = loadLastLitterAt(now);
+    let effectiveMessBase = loadLastMessAt(messClock);
+    let effectiveLitterBase = loadLastLitterAt(messClock);
 
     if (base?.is_sleeping) {
       const napHours = hoursUntilNaturalWake(base.energy);
@@ -860,18 +871,18 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
     }
 
     // Check litter box catch-up (only while awake)
-    const hoursSinceLitter = Math.max(0, (now - effectiveLitterBase) / MS_PER_HOUR);
+    const hoursSinceLitter = Math.max(0, (messClock - effectiveLitterBase) / MS_PER_HOUR);
     if (hoursSinceLitter >= 3.5 && !litterBoxDirty) {
       setLitterBoxDirty(true);
       saveLitterBoxDirty(true);
-      saveLastLitterAt(now);
+      saveLastLitterAt(messClock);
     }
 
-    const hoursSince = Math.max(0, (now - effectiveMessBase) / MS_PER_HOUR);
+    const hoursSince = Math.max(0, (messClock - effectiveMessBase) / MS_PER_HOUR);
     if (hoursSince < MESS_SPAWN_HOURS) return;
 
     const countToSpawn = Math.min(MAX_ROOM_MESSES - messes.length, Math.floor(hoursSince / MESS_SPAWN_HOURS));
-    saveLastMessAt(now);
+    saveLastMessAt(messClock);
     if (countToSpawn <= 0) return;
 
     setMesses((prev) => {
@@ -881,10 +892,10 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
         if (slot === null) break;
         const kind: MessKind = live.hygiene < 45 && i % 2 === 1 ? 'vomit' : 'fur_clump';
         next.push({
-          id: `${now.toString(36)}-${i}-${Math.random().toString(36).slice(2, 5)}`,
+          id: `${messClock.toString(36)}-${i}-${Math.random().toString(36).slice(2, 5)}`,
           kind,
           slot,
-          created_at: new Date(now).toISOString(),
+          created_at: new Date(messClock).toISOString(),
         });
       }
       saveMesses(next);
@@ -896,9 +907,9 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
       hygiene: -6 * countToSpawn,
       happiness: -4 * countToSpawn,
     };
-    const mutator = (b: CatState): CatState => applyEffect(materialize(b, now), penalty);
+    const mutator = (b: CatState): CatState => applyEffect(materialize(b, Date.now()), penalty);
     void commit(mutator, null);
-  }, [ready, live, base, now, messes.length, litterBoxDirty, commit]);
+  }, [ready, live, base, messClock, messes.length, litterBoxDirty, commit]);
 
   // Autonomous pass-out nap: if Oli's Energy drops to <= AUTO_NAP_ENERGY (5) while awake, he curls up to nap automatically.
   const autoNappingRef = useRef(false);
