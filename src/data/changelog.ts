@@ -7,6 +7,18 @@ export interface ReleaseEntry {
 
 export const CHANGELOG: ReleaseEntry[] = [
   {
+    version: 'v0.20.0',
+    date: '2026-11-09',
+    title: 'Real-Time Atmosphere & Cozy Rain Mode 🌅🌧️',
+    changes: [
+      'The living room and balcony now change with the real-world clock: bright daytime sunbeams with gentle floating dust motes, warm golden sunset tones, and cozy midnight darkness with twinkling stars and glowing neighbor windows.',
+      'A warm windowsill lamp automatically turns on during sunset and night.',
+      'New "Ambience" tab in the Menu lets you pick real-time auto lighting or lock in your favorite mood (Day, Golden Hour, or Cozy Night).',
+      'Cozy Rain (Cat TV mode): Turn on rain to watch droplets slide down the living room window pane or see the balcony rain streaks while relaxing with Oli.',
+      'Tap the new ambience chip right in the top status bar to quickly view or switch moods.',
+    ],
+  },
+  {
     version: 'v0.19.2',
     date: '2026-11-08',
     title: 'No More Leftover Water Bowls 💧🐾',

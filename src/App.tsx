@@ -22,6 +22,13 @@ import {
   sendSystemNotification,
   type NotificationPrefs,
 } from './utils/notifications';
+import {
+  loadAtmospherePrefs,
+  saveAtmospherePrefs,
+  resolveTimeOfDay,
+  getAtmosphereSummary,
+  type AtmospherePrefs,
+} from './utils/atmosphere';
 
 export const SPOT_HEAD_SVG: Record<CatSpot, { x: number; y: number }> = {
   rug: { x: 200, y: 261 },
@@ -111,6 +118,27 @@ export function App() {
     now,
   } = useCatGame('Nico', pushNotice);
   const { availableVersion, reloading, applyUpdate } = useVersionCheck();
+
+  const [atmospherePrefs, setAtmospherePrefs] = useState<AtmospherePrefs>(() => loadAtmospherePrefs());
+
+  const handleChangeAtmosphere = useCallback(
+    (next: AtmospherePrefs) => {
+      setAtmospherePrefs(next);
+      saveAtmospherePrefs(next);
+      const summary = getAtmosphereSummary(resolveTimeOfDay(next.mode, new Date(now)), next.rain, next.mode);
+      pushNotice({ text: `${summary.emoji} ${summary.label}`, tone: 'info' });
+    },
+    [now, pushNotice]
+  );
+
+  const effectiveTime = resolveTimeOfDay(atmospherePrefs.mode, new Date(now));
+  const atmosphereSummary = getAtmosphereSummary(
+    effectiveTime,
+    atmospherePrefs.rain,
+    atmospherePrefs.mode
+  );
+  const isNight = Boolean(live?.isSleeping || effectiveTime === 'night');
+  const isSunset = Boolean(!live?.isSleeping && effectiveTime === 'sunset');
 
   // Re-measure once the game screen is mounted (the loading screen has no frame to measure).
   const gameMounted = ready && Boolean(live);
@@ -237,13 +265,17 @@ export function App() {
           className="pointer-events-none absolute inset-x-0 bottom-0 transition-colors duration-500"
           style={{
             height: sceneShift > 0 ? sceneShift + 4 : 0,
-            backgroundColor: live.isSleeping
+            backgroundColor: isNight
               ? scene === 'balcony'
-                ? '#2f2b3b'
-                : '#3a3446'
-              : scene === 'balcony'
-                ? '#c9b9a2'
-                : '#e4d6c1',
+                ? '#1c1b26'
+                : '#272233'
+              : isSunset
+                ? scene === 'balcony'
+                  ? '#9e796e'
+                  : '#b88975'
+                : scene === 'balcony'
+                  ? '#c9b9a2'
+                  : '#e4d6c1',
           }}
         />
 
@@ -263,6 +295,8 @@ export function App() {
                 className="pointer-events-none absolute inset-0"
               >
                 <Balcony
+                  timeOfDay={effectiveTime}
+                  isRaining={atmospherePrefs.rain}
                   sleeping={live.isSleeping}
                   activeSpot={spot}
                   onSelectSpot={setSpot}
@@ -282,6 +316,8 @@ export function App() {
                 className="pointer-events-none absolute inset-0"
               >
                 <LivingRoom
+                  timeOfDay={effectiveTime}
+                  isRaining={atmospherePrefs.rain}
                   sleeping={live.isSleeping}
                   fountainBoost={eventPlaying && event?.actionId === 'fountain'}
                   onTapFountain={handleTapFountain}
@@ -298,11 +334,11 @@ export function App() {
             )}
           </AnimatePresence>
 
-          {/* Subtle sleep-mode ambient vignette */}
+          {/* Subtle sleep/sunset/night ambient vignette */}
           <motion.div
             className="pointer-events-none absolute inset-0 bg-indigo-950"
             initial={false}
-            animate={{ opacity: live.isSleeping ? 0.22 : 0 }}
+            animate={{ opacity: isNight ? 0.22 : isSunset ? 0.08 : 0 }}
             transition={{ duration: 0.7 }}
           />
         </div>
@@ -321,6 +357,10 @@ export function App() {
             onOpenMenu={() => handleOpenMenu(live.isPaused ? 'pause' : 'rules')}
             onOpenPause={() => handleOpenMenu('pause')}
             hasUpdate={Boolean(availableVersion)}
+            isNight={isNight}
+            atmosphereEmoji={atmosphereSummary.emoji}
+            atmosphereLabel={atmosphereSummary.label}
+            onOpenAtmosphere={() => handleOpenMenu('atmosphere')}
           />
 
           {/* New version available banner on main screen */}
@@ -400,7 +440,7 @@ export function App() {
             role="group"
             aria-label="Switch scenery"
             className={`pointer-events-auto absolute bottom-1.5 left-1/2 z-20 flex -translate-x-1/2 items-center gap-1 rounded-full border p-1 shadow-md backdrop-blur-md transition-colors ${
-              live.isSleeping
+              isNight
                 ? 'border-white/10 bg-slate-900/80 text-amber-50'
                 : 'border-amber-900/12 bg-white/90 text-amber-950'
             }`}
@@ -412,7 +452,7 @@ export function App() {
               className={`relative flex items-center gap-1 whitespace-nowrap rounded-full px-3 py-1 text-[11px] font-extrabold transition-colors active:scale-95 ${
                 scene === 'living_room'
                   ? 'text-amber-950'
-                  : live.isSleeping
+                  : isNight
                     ? 'text-indigo-200/75 hover:text-white'
                     : 'text-amber-900/65 hover:text-amber-950'
               }`}
@@ -421,7 +461,7 @@ export function App() {
                 <motion.span
                   layoutId="scene-pill"
                   className={`absolute inset-0 rounded-full shadow-2xs ${
-                    live.isSleeping ? 'bg-amber-300' : 'bg-amber-400/30 ring-1 ring-amber-500/40'
+                    isNight ? 'bg-amber-300' : 'bg-amber-400/30 ring-1 ring-amber-500/40'
                   }`}
                   transition={{ type: 'spring', stiffness: 380, damping: 30 }}
                 />
@@ -437,7 +477,7 @@ export function App() {
               className={`relative flex items-center gap-1 whitespace-nowrap rounded-full px-3 py-1 text-[11px] font-extrabold transition-colors active:scale-95 ${
                 scene === 'balcony'
                   ? 'text-amber-950'
-                  : live.isSleeping
+                  : isNight
                     ? 'text-indigo-200/75 hover:text-white'
                     : 'text-amber-900/65 hover:text-amber-950'
               }`}
@@ -446,7 +486,7 @@ export function App() {
                 <motion.span
                   layoutId="scene-pill"
                   className={`absolute inset-0 rounded-full shadow-2xs ${
-                    live.isSleeping ? 'bg-amber-300' : 'bg-emerald-400/35 ring-1 ring-emerald-600/40'
+                    isNight ? 'bg-amber-300' : 'bg-emerald-400/35 ring-1 ring-emerald-600/40'
                   }`}
                   transition={{ type: 'spring', stiffness: 380, damping: 30 }}
                 />
@@ -506,6 +546,8 @@ export function App() {
                 onToggleMasterNotifications={() => void handleToggleMasterNotifications()}
                 onChangeNotifPrefs={handleChangeNotifPrefs}
                 onTestNotification={handleTestNotification}
+                atmospherePrefs={atmospherePrefs}
+                onChangeAtmosphere={handleChangeAtmosphere}
               />
             </motion.div>
           )}

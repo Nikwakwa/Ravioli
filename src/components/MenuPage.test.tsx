@@ -79,12 +79,33 @@ describe('MenuPage Server Rendering & Content', () => {
 
     expect(html).toContain('Back to Oli');
     expect(html).toContain('Rules');
+    expect(html).toContain('Ambience');
     expect(html).toContain('Vacation');
     expect(html).toContain('Updates');
     expect(html).toContain('Alerts');
     expect(html).toContain('100 Energy');
     // Cozy spots tab is scrapped
     expect(html).not.toContain('Cozy Spots');
+  });
+
+  it('renders atmosphere controls when initialTab is atmosphere', () => {
+    const html = renderToString(
+      <MenuPage
+        onClose={vi.fn()}
+        initialTab="atmosphere"
+        live={mockLive}
+        onTogglePause={vi.fn()}
+        notifPrefs={defaultNotifPrefs}
+        onToggleMasterNotifications={vi.fn()}
+        onChangeNotifPrefs={vi.fn()}
+        onTestNotification={vi.fn()}
+        atmospherePrefs={{ mode: 'sunset', rain: true }}
+      />
+    );
+
+    expect(html).toContain('Real-Time Atmosphere');
+    expect(html).toContain('Golden Hour Sunset');
+    expect(html).toContain('Cozy Rain (Cat TV)');
   });
 
   it('renders pause clock controls when initialTab is pause', () => {

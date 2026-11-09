@@ -4,6 +4,15 @@ All updates to **Oli** are listed here.
 
 ---
 
+## `v0.20.0` — 2026-11-09
+### Real-Time Atmosphere & Cozy Rain Mode 🌅🌧️
+- **Living Room & Balcony Dynamic Lighting:** The scenery shifts smoothly with your local clock (or your chosen preset): bright sunny day with sunbeams and drifting dust motes, honey-golden sunset with twilight reflections, and deep starry night with glowing apartment windows across the street.
+- **Warm Windowsill Lamp Glow:** The cute lamp on the living room windowsill lights up softly at sunset and night.
+- **Cozy Rain / Cat TV Mode:** Toggle gentle raindrops sliding down the glass windowpane in the living room and streaming across the balcony.
+- **Ambience Menu & Quick Status Chip:** Pick Auto (Real-Time Clock), Sunny Daylight, Golden Hour Sunset, or Cozy Night anytime from the new Ambience tab in the Menu, or tap the ambience chip in the top status bar.
+
+---
+
 ## `v0.19.2` — 2026-11-08
 ### No More Leftover Water Bowls 💧🐾
 - **Animations End When They End:** After drinking, eating or playing, moving Oli to another spot no longer replays the finished animation, so the water bowl / food bowl / toy no longer reappears next to him (e.g. behind his back in the street-watch corner or on the bistro table).

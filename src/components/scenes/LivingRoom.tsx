@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { CatAvatar } from '../CatAvatar';
 import type { CatAnimation, CatSpot, Mood } from '../../types';
+import type { TimeOfDay } from '../../utils/atmosphere';
 
 /**
  * Nico & Athina's real Living Room — crafted from their living room photos:
@@ -19,6 +20,8 @@ import type { CatAnimation, CatSpot, Mood } from '../../types';
 export function LivingRoom({
   sleeping,
   fountainBoost,
+  timeOfDay = 'day',
+  isRaining = false,
   onTapFountain,
   litterBoxDirty = false,
   onTapLitterBox,
@@ -31,6 +34,8 @@ export function LivingRoom({
 }: {
   sleeping: boolean;
   fountainBoost: boolean;
+  timeOfDay?: TimeOfDay;
+  isRaining?: boolean;
   onTapFountain?: () => void;
   litterBoxDirty?: boolean;
   onTapLitterBox?: () => void;
@@ -41,31 +46,42 @@ export function LivingRoom({
   catAnimationKey?: number;
   onPetCat?: () => void;
 }) {
+  const isNight = sleeping || timeOfDay === 'night';
+  const isSunset = !sleeping && timeOfDay === 'sunset';
   return (
     <svg viewBox="0 0 400 600" preserveAspectRatio="xMidYMid slice" className="pointer-events-none absolute inset-0 h-full w-full">
       <defs>
         <linearGradient id="lr-wall" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={sleeping ? '#232238' : '#f7f5f0'} />
-          <stop offset="100%" stopColor={sleeping ? '#2f2c48' : '#ece8df'} />
+          <stop offset="0%" stopColor={isNight ? '#232238' : isSunset ? '#faece3' : '#f7f5f0'} />
+          <stop offset="100%" stopColor={isNight ? '#2f2c48' : isSunset ? '#f1d8c8' : '#ece8df'} />
         </linearGradient>
         <linearGradient id="lr-floor" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={sleeping ? '#423d4f' : '#e8dfd0'} />
-          <stop offset="100%" stopColor={sleeping ? '#332f3f' : '#d8ccb8'} />
+          <stop offset="0%" stopColor={isNight ? '#423d4f' : isSunset ? '#ecd5c0' : '#e8dfd0'} />
+          <stop offset="100%" stopColor={isNight ? '#332f3f' : isSunset ? '#dcbe9f' : '#d8ccb8'} />
         </linearGradient>
         <linearGradient id="lr-sky" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={sleeping ? '#131936' : '#a8dbf7'} />
-          <stop offset="100%" stopColor={sleeping ? '#2c3163' : '#fff8e8'} />
+          <stop offset="0%" stopColor={isNight ? '#131936' : isSunset ? '#7c3aed' : '#a8dbf7'} />
+          <stop offset="55%" stopColor={isNight ? '#1e2448' : isSunset ? '#f97316' : '#cce7f8'} />
+          <stop offset="100%" stopColor={isNight ? '#2c3163' : isSunset ? '#fef08a' : '#fff8e8'} />
         </linearGradient>
         <radialGradient id="lr-shag" cx="50%" cy="50%" r="55%">
-          <stop offset="0%" stopColor={sleeping ? '#c8c3d4' : '#fcfaf3'} />
-          <stop offset="72%" stopColor={sleeping ? '#b2acc2' : '#f2ede0'} />
-          <stop offset="100%" stopColor={sleeping ? '#9b95ad' : '#e3dccb'} />
+          <stop offset="0%" stopColor={isNight ? '#c8c3d4' : isSunset ? '#fff1e0' : '#fcfaf3'} />
+          <stop offset="72%" stopColor={isNight ? '#b2acc2' : isSunset ? '#fae0c7' : '#f2ede0'} />
+          <stop offset="100%" stopColor={isNight ? '#9b95ad' : isSunset ? '#edd1b4' : '#e3dccb'} />
         </radialGradient>
+        <linearGradient id="lr-sunbeam" x1="0" y1="0" x2="0.65" y2="1">
+          <stop offset="0%" stopColor={isSunset ? '#fb923c' : '#fffbe8'} stopOpacity={isSunset ? 0.24 : 0.16} />
+          <stop offset="65%" stopColor={isSunset ? '#fde047' : '#fffbe8'} stopOpacity={isSunset ? 0.08 : 0.05} />
+          <stop offset="100%" stopColor={isSunset ? '#fde047' : '#fffbe8'} stopOpacity="0" />
+        </linearGradient>
         <radialGradient id="lr-lamp" cx="50%" cy="50%" r="50%">
           <stop offset="0%" stopColor="#ffd98e" stopOpacity="0.88" />
           <stop offset="55%" stopColor="#ffbe5c" stopOpacity="0.32" />
           <stop offset="100%" stopColor="#ffbe5c" stopOpacity="0" />
         </radialGradient>
+        <clipPath id="lr-window-glass">
+          <rect x="126" y="112" width="92" height="102" rx="2" />
+        </clipPath>
         <pattern id="lr-weave" width="6" height="6" patternUnits="userSpaceOnUse">
           <path d="M0 3 H6 M3 0 V6" stroke="#343942" strokeWidth="0.6" opacity="0.35" />
         </pattern>
@@ -75,14 +91,14 @@ export function LivingRoom({
       <rect width="400" height="314" fill="url(#lr-wall)" />
 
       {/* Matching cream tile baseboard/skirting */}
-      <rect y="305" width="400" height="10" fill={sleeping ? '#3a3548' : '#dfd5c3'} />
-      <line x1="0" y1="305" x2="400" y2="305" stroke={sleeping ? '#2c2838' : '#cbc0ac'} strokeWidth="1.2" />
+      <rect y="305" width="400" height="10" fill={isNight ? '#3a3548' : isSunset ? '#dec8b2' : '#dfd5c3'} />
+      <line x1="0" y1="305" x2="400" y2="305" stroke={isNight ? '#2c2838' : isSunset ? '#c9b195' : '#cbc0ac'} strokeWidth="1.2" />
 
       {/* Large-format cream/beige travertine floor tiles (y: 315..600) */}
       <rect y="315" width="400" height="285" fill="url(#lr-floor)" />
       {/* Subtle porcelain tile grout lines */}
       {[346, 384, 428, 478].map((y) => (
-        <line key={y} x1="0" y1={y} x2="400" y2={y} stroke={sleeping ? '#2b2736' : '#c5b8a1'} strokeWidth="1" opacity="0.55" />
+        <line key={y} x1="0" y1={y} x2="400" y2={y} stroke={isNight ? '#2b2736' : isSunset ? '#c9b195' : '#c5b8a1'} strokeWidth="1" opacity="0.55" />
       ))}
       {[
         [85, 315, 346],
@@ -96,7 +112,7 @@ export function LivingRoom({
         [60, 428, 478],
         [215, 428, 478],
       ].map(([x1, y1, y2], i) => (
-        <line key={i} x1={x1} y1={y1} x2={x1 - 12} y2={y2} stroke={sleeping ? '#2b2736' : '#c5b8a1'} strokeWidth="1" opacity="0.48" />
+        <line key={i} x1={x1} y1={y1} x2={x1 - 12} y2={y2} stroke={isNight ? '#2b2736' : isSunset ? '#c9b195' : '#c5b8a1'} strokeWidth="1" opacity="0.48" />
       ))}
 
       {/* Tall white bookcase / cabinet on left, positioned closer to center (x: 32..108, y: 112..312) */}
@@ -108,24 +124,24 @@ export function LivingRoom({
           width="76"
           height="200"
           rx="2"
-          fill={sleeping ? '#c7c4d4' : '#f9f8f5'}
-          stroke={sleeping ? '#9e9ab0' : '#dcd8ce'}
+          fill={isNight ? '#c7c4d4' : '#f9f8f5'}
+          stroke={isNight ? '#9e9ab0' : '#dcd8ce'}
           strokeWidth="1.4"
         />
         {/* 4 Open horizontal upper shelf recesses */}
-        <rect x="37" y="118" width="66" height="28" fill={sleeping ? '#8d899e' : '#e8e4da'} />
-        <rect x="37" y="150" width="66" height="30" fill={sleeping ? '#8d899e' : '#e8e4da'} />
-        <rect x="37" y="184" width="66" height="30" fill={sleeping ? '#8d899e' : '#e8e4da'} />
-        <rect x="37" y="218" width="66" height="26" fill={sleeping ? '#8d899e' : '#e8e4da'} />
+        <rect x="37" y="118" width="66" height="28" fill={isNight ? '#8d899e' : '#e8e4da'} />
+        <rect x="37" y="150" width="66" height="30" fill={isNight ? '#8d899e' : '#e8e4da'} />
+        <rect x="37" y="184" width="66" height="30" fill={isNight ? '#8d899e' : '#e8e4da'} />
+        <rect x="37" y="218" width="66" height="26" fill={isNight ? '#8d899e' : '#e8e4da'} />
 
         {/* Shelf 1 (top): Grey storage box with oval handle */}
-        <rect x="64" y="124" width="36" height="22" rx="1.5" fill={sleeping ? '#5e5c6e' : '#7a7875'} />
-        <rect x="63" y="123" width="38" height="4" rx="1" fill={sleeping ? '#6b697c' : '#8a8884'} />
-        <ellipse cx="82" cy="135" rx="4.5" ry="2" fill="none" stroke={sleeping ? '#8d899e' : '#b5b2ac'} strokeWidth="1" />
+        <rect x="64" y="124" width="36" height="22" rx="1.5" fill={isNight ? '#5e5c6e' : '#7a7875'} />
+        <rect x="63" y="123" width="38" height="4" rx="1" fill={isNight ? '#6b697c' : '#8a8884'} />
+        <ellipse cx="82" cy="135" rx="4.5" ry="2" fill="none" stroke={isNight ? '#8d899e' : '#b5b2ac'} strokeWidth="1" />
 
         {/* Shelf 2: Glass jar & photo collage board */}
-        <rect x="42" y="158" width="14" height="22" rx="3" fill={sleeping ? '#b8c2cc' : '#dce6ed'} opacity="0.75" />
-        <rect x="62" y="156" width="34" height="24" rx="1" fill={sleeping ? '#d5d2e0' : '#faf8f4'} stroke={sleeping ? '#9e9ab0' : '#d5d0c5'} strokeWidth="0.8" />
+        <rect x="42" y="158" width="14" height="22" rx="3" fill={isNight ? '#b8c2cc' : '#dce6ed'} opacity="0.75" />
+        <rect x="62" y="156" width="34" height="24" rx="1" fill={isNight ? '#d5d2e0' : '#faf8f4'} stroke={isNight ? '#9e9ab0' : '#d5d0c5'} strokeWidth="0.8" />
         <rect x="66" y="160" width="11" height="8" fill="#8b99a1" />
         <rect x="80" y="160" width="12" height="8" fill="#c9ab84" />
         <rect x="66" y="170" width="26" height="7" fill="#7a8b7b" />
@@ -146,8 +162,8 @@ export function LivingRoom({
           y="248"
           width="32"
           height="60"
-          fill={sleeping ? '#bab6c9' : '#f4f2ed'}
-          stroke={sleeping ? '#9e9ab0' : '#dad5ca'}
+          fill={isNight ? '#bab6c9' : '#f4f2ed'}
+          stroke={isNight ? '#9e9ab0' : '#dad5ca'}
           strokeWidth="1"
         />
         <rect
@@ -156,7 +172,7 @@ export function LivingRoom({
           width="24"
           height="50"
           fill="none"
-          stroke={sleeping ? '#a6a2b8' : '#e2ded4'}
+          stroke={isNight ? '#a6a2b8' : '#e2ded4'}
           strokeWidth="0.8"
         />
         <rect
@@ -164,8 +180,8 @@ export function LivingRoom({
           y="248"
           width="32"
           height="60"
-          fill={sleeping ? '#bab6c9' : '#f4f2ed'}
-          stroke={sleeping ? '#9e9ab0' : '#dad5ca'}
+          fill={isNight ? '#bab6c9' : '#f4f2ed'}
+          stroke={isNight ? '#9e9ab0' : '#dad5ca'}
           strokeWidth="1"
         />
         <rect
@@ -174,7 +190,7 @@ export function LivingRoom({
           width="24"
           height="50"
           fill="none"
-          stroke={sleeping ? '#a6a2b8' : '#e2ded4'}
+          stroke={isNight ? '#a6a2b8' : '#e2ded4'}
           strokeWidth="0.8"
         />
         <circle cx="65" cy="276" r="1.6" fill="#3a3835" />
@@ -196,10 +212,10 @@ export function LivingRoom({
         {/* Outer white window frame */}
         <rect x="120" y="106" width="104" height="114" rx="4" fill="#ffffff" stroke="#d8d4ca" strokeWidth="1.5" />
         <rect x="126" y="112" width="92" height="102" rx="2" fill="url(#lr-sky)" />
-        {sleeping ? (
+        {isNight ? (
           <g>
             <circle cx="194" cy="144" r="10" fill="#fff6d8" />
-            <circle cx="199" cy="140" r="9" fill="#1b2147" />
+            <circle cx="199" cy="140" r="9" fill="#131936" />
             {[
               [140, 138],
               [162, 158],
@@ -217,10 +233,26 @@ export function LivingRoom({
                 transition={{ duration: 2 + i * 0.4, repeat: Infinity }}
               />
             ))}
+            {/* Night silhouette of neighbouring building with 2 cozy lit windows */}
+            <rect x="126" y="148" width="92" height="66" fill="#1e2242" opacity="0.88" />
+            <rect x="135" y="154" width="22" height="24" rx="1" fill="#fef08a" opacity="0.85" stroke="#fde047" strokeWidth="0.8" />
+            <rect x="184" y="180" width="16" height="18" rx="1" fill="#fef08a" opacity="0.8" stroke="#fde047" strokeWidth="0.8" />
+          </g>
+        ) : isSunset ? (
+          <g>
+            {/* Sunset golden neighbouring building facade across the street */}
+            <rect x="126" y="138" width="92" height="76" fill="#d97706" opacity="0.82" />
+            <rect x="126" y="138" width="44" height="76" fill="#f59e0b" opacity="0.88" />
+            {/* Neighbouring facade windows reflecting sunset twilight */}
+            <rect x="135" y="148" width="22" height="28" rx="1" fill="#7c3aed" opacity="0.45" stroke="#ffffff" strokeWidth="1.2" />
+            <line x1="135" y1="156" x2="157" y2="156" stroke="#fde047" strokeWidth="0.8" />
+            <line x1="135" y1="164" x2="157" y2="164" stroke="#fde047" strokeWidth="0.8" />
+            <rect x="184" y="146" width="16" height="18" rx="1" fill="#9333ea" opacity="0.4" stroke="#ffffff" strokeWidth="1.2" />
+            <rect x="184" y="180" width="16" height="18" rx="1" fill="#fed7aa" stroke="#ffffff" strokeWidth="1.2" />
           </g>
         ) : (
           <g>
-            {/* Warm cream/ochre neighboring building facade across the street (PXL_20261101_155116231.jpg) */}
+            {/* Warm cream/ochre neighboring building facade across the street */}
             <rect x="126" y="138" width="92" height="76" fill="#e6cfa8" opacity="0.85" />
             <rect x="126" y="138" width="44" height="76" fill="#f0eadc" opacity="0.9" />
             {/* Neighbouring facade windows */}
@@ -229,6 +261,50 @@ export function LivingRoom({
             <line x1="135" y1="164" x2="157" y2="164" stroke="#d5dce0" strokeWidth="0.8" />
             <rect x="184" y="146" width="16" height="18" rx="1" fill="#6f7d8c" stroke="#ffffff" strokeWidth="1.2" />
             <rect x="184" y="180" width="16" height="18" rx="1" fill="#f3f1ec" stroke="#ffffff" strokeWidth="1.2" />
+          </g>
+        )}
+        {/* Animated Rain on the Window Glass (Cat TV) */}
+        {isRaining && (
+          <g clipPath="url(#lr-window-glass)">
+            <rect x="126" y="112" width="92" height="102" fill="#38bdf8" opacity="0.12" />
+            {[
+              { x: 136, y0: 110, dur: 1.8, delay: 0 },
+              { x: 152, y0: 115, dur: 2.2, delay: 0.6 },
+              { x: 168, y0: 120, dur: 1.6, delay: 1.1 },
+              { x: 184, y0: 112, dur: 2.4, delay: 0.3 },
+              { x: 198, y0: 118, dur: 1.9, delay: 0.8 },
+              { x: 210, y0: 122, dur: 2.1, delay: 1.4 },
+            ].map((drop, i) => (
+              <motion.g
+                key={`rain-${i}`}
+                initial={{ y: 0, opacity: 0 }}
+                animate={{ y: [0, 42, 85], opacity: [0, 0.85, 0] }}
+                transition={{ duration: drop.dur, delay: drop.delay, repeat: Infinity, ease: 'easeIn' }}
+              >
+                <line
+                  x1={drop.x}
+                  y1={drop.y0}
+                  x2={drop.x - 2}
+                  y2={drop.y0 + 10}
+                  stroke="#ffffff"
+                  strokeWidth="1.2"
+                  strokeLinecap="round"
+                  opacity="0.8"
+                />
+                <circle cx={drop.x - 2} cy={drop.y0 + 10} r="1.3" fill="#ffffff" opacity="0.85" />
+              </motion.g>
+            ))}
+            {[
+              [142, 135],
+              [158, 170],
+              [176, 145],
+              [192, 162],
+              [205, 138],
+              [148, 198],
+              [188, 204],
+            ].map(([x, y], i) => (
+              <circle key={`bead-${i}`} cx={x} cy={y} r={1.2} fill="#ffffff" opacity="0.65" />
+            ))}
           </g>
         )}
         {/* Center window mullion & handle */}
@@ -241,12 +317,12 @@ export function LivingRoom({
           width="108"
           height="22"
           rx="2"
-          fill={sleeping ? '#cbc8d8' : '#f4f2ec'}
-          stroke={sleeping ? '#a6a2b8' : '#dcd8ce'}
+          fill={isNight ? '#cbc8d8' : isSunset ? '#f5eae0' : '#f4f2ec'}
+          stroke={isNight ? '#a6a2b8' : isSunset ? '#dcd2c4' : '#dcd8ce'}
           strokeWidth="1"
         />
-        <line x1="119" y1="106" x2="225" y2="106" stroke={sleeping ? '#b0acc2' : '#e2ded4'} strokeWidth="1" />
-        <line x1="119" y1="113" x2="225" y2="113" stroke={sleeping ? '#b0acc2' : '#e2ded4'} strokeWidth="1" />
+        <line x1="119" y1="106" x2="225" y2="106" stroke={isNight ? '#b0acc2' : isSunset ? '#e5d7ca' : '#e2ded4'} strokeWidth="1" />
+        <line x1="119" y1="113" x2="225" y2="113" stroke={isNight ? '#b0acc2' : isSunset ? '#e5d7ca' : '#e2ded4'} strokeWidth="1" />
 
         {/* White windowsill (Spot: 'window') */}
         <g
@@ -310,13 +386,24 @@ export function LivingRoom({
           width="14"
           height="12"
           rx="2"
-          fill={sleeping ? '#ffe8ad' : '#faf9f5'}
-          stroke={sleeping ? '#e0b96c' : '#d8d4ca'}
+          fill={isNight ? '#fff3c4' : isSunset ? '#fed7aa' : '#faf9f5'}
+          stroke={isNight ? '#f59e0b' : isSunset ? '#f97316' : '#d8d4ca'}
           strokeWidth="1"
         />
+        {/* Warm ambient windowsill lamp glow when night or sunset */}
+        {(isNight || isSunset) && (
+          <motion.circle
+            cx="217"
+            cy="198"
+            r={isNight ? 52 : 36}
+            fill="url(#lr-lamp)"
+            animate={{ opacity: isNight ? 0.95 : 0.55 }}
+            transition={{ duration: 0.8 }}
+          />
+        )}
 
         {/* White vertical-ribbed radiator under window + thermostat dial */}
-        <rect x="122" y="232" width="94" height="58" rx="4" fill={sleeping ? '#b8b5c7' : '#f7f6f2'} stroke={sleeping ? '#8e8ba1' : '#d8d4c9'} strokeWidth="1.2" />
+        <rect x="122" y="232" width="94" height="58" rx="4" fill={isNight ? '#b8b5c7' : isSunset ? '#f6eee4' : '#f7f6f2'} stroke={isNight ? '#8e8ba1' : isSunset ? '#d5cbbe' : '#d8d4c9'} strokeWidth="1.2" />
         {Array.from({ length: 11 }).map((_, i) => (
           <rect
             key={i}
@@ -325,13 +412,41 @@ export function LivingRoom({
             width={4}
             height={50}
             rx={1.5}
-            fill={sleeping ? '#9e9bb0' : '#e6e3da'}
+            fill={isNight ? '#9e9bb0' : isSunset ? '#e8ded3' : '#e6e3da'}
           />
         ))}
         {/* Radiator thermostat valve on right */}
         <circle cx="221" cy="240" r="4.5" fill="#f0eee9" stroke="#bab5a9" strokeWidth="1" />
         <circle cx="221" cy="240" r="2" fill="#9c988e" />
       </g>
+
+      {/* Sunbeams streaming into the room through the window + slow floating dust motes */}
+      {!isNight && !isRaining && (
+        <g pointerEvents="none">
+          <polygon points="126,160 220,160 360,440 140,440" fill="url(#lr-sunbeam)" />
+          {[
+            { cx: 180, cy: 250, r: 1.5, dur: 4.5, delay: 0 },
+            { cx: 220, cy: 295, r: 1.7, dur: 5.2, delay: 1.2 },
+            { cx: 250, cy: 345, r: 1.4, dur: 4.8, delay: 2.1 },
+            { cx: 195, cy: 375, r: 1.6, dur: 5.6, delay: 0.8 },
+            { cx: 280, cy: 395, r: 1.3, dur: 4.2, delay: 1.7 },
+          ].map((mote, i) => (
+            <motion.circle
+              key={`mote-${i}`}
+              cx={mote.cx}
+              cy={mote.cy}
+              r={mote.r}
+              fill={isSunset ? '#fde047' : '#ffffff'}
+              animate={{
+                y: [-6, 6, -6],
+                x: [-3, 3, -3],
+                opacity: [0.25, 0.75, 0.25],
+              }}
+              transition={{ duration: mote.dur, delay: mote.delay, repeat: Infinity, ease: 'easeInOut' }}
+            />
+          ))}
+        </g>
+      )}
 
       {/* Square tropical botanical leaf & flower print on wall (PXL_20261101_155116231.jpg) */}
       <g>
@@ -355,9 +470,9 @@ export function LivingRoom({
         <motion.circle
           cx="256"
           cy="198"
-          r="118"
+          r={118}
           fill="url(#lr-lamp)"
-          animate={{ opacity: sleeping ? 0.95 : 0.22 }}
+          animate={{ opacity: isNight ? 0.95 : isSunset ? 0.45 : 0.22 }}
           transition={{ duration: 0.8 }}
         />
         {/* Sisal scratching posts */}
@@ -370,8 +485,8 @@ export function LivingRoom({
           width="38"
           height="9"
           rx="4"
-          fill={sleeping ? '#cbc6d8' : '#efeae0'}
-          stroke={sleeping ? '#a6a0b8' : '#d5ccb8'}
+          fill={isNight ? '#cbc6d8' : '#efeae0'}
+          stroke={isNight ? '#a6a0b8' : '#d5ccb8'}
           strokeWidth="1"
         />
         {/* Middle plush cube condo with arched opening */}
@@ -381,8 +496,8 @@ export function LivingRoom({
           width="32"
           height="26"
           rx="3"
-          fill={sleeping ? '#c4bfd2' : '#ebe5da'}
-          stroke={sleeping ? '#9e99b0' : '#d0c7b4'}
+          fill={isNight ? '#c4bfd2' : '#ebe5da'}
+          stroke={isNight ? '#9e99b0' : '#d0c7b4'}
           strokeWidth="1"
         />
         <path d="M313 200 V187 A7 7 0 0 1 327 187 V200 Z" fill="#6e6559" />
@@ -393,8 +508,8 @@ export function LivingRoom({
           width="42"
           height="5"
           rx="2"
-          fill={sleeping ? '#cbc6d8' : '#efeae0'}
-          stroke={sleeping ? '#a6a0b8' : '#d5ccb8'}
+          fill={isNight ? '#cbc6d8' : '#efeae0'}
+          stroke={isNight ? '#a6a0b8' : '#d5ccb8'}
           strokeWidth="0.8"
         />
       </g>
@@ -547,8 +662,8 @@ export function LivingRoom({
           width="60"
           height="24"
           rx="4"
-          fill={sleeping ? '#6a6773' : '#8e8b86'}
-          stroke={sleeping ? '#54515c' : '#76736e'}
+          fill={isNight ? '#6a6773' : '#8e8b86'}
+          stroke={isNight ? '#54515c' : '#76736e'}
           strokeWidth="1"
         />
         {/* Bottom base lip/runners */}
@@ -558,7 +673,7 @@ export function LivingRoom({
           width="64"
           height="4"
           rx="2"
-          fill={sleeping ? '#5a5763' : '#7b7873'}
+          fill={isNight ? '#5a5763' : '#7b7873'}
         />
         {/* Recessed front pull handle on drawer face (centered at x=40) */}
         <rect
@@ -567,7 +682,7 @@ export function LivingRoom({
           width="24"
           height="11"
           rx="3"
-          fill={sleeping ? '#4c4954' : '#696662'}
+          fill={isNight ? '#4c4954' : '#696662'}
         />
         <rect
           x="30"
@@ -575,7 +690,7 @@ export function LivingRoom({
           width="20"
           height="4"
           rx="1.5"
-          fill={sleeping ? '#7d7a87' : '#a19e99'}
+          fill={isNight ? '#7d7a87' : '#a19e99'}
         />
 
         {/* Off-white / light cream enclosed upper hood */}
@@ -585,8 +700,8 @@ export function LivingRoom({
           width="60"
           height="31"
           rx="6"
-          fill={sleeping ? '#cac6d6' : '#f5f3ec'}
-          stroke={sleeping ? '#9e9ab0' : '#dad5cb'}
+          fill={isNight ? '#cac6d6' : '#f5f3ec'}
+          stroke={isNight ? '#9e9ab0' : '#dad5cb'}
           strokeWidth="1.2"
         />
         {/* Split seam line between hood and drawer base */}
@@ -595,7 +710,7 @@ export function LivingRoom({
           y1="346"
           x2="70"
           y2="346"
-          stroke={sleeping ? '#6a6773' : '#7c7974'}
+          stroke={isNight ? '#6a6773' : '#7c7974'}
           strokeWidth="1"
         />
 
@@ -606,8 +721,8 @@ export function LivingRoom({
           width="60"
           height="5"
           rx="2.5"
-          fill={sleeping ? '#bab7c7' : '#ece9e0'}
-          stroke={sleeping ? '#9e9ab0' : '#d8d4ca'}
+          fill={isNight ? '#bab7c7' : '#ece9e0'}
+          stroke={isNight ? '#9e9ab0' : '#d8d4ca'}
           strokeWidth="0.8"
         />
         {/* Centered top handle / carbon filter vent */}
@@ -625,7 +740,7 @@ export function LivingRoom({
           y1="318.5"
           x2="27"
           y2="318.5"
-          stroke={sleeping ? '#8a8799' : '#ccc8be'}
+          stroke={isNight ? '#8a8799' : '#ccc8be'}
           strokeWidth="0.8"
           strokeDasharray="2 1.5"
         />
@@ -634,7 +749,7 @@ export function LivingRoom({
           y1="318.5"
           x2="65"
           y2="318.5"
-          stroke={sleeping ? '#8a8799' : '#ccc8be'}
+          stroke={isNight ? '#8a8799' : '#ccc8be'}
           strokeWidth="0.8"
           strokeDasharray="2 1.5"
         />
@@ -646,7 +761,7 @@ export function LivingRoom({
           width="28"
           height="23"
           rx="4.5"
-          fill={sleeping ? '#383542' : '#454342'}
+          fill={isNight ? '#383542' : '#454342'}
         />
         {/* Smoked translucent tinted swinging flap door (centered at x=40) */}
         <rect
@@ -741,8 +856,8 @@ export function LivingRoom({
         <polygon points="140,356 192,356 186,378 144,378" fill="#9e7343" />
 
         {/* Left and right angled open flaps */}
-        <polygon points="138,356 130,344 146,346 142,356" fill={sleeping ? '#7d664d' : '#b88b56'} stroke={sleeping ? '#6a543e' : '#a87c48'} strokeWidth="0.8" />
-        <polygon points="194,356 202,344 186,346 190,356" fill={sleeping ? '#7d664d' : '#b88b56'} stroke={sleeping ? '#6a543e' : '#a87c48'} strokeWidth="0.8" />
+        <polygon points="138,356 130,344 146,346 142,356" fill={isNight ? '#7d664d' : '#b88b56'} stroke={isNight ? '#6a543e' : '#a87c48'} strokeWidth="0.8" />
+        <polygon points="194,356 202,344 186,346 190,356" fill={isNight ? '#7d664d' : '#b88b56'} stroke={isNight ? '#6a543e' : '#a87c48'} strokeWidth="0.8" />
 
         {/* Oli nestled inside the box (behind front cardboard panel) */}
         {activeSpot === 'box' && (
@@ -767,13 +882,13 @@ export function LivingRoom({
         )}
 
         {/* Corrugated kraft cardboard exterior front panel (covers bottom of Oli) */}
-        <polygon points="138,356 194,356 188,382 142,382" fill={sleeping ? '#8a7155' : '#c99b64'} stroke={sleeping ? '#6a543e' : '#a87c48'} strokeWidth="1" />
+        <polygon points="138,356 194,356 188,382 142,382" fill={isNight ? '#8a7155' : '#c99b64'} stroke={isNight ? '#6a543e' : '#a87c48'} strokeWidth="1" />
         {/* Top fold crease */}
         <line x1="138" y1="356" x2="194" y2="356" stroke="#deb888" strokeWidth="1.2" />
 
         {/* Front hanging flaps */}
-        <polygon points="146,356 156,366 166,356" fill={sleeping ? '#786249' : '#b0824e'} stroke={sleeping ? '#6a543e' : '#9e7343'} strokeWidth="0.7" />
-        <polygon points="168,356 178,366 188,356" fill={sleeping ? '#786249' : '#b0824e'} stroke={sleeping ? '#6a543e' : '#9e7343'} strokeWidth="0.7" />
+        <polygon points="146,356 156,366 166,356" fill={isNight ? '#786249' : '#b0824e'} stroke={isNight ? '#6a543e' : '#9e7343'} strokeWidth="0.7" />
+        <polygon points="168,356 178,366 188,356" fill={isNight ? '#786249' : '#b0824e'} stroke={isNight ? '#6a543e' : '#9e7343'} strokeWidth="0.7" />
 
         {/* White shipping barcode label */}
         <rect x="146" y="364" width="18" height="11" rx="1.5" fill="#faf8f2" stroke="#d5d0c5" strokeWidth="0.6" />
@@ -818,13 +933,13 @@ export function LivingRoom({
         <path
           d="M54 369 Q200 366 346 369 L364 438 Q200 442 36 438 Z"
           fill="url(#lr-shag)"
-          stroke={sleeping ? '#aca6bd' : '#dfd7c5'}
+          stroke={isNight ? '#aca6bd' : '#dfd7c5'}
           strokeWidth="2.2"
           strokeLinejoin="round"
         />
         {/* Authentic Moroccan Berber grey diamond trellis lines across the rug */}
         <g
-          stroke={sleeping ? '#9892ab' : '#c6bca8'}
+          stroke={isNight ? '#9892ab' : '#c6bca8'}
           strokeWidth="2.8"
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -882,7 +997,7 @@ export function LivingRoom({
         <rect x="0" y="-8" width="50" height="60" fill="transparent" style={{ pointerEvents: 'all' }} />
         <ellipse cx="25" cy="45" rx="23" ry="5.5" fill="rgba(40,35,28,0.16)" />
         {/* White rounded-square fountain body */}
-        <rect x="4" y="6" width="42" height="38" rx="7" fill={sleeping ? '#d5d2e3' : '#fbfaf7'} stroke={sleeping ? '#aba6bf' : '#d5d0c5'} strokeWidth="1.2" />
+        <rect x="4" y="6" width="42" height="38" rx="7" fill={isNight ? '#d5d2e3' : '#fbfaf7'} stroke={isNight ? '#aba6bf' : '#d5d0c5'} strokeWidth="1.2" />
         {/* Top water dish recess */}
         <ellipse cx="25" cy="8" rx="18" ry="4.5" fill="#e3ecf2" />
         <ellipse cx="25" cy="8" rx="14.5" ry="3.4" fill="#7fd0f5" />

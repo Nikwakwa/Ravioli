@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { CatAvatar } from '../CatAvatar';
 import type { CatAnimation, CatSpot, Mood } from '../../types';
+import type { TimeOfDay } from '../../utils/atmosphere';
 
 /**
  * Unified 3D pinhole camera projection so every architectural line, tile seam,
@@ -572,6 +573,8 @@ function FoldingBistroChair({
  */
 export function Balcony({
   sleeping,
+  timeOfDay = 'day',
+  isRaining = false,
   activeSpot = 'planter',
   onSelectSpot,
   catMood = 'content',
@@ -580,6 +583,8 @@ export function Balcony({
   onPetCat,
 }: {
   sleeping: boolean;
+  timeOfDay?: TimeOfDay;
+  isRaining?: boolean;
   activeSpot?: CatSpot;
   onSelectSpot?: (spot: CatSpot) => void;
   catMood?: Mood;
@@ -587,6 +592,9 @@ export function Balcony({
   catAnimationKey?: number;
   onPetCat?: () => void;
 }) {
+  const isNight = sleeping || timeOfDay === 'night';
+  const isSunset = !sleeping && timeOfDay === 'sunset';
+
   // Back railing & right side return geometry in 3D world space (relative to VP_X = 236)
   const zRailBack = 290;
   const xWallLeft = -182; // -> x_svg = 50.9 at Z=290
@@ -600,9 +608,11 @@ export function Balcony({
   const tZFront = 196;
   const tY = 59;
 
-  const tableSlatColors = sleeping
+  const tableSlatColors = isNight
     ? ['#756e82', '#6c6579', '#797286', '#6a6377', '#746d81', '#6e677b']
-    : ['#b8a793', '#aa9985', '#bda995', '#a4937f', '#b4a38f', '#ac9b87'];
+    : isSunset
+      ? ['#c99a7c', '#be8f71', '#cf9f81', '#b8896c', '#c7977a', '#bf8e71']
+      : ['#b8a793', '#aa9985', '#bda995', '#a4937f', '#b4a38f', '#ac9b87'];
 
   const tableSlats = [0, 1, 2, 3, 4, 5].map((i) => {
     const slatSpan = (tZBack - tZFront) / 6;
@@ -641,52 +651,52 @@ export function Balcony({
     >
       <defs>
         <linearGradient id="bal-sky" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={sleeping ? '#0f1631' : '#8ecaf6'} />
-          <stop offset="58%" stopColor={sleeping ? '#1c254b' : '#cde8fb'} />
-          <stop offset="100%" stopColor={sleeping ? '#2a315c' : '#faf2e1'} />
+          <stop offset="0%" stopColor={isNight ? '#0f1631' : isSunset ? '#312e81' : '#8ecaf6'} />
+          <stop offset="58%" stopColor={isNight ? '#1c254b' : isSunset ? '#c026d3' : '#cde8fb'} />
+          <stop offset="100%" stopColor={isNight ? '#2a315c' : isSunset ? '#f97316' : '#faf2e1'} />
         </linearGradient>
 
         <radialGradient id="bal-sunglow" cx="25%" cy="18%" r="55%">
-          <stop offset="0%" stopColor="#fff7d6" stopOpacity={sleeping ? '0' : '0.65'} />
-          <stop offset="60%" stopColor="#ffeab3" stopOpacity={sleeping ? '0' : '0.18'} />
-          <stop offset="100%" stopColor="#ffeab3" stopOpacity="0" />
+          <stop offset="0%" stopColor={isSunset ? '#fef08a' : '#fff7d6'} stopOpacity={isNight ? '0' : isSunset ? '0.75' : '0.65'} />
+          <stop offset="60%" stopColor={isSunset ? '#fb923c' : '#ffeab3'} stopOpacity={isNight ? '0' : isSunset ? '0.28' : '0.18'} />
+          <stop offset="100%" stopColor={isSunset ? '#f97316' : '#ffeab3'} stopOpacity="0" />
         </radialGradient>
 
         <linearGradient id="bal-tiles" x1="0.15" y1="0" x2="0.65" y2="1">
-          <stop offset="0%" stopColor={sleeping ? '#443f52' : '#e6dac8'} />
-          <stop offset="55%" stopColor={sleeping ? '#3a3547' : '#d8cab5'} />
-          <stop offset="100%" stopColor={sleeping ? '#2f2b3b' : '#c9b9a2'} />
+          <stop offset="0%" stopColor={isNight ? '#443f52' : isSunset ? '#dfbda7' : '#e6dac8'} />
+          <stop offset="55%" stopColor={isNight ? '#3a3547' : isSunset ? '#cc9f83' : '#d8cab5'} />
+          <stop offset="100%" stopColor={isNight ? '#2f2b3b' : isSunset ? '#ba8669' : '#c9b9a2'} />
         </linearGradient>
 
         <linearGradient id="bal-wall-left" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0%" stopColor={sleeping ? '#534f66' : '#f4efe6'} />
-          <stop offset="78%" stopColor={sleeping ? '#474358' : '#eae3d6'} />
-          <stop offset="100%" stopColor={sleeping ? '#3a3749' : '#dad1c1'} />
+          <stop offset="0%" stopColor={isNight ? '#534f66' : isSunset ? '#fbeae0' : '#f4efe6'} />
+          <stop offset="78%" stopColor={isNight ? '#474358' : isSunset ? '#f1dbce' : '#eae3d6'} />
+          <stop offset="100%" stopColor={isNight ? '#3a3749' : isSunset ? '#e2c6b4' : '#dad1c1'} />
         </linearGradient>
 
         <linearGradient id="bal-steel-h" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={sleeping ? '#8a91a8' : '#eef2f6'} />
-          <stop offset="40%" stopColor={sleeping ? '#adb4ca' : '#ffffff'} />
-          <stop offset="78%" stopColor={sleeping ? '#686f85' : '#b7c0ca'} />
-          <stop offset="100%" stopColor={sleeping ? '#4f5568' : '#8d97a3'} />
+          <stop offset="0%" stopColor={isNight ? '#8a91a8' : isSunset ? '#fde047' : '#eef2f6'} />
+          <stop offset="40%" stopColor={isNight ? '#adb4ca' : isSunset ? '#fed7aa' : '#ffffff'} />
+          <stop offset="78%" stopColor={isNight ? '#686f85' : isSunset ? '#fb923c' : '#b7c0ca'} />
+          <stop offset="100%" stopColor={isNight ? '#4f5568' : isSunset ? '#b45309' : '#8d97a3'} />
         </linearGradient>
 
         <linearGradient id="bal-steel-v" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0%" stopColor={sleeping ? '#6c7389' : '#b8c1cb'} />
-          <stop offset="45%" stopColor={sleeping ? '#9ea5bc' : '#f2f5f8'} />
-          <stop offset="100%" stopColor={sleeping ? '#555b70' : '#8e98a4'} />
+          <stop offset="0%" stopColor={isNight ? '#6c7389' : isSunset ? '#f59e0b' : '#b8c1cb'} />
+          <stop offset="45%" stopColor={isNight ? '#9ea5bc' : isSunset ? '#fed7aa' : '#f2f5f8'} />
+          <stop offset="100%" stopColor={isNight ? '#555b70' : isSunset ? '#b45309' : '#8e98a4'} />
         </linearGradient>
 
         <linearGradient id="bal-planter-front" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={sleeping ? '#5c606e' : '#7b818a'} />
-          <stop offset="100%" stopColor={sleeping ? '#434753' : '#5b6068'} />
+          <stop offset="0%" stopColor={isNight ? '#5c606e' : isSunset ? '#8b7c79' : '#7b818a'} />
+          <stop offset="100%" stopColor={isNight ? '#434753' : isSunset ? '#6b5c5a' : '#5b6068'} />
         </linearGradient>
 
         <linearGradient id="bal-pot-cyl" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0%" stopColor={sleeping ? '#646878' : '#858b94'} />
-          <stop offset="32%" stopColor={sleeping ? '#727788' : '#969ca6'} />
-          <stop offset="72%" stopColor={sleeping ? '#525665' : '#6c727b'} />
-          <stop offset="100%" stopColor={sleeping ? '#3f424f' : '#525760'} />
+          <stop offset="0%" stopColor={isNight ? '#646878' : isSunset ? '#8f837f' : '#858b94'} />
+          <stop offset="32%" stopColor={isNight ? '#727788' : isSunset ? '#9e918d' : '#969ca6'} />
+          <stop offset="72%" stopColor={isNight ? '#525665' : isSunset ? '#796c68' : '#6c727b'} />
+          <stop offset="100%" stopColor={isNight ? '#3f424f' : isSunset ? '#5d514d' : '#525760'} />
         </linearGradient>
       </defs>
 
@@ -694,7 +704,7 @@ export function Balcony({
       <rect width="400" height="325" fill="url(#bal-sky)" />
       <rect width="400" height="325" fill="url(#bal-sunglow)" />
 
-      {sleeping && (
+      {isNight && (
         <g>
           <circle cx="332" cy="64" r="13" fill="#fff6d6" />
           <circle cx="338" cy="59" r="11.5" fill="#131b3a" />
@@ -714,6 +724,37 @@ export function Balcony({
               fill="#ffffff"
               animate={{ opacity: [0.3, 1, 0.3] }}
               transition={{ duration: 2.2 + i * 0.35, repeat: Infinity }}
+            />
+          ))}
+        </g>
+      )}
+
+      {/* Outdoor Rain Over Balcony */}
+      {isRaining && (
+        <g pointerEvents="none">
+          <rect width="400" height="325" fill="#38bdf8" opacity="0.10" />
+          {[
+            { x: 45, y: 30, dur: 1.4, delay: 0 },
+            { x: 95, y: 70, dur: 1.7, delay: 0.3 },
+            { x: 145, y: 40, dur: 1.5, delay: 0.7 },
+            { x: 210, y: 80, dur: 1.9, delay: 0.2 },
+            { x: 275, y: 50, dur: 1.6, delay: 0.5 },
+            { x: 340, y: 90, dur: 1.8, delay: 0.9 },
+            { x: 175, y: 120, dur: 1.5, delay: 0.4 },
+            { x: 310, y: 140, dur: 1.7, delay: 0.8 },
+          ].map((drop, i) => (
+            <motion.line
+              key={`bal-rain-${i}`}
+              x1={drop.x}
+              y1={drop.y}
+              x2={drop.x - 3}
+              y2={drop.y + 16}
+              stroke="#ffffff"
+              strokeWidth="1.2"
+              strokeLinecap="round"
+              opacity="0.65"
+              animate={{ y: [0, 80, 160], opacity: [0, 0.75, 0] }}
+              transition={{ duration: drop.dur, delay: drop.delay, repeat: Infinity, ease: 'easeIn' }}
             />
           ))}
         </g>
@@ -750,32 +791,32 @@ export function Balcony({
         />
         <polygon points="216,102 260,102 264,108 212,108" fill={sleeping ? '#5b6076' : '#bcc4cc'} />
 
-        <polygon points="158,112 182,108 182,252 158,252" fill={sleeping ? '#646075' : '#e5ddd0'} />
-        <rect x="182" y="108" width="128" height="146" fill={sleeping ? '#736f86' : '#f3ece0'} />
-        <rect x="310" y="112" width="90" height="142" fill={sleeping ? '#685f72' : '#e7d4c0'} />
-        <line x1="182" y1="108" x2="182" y2="252" stroke={sleeping ? '#4a4759' : '#b2a99c'} strokeWidth="1.4" />
-        <line x1="310" y1="112" x2="310" y2="252" stroke={sleeping ? '#4a4759' : '#bba998'} strokeWidth="1.4" />
+        <polygon points="158,112 182,108 182,252 158,252" fill={isNight ? '#646075' : isSunset ? '#f1dbce' : '#e5ddd0'} />
+        <rect x="182" y="108" width="128" height="146" fill={isNight ? '#736f86' : isSunset ? '#fbeae0' : '#f3ece0'} />
+        <rect x="310" y="112" width="90" height="142" fill={isNight ? '#685f72' : isSunset ? '#ebd5bf' : '#e7d4c0'} />
+        <line x1="182" y1="108" x2="182" y2="252" stroke={isNight ? '#4a4759' : isSunset ? '#baa99a' : '#b2a99c'} strokeWidth="1.4" />
+        <line x1="310" y1="112" x2="310" y2="252" stroke={isNight ? '#4a4759' : isSunset ? '#baa99a' : '#bba998'} strokeWidth="1.4" />
 
-        {/* Upper floor windows with soft sky-reflecting glass & white roller shutters */}
-        <rect x="198" y="120" width="42" height="26" rx="1.5" fill={sleeping ? '#2f354b' : '#7b8c9c'} stroke="#ffffff" strokeWidth="1.5" />
-        <rect x="199" y="121" width="40" height="14" fill={sleeping ? '#87839b' : '#eeeae2'} />
-        <line x1="199" y1="126" x2="239" y2="126" stroke={sleeping ? '#6d6980' : '#d5cfc4'} strokeWidth="0.8" />
-        <line x1="199" y1="131" x2="239" y2="131" stroke={sleeping ? '#6d6980' : '#d5cfc4'} strokeWidth="0.8" />
+        {/* Upper floor windows with soft sky-reflecting glass & white roller shutters (warm night lights) */}
+        <rect x="198" y="120" width="42" height="26" rx="1.5" fill={isNight ? '#fef08a' : isSunset ? '#a855f7' : '#7b8c9c'} opacity={isNight ? 0.9 : 1} stroke="#ffffff" strokeWidth="1.5" />
+        <rect x="199" y="121" width="40" height="14" fill={isNight ? '#87839b' : '#eeeae2'} />
+        <line x1="199" y1="126" x2="239" y2="126" stroke={isNight ? '#6d6980' : '#d5cfc4'} strokeWidth="0.8" />
+        <line x1="199" y1="131" x2="239" y2="131" stroke={isNight ? '#6d6980' : '#d5cfc4'} strokeWidth="0.8" />
 
-        <rect x="256" y="122" width="38" height="24" rx="1.5" fill={sleeping ? '#2f354b' : '#7b8c9c'} stroke="#ffffff" strokeWidth="1.5" />
-        <rect x="257" y="123" width="18" height="22" fill={sleeping ? '#87839b' : '#eeeae2'} />
-        <rect x="276" y="123" width="17" height="11" fill={sleeping ? '#87839b' : '#eeeae2'} />
+        <rect x="256" y="122" width="38" height="24" rx="1.5" fill={isNight ? '#fef08a' : isSunset ? '#9333ea' : '#7b8c9c'} opacity={isNight ? 0.85 : 1} stroke="#ffffff" strokeWidth="1.5" />
+        <rect x="257" y="123" width="18" height="22" fill={isNight ? '#87839b' : '#eeeae2'} />
+        <rect x="276" y="123" width="17" height="11" fill={isNight ? '#87839b' : '#eeeae2'} />
 
-        <rect x="324" y="125" width="32" height="23" rx="1.5" fill={sleeping ? '#2f354b' : '#7b8c9c'} stroke="#ffffff" strokeWidth="1.5" />
-        <rect x="340" y="126" width="15" height="21" fill={sleeping ? '#87839b' : '#eeeae2'} />
+        <rect x="324" y="125" width="32" height="23" rx="1.5" fill={isNight ? '#2f354b' : isSunset ? '#7c3aed' : '#7b8c9c'} stroke="#ffffff" strokeWidth="1.5" />
+        <rect x="340" y="126" width="15" height="21" fill={isNight ? '#87839b' : '#eeeae2'} />
 
         {/* Lower floor shuttered windows */}
-        <rect x="198" y="162" width="42" height="25" rx="1.5" fill={sleeping ? '#817d94' : '#ece7dd'} stroke="#ffffff" strokeWidth="1.4" />
-        <line x1="199" y1="170" x2="239" y2="170" stroke={sleeping ? '#6b677d' : '#d5cfc4'} strokeWidth="0.8" />
-        <line x1="199" y1="178" x2="239" y2="178" stroke={sleeping ? '#6b677d' : '#d5cfc4'} strokeWidth="0.8" />
+        <rect x="198" y="162" width="42" height="25" rx="1.5" fill={isNight ? '#817d94' : '#ece7dd'} stroke="#ffffff" strokeWidth="1.4" />
+        <line x1="199" y1="170" x2="239" y2="170" stroke={isNight ? '#6b677d' : '#d5cfc4'} strokeWidth="0.8" />
+        <line x1="199" y1="178" x2="239" y2="178" stroke={isNight ? '#6b677d' : '#d5cfc4'} strokeWidth="0.8" />
 
-        <rect x="256" y="164" width="38" height="23" rx="1.5" fill={sleeping ? '#817d94' : '#ece7dd'} stroke="#ffffff" strokeWidth="1.4" />
-        <line x1="275" y1="164" x2="275" y2="187" stroke={sleeping ? '#6b677d' : '#d5cfc4'} strokeWidth="0.9" />
+        <rect x="256" y="164" width="38" height="23" rx="1.5" fill={isNight ? '#817d94' : '#ece7dd'} stroke="#ffffff" strokeWidth="1.4" />
+        <line x1="275" y1="164" x2="275" y2="187" stroke={isNight ? '#6b677d' : '#d5cfc4'} strokeWidth="0.9" />
       </g>
 
       {/* 4. Quiet street & lush green garden hedges visible through the balcony railing balusters */}
