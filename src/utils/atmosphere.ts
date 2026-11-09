@@ -1,8 +1,8 @@
 /**
- * Real-Time Atmosphere & Luxembourg Weather for Oli's Living Room and Balcony.
+ * Automatic Real-Time Atmosphere for Luxembourg City.
+ * Dynamically tracks real sunrise, sunset, and rain data with zero manual configuration.
  */
 
-export type AtmosphereMode = 'auto' | 'day' | 'sunset' | 'night';
 export type TimeOfDay = 'day' | 'sunset' | 'night';
 
 export const LUXEMBOURG_COORDS = {
@@ -11,128 +11,35 @@ export const LUXEMBOURG_COORDS = {
   longitude: 6.1319,
 } as const;
 
-export interface LiveWeatherInfo {
-  city: string;
+export interface LiveLuxembourgData {
   temperatureC: number;
   weatherCode: number;
-  label: string;
-  emoji: string;
   isRaining: boolean;
+  isDay: boolean;
+  sunrise: string;
+  sunset: string;
   fetchedAt: number;
 }
 
-export interface AtmospherePrefs {
-  mode: AtmosphereMode;
-}
+const LS_LUXEMBOURG_CACHE = 'ravioli:v1:luxembourg_atmosphere';
 
-const LS_ATMOSPHERE_MODE = 'ravioli:v1:atmosphere_mode';
-const LS_ATMOSPHERE_WEATHER_CACHE = 'ravioli:v1:atmosphere_weather_cache';
-
-export const DEFAULT_ATMOSPHERE_PREFS: AtmospherePrefs = {
-  mode: 'auto',
-};
-
-export function loadAtmospherePrefs(): AtmospherePrefs {
-  try {
-    if (typeof window === 'undefined' || !window.localStorage) {
-      return DEFAULT_ATMOSPHERE_PREFS;
-    }
-    const rawMode = window.localStorage.getItem(LS_ATMOSPHERE_MODE);
-    const mode: AtmosphereMode =
-      rawMode === 'day' || rawMode === 'sunset' || rawMode === 'night' || rawMode === 'auto'
-        ? rawMode
-        : 'auto';
-
-    return { mode };
-  } catch {
-    return DEFAULT_ATMOSPHERE_PREFS;
-  }
-}
-
-export function saveAtmospherePrefs(prefs: AtmospherePrefs): void {
-  try {
-    if (typeof window === 'undefined' || !window.localStorage) return;
-    window.localStorage.setItem(LS_ATMOSPHERE_MODE, prefs.mode);
-  } catch {
-    /* no-op */
-  }
-}
-
-export function loadCachedWeather(): LiveWeatherInfo | null {
+export function loadCachedLuxembourgData(): LiveLuxembourgData | null {
   try {
     if (typeof window === 'undefined' || !window.localStorage) return null;
-    const raw = window.localStorage.getItem(LS_ATMOSPHERE_WEATHER_CACHE);
+    const raw = window.localStorage.getItem(LS_LUXEMBOURG_CACHE);
     if (!raw) return null;
-    return JSON.parse(raw) as LiveWeatherInfo;
+    return JSON.parse(raw) as LiveLuxembourgData;
   } catch {
     return null;
   }
 }
 
-export function saveCachedWeather(info: LiveWeatherInfo): void {
+export function saveCachedLuxembourgData(data: LiveLuxembourgData): void {
   try {
     if (typeof window === 'undefined' || !window.localStorage) return;
-    window.localStorage.setItem(LS_ATMOSPHERE_WEATHER_CACHE, JSON.stringify(info));
+    window.localStorage.setItem(LS_LUXEMBOURG_CACHE, JSON.stringify(data));
   } catch {
     /* no-op */
-  }
-}
-
-export function getWeatherDescription(code: number): { label: string; emoji: string } {
-  switch (code) {
-    case 0:
-      return { label: 'Clear sky', emoji: '☀️' };
-    case 1:
-      return { label: 'Mainly clear', emoji: '🌤️' };
-    case 2:
-      return { label: 'Partly cloudy', emoji: '⛅' };
-    case 3:
-      return { label: 'Overcast', emoji: '☁️' };
-    case 45:
-    case 48:
-      return { label: 'Foggy', emoji: '🌫️' };
-    case 51:
-      return { label: 'Light drizzle', emoji: '🌦️' };
-    case 53:
-      return { label: 'Drizzle', emoji: '🌦️' };
-    case 55:
-      return { label: 'Dense drizzle', emoji: '🌧️' };
-    case 56:
-    case 57:
-      return { label: 'Freezing drizzle', emoji: '🌧️' };
-    case 61:
-      return { label: 'Light rain', emoji: '🌧️' };
-    case 63:
-      return { label: 'Moderate rain', emoji: '🌧️' };
-    case 65:
-      return { label: 'Heavy rain', emoji: '🌧️' };
-    case 66:
-    case 67:
-      return { label: 'Freezing rain', emoji: '🌧️' };
-    case 71:
-      return { label: 'Light snow', emoji: '🌨️' };
-    case 73:
-      return { label: 'Moderate snow', emoji: '🌨️' };
-    case 75:
-      return { label: 'Heavy snow', emoji: '❄️' };
-    case 77:
-      return { label: 'Snow grains', emoji: '❄️' };
-    case 80:
-      return { label: 'Light showers', emoji: '🌦️' };
-    case 81:
-      return { label: 'Rain showers', emoji: '🌧️' };
-    case 82:
-      return { label: 'Violent showers', emoji: '⛈️' };
-    case 85:
-    case 86:
-      return { label: 'Snow showers', emoji: '🌨️' };
-    case 95:
-      return { label: 'Thunderstorm', emoji: '⛈️' };
-    case 96:
-    case 99:
-      return { label: 'Thunderstorm & hail', emoji: '⛈️' };
-    default:
-      return { label: 'Passing clouds', emoji: '🌤️' };
   }
 }
 
@@ -150,110 +57,114 @@ export function isRainingFromWeather(
   );
 }
 
-export async function fetchLuxembourgWeather(): Promise<LiveWeatherInfo> {
-  const { latitude, longitude, name } = LUXEMBOURG_COORDS;
-  const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,precipitation,rain,showers,weather_code`;
+/**
+ * Solar position approximation for Luxembourg (latitude: 49.6116, longitude: 6.1319).
+ * Used as an immediate offline fallback before any API response is received.
+ */
+export function calculateLuxembourgSunTimes(date: Date = new Date()): { sunrise: Date; sunset: Date } {
+  const startOfYear = new Date(Date.UTC(date.getUTCFullYear(), 0, 0));
+  const diff = date.getTime() - startOfYear.getTime();
+  const dayOfYear = Math.floor(diff / (1000 * 60 * 60 * 24));
+
+  // Approximate solar declination in radians
+  const declination = -0.4093 * Math.cos(((2 * Math.PI) / 365) * (dayOfYear + 10));
+  const latRad = (LUXEMBOURG_COORDS.latitude * Math.PI) / 180;
+
+  const cosHourAngle = -Math.tan(latRad) * Math.tan(declination);
+  const hourAngle = Math.acos(Math.max(-1, Math.min(1, cosHourAngle)));
+  const daylightHalfHours = ((hourAngle * 180) / Math.PI) / 15;
+
+  // Luxembourg time zone offset: UTC+1 in winter (CET), UTC+2 in summer (CEST)
+  // Solar noon ~ 12:35 local CET
+  const solarNoonHours = 12.6;
+  const sunriseHours = solarNoonHours - daylightHalfHours;
+  const sunsetHours = solarNoonHours + daylightHalfHours;
+
+  const sunrise = new Date(date);
+  sunrise.setHours(Math.floor(sunriseHours), Math.round((sunriseHours % 1) * 60), 0, 0);
+
+  const sunset = new Date(date);
+  sunset.setHours(Math.floor(sunsetHours), Math.round((sunsetHours % 1) * 60), 0, 0);
+
+  return { sunrise, sunset };
+}
+
+/**
+ * Calculates current lighting mode (day, golden sunset, or cozy night)
+ * dynamically matching the real solar sunrise and sunset.
+ *
+ * - Golden hour / sunset: 45 minutes before sunset until 45 minutes after sunset
+ * - Day: Between sunrise and golden hour
+ * - Night: All other hours (before sunrise, or after dusk)
+ */
+export function resolveTimeOfDay(
+  date: Date = new Date(),
+  sunTimes?: { sunrise?: string; sunset?: string } | null
+): TimeOfDay {
+  let sunriseDate: Date;
+  let sunsetDate: Date;
+
+  if (sunTimes?.sunrise && sunTimes?.sunset) {
+    sunriseDate = new Date(sunTimes.sunrise);
+    sunsetDate = new Date(sunTimes.sunset);
+  } else {
+    const calc = calculateLuxembourgSunTimes(date);
+    sunriseDate = calc.sunrise;
+    sunsetDate = calc.sunset;
+  }
+
+  const t = date.getTime();
+  const sunriseMs = sunriseDate.getTime();
+  const sunsetMs = sunsetDate.getTime();
+
+  // Golden hour starts 45 minutes before sunset and ends 45 minutes after sunset
+  const sunsetWindowStart = sunsetMs - 45 * 60 * 1000;
+  const sunsetWindowEnd = sunsetMs + 45 * 60 * 1000;
+
+  if (t < sunriseMs) {
+    return 'night';
+  }
+  if (t >= sunriseMs && t < sunsetWindowStart) {
+    return 'day';
+  }
+  if (t >= sunsetWindowStart && t < sunsetWindowEnd) {
+    return 'sunset';
+  }
+  return 'night';
+}
+
+export async function fetchLuxembourgAtmosphere(): Promise<LiveLuxembourgData> {
+  const { latitude, longitude } = LUXEMBOURG_COORDS;
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,precipitation,rain,showers,weather_code,is_day&daily=sunrise,sunset&timezone=auto`;
   const res = await fetch(url);
   if (!res.ok) {
     throw new Error(`Weather request failed with status ${res.status}`);
   }
   const data = await res.json();
   const current = data.current ?? {};
+  const daily = data.daily ?? {};
+
   const code = Number(current.weather_code ?? 0);
   const temp = Number(current.temperature_2m ?? 15);
   const precip = Number(current.precipitation ?? 0);
   const rain = Number(current.rain ?? 0);
   const showers = Number(current.showers ?? 0);
+  const isDay = Boolean(current.is_day === 1);
 
-  const { label, emoji } = getWeatherDescription(code);
   const isRaining = isRainingFromWeather(code, precip, rain, showers);
+  const sunrise = daily.sunrise?.[0] ?? '';
+  const sunset = daily.sunset?.[0] ?? '';
 
-  const info: LiveWeatherInfo = {
-    city: name,
+  const live: LiveLuxembourgData = {
     temperatureC: temp,
     weatherCode: code,
-    label,
-    emoji,
     isRaining,
+    isDay,
+    sunrise,
+    sunset,
     fetchedAt: Date.now(),
   };
 
-  saveCachedWeather(info);
-  return info;
-}
-
-/**
- * Calculates the effective time of day based on the user's preference and clock:
- * - Day: 07:00 – 17:30 (Morning & Afternoon daylight)
- * - Sunset: 17:30 – 20:30 (Golden hour & dusk glow)
- * - Night: 20:30 – 07:00 (Cozy nighttime & starlight)
- */
-export function resolveTimeOfDay(mode: AtmosphereMode, date: Date = new Date()): TimeOfDay {
-  if (mode === 'day' || mode === 'sunset' || mode === 'night') {
-    return mode;
-  }
-
-  const hours = date.getHours() + date.getMinutes() / 60;
-
-  if (hours >= 7 && hours < 17.5) {
-    return 'day';
-  }
-  if (hours >= 17.5 && hours < 20.5) {
-    return 'sunset';
-  }
-  return 'night';
-}
-
-export interface AtmosphereSummary {
-  effectiveTime: TimeOfDay;
-  isRaining: boolean;
-  label: string;
-  emoji: string;
-  tagline: string;
-}
-
-export function getAtmosphereSummary(
-  effectiveTime: TimeOfDay,
-  isRaining: boolean,
-  mode: AtmosphereMode = 'auto'
-): AtmosphereSummary {
-  if (isRaining) {
-    const timeLabel =
-      effectiveTime === 'night' ? 'Rainy Night' : effectiveTime === 'sunset' ? 'Rainy Sunset' : 'Rainy Day';
-    return {
-      effectiveTime,
-      isRaining: true,
-      label: `${timeLabel} (Luxembourg)`,
-      emoji: '🌧️',
-      tagline: 'Raining in Luxembourg — gentle raindrops sliding down the window pane for Cat TV.',
-    };
-  }
-
-  switch (effectiveTime) {
-    case 'sunset':
-      return {
-        effectiveTime: 'sunset',
-        isRaining: false,
-        label: mode === 'auto' ? 'Golden Hour (Auto)' : 'Golden Hour',
-        emoji: '🌅',
-        tagline: 'Warm amber sunset glow stretching across the living room and balcony.',
-      };
-    case 'night':
-      return {
-        effectiveTime: 'night',
-        isRaining: false,
-        label: mode === 'auto' ? 'Cozy Night (Auto)' : 'Cozy Night',
-        emoji: '🌙',
-        tagline: 'Deep starlit sky with the cozy windowsill lamp glowing.',
-      };
-    case 'day':
-    default:
-      return {
-        effectiveTime: 'day',
-        isRaining: false,
-        label: mode === 'auto' ? 'Sunny Daylight (Auto)' : 'Sunny Daylight',
-        emoji: '☀️',
-        tagline: 'Bright, warm daylight with soft sunbeams streaming across the rug.',
-      };
-  }
+  saveCachedLuxembourgData(live);
+  return live;
 }

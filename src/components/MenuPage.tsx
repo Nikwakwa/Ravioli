@@ -29,17 +29,9 @@ import {
   NEGLECT_DEATH_HOURS,
 } from '../utils/decayEngine';
 import { CRITICAL_THRESHOLD, type NotificationPrefs } from '../utils/notifications';
-import {
-  DEFAULT_ATMOSPHERE_PREFS,
-  getAtmosphereSummary,
-  resolveTimeOfDay,
-  type AtmosphereMode,
-  type AtmospherePrefs,
-  type LiveWeatherInfo,
-} from '../utils/atmosphere';
 import { STAT_ICONS } from './statIcons';
 
-export type MenuTab = 'rules' | 'atmosphere' | 'pause' | 'version' | 'notifications';
+export type MenuTab = 'rules' | 'pause' | 'version' | 'notifications';
 
 export interface MenuPageProps {
   onClose: () => void;
@@ -53,9 +45,6 @@ export interface MenuPageProps {
   onToggleMasterNotifications: () => void;
   onChangeNotifPrefs: (next: NotificationPrefs) => void;
   onTestNotification: () => void;
-  atmospherePrefs?: AtmospherePrefs;
-  onChangeAtmosphere?: (next: AtmospherePrefs) => void;
-  liveWeather?: LiveWeatherInfo | null;
 }
 
 export function MenuPage({
@@ -70,9 +59,6 @@ export function MenuPage({
   onToggleMasterNotifications,
   onChangeNotifPrefs,
   onTestNotification,
-  atmospherePrefs = DEFAULT_ATMOSPHERE_PREFS,
-  onChangeAtmosphere,
-  liveWeather,
 }: MenuPageProps) {
   const [activeTab, setActiveTab] = useState<MenuTab>(initialTab);
 
@@ -87,16 +73,8 @@ export function MenuPage({
     });
   };
 
-  const currentEffectiveTime = resolveTimeOfDay(atmospherePrefs.mode);
-  const currentSummary = getAtmosphereSummary(
-    currentEffectiveTime,
-    Boolean(liveWeather?.isRaining),
-    atmospherePrefs.mode
-  );
-
   const tabs: Array<{ id: MenuTab; label: string; icon: string; badge?: boolean }> = [
     { id: 'rules', label: 'Rules', icon: '📖' },
-    { id: 'atmosphere', label: 'Ambience', icon: '🌅' },
     { id: 'pause', label: live.isPaused ? 'Paused' : 'Vacation', icon: '✈️' },
     { id: 'version', label: 'Updates', icon: '✨', badge: Boolean(availableVersion) },
     { id: 'notifications', label: 'Alerts', icon: notifPrefs.enabled ? '🔔' : '🔕' },
@@ -278,144 +256,7 @@ export function MenuPage({
           </div>
         )}
 
-        {/* TAB 2: REAL-TIME ATMOSPHERE & AMBIENCE */}
-        {activeTab === 'atmosphere' && (
-          <div className="flex flex-col gap-3">
-            {/* Current Ambience Status Card */}
-            <div className="rounded-2xl border border-amber-900/10 bg-white p-4 shadow-sm">
-              <div className="flex items-center gap-3">
-                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-amber-500/15 text-2xl">
-                  {currentSummary.emoji}
-                </span>
-                <div className="min-w-0">
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <h2 className="font-display text-sm font-bold text-amber-950">Real-Time Atmosphere</h2>
-                    <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-extrabold text-amber-800">
-                      {currentSummary.label}
-                    </span>
-                  </div>
-                  <p className="mt-0.5 text-xs font-medium text-amber-900/75 leading-relaxed">
-                    {currentSummary.tagline}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Time of Day Lighting Modes */}
-            <div className="rounded-2xl border border-amber-900/10 bg-white p-4 shadow-sm">
-              <h3 className="font-display text-xs font-bold text-amber-950 uppercase tracking-wider opacity-75">
-                Lighting & Time of Day
-              </h3>
-              <p className="mt-0.5 text-xs font-medium text-amber-900/70">
-                Oli’s home naturally follows your clock, or you can pick your favorite atmosphere anytime.
-              </p>
-
-              <div className="mt-3 grid grid-cols-1 gap-2">
-                {[
-                  {
-                    id: 'auto' as AtmosphereMode,
-                    label: 'Real-Time Clock (Auto)',
-                    emoji: '⏰',
-                    desc: 'Sunbeams by day (07:00–17:30), golden sunset in the evening, and starlight with cozy lamp at night.',
-                  },
-                  {
-                    id: 'day' as AtmosphereMode,
-                    label: 'Sunny Daylight',
-                    emoji: '☀️',
-                    desc: 'Crisp bright daylight with soft sunbeams streaming across the rug.',
-                  },
-                  {
-                    id: 'sunset' as AtmosphereMode,
-                    label: 'Golden Hour Sunset',
-                    emoji: '🌅',
-                    desc: 'Warm sunset glow across the balcony and rich apricot light on the walls.',
-                  },
-                  {
-                    id: 'night' as AtmosphereMode,
-                    label: 'Cozy Night Mode',
-                    emoji: '🌙',
-                    desc: 'Starlit sky, crescent moon, and the warm windowsill lamp on.',
-                  },
-                ].map((opt) => {
-                  const selected = atmospherePrefs.mode === opt.id;
-                  return (
-                    <button
-                      key={opt.id}
-                      type="button"
-                      onClick={() => onChangeAtmosphere?.({ ...atmospherePrefs, mode: opt.id })}
-                      className={`flex items-start gap-3 rounded-2xl border p-3 text-left transition-all active:scale-[0.99] ${
-                        selected
-                          ? 'border-amber-600 bg-amber-50/70 shadow-xs ring-1 ring-amber-500/30'
-                          : 'border-amber-900/10 bg-amber-900/3 hover:bg-amber-900/6'
-                      }`}
-                    >
-                      <span className="text-xl leading-none pt-0.5">{opt.emoji}</span>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center justify-between">
-                          <span className={`text-xs font-bold ${selected ? 'text-amber-950 font-black' : 'text-amber-900'}`}>
-                            {opt.label}
-                          </span>
-                          {selected && <Check className="h-4 w-4 text-amber-600" />}
-                        </div>
-                        <p className="mt-0.5 text-[11px] font-medium text-amber-900/70 leading-snug">
-                          {opt.desc}
-                        </p>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Luxembourg Outside Weather Card */}
-            <div className="rounded-2xl border border-sky-900/10 bg-white p-4 shadow-sm">
-              <div className="flex items-center gap-3">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-sky-500/15 text-xl">
-                  {liveWeather?.isRaining ? '🌧️' : liveWeather ? liveWeather.emoji : '🇱🇺'}
-                </span>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-1.5">
-                    <h3 className="font-display text-sm font-bold text-amber-950">
-                      Luxembourg Weather
-                    </h3>
-                    <span className="text-xs">🇱🇺</span>
-                  </div>
-                  <p className="text-xs font-medium text-amber-900/70">
-                    Automatic outside rain matching
-                  </p>
-                </div>
-              </div>
-
-              {liveWeather ? (
-                <div className="mt-3.5 flex items-center justify-between rounded-xl bg-sky-50/70 p-3 border border-sky-900/10">
-                  <div className="flex items-center gap-3">
-                    <span className="text-2xl">{liveWeather.emoji}</span>
-                    <div>
-                      <p className="text-xs font-bold text-sky-950">
-                        {liveWeather.label} • {Math.round(liveWeather.temperatureC)}°C
-                      </p>
-                      <p className="text-[11px] font-medium text-sky-900/75 mt-0.5">
-                        {liveWeather.isRaining
-                          ? '🌧️ Raining in Luxembourg — Cat TV is on Oli’s window!'
-                          : '☀️ Dry in Luxembourg — clear window'}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="mt-3.5 rounded-xl bg-sky-50/50 p-3 text-xs text-sky-900/70">
-                  Checking weather in Luxembourg…
-                </div>
-              )}
-
-              <p className="mt-3 text-xs font-medium text-amber-900/75 leading-relaxed">
-                Oli’s window automatically matches the real rain in Luxembourg City each time the app is launched.
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* TAB 3: VACATION CLOCK (PAUSE BUTTON) */}
+        {/* TAB 2: VACATION CLOCK (PAUSE BUTTON) */}
         {activeTab === 'pause' && (
           <div className="flex flex-col gap-3">
             <div

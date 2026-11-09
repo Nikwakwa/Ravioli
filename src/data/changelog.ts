@@ -7,6 +7,16 @@ export interface ReleaseEntry {
 
 export const CHANGELOG: ReleaseEntry[] = [
   {
+    version: 'v0.20.3',
+    date: '2026-11-09',
+    title: 'Zero-Settings Solar Lighting & Clean Menu 🌅✨',
+    changes: [
+      'Lighting now tracks real daily sunrise and sunset data in Luxembourg automatically with zero hardcoded times: bright daytime sunbeams, golden sunset during real dusk, and starry night after twilight.',
+      'Removed the Ambience settings menu entirely to keep the app clean, distraction-free, and simple.',
+      'Oli’s room and balcony atmosphere just works on its own without any menus or sliders to manage.',
+    ],
+  },
+  {
     version: 'v0.20.2',
     date: '2026-11-09',
     title: 'Pure Automatic Weather in Luxembourg 🇱🇺🌧️',

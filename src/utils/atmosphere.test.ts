@@ -1,20 +1,16 @@
 import { describe, expect, it, beforeEach, afterEach, vi } from 'vitest';
 import {
-  DEFAULT_ATMOSPHERE_PREFS,
-  fetchLuxembourgWeather,
-  getAtmosphereSummary,
-  getWeatherDescription,
+  calculateLuxembourgSunTimes,
+  fetchLuxembourgAtmosphere,
   isRainingFromWeather,
-  loadAtmospherePrefs,
-  loadCachedWeather,
+  loadCachedLuxembourgData,
   LUXEMBOURG_COORDS,
   resolveTimeOfDay,
-  saveAtmospherePrefs,
-  saveCachedWeather,
-  type LiveWeatherInfo,
+  saveCachedLuxembourgData,
+  type LiveLuxembourgData,
 } from './atmosphere';
 
-describe('Atmosphere Utilities & Luxembourg Weather Sync', () => {
+describe('Luxembourg Real-Time Atmosphere', () => {
   const store: Record<string, string> = {};
 
   beforeEach(() => {
@@ -44,37 +40,87 @@ describe('Atmosphere Utilities & Luxembourg Weather Sync', () => {
     vi.restoreAllMocks();
   });
 
-  it('has fixed coordinates for Luxembourg City', () => {
+  it('has coordinates for Luxembourg City', () => {
     expect(LUXEMBOURG_COORDS.name).toBe('Luxembourg');
     expect(LUXEMBOURG_COORDS.latitude).toBeCloseTo(49.6116, 2);
     expect(LUXEMBOURG_COORDS.longitude).toBeCloseTo(6.1319, 2);
   });
 
-  it('loads default atmosphere preferences when localStorage is empty', () => {
-    const prefs = loadAtmospherePrefs();
-    expect(prefs).toEqual(DEFAULT_ATMOSPHERE_PREFS);
-    expect(prefs.mode).toBe('auto');
-  });
-
-  it('saves and reloads custom lighting preferences', () => {
-    saveAtmospherePrefs({ mode: 'sunset' });
-    const prefs = loadAtmospherePrefs();
-    expect(prefs.mode).toBe('sunset');
-  });
-
-  it('caches and loads live weather info', () => {
-    expect(loadCachedWeather()).toBeNull();
-    const weather: LiveWeatherInfo = {
-      city: 'Luxembourg',
-      temperatureC: 11,
+  it('caches and loads live Luxembourg atmosphere data', () => {
+    expect(loadCachedLuxembourgData()).toBeNull();
+    const mock: LiveLuxembourgData = {
+      temperatureC: 8.5,
       weatherCode: 61,
-      label: 'Light rain',
-      emoji: '🌧️',
       isRaining: true,
+      isDay: true,
+      sunrise: '2026-11-09T07:37',
+      sunset: '2026-11-09T17:00',
       fetchedAt: 12345678,
     };
-    saveCachedWeather(weather);
-    expect(loadCachedWeather()).toEqual(weather);
+    saveCachedLuxembourgData(mock);
+    expect(loadCachedLuxembourgData()).toEqual(mock);
+  });
+
+  describe('resolveTimeOfDay based on real sunrise and sunset', () => {
+    const sunTimes = {
+      sunrise: '2026-11-09T07:30:00',
+      sunset: '2026-11-09T17:00:00',
+    };
+
+    it('returns night before sunrise', () => {
+      const predawn = new Date('2026-11-09T06:00:00');
+      expect(resolveTimeOfDay(predawn, sunTimes)).toBe('night');
+    });
+
+    it('returns day after sunrise until golden hour begins', () => {
+      const morning = new Date('2026-11-09T08:00:00');
+      expect(resolveTimeOfDay(morning, sunTimes)).toBe('day');
+
+      const midday = new Date('2026-11-09T12:00:00');
+      expect(resolveTimeOfDay(midday, sunTimes)).toBe('day');
+
+      const afternoon = new Date('2026-11-09T16:00:00');
+      expect(resolveTimeOfDay(afternoon, sunTimes)).toBe('day');
+    });
+
+    it('returns sunset during golden hour (45 minutes before to 45 minutes after sunset)', () => {
+      // Sunset is 17:00, golden hour is 16:15 to 17:45
+      const earlySunset = new Date('2026-11-09T16:20:00');
+      expect(resolveTimeOfDay(earlySunset, sunTimes)).toBe('sunset');
+
+      const atSunset = new Date('2026-11-09T17:00:00');
+      expect(resolveTimeOfDay(atSunset, sunTimes)).toBe('sunset');
+
+      const dusk = new Date('2026-11-09T17:35:00');
+      expect(resolveTimeOfDay(dusk, sunTimes)).toBe('sunset');
+    });
+
+    it('returns night after dusk', () => {
+      const lateEvening = new Date('2026-11-09T18:00:00');
+      expect(resolveTimeOfDay(lateEvening, sunTimes)).toBe('night');
+
+      const midnight = new Date('2026-11-09T23:30:00');
+      expect(resolveTimeOfDay(midnight, sunTimes)).toBe('night');
+    });
+
+    it('falls back to offline solar calculation if sunTimes are omitted', () => {
+      const midday = new Date(2026, 10, 9, 13, 0);
+      expect(resolveTimeOfDay(midday)).toBe('day');
+
+      const midnight = new Date(2026, 10, 9, 1, 0);
+      expect(resolveTimeOfDay(midnight)).toBe('night');
+    });
+  });
+
+  describe('calculateLuxembourgSunTimes', () => {
+    it('calculates reasonable sunrise and sunset dates', () => {
+      const date = new Date(2026, 10, 9, 12, 0);
+      const { sunrise, sunset } = calculateLuxembourgSunTimes(date);
+      expect(sunrise.getHours()).toBeGreaterThanOrEqual(6);
+      expect(sunrise.getHours()).toBeLessThanOrEqual(9);
+      expect(sunset.getHours()).toBeGreaterThanOrEqual(16);
+      expect(sunset.getHours()).toBeLessThanOrEqual(19);
+    });
   });
 
   describe('isRainingFromWeather', () => {
@@ -96,17 +142,8 @@ describe('Atmosphere Utilities & Luxembourg Weather Sync', () => {
     });
   });
 
-  describe('getWeatherDescription', () => {
-    it('maps WMO codes to friendly labels and emojis', () => {
-      expect(getWeatherDescription(0)).toEqual({ label: 'Clear sky', emoji: '☀️' });
-      expect(getWeatherDescription(2)).toEqual({ label: 'Partly cloudy', emoji: '⛅' });
-      expect(getWeatherDescription(61)).toEqual({ label: 'Light rain', emoji: '🌧️' });
-      expect(getWeatherDescription(95)).toEqual({ label: 'Thunderstorm', emoji: '⛈️' });
-    });
-  });
-
-  describe('fetchLuxembourgWeather', () => {
-    it('fetches real weather for Luxembourg and caches it', async () => {
+  describe('fetchLuxembourgAtmosphere', () => {
+    it('fetches real weather and daily sunrise/sunset from Open-Meteo', async () => {
       const mockResponse = {
         current: {
           weather_code: 61,
@@ -114,6 +151,11 @@ describe('Atmosphere Utilities & Luxembourg Weather Sync', () => {
           precipitation: 0.8,
           rain: 0.8,
           showers: 0.0,
+          is_day: 1,
+        },
+        daily: {
+          sunrise: ['2026-11-09T07:37'],
+          sunset: ['2026-11-09T17:00'],
         },
       };
 
@@ -124,52 +166,17 @@ describe('Atmosphere Utilities & Luxembourg Weather Sync', () => {
       } as any);
 
       try {
-        const info = await fetchLuxembourgWeather();
-        expect(info.city).toBe('Luxembourg');
+        const info = await fetchLuxembourgAtmosphere();
         expect(info.temperatureC).toBe(9.5);
         expect(info.weatherCode).toBe(61);
         expect(info.isRaining).toBe(true);
-        expect(info.label).toBe('Light rain');
-        expect(info.emoji).toBe('🌧️');
-        expect(loadCachedWeather()?.city).toBe('Luxembourg');
+        expect(info.isDay).toBe(true);
+        expect(info.sunrise).toBe('2026-11-09T07:37');
+        expect(info.sunset).toBe('2026-11-09T17:00');
+        expect(loadCachedLuxembourgData()?.sunrise).toBe('2026-11-09T07:37');
       } finally {
         globalThis.fetch = originalFetch;
       }
-    });
-  });
-
-  describe('resolveTimeOfDay in auto mode', () => {
-    it('returns day during morning and afternoon', () => {
-      const morning = new Date(2026, 10, 8, 10, 30);
-      expect(resolveTimeOfDay('auto', morning)).toBe('day');
-      const afternoon = new Date(2026, 10, 8, 15, 0);
-      expect(resolveTimeOfDay('auto', afternoon)).toBe('day');
-    });
-
-    it('returns sunset during golden hour', () => {
-      const sunset1 = new Date(2026, 10, 8, 18, 0);
-      expect(resolveTimeOfDay('auto', sunset1)).toBe('sunset');
-    });
-
-    it('returns night during late evening and night', () => {
-      const evening = new Date(2026, 10, 8, 21, 0);
-      expect(resolveTimeOfDay('auto', evening)).toBe('night');
-    });
-  });
-
-  describe('getAtmosphereSummary', () => {
-    it('returns Luxembourg rain summary when rain is active', () => {
-      const summary = getAtmosphereSummary('day', true);
-      expect(summary.emoji).toBe('🌧️');
-      expect(summary.label).toBe('Rainy Day (Luxembourg)');
-      expect(summary.isRaining).toBe(true);
-    });
-
-    it('returns sunset summary for sunset', () => {
-      const summary = getAtmosphereSummary('sunset', false, 'auto');
-      expect(summary.emoji).toBe('🌅');
-      expect(summary.label).toBe('Golden Hour (Auto)');
-      expect(summary.isRaining).toBe(false);
     });
   });
 });

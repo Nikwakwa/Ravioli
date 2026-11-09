@@ -4,6 +4,14 @@ All updates to **Oli** are listed here.
 
 ---
 
+## `v0.20.3` — 2026-11-09
+### Zero-Settings Solar Lighting & Clean Menu 🌅✨
+- **Dynamic Solar Lighting**: The living room and balcony automatically follow Luxembourg's real daily sunrise and sunset data with no hardcoded hours.
+- **Ambience Menu Removed**: Eliminated the Ambience tab and status chip completely to keep the menu simple, focused, and free of unnecessary settings.
+- **Zero Configuration**: Everything (daylight, golden sunset, nighttime lamp, and rain) works invisibly and automatically.
+
+---
+
 ## `v0.20.2` — 2026-11-09
 ### Pure Automatic Weather in Luxembourg 🇱🇺🌧️
 - **Fully Automatic Rain**: Oli’s window matches the actual rain in Luxembourg City with zero toggles or manual settings.

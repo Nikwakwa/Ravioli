@@ -32,9 +32,6 @@ export interface StatusHUDProps {
   onOpenPause?: () => void;
   hasUpdate?: boolean;
   isNight?: boolean;
-  atmosphereEmoji?: string;
-  atmosphereLabel?: string;
-  onOpenAtmosphere?: () => void;
 }
 
 export function StatusHUD({
@@ -49,9 +46,6 @@ export function StatusHUD({
   onOpenPause,
   hasUpdate,
   isNight = false,
-  atmosphereEmoji,
-  atmosphereLabel,
-  onOpenAtmosphere,
 }: StatusHUDProps) {
   const badge = live.isDeceased
     ? { label: 'Needs emergency care', emoji: '👼' }
@@ -116,21 +110,6 @@ export function StatusHUD({
                 <span className={`rounded-full bg-rose-500/15 px-1.5 py-0.5 text-[10px] font-extrabold ${night ? 'text-rose-300' : 'text-rose-600'}`}>
                   Stuffed
                 </span>
-              )}
-              {atmosphereEmoji && onOpenAtmosphere && (
-                <button
-                  type="button"
-                  onClick={onOpenAtmosphere}
-                  title={`Ambience: ${atmosphereLabel ?? 'Atmosphere'}. Tap to customize.`}
-                  aria-label={`Ambience: ${atmosphereLabel ?? 'Atmosphere'}. Tap to customize.`}
-                  className={`rounded-full px-1.5 py-0.5 text-[10px] font-extrabold transition-transform active:scale-95 ${
-                    night
-                      ? 'bg-white/10 text-amber-200 hover:bg-white/15'
-                      : 'bg-amber-900/8 text-amber-800 hover:bg-amber-900/12'
-                  }`}
-                >
-                  {atmosphereEmoji}
-                </button>
               )}
             </div>
             <p className={`truncate text-[10px] font-bold ${night ? 'text-indigo-200/80' : 'text-amber-800/80'}`}>

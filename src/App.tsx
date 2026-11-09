@@ -23,14 +23,10 @@ import {
   type NotificationPrefs,
 } from './utils/notifications';
 import {
-  loadAtmospherePrefs,
-  saveAtmospherePrefs,
+  fetchLuxembourgAtmosphere,
+  loadCachedLuxembourgData,
   resolveTimeOfDay,
-  getAtmosphereSummary,
-  loadCachedWeather,
-  fetchLuxembourgWeather,
-  type AtmospherePrefs,
-  type LiveWeatherInfo,
+  type LiveLuxembourgData,
 } from './utils/atmosphere';
 
 export const SPOT_HEAD_SVG: Record<CatSpot, { x: number; y: number }> = {
@@ -122,53 +118,32 @@ export function App() {
   } = useCatGame('Nico', pushNotice);
   const { availableVersion, reloading, applyUpdate } = useVersionCheck();
 
-  const [atmospherePrefs, setAtmospherePrefs] = useState<AtmospherePrefs>(() => loadAtmospherePrefs());
-  const [liveWeather, setLiveWeather] = useState<LiveWeatherInfo | null>(() => loadCachedWeather());
+  const [luxData, setLuxData] = useState<LiveLuxembourgData | null>(() => loadCachedLuxembourgData());
 
-  const effectiveTime = resolveTimeOfDay(atmospherePrefs.mode, new Date(now));
-  const isRaining = Boolean(liveWeather?.isRaining);
-
-  const atmosphereSummary = getAtmosphereSummary(
-    effectiveTime,
-    isRaining,
-    atmospherePrefs.mode
-  );
+  const effectiveTime = resolveTimeOfDay(new Date(now), luxData);
+  const isRaining = Boolean(luxData?.isRaining);
   const isNight = Boolean(live?.isSleeping || effectiveTime === 'night');
   const isSunset = Boolean(!live?.isSleeping && effectiveTime === 'sunset');
 
-  const handleChangeAtmosphere = useCallback(
-    (next: AtmospherePrefs) => {
-      setAtmospherePrefs(next);
-      saveAtmospherePrefs(next);
-      const summary = getAtmosphereSummary(
-        resolveTimeOfDay(next.mode, new Date(now)),
-        isRaining,
-        next.mode
-      );
-      pushNotice({ text: `${summary.emoji} ${summary.label}`, tone: 'info' });
-    },
-    [isRaining, now, pushNotice]
-  );
-
-  // Automatically refresh Luxembourg weather each time the app is launched or resumed
+  // Automatically refresh Luxembourg atmosphere (weather, real sunrise/sunset) on launch and resume
   useEffect(() => {
     let cancelled = false;
-    const updateWeather = async () => {
+    const syncAtmosphere = async () => {
       try {
-        const info = await fetchLuxembourgWeather();
+        const info = await fetchLuxembourgAtmosphere();
         if (!cancelled) {
-          setLiveWeather(info);
+          setLuxData(info);
         }
       } catch {
-        /* Keep cached weather if offline */
+        /* Keep cached if offline */
       }
     };
 
-    void updateWeather();
+    void syncAtmosphere();
 
     const onVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
-        void updateWeather();
+        void syncAtmosphere();
       }
     };
     document.addEventListener('visibilitychange', onVisibilityChange);
@@ -396,9 +371,6 @@ export function App() {
             onOpenPause={() => handleOpenMenu('pause')}
             hasUpdate={Boolean(availableVersion)}
             isNight={isNight}
-            atmosphereEmoji={atmosphereSummary.emoji}
-            atmosphereLabel={atmosphereSummary.label}
-            onOpenAtmosphere={() => handleOpenMenu('atmosphere')}
           />
 
           {/* New version available banner on main screen */}
@@ -584,9 +556,6 @@ export function App() {
                 onToggleMasterNotifications={() => void handleToggleMasterNotifications()}
                 onChangeNotifPrefs={handleChangeNotifPrefs}
                 onTestNotification={handleTestNotification}
-                atmospherePrefs={atmospherePrefs}
-                onChangeAtmosphere={handleChangeAtmosphere}
-                liveWeather={liveWeather}
               />
             </motion.div>
           )}
