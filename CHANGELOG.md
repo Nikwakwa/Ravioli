@@ -4,6 +4,14 @@ All updates to **Oli** are listed here.
 
 ---
 
+## `v0.20.6` — 2026-11-09
+### Security & Stability Hardening 🛡️
+- Hardened app security policy against plugin and injection risks.
+- Added timeout protection to prevent hanging network requests.
+- Protected solar and weather calculations against corrupted timestamps.
+
+---
+
 ## `v0.20.5` — 2026-11-09
 ### UX & Design Polish 🌟
 - Connected live weather permissions so rain sync works in all browsers.

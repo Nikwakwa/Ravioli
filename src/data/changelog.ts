@@ -7,6 +7,16 @@ export interface ReleaseEntry {
 
 export const CHANGELOG: ReleaseEntry[] = [
   {
+    version: 'v0.20.6',
+    date: '2026-11-09',
+    title: 'Security & Stability Hardening 🛡️',
+    changes: [
+      'Hardened app security policy against plugin and injection risks.',
+      'Added timeout protection to prevent hanging network requests.',
+      'Protected solar and weather calculations against corrupted timestamps.',
+    ],
+  },
+  {
     version: 'v0.20.5',
     date: '2026-11-09',
     title: 'UX & Design Polish 🌟',

@@ -41,6 +41,7 @@ export function useVersionCheck() {
       const res = await fetch(`${baseUrl}version.json?t=${Date.now()}`, {
         cache: 'no-store',
         headers: { pragma: 'no-cache', 'cache-control': 'no-cache' },
+        signal: AbortSignal.timeout(6000),
       });
       if (!res.ok) return;
       const data = (await res.json()) as { version?: unknown };

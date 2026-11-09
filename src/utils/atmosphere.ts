@@ -62,8 +62,9 @@ export function isRainingFromWeather(
  * Used as an immediate offline fallback before any API response is received.
  */
 export function calculateLuxembourgSunTimes(date: Date = new Date()): { sunrise: Date; sunset: Date } {
-  const startOfYear = new Date(Date.UTC(date.getUTCFullYear(), 0, 0));
-  const diff = date.getTime() - startOfYear.getTime();
+  const safeDate = Number.isFinite(date.getTime()) ? date : new Date();
+  const startOfYear = new Date(Date.UTC(safeDate.getUTCFullYear(), 0, 0));
+  const diff = safeDate.getTime() - startOfYear.getTime();
   const dayOfYear = Math.floor(diff / (1000 * 60 * 60 * 24));
 
   // Approximate solar declination in radians
@@ -80,10 +81,10 @@ export function calculateLuxembourgSunTimes(date: Date = new Date()): { sunrise:
   const sunriseHours = solarNoonHours - daylightHalfHours;
   const sunsetHours = solarNoonHours + daylightHalfHours;
 
-  const sunrise = new Date(date);
+  const sunrise = new Date(safeDate);
   sunrise.setHours(Math.floor(sunriseHours), Math.round((sunriseHours % 1) * 60), 0, 0);
 
-  const sunset = new Date(date);
+  const sunset = new Date(safeDate);
   sunset.setHours(Math.floor(sunsetHours), Math.round((sunsetHours % 1) * 60), 0, 0);
 
   return { sunrise, sunset };
@@ -101,19 +102,25 @@ export function resolveTimeOfDay(
   date: Date = new Date(),
   sunTimes?: { sunrise?: string; sunset?: string } | null
 ): TimeOfDay {
+  const safeDate = Number.isFinite(date.getTime()) ? date : new Date();
   let sunriseDate: Date;
   let sunsetDate: Date;
 
-  if (sunTimes?.sunrise && sunTimes?.sunset) {
+  if (
+    sunTimes?.sunrise &&
+    sunTimes?.sunset &&
+    Number.isFinite(new Date(sunTimes.sunrise).getTime()) &&
+    Number.isFinite(new Date(sunTimes.sunset).getTime())
+  ) {
     sunriseDate = new Date(sunTimes.sunrise);
     sunsetDate = new Date(sunTimes.sunset);
   } else {
-    const calc = calculateLuxembourgSunTimes(date);
+    const calc = calculateLuxembourgSunTimes(safeDate);
     sunriseDate = calc.sunrise;
     sunsetDate = calc.sunset;
   }
 
-  const t = date.getTime();
+  const t = safeDate.getTime();
   const sunriseMs = sunriseDate.getTime();
   const sunsetMs = sunsetDate.getTime();
 
@@ -136,7 +143,7 @@ export function resolveTimeOfDay(
 export async function fetchLuxembourgAtmosphere(): Promise<LiveLuxembourgData> {
   const { latitude, longitude } = LUXEMBOURG_COORDS;
   const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,precipitation,rain,showers,weather_code,is_day&daily=sunrise,sunset&timezone=auto`;
-  const res = await fetch(url);
+  const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
   if (!res.ok) {
     throw new Error(`Weather request failed with status ${res.status}`);
   }

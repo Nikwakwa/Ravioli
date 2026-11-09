@@ -110,6 +110,17 @@ describe('Luxembourg Real-Time Atmosphere', () => {
       const midnight = new Date(2026, 10, 9, 1, 0);
       expect(resolveTimeOfDay(midnight)).toBe('night');
     });
+
+    it('gracefully handles malformed sunTimes strings without crashing', () => {
+      const invalidSunTimes = { sunrise: 'corrupted-data', sunset: 'invalid-date' };
+      const midday = new Date(2026, 10, 9, 13, 0);
+      expect(resolveTimeOfDay(midday, invalidSunTimes)).toBe('day');
+    });
+
+    it('gracefully handles invalid Date objects without crashing', () => {
+      const invalidDate = new Date('not-a-date');
+      expect(['day', 'sunset', 'night']).toContain(resolveTimeOfDay(invalidDate));
+    });
   });
 
   describe('calculateLuxembourgSunTimes', () => {
