@@ -88,6 +88,7 @@ export function MenuPage({
           <button
             type="button"
             onClick={onClose}
+            autoFocus
             className="flex h-10 shrink-0 items-center gap-1.5 rounded-full bg-amber-900/10 pr-3.5 pl-3 text-xs font-bold whitespace-nowrap text-amber-950 transition-colors hover:bg-amber-900/15 active:scale-95"
           >
             <ArrowLeft className="h-4 w-4" />
@@ -98,7 +99,7 @@ export function MenuPage({
         </div>
 
         {/* 4-Column Segmented Tab Bar */}
-        <nav className="mt-2.5 grid grid-cols-4 gap-1 rounded-2xl bg-amber-950/6 p-1" aria-label="Menu Sections">
+        <nav className="mt-2.5 grid grid-cols-4 gap-1 rounded-2xl bg-amber-950/6 p-1" role="tablist" aria-label="Menu Sections">
           {tabs.map((t) => {
             const active = activeTab === t.id;
             return (
@@ -111,7 +112,8 @@ export function MenuPage({
                     ? 'bg-white text-amber-950 shadow-xs font-black'
                     : 'text-amber-900/70 hover:text-amber-950 font-bold'
                 }`}
-                aria-pressed={active}
+                role="tab"
+                aria-selected={active}
               >
                 <span className="text-base leading-none" aria-hidden="true">{t.icon}</span>
                 <span className="max-w-full truncate">{t.label}</span>

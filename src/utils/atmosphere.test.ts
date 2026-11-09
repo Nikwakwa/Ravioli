@@ -3,6 +3,7 @@ import {
   calculateLuxembourgSunTimes,
   fetchLuxembourgAtmosphere,
   isRainingFromWeather,
+  isRainingNow,
   loadCachedLuxembourgData,
   LUXEMBOURG_COORDS,
   resolveTimeOfDay,
@@ -104,16 +105,17 @@ describe('Luxembourg Real-Time Atmosphere', () => {
     });
 
     it('falls back to offline solar calculation if sunTimes are omitted', () => {
-      const midday = new Date(2026, 10, 9, 13, 0);
+      // 13:00 and 01:00 in Luxembourg (CET = UTC+1), whatever time zone the test machine uses
+      const midday = new Date(Date.UTC(2026, 10, 9, 12, 0));
       expect(resolveTimeOfDay(midday)).toBe('day');
 
-      const midnight = new Date(2026, 10, 9, 1, 0);
+      const midnight = new Date(Date.UTC(2026, 10, 9, 0, 0));
       expect(resolveTimeOfDay(midnight)).toBe('night');
     });
 
     it('gracefully handles malformed sunTimes strings without crashing', () => {
       const invalidSunTimes = { sunrise: 'corrupted-data', sunset: 'invalid-date' };
-      const midday = new Date(2026, 10, 9, 13, 0);
+      const midday = new Date(Date.UTC(2026, 10, 9, 12, 0));
       expect(resolveTimeOfDay(midday, invalidSunTimes)).toBe('day');
     });
 
@@ -124,13 +126,55 @@ describe('Luxembourg Real-Time Atmosphere', () => {
   });
 
   describe('calculateLuxembourgSunTimes', () => {
-    it('calculates reasonable sunrise and sunset dates', () => {
-      const date = new Date(2026, 10, 9, 12, 0);
-      const { sunrise, sunset } = calculateLuxembourgSunTimes(date);
-      expect(sunrise.getHours()).toBeGreaterThanOrEqual(6);
-      expect(sunrise.getHours()).toBeLessThanOrEqual(9);
-      expect(sunset.getHours()).toBeGreaterThanOrEqual(16);
-      expect(sunset.getHours()).toBeLessThanOrEqual(19);
+    const utcHours = (d: Date) => d.getUTCHours() + d.getUTCMinutes() / 60;
+
+    it('matches real Luxembourg sunrise and sunset in winter (in UTC, any phone time zone)', () => {
+      // Real values for 9 Nov: sunrise ~06:37 UTC, sunset ~15:57 UTC
+      const { sunrise, sunset } = calculateLuxembourgSunTimes(new Date(Date.UTC(2026, 10, 9, 12)));
+      expect(utcHours(sunrise)).toBeGreaterThan(6.3);
+      expect(utcHours(sunrise)).toBeLessThan(6.9);
+      expect(utcHours(sunset)).toBeGreaterThan(15.7);
+      expect(utcHours(sunset)).toBeLessThan(16.3);
+    });
+
+    it('stays correct in summer time', () => {
+      // Real values for 21 Jun: sunrise ~03:30 UTC (05:30 CEST), sunset ~19:43 UTC (21:43 CEST)
+      const { sunrise, sunset } = calculateLuxembourgSunTimes(new Date(Date.UTC(2026, 5, 21, 12)));
+      expect(utcHours(sunrise)).toBeGreaterThan(3.2);
+      expect(utcHours(sunrise)).toBeLessThan(3.8);
+      expect(utcHours(sunset)).toBeGreaterThan(19.4);
+      expect(utcHours(sunset)).toBeLessThan(20);
+    });
+  });
+
+  describe('stale weather protection', () => {
+    it('ignores saved sunrise/sunset from another day', () => {
+      const yesterday = { sunrise: '2026-11-08T07:30:00', sunset: '2026-11-08T17:00:00' };
+      // Midday today must be day, not night (yesterday's sunset is in the past)
+      expect(resolveTimeOfDay(new Date(Date.UTC(2026, 10, 9, 11, 0)), yesterday)).toBe('day');
+    });
+
+    it('only shows rain from a recent report', () => {
+      const base: LiveLuxembourgData = {
+        temperatureC: 8,
+        weatherCode: 61,
+        isRaining: true,
+        isDay: true,
+        sunrise: '',
+        sunset: '',
+        fetchedAt: 1_000_000,
+      };
+      expect(isRainingNow(base, 1_000_000 + 60_000)).toBe(true);
+      expect(isRainingNow(base, 1_000_000 + 4 * 3_600_000)).toBe(false);
+      expect(isRainingNow({ ...base, isRaining: false }, 1_000_000)).toBe(false);
+      expect(isRainingNow(null)).toBe(false);
+    });
+
+    it('drops corrupted cache entries', () => {
+      store['ravioli:v1:luxembourg_atmosphere'] = '"oops"';
+      expect(loadCachedLuxembourgData()).toBeNull();
+      store['ravioli:v1:luxembourg_atmosphere'] = '{"isRaining":"yes"}';
+      expect(loadCachedLuxembourgData()).toBeNull();
     });
   });
 
@@ -165,8 +209,9 @@ describe('Luxembourg Real-Time Atmosphere', () => {
           is_day: 1,
         },
         daily: {
-          sunrise: ['2026-11-09T07:37'],
-          sunset: ['2026-11-09T17:00'],
+          // Unix seconds (timeformat=unixtime)
+          sunrise: [Date.UTC(2026, 10, 9, 6, 37) / 1000],
+          sunset: [Date.UTC(2026, 10, 9, 16, 0) / 1000],
         },
       };
 
@@ -182,9 +227,9 @@ describe('Luxembourg Real-Time Atmosphere', () => {
         expect(info.weatherCode).toBe(61);
         expect(info.isRaining).toBe(true);
         expect(info.isDay).toBe(true);
-        expect(info.sunrise).toBe('2026-11-09T07:37');
-        expect(info.sunset).toBe('2026-11-09T17:00');
-        expect(loadCachedLuxembourgData()?.sunrise).toBe('2026-11-09T07:37');
+        expect(info.sunrise).toBe('2026-11-09T06:37:00.000Z');
+        expect(info.sunset).toBe('2026-11-09T16:00:00.000Z');
+        expect(loadCachedLuxembourgData()?.sunrise).toBe('2026-11-09T06:37:00.000Z');
       } finally {
         globalThis.fetch = originalFetch;
       }

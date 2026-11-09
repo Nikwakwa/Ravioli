@@ -7,6 +7,16 @@ export interface ReleaseEntry {
 
 export const CHANGELOG: ReleaseEntry[] = [
   {
+    version: 'v0.20.7',
+    date: '2026-11-09',
+    title: 'Weather & Bug Fixes 🌦️',
+    changes: [
+      'Live Luxembourg weather and sunset now actually work in the app.',
+      'One tap on Oli now counts as one pet (no more double Joy).',
+      'Skip no longer erases a finished minigame score.',
+    ],
+  },
+  {
     version: 'v0.20.6',
     date: '2026-11-09',
     title: 'Security & Stability Hardening 🛡️',

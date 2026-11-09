@@ -40,3 +40,14 @@ body > *:not(#root):not(script) {
   outline: 2px solid #f59e0b;
   outline-offset: 2px;
 }
+
+/* Respect the system "Reduce motion" setting for CSS pulses, pings and bounces. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

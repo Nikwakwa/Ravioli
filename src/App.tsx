@@ -1,4 +1,4 @@
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, MotionConfig, motion } from 'framer-motion';
 import { RefreshCw } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActionDock } from './components/ActionDock';
@@ -24,10 +24,17 @@ import {
 } from './utils/notifications';
 import {
   fetchLuxembourgAtmosphere,
+  isRainingNow,
   loadCachedLuxembourgData,
   resolveTimeOfDay,
   type LiveLuxembourgData,
 } from './utils/atmosphere';
+
+/** Re-check the Luxembourg weather at most this often (on resume), and on this interval while open. */
+const WEATHER_MIN_GAP_MS = 10 * 60_000;
+const WEATHER_REFRESH_MS = 15 * 60_000;
+/** One tap on Oli reaches both Oli and the spot he sits on; count it once. */
+const PET_TAP_DEDUPE_MS = 400;
 
 export const SPOT_HEAD_SVG: Record<CatSpot, { x: number; y: number }> = {
   rug: { x: 200, y: 261 },
@@ -87,6 +94,7 @@ export function App() {
 
   const {
     ready,
+    bootError,
     live,
     mood,
     tummyAche,
@@ -121,14 +129,18 @@ export function App() {
   const [luxData, setLuxData] = useState<LiveLuxembourgData | null>(() => loadCachedLuxembourgData());
 
   const effectiveTime = resolveTimeOfDay(new Date(now), luxData);
-  const isRaining = Boolean(luxData?.isRaining);
+  const isRaining = isRainingNow(luxData, now);
   const isNight = Boolean(live?.isSleeping || effectiveTime === 'night');
   const isSunset = Boolean(!live?.isSleeping && effectiveTime === 'sunset');
 
   // Automatically refresh Luxembourg atmosphere (weather, real sunrise/sunset) on launch and resume
   useEffect(() => {
     let cancelled = false;
-    const syncAtmosphere = async () => {
+    let lastAttempt = 0;
+    const syncAtmosphere = async (force = false) => {
+      const t = Date.now();
+      if (!force && t - lastAttempt < WEATHER_MIN_GAP_MS) return;
+      lastAttempt = t;
       try {
         const info = await fetchLuxembourgAtmosphere();
         if (!cancelled) {
@@ -139,16 +151,20 @@ export function App() {
       }
     };
 
-    void syncAtmosphere();
+    void syncAtmosphere(true);
 
     const onVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
         void syncAtmosphere();
       }
     };
+    const interval = window.setInterval(() => {
+      if (document.visibilityState === 'visible') void syncAtmosphere();
+    }, WEATHER_REFRESH_MS);
     document.addEventListener('visibilitychange', onVisibilityChange);
     return () => {
       cancelled = true;
+      window.clearInterval(interval);
       document.removeEventListener('visibilitychange', onVisibilityChange);
     };
   }, []);
@@ -205,7 +221,11 @@ export function App() {
     setMenuOpen(true);
   };
 
+  const lastPetTapRef = useRef(0);
   const handlePetOli = () => {
+    const t = Date.now();
+    if (t - lastPetTapRef.current < PET_TAP_DEDUPE_MS) return;
+    lastPetTapRef.current = t;
     setTapHeartKey((k) => k + 1);
     petOli();
   };
@@ -260,15 +280,30 @@ export function App() {
   if (!ready || !live) {
     return (
       <div className="flex h-dvh w-full items-center justify-center bg-[#fbe3cb] text-amber-950">
-        <div className="flex flex-col items-center gap-2">
-          <span className="text-4xl animate-bounce">🐱</span>
-          <p className="font-display text-sm font-bold">Waking up Oli…</p>
-        </div>
+        {bootError ? (
+          <div role="alert" className="flex flex-col items-center gap-3 px-6 text-center">
+            <span className="text-4xl">😿</span>
+            <p className="font-display text-sm font-bold">Oli couldn’t load.</p>
+            <button
+              type="button"
+              onClick={() => window.location.reload()}
+              className="rounded-full bg-amber-600 px-4 py-2 text-xs font-black text-white shadow-sm active:scale-95"
+            >
+              Try again
+            </button>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center gap-2">
+            <span className="text-4xl animate-bounce">🐱</span>
+            <p className="font-display text-sm font-bold">Waking up Oli…</p>
+          </div>
+        )}
       </div>
     );
   }
 
   return (
+    <MotionConfig reducedMotion="user">
     <div className="flex h-dvh w-full items-center justify-center bg-[#23170f]">
       {/* Mobile portrait frame (full-bleed on phones, phone-sized card on desktop) */}
       <main ref={mainRef} className="safe-shell relative flex h-full w-full max-w-[440px] flex-col justify-between overflow-hidden bg-[#fbe3cb] shadow-2xl">
@@ -367,6 +402,7 @@ export function App() {
             litterBoxDirty={litterBoxDirty}
             churuStash={churuStash}
             churuPoints={churuProgress.points}
+            onBalcony={scene === 'balcony'}
             onOpenMenu={() => handleOpenMenu(live.isPaused ? 'pause' : 'rules')}
             onOpenPause={() => handleOpenMenu('pause')}
             hasUpdate={Boolean(availableVersion)}
@@ -562,6 +598,7 @@ export function App() {
         </AnimatePresence>
       </main>
     </div>
+    </MotionConfig>
   );
 }
 

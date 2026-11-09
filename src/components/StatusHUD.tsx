@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { BookOpen } from 'lucide-react';
-import { CHURU_POINTS_PER_TUBE, STAT_META } from '../data/actions';
+import { CHURU_POINTS_PER_TUBE, DEFAULT_CHURU_STASH, STAT_META } from '../data/actions';
 import { STAT_KEYS, type LiveCat, type Mood } from '../types';
 import { NEED_THRESHOLD } from '../utils/decayEngine';
 import { STAT_ICONS } from './statIcons';
@@ -28,6 +28,8 @@ export interface StatusHUDProps {
   churuStash?: number;
   /** Churu points collected toward the next tube (0–2). */
   churuPoints?: number;
+  /** True while the balcony is shown (rug messes are only visible in the living room). */
+  onBalcony?: boolean;
   onOpenMenu: () => void;
   onOpenPause?: () => void;
   hasUpdate?: boolean;
@@ -40,8 +42,9 @@ export function StatusHUD({
   tummyAche,
   messCount = 0,
   litterBoxDirty = false,
-  churuStash = 3,
+  churuStash = DEFAULT_CHURU_STASH,
   churuPoints = 0,
+  onBalcony = false,
   onOpenMenu,
   onOpenPause,
   hasUpdate,
@@ -59,8 +62,11 @@ export function StatusHUD({
             ? { label: 'Scoop the litter box', emoji: '🧹' }
             : messCount > 0 && !live.isSleeping
               ? {
-                  label:
-                    messCount === 1
+                  label: onBalcony
+                    ? messCount === 1
+                      ? 'A mess is waiting inside'
+                      : `${messCount} messes waiting inside`
+                    : messCount === 1
                       ? 'Tap the mess to tidy'
                       : `Tap ${messCount} messes to tidy`,
                   emoji: '🧹',
