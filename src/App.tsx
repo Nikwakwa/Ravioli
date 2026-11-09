@@ -28,13 +28,9 @@ import {
   resolveTimeOfDay,
   getAtmosphereSummary,
   loadCachedWeather,
-  fetchWeatherForCoords,
-  searchCityCoords,
-  reverseGeocodeCity,
-  requestBrowserCoords,
+  fetchLuxembourgWeather,
   type AtmospherePrefs,
   type LiveWeatherInfo,
-  type WeatherLocation,
 } from './utils/atmosphere';
 
 export const SPOT_HEAD_SVG: Record<CatSpot, { x: number; y: number }> = {
@@ -128,19 +124,14 @@ export function App() {
 
   const [atmospherePrefs, setAtmospherePrefs] = useState<AtmospherePrefs>(() => loadAtmospherePrefs());
   const [liveWeather, setLiveWeather] = useState<LiveWeatherInfo | null>(() => loadCachedWeather());
-  const [weatherLoading, setWeatherLoading] = useState(false);
-  const [weatherError, setWeatherError] = useState<string | null>(null);
 
   const effectiveTime = resolveTimeOfDay(atmospherePrefs.mode, new Date(now));
-  const isRaining = atmospherePrefs.weatherSync && liveWeather
-    ? liveWeather.isRaining
-    : atmospherePrefs.rain;
+  const isRaining = Boolean(liveWeather?.isRaining);
 
   const atmosphereSummary = getAtmosphereSummary(
     effectiveTime,
     isRaining,
-    atmospherePrefs.mode,
-    atmospherePrefs.weatherSync && liveWeather ? liveWeather.city : undefined
+    atmospherePrefs.mode
   );
   const isNight = Boolean(live?.isSleeping || effectiveTime === 'night');
   const isSunset = Boolean(!live?.isSleeping && effectiveTime === 'sunset');
@@ -149,121 +140,43 @@ export function App() {
     (next: AtmospherePrefs) => {
       setAtmospherePrefs(next);
       saveAtmospherePrefs(next);
-      const raining = next.weatherSync && liveWeather ? liveWeather.isRaining : next.rain;
       const summary = getAtmosphereSummary(
         resolveTimeOfDay(next.mode, new Date(now)),
-        raining,
-        next.mode,
-        next.weatherSync && liveWeather ? liveWeather.city : undefined
+        isRaining,
+        next.mode
       );
       pushNotice({ text: `${summary.emoji} ${summary.label}`, tone: 'info' });
     },
-    [liveWeather, now, pushNotice]
+    [isRaining, now, pushNotice]
   );
 
-  const handleRefreshWeather = useCallback(async () => {
-    const loc = atmospherePrefs.location;
-    if (!loc) return;
-    setWeatherLoading(true);
-    setWeatherError(null);
-    try {
-      const info = await fetchWeatherForCoords(loc.latitude, loc.longitude, loc.name);
-      setLiveWeather(info);
-      pushNotice({
-        text: `📍 ${info.city}: ${info.label} (${Math.round(info.temperatureC)}°C) — ${info.isRaining ? 'Raining 🌧️' : 'Dry ☀️'}`,
-        tone: 'info',
-      });
-    } catch {
-      setWeatherError('Could not fetch latest weather. Check internet connection.');
-    } finally {
-      setWeatherLoading(false);
-    }
-  }, [atmospherePrefs.location, pushNotice]);
-
-  const handleUseGpsWeather = useCallback(async (): Promise<boolean> => {
-    setWeatherLoading(true);
-    setWeatherError(null);
-    try {
-      const coords = await requestBrowserCoords();
-      const cityName = await reverseGeocodeCity(coords.latitude, coords.longitude);
-      const loc: WeatherLocation = {
-        name: cityName,
-        latitude: coords.latitude,
-        longitude: coords.longitude,
-      };
-      const info = await fetchWeatherForCoords(coords.latitude, coords.longitude, cityName);
-      setLiveWeather(info);
-      const nextPrefs: AtmospherePrefs = {
-        ...atmospherePrefs,
-        weatherSync: true,
-        location: loc,
-      };
-      setAtmospherePrefs(nextPrefs);
-      saveAtmospherePrefs(nextPrefs);
-      pushNotice({
-        text: `📍 Synced to ${cityName}: ${info.label} (${Math.round(info.temperatureC)}°C) — ${info.isRaining ? 'Raining 🌧️' : 'Dry ☀️'}`,
-        tone: 'info',
-      });
-      return true;
-    } catch (err: any) {
-      const msg = err?.message?.includes('denied')
-        ? 'Location access was blocked. You can type your city instead.'
-        : 'Could not get current location. Please try typing your city.';
-      setWeatherError(msg);
-      pushNotice({ text: msg, tone: 'warn' });
-      return false;
-    } finally {
-      setWeatherLoading(false);
-    }
-  }, [atmospherePrefs, pushNotice]);
-
-  const handleSetWeatherCity = useCallback(
-    async (cityName: string): Promise<boolean> => {
-      setWeatherLoading(true);
-      setWeatherError(null);
-      try {
-        const found = await searchCityCoords(cityName);
-        if (!found) {
-          setWeatherError(`Could not find "${cityName}". Try another city name.`);
-          return false;
-        }
-        const info = await fetchWeatherForCoords(found.latitude, found.longitude, found.name);
-        setLiveWeather(info);
-        const nextPrefs: AtmospherePrefs = {
-          ...atmospherePrefs,
-          weatherSync: true,
-          location: found,
-        };
-        setAtmospherePrefs(nextPrefs);
-        saveAtmospherePrefs(nextPrefs);
-        pushNotice({
-          text: `📍 Synced to ${found.name}: ${info.label} (${Math.round(info.temperatureC)}°C) — ${info.isRaining ? 'Raining 🌧️' : 'Dry ☀️'}`,
-          tone: 'info',
-        });
-        return true;
-      } catch {
-        setWeatherError('Could not search city. Check internet connection.');
-        return false;
-      } finally {
-        setWeatherLoading(false);
-      }
-    },
-    [atmospherePrefs, pushNotice]
-  );
-
-  // Background weather sync: refresh if cache is older than 20 minutes
+  // Automatically refresh Luxembourg weather each time the app is launched or resumed
   useEffect(() => {
-    if (!atmospherePrefs.weatherSync || !atmospherePrefs.location) return;
-    const CACHE_MS = 20 * 60 * 1000;
-    const isStale = !liveWeather || Date.now() - liveWeather.fetchedAt > CACHE_MS;
-    if (isStale) {
-      void handleRefreshWeather();
-    }
-    const timer = setInterval(() => {
-      void handleRefreshWeather();
-    }, CACHE_MS);
-    return () => clearInterval(timer);
-  }, [atmospherePrefs.weatherSync, atmospherePrefs.location, liveWeather, handleRefreshWeather]);
+    let cancelled = false;
+    const updateWeather = async () => {
+      try {
+        const info = await fetchLuxembourgWeather();
+        if (!cancelled) {
+          setLiveWeather(info);
+        }
+      } catch {
+        /* Keep cached weather if offline */
+      }
+    };
+
+    void updateWeather();
+
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        void updateWeather();
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    return () => {
+      cancelled = true;
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+    };
+  }, []);
 
   // Re-measure once the game screen is mounted (the loading screen has no frame to measure).
   const gameMounted = ready && Boolean(live);
@@ -674,11 +587,6 @@ export function App() {
                 atmospherePrefs={atmospherePrefs}
                 onChangeAtmosphere={handleChangeAtmosphere}
                 liveWeather={liveWeather}
-                weatherLoading={weatherLoading}
-                weatherError={weatherError}
-                onRefreshWeather={() => void handleRefreshWeather()}
-                onSetWeatherCity={handleSetWeatherCity}
-                onUseGpsWeather={handleUseGpsWeather}
               />
             </motion.div>
           )}

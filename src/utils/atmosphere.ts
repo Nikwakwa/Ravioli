@@ -1,15 +1,15 @@
 /**
- * Real-Time Atmosphere & Cozy Weather for Oli's Living Room and Balcony.
+ * Real-Time Atmosphere & Luxembourg Weather for Oli's Living Room and Balcony.
  */
 
 export type AtmosphereMode = 'auto' | 'day' | 'sunset' | 'night';
 export type TimeOfDay = 'day' | 'sunset' | 'night';
 
-export interface WeatherLocation {
-  name: string;
-  latitude: number;
-  longitude: number;
-}
+export const LUXEMBOURG_COORDS = {
+  name: 'Luxembourg',
+  latitude: 49.6116,
+  longitude: 6.1319,
+} as const;
 
 export interface LiveWeatherInfo {
   city: string;
@@ -23,22 +23,13 @@ export interface LiveWeatherInfo {
 
 export interface AtmospherePrefs {
   mode: AtmosphereMode;
-  rain: boolean;
-  weatherSync?: boolean;
-  location?: WeatherLocation | null;
 }
 
 const LS_ATMOSPHERE_MODE = 'ravioli:v1:atmosphere_mode';
-const LS_ATMOSPHERE_RAIN = 'ravioli:v1:atmosphere_rain';
-const LS_ATMOSPHERE_WEATHER_SYNC = 'ravioli:v1:atmosphere_weather_sync';
-const LS_ATMOSPHERE_LOCATION = 'ravioli:v1:atmosphere_weather_location';
 const LS_ATMOSPHERE_WEATHER_CACHE = 'ravioli:v1:atmosphere_weather_cache';
 
 export const DEFAULT_ATMOSPHERE_PREFS: AtmospherePrefs = {
   mode: 'auto',
-  rain: false,
-  weatherSync: false,
-  location: null,
 };
 
 export function loadAtmospherePrefs(): AtmospherePrefs {
@@ -47,28 +38,12 @@ export function loadAtmospherePrefs(): AtmospherePrefs {
       return DEFAULT_ATMOSPHERE_PREFS;
     }
     const rawMode = window.localStorage.getItem(LS_ATMOSPHERE_MODE);
-    const rawRain = window.localStorage.getItem(LS_ATMOSPHERE_RAIN);
-    const rawSync = window.localStorage.getItem(LS_ATMOSPHERE_WEATHER_SYNC);
-    const rawLoc = window.localStorage.getItem(LS_ATMOSPHERE_LOCATION);
-
     const mode: AtmosphereMode =
       rawMode === 'day' || rawMode === 'sunset' || rawMode === 'night' || rawMode === 'auto'
         ? rawMode
         : 'auto';
 
-    const rain = rawRain === 'true';
-    const weatherSync = rawSync === 'true';
-
-    let location: WeatherLocation | null = null;
-    if (rawLoc) {
-      try {
-        location = JSON.parse(rawLoc);
-      } catch {
-        location = null;
-      }
-    }
-
-    return { mode, rain, weatherSync, location };
+    return { mode };
   } catch {
     return DEFAULT_ATMOSPHERE_PREFS;
   }
@@ -78,13 +53,6 @@ export function saveAtmospherePrefs(prefs: AtmospherePrefs): void {
   try {
     if (typeof window === 'undefined' || !window.localStorage) return;
     window.localStorage.setItem(LS_ATMOSPHERE_MODE, prefs.mode);
-    window.localStorage.setItem(LS_ATMOSPHERE_RAIN, prefs.rain ? 'true' : 'false');
-    window.localStorage.setItem(LS_ATMOSPHERE_WEATHER_SYNC, prefs.weatherSync ? 'true' : 'false');
-    if (prefs.location) {
-      window.localStorage.setItem(LS_ATMOSPHERE_LOCATION, JSON.stringify(prefs.location));
-    } else {
-      window.localStorage.removeItem(LS_ATMOSPHERE_LOCATION);
-    }
   } catch {
     /* no-op */
   }
@@ -182,11 +150,8 @@ export function isRainingFromWeather(
   );
 }
 
-export async function fetchWeatherForCoords(
-  latitude: number,
-  longitude: number,
-  cityName = 'My Location'
-): Promise<LiveWeatherInfo> {
+export async function fetchLuxembourgWeather(): Promise<LiveWeatherInfo> {
+  const { latitude, longitude, name } = LUXEMBOURG_COORDS;
   const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,precipitation,rain,showers,weather_code`;
   const res = await fetch(url);
   if (!res.ok) {
@@ -195,7 +160,7 @@ export async function fetchWeatherForCoords(
   const data = await res.json();
   const current = data.current ?? {};
   const code = Number(current.weather_code ?? 0);
-  const temp = Number(current.temperature_2m ?? 20);
+  const temp = Number(current.temperature_2m ?? 15);
   const precip = Number(current.precipitation ?? 0);
   const rain = Number(current.rain ?? 0);
   const showers = Number(current.showers ?? 0);
@@ -204,7 +169,7 @@ export async function fetchWeatherForCoords(
   const isRaining = isRainingFromWeather(code, precip, rain, showers);
 
   const info: LiveWeatherInfo = {
-    city: cityName,
+    city: name,
     temperatureC: temp,
     weatherCode: code,
     label,
@@ -215,55 +180,6 @@ export async function fetchWeatherForCoords(
 
   saveCachedWeather(info);
   return info;
-}
-
-export async function searchCityCoords(query: string): Promise<WeatherLocation | null> {
-  const trimmed = query.trim();
-  if (!trimmed) return null;
-  const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(trimmed)}&count=1&language=en&format=json`;
-  const res = await fetch(url);
-  if (!res.ok) return null;
-  const data = await res.json();
-  const first = data.results?.[0];
-  if (!first) return null;
-  return {
-    name: first.name + (first.country ? `, ${first.country}` : ''),
-    latitude: first.latitude,
-    longitude: first.longitude,
-  };
-}
-
-export async function reverseGeocodeCity(lat: number, lon: number): Promise<string> {
-  try {
-    const url = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`;
-    const res = await fetch(url);
-    if (!res.ok) return 'My Location';
-    const data = await res.json();
-    return data.city || data.locality || data.principalSubdivision || 'My Location';
-  } catch {
-    return 'My Location';
-  }
-}
-
-export function requestBrowserCoords(): Promise<{ latitude: number; longitude: number }> {
-  return new Promise((resolve, reject) => {
-    if (typeof navigator === 'undefined' || !navigator.geolocation) {
-      reject(new Error('Geolocation is not supported by your browser'));
-      return;
-    }
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        resolve({
-          latitude: pos.coords.latitude,
-          longitude: pos.coords.longitude,
-        });
-      },
-      (err) => {
-        reject(err);
-      },
-      { timeout: 10000, maximumAge: 600000 }
-    );
-  });
 }
 
 /**
@@ -294,14 +210,12 @@ export interface AtmosphereSummary {
   label: string;
   emoji: string;
   tagline: string;
-  weatherCity?: string;
 }
 
 export function getAtmosphereSummary(
   effectiveTime: TimeOfDay,
   isRaining: boolean,
-  mode: AtmosphereMode = 'auto',
-  weatherCity?: string
+  mode: AtmosphereMode = 'auto'
 ): AtmosphereSummary {
   if (isRaining) {
     const timeLabel =
@@ -309,12 +223,9 @@ export function getAtmosphereSummary(
     return {
       effectiveTime,
       isRaining: true,
-      label: weatherCity ? `${timeLabel} (${weatherCity})` : timeLabel,
+      label: `${timeLabel} (Luxembourg)`,
       emoji: '🌧️',
-      tagline: weatherCity
-        ? `Gentle raindrops matching real weather in ${weatherCity} for Oli's Cat TV.`
-        : "Gentle raindrops sliding down the window pane for Oli's favorite Cat TV.",
-      weatherCity,
+      tagline: 'Raining in Luxembourg — gentle raindrops sliding down the window pane for Cat TV.',
     };
   }
 
@@ -326,7 +237,6 @@ export function getAtmosphereSummary(
         label: mode === 'auto' ? 'Golden Hour (Auto)' : 'Golden Hour',
         emoji: '🌅',
         tagline: 'Warm amber sunset glow stretching across the living room and balcony.',
-        weatherCity,
       };
     case 'night':
       return {
@@ -335,7 +245,6 @@ export function getAtmosphereSummary(
         label: mode === 'auto' ? 'Cozy Night (Auto)' : 'Cozy Night',
         emoji: '🌙',
         tagline: 'Deep starlit sky with the cozy windowsill lamp glowing.',
-        weatherCity,
       };
     case 'day':
     default:
@@ -345,7 +254,6 @@ export function getAtmosphereSummary(
         label: mode === 'auto' ? 'Sunny Daylight (Auto)' : 'Sunny Daylight',
         emoji: '☀️',
         tagline: 'Bright, warm daylight with soft sunbeams streaming across the rug.',
-        weatherCity,
       };
   }
 }

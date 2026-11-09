@@ -4,6 +4,14 @@ All updates to **Oli** are listed here.
 
 ---
 
+## `v0.20.2` — 2026-11-09
+### Pure Automatic Weather in Luxembourg 🇱🇺🌧️
+- **Fully Automatic Rain**: Oli’s window matches the actual rain in Luxembourg City with zero toggles or manual settings.
+- **Auto-Refreshes on Launch**: Weather checks automatically each time you open the app or switch back to it.
+- **Zero Setup or Permissions**: Fixed directly to Luxembourg City — no GPS prompts, buttons, or search bars required.
+
+---
+
 ## `v0.20.1` — 2026-11-09
 ### Outside Weather Sync for Cozy Rain 🌦️🌧️
 - **Match Outside Rain**: Turn on "Sync with Outside Weather" to have Oli's window automatically rain when it's raining in your city.

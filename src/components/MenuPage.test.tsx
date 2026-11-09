@@ -99,17 +99,17 @@ describe('MenuPage Server Rendering & Content', () => {
         onToggleMasterNotifications={vi.fn()}
         onChangeNotifPrefs={vi.fn()}
         onTestNotification={vi.fn()}
-        atmospherePrefs={{ mode: 'sunset', rain: true }}
+        atmospherePrefs={{ mode: 'sunset' }}
       />
     );
 
     expect(html).toContain('Real-Time Atmosphere');
     expect(html).toContain('Golden Hour Sunset');
-    expect(html).toContain('Cozy Rain (Cat TV)');
-    expect(html).toContain('Sync with Outside Weather');
+    expect(html).toContain('Luxembourg Weather');
+    expect(html).toContain('Automatic outside rain matching');
   });
 
-  it('renders live outside weather info when weather sync is active', () => {
+  it('renders live Luxembourg weather info when weather data is available', () => {
     const html = renderToString(
       <MenuPage
         onClose={vi.fn()}
@@ -120,15 +120,10 @@ describe('MenuPage Server Rendering & Content', () => {
         onToggleMasterNotifications={vi.fn()}
         onChangeNotifPrefs={vi.fn()}
         onTestNotification={vi.fn()}
-        atmospherePrefs={{
-          mode: 'auto',
-          rain: false,
-          weatherSync: true,
-          location: { name: 'Seattle', latitude: 47.6, longitude: -122.33 },
-        }}
+        atmospherePrefs={{ mode: 'auto' }}
         liveWeather={{
-          city: 'Seattle',
-          temperatureC: 13,
+          city: 'Luxembourg',
+          temperatureC: 11,
           weatherCode: 61,
           label: 'Light rain',
           emoji: '🌧️',
@@ -138,10 +133,9 @@ describe('MenuPage Server Rendering & Content', () => {
       />
     );
 
-    expect(html).toContain('Sync with Outside Weather');
-    expect(html).toContain('Seattle');
+    expect(html).toContain('Luxembourg Weather');
     expect(html).toContain('Light rain');
-    expect(html).toContain('Rain sliding down the window pane');
+    expect(html).toContain('Raining in Luxembourg — Cat TV is on Oli’s window!');
   });
 
   it('renders pause clock controls when initialTab is pause', () => {

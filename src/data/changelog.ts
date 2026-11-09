@@ -7,6 +7,16 @@ export interface ReleaseEntry {
 
 export const CHANGELOG: ReleaseEntry[] = [
   {
+    version: 'v0.20.2',
+    date: '2026-11-09',
+    title: 'Pure Automatic Weather in Luxembourg 🇱🇺🌧️',
+    changes: [
+      'Rain mode is now completely automatic with no buttons to press: Oli’s window matches the real rain in Luxembourg City.',
+      'The weather updates automatically each time you open the app or return to it.',
+      'No location permissions or city searches required — fixed right at home in Luxembourg.',
+    ],
+  },
+  {
     version: 'v0.20.1',
     date: '2026-11-09',
     title: 'Outside Weather Sync for Cozy Rain 🌦️🌧️',

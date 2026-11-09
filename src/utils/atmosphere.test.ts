@@ -1,21 +1,20 @@
 import { describe, expect, it, beforeEach, afterEach, vi } from 'vitest';
 import {
   DEFAULT_ATMOSPHERE_PREFS,
-  fetchWeatherForCoords,
+  fetchLuxembourgWeather,
   getAtmosphereSummary,
   getWeatherDescription,
   isRainingFromWeather,
   loadAtmospherePrefs,
   loadCachedWeather,
+  LUXEMBOURG_COORDS,
   resolveTimeOfDay,
-  reverseGeocodeCity,
   saveAtmospherePrefs,
   saveCachedWeather,
-  searchCityCoords,
   type LiveWeatherInfo,
 } from './atmosphere';
 
-describe('Atmosphere Utilities & Weather Sync', () => {
+describe('Atmosphere Utilities & Luxembourg Weather Sync', () => {
   const store: Record<string, string> = {};
 
   beforeEach(() => {
@@ -45,35 +44,29 @@ describe('Atmosphere Utilities & Weather Sync', () => {
     vi.restoreAllMocks();
   });
 
+  it('has fixed coordinates for Luxembourg City', () => {
+    expect(LUXEMBOURG_COORDS.name).toBe('Luxembourg');
+    expect(LUXEMBOURG_COORDS.latitude).toBeCloseTo(49.6116, 2);
+    expect(LUXEMBOURG_COORDS.longitude).toBeCloseTo(6.1319, 2);
+  });
+
   it('loads default atmosphere preferences when localStorage is empty', () => {
     const prefs = loadAtmospherePrefs();
     expect(prefs).toEqual(DEFAULT_ATMOSPHERE_PREFS);
     expect(prefs.mode).toBe('auto');
-    expect(prefs.rain).toBe(false);
-    expect(prefs.weatherSync).toBe(false);
-    expect(prefs.location).toBeNull();
   });
 
-  it('saves and reloads custom atmosphere preferences with weather sync and location', () => {
-    saveAtmospherePrefs({
-      mode: 'sunset',
-      rain: true,
-      weatherSync: true,
-      location: { name: 'Seattle', latitude: 47.6, longitude: -122.33 },
-    });
+  it('saves and reloads custom lighting preferences', () => {
+    saveAtmospherePrefs({ mode: 'sunset' });
     const prefs = loadAtmospherePrefs();
     expect(prefs.mode).toBe('sunset');
-    expect(prefs.rain).toBe(true);
-    expect(prefs.weatherSync).toBe(true);
-    expect(prefs.location?.name).toBe('Seattle');
-    expect(prefs.location?.latitude).toBe(47.6);
   });
 
   it('caches and loads live weather info', () => {
     expect(loadCachedWeather()).toBeNull();
     const weather: LiveWeatherInfo = {
-      city: 'Paris',
-      temperatureC: 15,
+      city: 'Luxembourg',
+      temperatureC: 11,
       weatherCode: 61,
       label: 'Light rain',
       emoji: '🌧️',
@@ -91,7 +84,7 @@ describe('Atmosphere Utilities & Weather Sync', () => {
       expect(isRainingFromWeather(0, 0, 0, 0)).toBe(false);
     });
 
-    it('detects rain from WMO rain codes (drizzle, rain, showers, storms)', () => {
+    it('detects rain from WMO rain codes', () => {
       expect(isRainingFromWeather(51)).toBe(true); // Light drizzle
       expect(isRainingFromWeather(61)).toBe(true); // Light rain
       expect(isRainingFromWeather(65)).toBe(true); // Heavy rain
@@ -112,14 +105,14 @@ describe('Atmosphere Utilities & Weather Sync', () => {
     });
   });
 
-  describe('fetchWeatherForCoords', () => {
-    it('fetches real weather from Open-Meteo API', async () => {
+  describe('fetchLuxembourgWeather', () => {
+    it('fetches real weather for Luxembourg and caches it', async () => {
       const mockResponse = {
         current: {
           weather_code: 61,
-          temperature_2m: 14.5,
-          precipitation: 1.2,
-          rain: 1.2,
+          temperature_2m: 9.5,
+          precipitation: 0.8,
+          rain: 0.8,
           showers: 0.0,
         },
       };
@@ -131,75 +124,14 @@ describe('Atmosphere Utilities & Weather Sync', () => {
       } as any);
 
       try {
-        const info = await fetchWeatherForCoords(48.85, 2.35, 'Paris');
-        expect(info.city).toBe('Paris');
-        expect(info.temperatureC).toBe(14.5);
+        const info = await fetchLuxembourgWeather();
+        expect(info.city).toBe('Luxembourg');
+        expect(info.temperatureC).toBe(9.5);
         expect(info.weatherCode).toBe(61);
         expect(info.isRaining).toBe(true);
         expect(info.label).toBe('Light rain');
         expect(info.emoji).toBe('🌧️');
-        expect(loadCachedWeather()?.city).toBe('Paris');
-      } finally {
-        globalThis.fetch = originalFetch;
-      }
-    });
-  });
-
-  describe('searchCityCoords', () => {
-    it('searches for city coordinates via Open-Meteo Geocoding API', async () => {
-      const mockResponse = {
-        results: [
-          {
-            name: 'Tokyo',
-            country: 'Japan',
-            latitude: 35.68,
-            longitude: 139.76,
-          },
-        ],
-      };
-
-      const originalFetch = globalThis.fetch;
-      globalThis.fetch = vi.fn().mockResolvedValue({
-        ok: true,
-        json: async () => mockResponse,
-      } as any);
-
-      try {
-        const result = await searchCityCoords('Tokyo');
-        expect(result).toEqual({
-          name: 'Tokyo, Japan',
-          latitude: 35.68,
-          longitude: 139.76,
-        });
-      } finally {
-        globalThis.fetch = originalFetch;
-      }
-    });
-
-    it('returns null if city query is empty or no results', async () => {
-      expect(await searchCityCoords('')).toBeNull();
-      const originalFetch = globalThis.fetch;
-      globalThis.fetch = vi.fn().mockResolvedValue({
-        ok: true,
-        json: async () => ({ results: [] }),
-      } as any);
-      try {
-        expect(await searchCityCoords('nonexistentcity12345')).toBeNull();
-      } finally {
-        globalThis.fetch = originalFetch;
-      }
-    });
-  });
-
-  describe('reverseGeocodeCity', () => {
-    it('returns city name from reverse geocoding API', async () => {
-      const originalFetch = globalThis.fetch;
-      globalThis.fetch = vi.fn().mockResolvedValue({
-        ok: true,
-        json: async () => ({ city: 'London' }),
-      } as any);
-      try {
-        expect(await reverseGeocodeCity(51.5, -0.12)).toBe('London');
+        expect(loadCachedWeather()?.city).toBe('Luxembourg');
       } finally {
         globalThis.fetch = originalFetch;
       }
@@ -226,12 +158,11 @@ describe('Atmosphere Utilities & Weather Sync', () => {
   });
 
   describe('getAtmosphereSummary', () => {
-    it('returns rain summary when rain is active', () => {
-      const summary = getAtmosphereSummary('day', true, 'auto', 'Paris');
+    it('returns Luxembourg rain summary when rain is active', () => {
+      const summary = getAtmosphereSummary('day', true);
       expect(summary.emoji).toBe('🌧️');
-      expect(summary.label).toBe('Rainy Day (Paris)');
+      expect(summary.label).toBe('Rainy Day (Luxembourg)');
       expect(summary.isRaining).toBe(true);
-      expect(summary.weatherCity).toBe('Paris');
     });
 
     it('returns sunset summary for sunset', () => {
