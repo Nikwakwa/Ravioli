@@ -4,6 +4,14 @@ All updates to **Oli** are listed here.
 
 ---
 
+## `v0.20.5` — 2026-11-09
+### UX & Design Polish 🌟
+- Connected live weather permissions so rain sync works in all browsers.
+- Balanced menu tabs so all 4 buttons fill the bar evenly.
+- Improved nighttime contrast and low-need alert animations.
+
+---
+
 ## `v0.20.4` — 2026-11-09
 ### Clean & Simple Updates 📝
 - Shortened all update notes so they are quick and easy to read.

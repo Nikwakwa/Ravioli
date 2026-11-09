@@ -97,8 +97,8 @@ export function MenuPage({
           <h1 className="truncate font-display text-sm font-extrabold text-amber-950">Guide & Settings</h1>
         </div>
 
-        {/* 5-Column Segmented Tab Bar */}
-        <nav className="mt-2.5 grid grid-cols-5 gap-1 rounded-2xl bg-amber-950/6 p-1" aria-label="Menu Sections">
+        {/* 4-Column Segmented Tab Bar */}
+        <nav className="mt-2.5 grid grid-cols-4 gap-1 rounded-2xl bg-amber-950/6 p-1" aria-label="Menu Sections">
           {tabs.map((t) => {
             const active = activeTab === t.id;
             return (

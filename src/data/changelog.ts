@@ -7,6 +7,16 @@ export interface ReleaseEntry {
 
 export const CHANGELOG: ReleaseEntry[] = [
   {
+    version: 'v0.20.5',
+    date: '2026-11-09',
+    title: 'UX & Design Polish 🌟',
+    changes: [
+      'Connected live weather permissions so rain sync works in all browsers.',
+      'Balanced menu tabs so all 4 buttons fill the bar evenly.',
+      'Improved nighttime contrast and low-need alert animations.',
+    ],
+  },
+  {
     version: 'v0.20.4',
     date: '2026-11-09',
     title: 'Clean & Simple Updates 📝',

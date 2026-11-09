@@ -112,7 +112,7 @@ export function StatusHUD({
                 </span>
               )}
             </div>
-            <p className={`truncate text-[10px] font-bold ${night ? 'text-indigo-200/80' : 'text-amber-800/80'}`}>
+            <p className={`truncate text-[10px] font-bold ${night ? 'text-indigo-100' : 'text-amber-800/90'}`}>
               {badge.label}
             </p>
           </div>
@@ -179,7 +179,7 @@ export function StatusHUD({
                 ? 'bg-amber-400'
                 : 'bg-rose-500';
 
-          const pulse = low && !night;
+          const pulse = low && !live.isSleeping;
 
           return (
             <div
