@@ -4,6 +4,11 @@
 - Always communicate in plain, everyday language. Avoid dev jargon, complex technical details, or code-heavy explanations unless explicitly asked.
 - Keep updates simple, clear, and easy to understand at a glance (focus on what changed and how it helps).
 
+## Writing Style & Changelogs (No AI Slop)
+- **Zero AI Slop**: Never write flowery, bloated, or overly poetic text anywhere (changelogs, UI text, or chat).
+- **Player Perspective**: End users want to scan updates in 3 seconds. Never write paragraphs in a gaming app.
+- **Short Changelogs**: Keep changelog entries to 1–3 short, punchy bullet points (1 single-line sentence per bullet). Focus strictly on what changed.
+
 ## Git Commit, Tag & Push Workflow (Zero-Prompt Automation)
 
 To prevent the user from having to manually approve every `git commit`, `git tag`, or `git push` command due to changing commit messages, tags, quotes, or command chaining:

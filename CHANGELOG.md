@@ -4,133 +4,123 @@ All updates to **Oli** are listed here.
 
 ---
 
+## `v0.20.4` — 2026-11-09
+### Clean & Simple Updates 📝
+- Shortened all update notes so they are quick and easy to read.
+
+---
+
 ## `v0.20.3` — 2026-11-09
-### Zero-Settings Solar Lighting & Clean Menu 🌅✨
-- **Dynamic Solar Lighting**: The living room and balcony automatically follow Luxembourg's real daily sunrise and sunset data with no hardcoded hours.
-- **Ambience Menu Removed**: Eliminated the Ambience tab and status chip completely to keep the menu simple, focused, and free of unnecessary settings.
-- **Zero Configuration**: Everything (daylight, golden sunset, nighttime lamp, and rain) works invisibly and automatically.
+### Automatic Sunlight & Sunset 🌅
+- Room lighting now matches real sunrise and sunset in Luxembourg.
+- Removed the Ambience menu to keep things simple.
 
 ---
 
 ## `v0.20.2` — 2026-11-09
-### Pure Automatic Weather in Luxembourg 🇱🇺🌧️
-- **Fully Automatic Rain**: Oli’s window matches the actual rain in Luxembourg City with zero toggles or manual settings.
-- **Auto-Refreshes on Launch**: Weather checks automatically each time you open the app or switch back to it.
-- **Zero Setup or Permissions**: Fixed directly to Luxembourg City — no GPS prompts, buttons, or search bars required.
+### Automatic Weather 🌧️
+- Rain on Oli’s window now matches the real weather in Luxembourg.
+- Updates automatically whenever you open the app.
 
 ---
 
 ## `v0.20.1` — 2026-11-09
-### Outside Weather Sync for Cozy Rain 🌦️🌧️
-- **Match Outside Rain**: Turn on "Sync with Outside Weather" to have Oli's window automatically rain when it's raining in your city.
-- **Easy Location Setup**: Tap "Use My Current Location" or type any city in the world (e.g. Paris, Tokyo, London, Seattle).
-- **Live Weather Badge**: Shows the outside temperature and current sky conditions right in the Ambience tab with a one-tap refresh button.
-- **Manual Override Anytime**: You can still toggle Cozy Rain on or off manually whenever you want.
+### Weather Sync 🌦️
+- Added outside weather sync so rain on the window matches real weather.
 
 ---
 
 ## `v0.20.0` — 2026-11-09
-### Real-Time Atmosphere & Cozy Rain Mode 🌅🌧️
-- **Living Room & Balcony Dynamic Lighting:** The scenery shifts smoothly with your local clock (or your chosen preset): bright sunny day with sunbeams and drifting dust motes, honey-golden sunset with twilight reflections, and deep starry night with glowing apartment windows across the street.
-- **Warm Windowsill Lamp Glow:** The cute lamp on the living room windowsill lights up softly at sunset and night.
-- **Cozy Rain / Cat TV Mode:** Toggle gentle raindrops sliding down the glass windowpane in the living room and streaming across the balcony.
-- **Ambience Menu & Quick Status Chip:** Pick Auto (Real-Time Clock), Sunny Daylight, Golden Hour Sunset, or Cozy Night anytime from the new Ambience tab in the Menu, or tap the ambience chip in the top status bar.
+### Real-Time Atmosphere & Rain 🌅🌧️
+- The room and balcony now change lighting with the time of day.
+- The windowsill lamp lights up at sunset and night.
+- Added gentle rain on the window.
 
 ---
 
 ## `v0.19.2` — 2026-11-08
-### No More Leftover Water Bowls 💧🐾
-- **Animations End When They End:** After drinking, eating or playing, moving Oli to another spot no longer replays the finished animation, so the water bowl / food bowl / toy no longer reappears next to him (e.g. behind his back in the street-watch corner or on the bistro table).
-- **Facing-Away Pose Stays Clean:** Bowls and toys never appear while Oli watches the street with his back to you.
-- **Fountain Bubbles:** The fountain only bubbles faster while Oli is actually drinking.
+### Clean Room Animations 💧🐾
+- Fixed bowls and toys reappearing after Oli moves to a new spot.
+- The water fountain only bubbles faster while Oli is drinking.
 
 ---
 
 ## `v0.19.1` — 2026-11-08
-### Close-Up Rooms Are Back 🛋️🔍
-- **Full-Size Scenery:** The living room and balcony fill the screen at full size again (v0.19.0 had shrunk them on every phone, which felt small and far away on tall phones).
-- **Smart Slide-Up on Short Screens:** Only when Oli's paws would end up behind the room switcher or care dock does the room slide up, by just the amount needed.
+### Room View Polish 🛋️
+- Restored full-size room views across all phone screens.
+- Oli is never hidden behind buttons on smaller screens.
 
 ---
 
 ## `v0.19.0` — 2026-11-08
-### Churu Points, Calmer Cravings & a Roomier Screen 🍬🐾
-- **Churu Points:** Cravings and perfect 3/3 minigames now earn churu points; 3 points = 1 Churu tube, up to 3 tubes per day. Progress dots sit next to 🍬 in the header. Chin-scratch cravings give extra Joy but no points.
-- **Calmer Cravings:** A new craving every 12–20 minutes (was ~35 seconds), no new cravings while the app is in the background, and no Joy penalty for cravings that expired while the app was closed.
-- **Roomier Screen:** The room is fitted above the care dock so Oli is never hidden behind it on smaller phones; the Living Room / Balcony switch no longer wraps.
-- **Tidier Care Dock:** Care and Rest use the same card layout as Feed and Play, so effect chips are never cut off.
+### Churu Points & Calmer Cravings 🍬🐾
+- Earn Churu tubes by completing cravings and minigames.
+- Cravings now appear every 12–20 minutes instead of every 30 seconds.
+- Cleaned up button layout on smaller phones.
 
 ---
 
 ## `v0.18.5` — 2026-11-08
-### No More Surprise Messes When Petting 🐾🧹
-- **Messes Follow the Clock, Not Your Taps:** Petting Oli (e.g. in his cardboard box) no longer makes a waiting fur clump or throw-up appear at that exact moment. Messes that build up over time now only show up on the game's own clock, when the app opens, or when you come back to it.
+### Smoother Petting 🐾🧹
+- Petting Oli no longer triggers surprise messes.
 
 ---
 
 ## `v0.18.4` — 2026-11-08
-### Cuter Balcony Oli: Street Watch & Belly Rolls Redrawn 🐾💕
-- **Street Watch From Behind (`planter`):** Redrew Oli's back view — furry backs of the ears instead of pink insides, round haunches with tiny hind toes peeking out, tabby stripes down his back, and his striped tail curled on the tiles with a flicking white tip. Pet him and he turns around to smile at you.
-- **True Belly-Up Roll (`balcony_floor`):** Oli now actually lies on his back: fluffy cream tummy to the sky, pink toe beans in the air, kneading mitten paws, head tilted back with a blissful face, and a happy wiggle when you rub his belly.
-- **Perspective & Overlap Fixes:** Oli is the same size in all three balcony spots, sits behind the closer cypress pot instead of on top of it, and the terrace tiles are proper squares all the way down.
+### Cuter Balcony Poses 🐾💕
+- Redrew Oli watching the street, with a happy turn when petted.
+- Redrew the belly-up roll on the warm terrace tiles.
+- Fixed furniture overlap on the balcony.
 
 ---
 
 ## `v0.18.3` — 2026-11-07
-### Balcony Street Watch & Sunny Belly Rolls ☀️👀🐾
-- **Left Corner Street Watch (`planter`):** Oli now sits in his favorite left corner against the railing looking out and down at the quiet street below with his back to us, perked ears, swishing tail, and tucked white paws.
-- **Warm Tile Belly-Up Roll (`balcony_floor`):** Oli rolls happily on the sunlit terrace tiles in pure bliss, exposing his soft cream belly for pets, with four curled paws, sweet blushing smile, and crescent eyes.
-- **Opened Left Corner:** Placed the cypress pot neatly under the edge of the planter box so the corner is wide open for Oli's street surveillance.
+### Street Watch & Belly Rolls ☀️🐾
+- Added street watching in the left balcony corner.
+- Added a cozy belly-up roll on the sunny floor.
 
 ---
 
 ## `v0.18.2` — 2026-11-07
-### True 3D Balcony Perspective & Café Set Redesign 🌿🪑✨
-- **Unified Straight-On Balcony Camera:** Replaced the distorted wide-angle diagonal view from the reference photo with a clean, welcoming 1-point perspective matching the Living Room — every floor tile seam, parapet curb, railing bar, planter box, tabletop plank, and chair frame now converges to one exact 3D horizon.
-- **Redesigned Bistro Table & Folding Chairs:** Replaced the skewed diagonal furniture with a classic French bistro table (complete with crossed wrought-iron X-legs and 6 horizontal weathered wood slats) flanked symmetrically by two matching folding bistro chairs facing each other in 3/4 view.
-- **Horizontal 3D Hanging Planter Boxes:** Mounted both matte-grey planter troughs horizontally along the stainless-steel handrail with compact curved metal hooks, trailing foliage, and blooming yellow & purple pansies.
+### Balcony 3D Perspective & Café Set 🌿🪑
+- Matched balcony perspective to the living room.
+- Added wooden bistro table and chairs with flower planters.
 
 ---
 
 ## `v0.18.1` — 2026-11-07
-### Balcony Design Overhaul & Cozy Spot Polish 🌿🪑🐾
-- **Fixed Oli’s Balcony Positions & Layering:**
-  - **By the Cypress Pot (`planter`):** Grounded Oli on the back terrace tiles right beside the cypress pot and railing curb instead of floating in mid-air over the railing bars.
-  - **Bistro Table (`bistro_chair`):** Perched Oli cleanly on top of the wooden bistro tabletop so chair slats never cut across his face.
-  - **Sunny Balcony Tiles (`balcony_floor`):** Layered Oli in front of the bistro set so the table and legs never overlap his body or tail.
-- **Redesigned Balcony Architecture & Plants:** Extended the left apartment wall to the top of the scene, aligned all vertical railing balusters and the continuous brushed-steel handrail, gave the grey planter boxes 3D depth with detailed yellow & purple pansies, reshaped the corner conifer into a natural feathery cypress tree, and swept away the fallen leaves from the terrace tiles.
+### Balcony Polish 🌿🐾
+- Fixed Oli positioning so furniture never overlaps him.
+- Cleaned up railing, planters, and floor tiles.
 
 ---
 
 ## `v0.18.0` — 2026-11-07
-### New Scenery: The Balcony! 🌿🌼🪑
-- **Authentic Balcony Scenery:** Modeled directly from your balcony photo — featuring the brushed stainless-steel railing, hanging grey planter boxes with yellow & purple pansies, round corner pot with the tall green conifer, weathered wooden-slat folding bistro table & chairs, warm square terrace tiles with fallen autumn leaves, and the neighboring house & trees across the street.
-- **Quick Room Switcher & Roaming:** Tap **Living Room** or **Balcony** right above the care dock to switch sceneries anytime, or let Oli wander outside on his own when awake.
-- **Outdoor Spots & Reactions:** Oli can sniff the pansies and watch the street by the flower boxes & conifer pot, perch on the wooden bistro chair, or stretch out on the sunny balcony tiles.
+### New Room: The Balcony 🌿🌼
+- Added the outdoor balcony with street views and bistro seating.
+- Quick switch between Living Room and Balcony.
+- New spots for Oli to explore outside.
 
 ---
 
 ## `v0.17.1` — 2026-11-06
-### Red Ball Sofa Rally & Smooth Tail Spin 🛋️🐾🌀
-- **Red Ball Sofa Rally:** Completely redesigned the Red Ball minigame! Instead of tapping a dot like Laser Zoomies, you now control **Oli’s sliding paw** along the floor to bounce the rolling red ball back (`2` saves per round) before it rolls into the dark gap **Under the Sofa**.
-- **Smooth Tail Spin Loop:** Fixed Oli’s center head snapping when the tail indicator completed a full 360° loop around the ring.
+### Red Ball Rally & Tail Spin Fix 🛋️🐾
+- Redesigned Red Ball into a paw-sliding rally game.
+- Fixed animation glitch in Tail Spin.
 
 ---
 
 ## `v0.17.0` — 2026-11-06
-### New Solo Minigames: Tail Spin & Red Ball! 🌀🔴🐾
-- **Tail Spin (`Chase Tail`):** Inspired by Oli spinning solo after his own tail! Watch his striped ginger tail and white tip orbit around the circle and tap **NAB TAIL!** when it enters the green Nab Zone (with alternating clockwise and counter-clockwise spins).
-- **Red Ball Chase (`Red Ball`):** Inspired by Oli chasing his favorite small red ball on the floor! Tap the rolling red ball once to bat it across the rug, then chase where it bounces and pounce a second time to trap it under his paws.
-- **4-Game Play Tab & Animations:** Expanded the `Play` tab into a 2×2 grid alongside `Feather Wand` and `Laser Zoomies`, complete with new animations on the living room rug and spontaneous cravings.
+### New Minigames: Tail Spin & Red Ball 🌀🔴
+- Added two new minigames: Tail Spin and Red Ball.
+- Updated Play menu into a 2×2 game grid.
 
 ---
 
 ## `v0.16.17` — 2026-11-06
-### Real Living Room Makeover 🛋️🌿✨
-- **Moroccan Diamond Shag Rug:** Replaced the noisy yarn squiggles on the rug with a clean, realistic cream shag rug featuring your grey diamond trellis pattern.
-- **Tropical Botanical Wall Art & Cat Tree:** Replaced the generic brown mountain picture with your square tropical monstera and red flower print, plus Oli’s cream plush cat tree tucked behind the sofa corner.
-- **Tall White Bookcase:** Redesigned the left shelving unit into your tall white cabinet with open shelves, top storage box, trailing pothos plant, and double Shaker doors positioned closer to the center.
-- **Window & Sofa Details:** Added the folded white fabric Roman blind, the little white windowsill lamp, the split-top coffee table seam, and all 5 throw pillows along the charcoal sofa.
+### Living Room Makeover 🛋️🌿
+- Updated living room furniture and decor to match the real apartment.
+- Added cat tree, bookcase, Roman blind, and windowsill lamp.
 
 ---
 
