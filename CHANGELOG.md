@@ -4,6 +4,15 @@ All updates to **Oli** are listed here.
 
 ---
 
+## `v0.20.1` — 2026-11-09
+### Outside Weather Sync for Cozy Rain 🌦️🌧️
+- **Match Outside Rain**: Turn on "Sync with Outside Weather" to have Oli's window automatically rain when it's raining in your city.
+- **Easy Location Setup**: Tap "Use My Current Location" or type any city in the world (e.g. Paris, Tokyo, London, Seattle).
+- **Live Weather Badge**: Shows the outside temperature and current sky conditions right in the Ambience tab with a one-tap refresh button.
+- **Manual Override Anytime**: You can still toggle Cozy Rain on or off manually whenever you want.
+
+---
+
 ## `v0.20.0` — 2026-11-09
 ### Real-Time Atmosphere & Cozy Rain Mode 🌅🌧️
 - **Living Room & Balcony Dynamic Lighting:** The scenery shifts smoothly with your local clock (or your chosen preset): bright sunny day with sunbeams and drifting dust motes, honey-golden sunset with twilight reflections, and deep starry night with glowing apartment windows across the street.

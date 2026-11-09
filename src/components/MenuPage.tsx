@@ -5,7 +5,9 @@ import {
   BellOff,
   Check,
   Flame,
+  MapPin,
   Moon,
+  Navigation,
   Pause,
   Play,
   RefreshCw,
@@ -36,6 +38,7 @@ import {
   resolveTimeOfDay,
   type AtmosphereMode,
   type AtmospherePrefs,
+  type LiveWeatherInfo,
 } from '../utils/atmosphere';
 import { STAT_ICONS } from './statIcons';
 
@@ -55,6 +58,12 @@ export interface MenuPageProps {
   onTestNotification: () => void;
   atmospherePrefs?: AtmospherePrefs;
   onChangeAtmosphere?: (next: AtmospherePrefs) => void;
+  liveWeather?: LiveWeatherInfo | null;
+  weatherLoading?: boolean;
+  weatherError?: string | null;
+  onRefreshWeather?: () => void;
+  onSetWeatherCity?: (city: string) => Promise<boolean>;
+  onUseGpsWeather?: () => Promise<boolean>;
 }
 
 export function MenuPage({
@@ -71,8 +80,17 @@ export function MenuPage({
   onTestNotification,
   atmospherePrefs = DEFAULT_ATMOSPHERE_PREFS,
   onChangeAtmosphere,
+  liveWeather,
+  weatherLoading,
+  weatherError,
+  onRefreshWeather,
+  onSetWeatherCity,
+  onUseGpsWeather,
 }: MenuPageProps) {
   const [activeTab, setActiveTab] = useState<MenuTab>(initialTab);
+  const [searchCityInput, setSearchCityInput] = useState('');
+  const [showCityInput, setShowCityInput] = useState(false);
+  const [isSearchingCity, setIsSearchingCity] = useState(false);
 
   const toggleNotifFlag = (key: 'lowNeed' | 'critical' | 'wakeUp' | 'partner') => {
     onChangeNotifPrefs({ ...notifPrefs, [key]: !notifPrefs[key] });
@@ -377,23 +395,33 @@ export function MenuPage({
                       Cozy Rain (Cat TV)
                     </h3>
                     <p className="text-xs font-medium text-amber-900/70">
-                      Raindrops sliding down the window pane
+                      {atmospherePrefs.weatherSync
+                        ? liveWeather?.isRaining
+                          ? 'Raining outside (Auto-synced)'
+                          : 'Clear outside (Auto-synced)'
+                        : 'Raindrops sliding down the window pane'}
                     </p>
                   </div>
                 </div>
 
                 <button
                   type="button"
-                  onClick={() => onChangeAtmosphere?.({ ...atmospherePrefs, rain: !atmospherePrefs.rain })}
+                  onClick={() =>
+                    onChangeAtmosphere?.({
+                      ...atmospherePrefs,
+                      rain: !atmospherePrefs.rain,
+                      weatherSync: false,
+                    })
+                  }
                   className={`flex h-7 w-12 shrink-0 items-center rounded-full p-1 transition-colors ${
-                    atmospherePrefs.rain ? 'bg-sky-500' : 'bg-amber-900/15'
+                    !atmospherePrefs.weatherSync && atmospherePrefs.rain ? 'bg-sky-500' : 'bg-amber-900/15'
                   }`}
-                  aria-pressed={atmospherePrefs.rain}
-                  aria-label="Toggle cozy rain"
+                  aria-pressed={!atmospherePrefs.weatherSync && atmospherePrefs.rain}
+                  aria-label="Toggle cozy rain manually"
                 >
                   <motion.div
                     className="h-5 w-5 rounded-full bg-white shadow-xs"
-                    animate={{ x: atmospherePrefs.rain ? 20 : 0 }}
+                    animate={{ x: !atmospherePrefs.weatherSync && atmospherePrefs.rain ? 20 : 0 }}
                     transition={{ type: 'spring', stiffness: 500, damping: 30 }}
                   />
                 </button>
@@ -402,6 +430,153 @@ export function MenuPage({
               <p className="mt-3 text-xs font-medium text-amber-900/75 leading-relaxed">
                 Watch gentle raindrops trickle down the living room window — perfect for a cozy rainy day with Oli watching his favorite Cat TV.
               </p>
+
+              {/* Outside Weather Synchronization Box */}
+              <div className="mt-4 rounded-xl border border-sky-900/12 bg-sky-50/70 p-3.5">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2.5">
+                    <span className="text-xl">🌦️</span>
+                    <div>
+                      <h4 className="text-xs font-bold text-sky-950">Sync with Outside Weather</h4>
+                      <p className="text-[11px] font-medium text-sky-900/70">
+                        Rains automatically when it rains in your city
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!atmospherePrefs.weatherSync) {
+                        if (atmospherePrefs.location) {
+                          onChangeAtmosphere?.({ ...atmospherePrefs, weatherSync: true });
+                          onRefreshWeather?.();
+                        } else {
+                          void onUseGpsWeather?.();
+                        }
+                      } else {
+                        onChangeAtmosphere?.({ ...atmospherePrefs, weatherSync: false });
+                      }
+                    }}
+                    disabled={weatherLoading}
+                    className={`flex h-7 w-12 shrink-0 items-center rounded-full p-1 transition-colors ${
+                      atmospherePrefs.weatherSync ? 'bg-sky-600' : 'bg-amber-900/15'
+                    }`}
+                    aria-pressed={atmospherePrefs.weatherSync}
+                    aria-label="Toggle real-time weather sync"
+                  >
+                    <motion.div
+                      className="h-5 w-5 rounded-full bg-white shadow-xs"
+                      animate={{ x: atmospherePrefs.weatherSync ? 20 : 0 }}
+                      transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                    />
+                  </button>
+                </div>
+
+                {atmospherePrefs.weatherSync && (
+                  <div className="mt-3 border-t border-sky-900/10 pt-3">
+                    {weatherLoading && !liveWeather ? (
+                      <div className="flex items-center gap-2 py-1 text-xs font-semibold text-sky-900">
+                        <RefreshCw className="h-3.5 w-3.5 animate-spin text-sky-600" />
+                        <span>Checking weather outside…</span>
+                      </div>
+                    ) : liveWeather ? (
+                      <div className="flex flex-col gap-2">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="flex items-center gap-1.5 text-xs font-bold text-sky-950 min-w-0">
+                            <MapPin className="h-3.5 w-3.5 text-sky-600 shrink-0" />
+                            <span className="truncate">{liveWeather.city}</span>
+                          </span>
+                          <div className="flex items-center gap-1 shrink-0">
+                            <button
+                              type="button"
+                              onClick={() => onRefreshWeather?.()}
+                              disabled={weatherLoading}
+                              className="flex items-center gap-1 rounded-lg bg-sky-100 px-2 py-1 text-[11px] font-bold text-sky-800 transition-colors hover:bg-sky-200 active:scale-95"
+                            >
+                              <RefreshCw className={`h-3 w-3 ${weatherLoading ? 'animate-spin' : ''}`} />
+                              <span>Refresh</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setShowCityInput((v) => !v)}
+                              className="rounded-lg bg-sky-100 px-2 py-1 text-[11px] font-bold text-sky-800 transition-colors hover:bg-sky-200 active:scale-95"
+                            >
+                              {showCityInput ? 'Close' : 'Change City'}
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between rounded-xl bg-white/90 p-2.5 border border-sky-900/10 shadow-2xs">
+                          <div className="flex items-center gap-2.5">
+                            <span className="text-2xl">{liveWeather.emoji}</span>
+                            <div>
+                              <p className="text-xs font-bold text-sky-950">
+                                {liveWeather.label} • {Math.round(liveWeather.temperatureC)}°C
+                              </p>
+                              <p className="text-[11px] font-medium text-sky-900/70">
+                                {liveWeather.isRaining
+                                  ? '🌧️ Rain sliding down the window pane'
+                                  : '☀️ Dry outside — window is clear'}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ) : null}
+
+                    {(!atmospherePrefs.location || showCityInput) && (
+                      <div className="mt-3 flex flex-col gap-2">
+                        <button
+                          type="button"
+                          onClick={() => void onUseGpsWeather?.()}
+                          disabled={weatherLoading}
+                          className="flex items-center justify-center gap-1.5 rounded-xl bg-sky-600 px-3 py-2 text-xs font-bold text-white shadow-xs hover:bg-sky-500 active:scale-95"
+                        >
+                          <Navigation className="h-3.5 w-3.5" />
+                          <span>Use My Current Location</span>
+                        </button>
+
+                        <form
+                          onSubmit={async (e) => {
+                            e.preventDefault();
+                            if (!searchCityInput.trim()) return;
+                            setIsSearchingCity(true);
+                            const ok = await onSetWeatherCity?.(searchCityInput.trim());
+                            setIsSearchingCity(false);
+                            if (ok) {
+                              setSearchCityInput('');
+                              setShowCityInput(false);
+                            }
+                          }}
+                          className="flex items-center gap-1.5"
+                        >
+                          <input
+                            type="text"
+                            value={searchCityInput}
+                            onChange={(e) => setSearchCityInput(e.target.value)}
+                            placeholder="Or type a city (e.g. Paris, Tokyo, London)"
+                            className="flex-1 rounded-xl border border-sky-900/20 bg-white px-2.5 py-1.5 text-xs text-sky-950 placeholder:text-sky-900/40 focus:border-sky-500 focus:outline-none"
+                          />
+                          <button
+                            type="submit"
+                            disabled={isSearchingCity || !searchCityInput.trim()}
+                            className="rounded-xl bg-sky-700 px-3 py-1.5 text-xs font-bold text-white transition-opacity disabled:opacity-50 active:scale-95"
+                          >
+                            {isSearchingCity ? '…' : 'Set'}
+                          </button>
+                        </form>
+                      </div>
+                    )}
+
+                    {weatherError && (
+                      <p className="mt-2 text-[11px] font-semibold text-rose-600">
+                        ⚠️ {weatherError}
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )}

@@ -7,6 +7,17 @@ export interface ReleaseEntry {
 
 export const CHANGELOG: ReleaseEntry[] = [
   {
+    version: 'v0.20.1',
+    date: '2026-11-09',
+    title: 'Outside Weather Sync for Cozy Rain 🌦️🌧️',
+    changes: [
+      'Oli can now match the real weather outside your window! Turn on "Sync with Outside Weather" to have gentle rain slide down the window whenever it rains in your area.',
+      'Tap "Use My Current Location" or type any city name in the world (e.g. Paris, Tokyo, London, Seattle).',
+      'The Ambience menu shows the current temperature and outside sky conditions with a quick refresh button.',
+      'You can still turn on Cozy Rain manually anytime if you want rain regardless of the weather.',
+    ],
+  },
+  {
     version: 'v0.20.0',
     date: '2026-11-09',
     title: 'Real-Time Atmosphere & Cozy Rain Mode 🌅🌧️',

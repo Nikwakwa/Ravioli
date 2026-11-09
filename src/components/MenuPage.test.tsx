@@ -106,6 +106,42 @@ describe('MenuPage Server Rendering & Content', () => {
     expect(html).toContain('Real-Time Atmosphere');
     expect(html).toContain('Golden Hour Sunset');
     expect(html).toContain('Cozy Rain (Cat TV)');
+    expect(html).toContain('Sync with Outside Weather');
+  });
+
+  it('renders live outside weather info when weather sync is active', () => {
+    const html = renderToString(
+      <MenuPage
+        onClose={vi.fn()}
+        initialTab="atmosphere"
+        live={mockLive}
+        onTogglePause={vi.fn()}
+        notifPrefs={defaultNotifPrefs}
+        onToggleMasterNotifications={vi.fn()}
+        onChangeNotifPrefs={vi.fn()}
+        onTestNotification={vi.fn()}
+        atmospherePrefs={{
+          mode: 'auto',
+          rain: false,
+          weatherSync: true,
+          location: { name: 'Seattle', latitude: 47.6, longitude: -122.33 },
+        }}
+        liveWeather={{
+          city: 'Seattle',
+          temperatureC: 13,
+          weatherCode: 61,
+          label: 'Light rain',
+          emoji: '🌧️',
+          isRaining: true,
+          fetchedAt: Date.now(),
+        }}
+      />
+    );
+
+    expect(html).toContain('Sync with Outside Weather');
+    expect(html).toContain('Seattle');
+    expect(html).toContain('Light rain');
+    expect(html).toContain('Rain sliding down the window pane');
   });
 
   it('renders pause clock controls when initialTab is pause', () => {
