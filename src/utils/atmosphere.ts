@@ -2,6 +2,7 @@
  * Automatic Real-Time Atmosphere for Luxembourg City.
  * Dynamically tracks real sunrise, sunset, and rain data with zero manual configuration.
  */
+import { timeoutSignal } from './net';
 
 export type TimeOfDay = 'day' | 'sunset' | 'night';
 
@@ -23,15 +24,36 @@ export interface LiveLuxembourgData {
 
 const LS_LUXEMBOURG_CACHE = 'ravioli:v1:luxembourg_atmosphere';
 
+/** Rain reports older than this are ignored, so an old shower never sticks to the window. */
+export const RAIN_MAX_AGE_MS = 3 * 60 * 60 * 1000;
+
 export function loadCachedLuxembourgData(): LiveLuxembourgData | null {
   try {
     if (typeof window === 'undefined' || !window.localStorage) return null;
     const raw = window.localStorage.getItem(LS_LUXEMBOURG_CACHE);
     if (!raw) return null;
-    return JSON.parse(raw) as LiveLuxembourgData;
+    const p = JSON.parse(raw) as Partial<LiveLuxembourgData> | null;
+    if (!p || typeof p !== 'object') return null;
+    if (typeof p.fetchedAt !== 'number' || !Number.isFinite(p.fetchedAt)) return null;
+    return {
+      temperatureC: typeof p.temperatureC === 'number' && Number.isFinite(p.temperatureC) ? p.temperatureC : 15,
+      weatherCode: typeof p.weatherCode === 'number' && Number.isFinite(p.weatherCode) ? p.weatherCode : 0,
+      isRaining: p.isRaining === true,
+      isDay: p.isDay === true,
+      sunrise: typeof p.sunrise === 'string' ? p.sunrise : '',
+      sunset: typeof p.sunset === 'string' ? p.sunset : '',
+      fetchedAt: p.fetchedAt,
+    };
   } catch {
     return null;
   }
+}
+
+/** True only while the latest weather report is recent and says it is raining. */
+export function isRainingNow(data: LiveLuxembourgData | null | undefined, nowMs: number = Date.now()): boolean {
+  if (!data?.isRaining) return false;
+  const age = nowMs - data.fetchedAt;
+  return age >= 0 && age < RAIN_MAX_AGE_MS;
 }
 
 export function saveCachedLuxembourgData(data: LiveLuxembourgData): void {
@@ -59,35 +81,40 @@ export function isRainingFromWeather(
 
 /**
  * Solar position approximation for Luxembourg (latitude: 49.6116, longitude: 6.1319).
- * Used as an immediate offline fallback before any API response is received.
+ * Used as an offline fallback before any API response is received.
+ * Computed in UTC, so it stays right in summer time and on phones set to any time zone.
  */
 export function calculateLuxembourgSunTimes(date: Date = new Date()): { sunrise: Date; sunset: Date } {
   const safeDate = Number.isFinite(date.getTime()) ? date : new Date();
-  const startOfYear = new Date(Date.UTC(safeDate.getUTCFullYear(), 0, 0));
-  const diff = safeDate.getTime() - startOfYear.getTime();
-  const dayOfYear = Math.floor(diff / (1000 * 60 * 60 * 24));
+  const dayStartUtc = Date.UTC(safeDate.getUTCFullYear(), safeDate.getUTCMonth(), safeDate.getUTCDate());
+  const startOfYear = Date.UTC(safeDate.getUTCFullYear(), 0, 0);
+  const dayOfYear = Math.floor((dayStartUtc - startOfYear) / 86_400_000);
 
-  // Approximate solar declination in radians
+  // Approximate solar declination (radians)
   const declination = -0.4093 * Math.cos(((2 * Math.PI) / 365) * (dayOfYear + 10));
   const latRad = (LUXEMBOURG_COORDS.latitude * Math.PI) / 180;
 
-  const cosHourAngle = -Math.tan(latRad) * Math.tan(declination);
+  // Sun's upper edge on the horizon, including atmospheric refraction (-0.833°)
+  const horizon = (-0.833 * Math.PI) / 180;
+  const cosHourAngle =
+    (Math.sin(horizon) - Math.sin(latRad) * Math.sin(declination)) / (Math.cos(latRad) * Math.cos(declination));
   const hourAngle = Math.acos(Math.max(-1, Math.min(1, cosHourAngle)));
-  const daylightHalfHours = ((hourAngle * 180) / Math.PI) / 15;
+  const halfDayHours = (hourAngle * 180) / Math.PI / 15;
 
-  // Luxembourg time zone offset: UTC+1 in winter (CET), UTC+2 in summer (CEST)
-  // Solar noon ~ 12:35 local CET
-  const solarNoonHours = 12.6;
-  const sunriseHours = solarNoonHours - daylightHalfHours;
-  const sunsetHours = solarNoonHours + daylightHalfHours;
+  // Equation of time (minutes) shifts solar noon through the year
+  const b = ((2 * Math.PI) / 365) * (dayOfYear - 81);
+  const equationOfTimeMin = 9.87 * Math.sin(2 * b) - 7.53 * Math.cos(b) - 1.5 * Math.sin(b);
+  const solarNoonUtcHours = 12 - LUXEMBOURG_COORDS.longitude / 15 - equationOfTimeMin / 60;
 
-  const sunrise = new Date(safeDate);
-  sunrise.setHours(Math.floor(sunriseHours), Math.round((sunriseHours % 1) * 60), 0, 0);
+  const toDate = (hours: number) => new Date(dayStartUtc + Math.round(hours * 3_600_000));
+  return {
+    sunrise: toDate(solarNoonUtcHours - halfDayHours),
+    sunset: toDate(solarNoonUtcHours + halfDayHours),
+  };
+}
 
-  const sunset = new Date(safeDate);
-  sunset.setHours(Math.floor(sunsetHours), Math.round((sunsetHours % 1) * 60), 0, 0);
-
-  return { sunrise, sunset };
+function sameLocalDay(a: Date, b: Date): boolean {
+  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 }
 
 /**
@@ -106,14 +133,19 @@ export function resolveTimeOfDay(
   let sunriseDate: Date;
   let sunsetDate: Date;
 
+  const apiSunrise = typeof sunTimes?.sunrise === 'string' ? new Date(sunTimes.sunrise) : null;
+  const apiSunset = typeof sunTimes?.sunset === 'string' ? new Date(sunTimes.sunset) : null;
+
+  // Only trust saved sunrise/sunset for the same day: yesterday's times would turn today into night.
   if (
-    sunTimes?.sunrise &&
-    sunTimes?.sunset &&
-    Number.isFinite(new Date(sunTimes.sunrise).getTime()) &&
-    Number.isFinite(new Date(sunTimes.sunset).getTime())
+    apiSunrise &&
+    apiSunset &&
+    Number.isFinite(apiSunrise.getTime()) &&
+    Number.isFinite(apiSunset.getTime()) &&
+    sameLocalDay(apiSunrise, safeDate)
   ) {
-    sunriseDate = new Date(sunTimes.sunrise);
-    sunsetDate = new Date(sunTimes.sunset);
+    sunriseDate = apiSunrise;
+    sunsetDate = apiSunset;
   } else {
     const calc = calculateLuxembourgSunTimes(safeDate);
     sunriseDate = calc.sunrise;
@@ -140,10 +172,16 @@ export function resolveTimeOfDay(
   return 'night';
 }
 
+function toIsoTime(value: unknown): string {
+  if (typeof value === 'number' && Number.isFinite(value)) return new Date(value * 1000).toISOString();
+  if (typeof value === 'string' && Number.isFinite(new Date(value).getTime())) return value;
+  return '';
+}
+
 export async function fetchLuxembourgAtmosphere(): Promise<LiveLuxembourgData> {
   const { latitude, longitude } = LUXEMBOURG_COORDS;
-  const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,precipitation,rain,showers,weather_code,is_day&daily=sunrise,sunset&timezone=auto`;
-  const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,precipitation,rain,showers,weather_code,is_day&daily=sunrise,sunset&timezone=auto&timeformat=unixtime`;
+  const res = await fetch(url, { signal: timeoutSignal(8000) });
   if (!res.ok) {
     throw new Error(`Weather request failed with status ${res.status}`);
   }
@@ -151,16 +189,18 @@ export async function fetchLuxembourgAtmosphere(): Promise<LiveLuxembourgData> {
   const current = data.current ?? {};
   const daily = data.daily ?? {};
 
-  const code = Number(current.weather_code ?? 0);
-  const temp = Number(current.temperature_2m ?? 15);
-  const precip = Number(current.precipitation ?? 0);
-  const rain = Number(current.rain ?? 0);
-  const showers = Number(current.showers ?? 0);
+  const finite = (v: unknown, fallback: number) => (Number.isFinite(Number(v)) && v !== null ? Number(v) : fallback);
+  const code = finite(current.weather_code, 0);
+  const temp = finite(current.temperature_2m, 15);
+  const precip = finite(current.precipitation, 0);
+  const rain = finite(current.rain, 0);
+  const showers = finite(current.showers, 0);
   const isDay = Boolean(current.is_day === 1);
 
   const isRaining = isRainingFromWeather(code, precip, rain, showers);
-  const sunrise = daily.sunrise?.[0] ?? '';
-  const sunset = daily.sunset?.[0] ?? '';
+  // Unix timestamps are time-zone proof (correct even if the phone is set to another zone).
+  const sunrise = toIsoTime(daily.sunrise?.[0]);
+  const sunset = toIsoTime(daily.sunset?.[0]);
 
   const live: LiveLuxembourgData = {
     temperatureC: temp,

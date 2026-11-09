@@ -326,6 +326,8 @@ function loadActiveWhim(): CatWhim | null {
       p &&
       typeof p.id === 'string' &&
       typeof p.actionId === 'string' &&
+      (p.actionId === PET_ACTION_ID || Boolean(actionById(p.actionId))) &&
+      Number.isFinite(p.expiresAt) &&
       typeof p.label === 'string' &&
       typeof p.emoji === 'string' &&
       typeof p.expiresAt === 'number'
@@ -410,6 +412,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
   noticeRef.current = onNotice;
 
   const [ready, setReady] = useState(false);
+  const [bootError, setBootError] = useState(false);
   const [base, setBase] = useState<CatState | null>(null);
   const [log, setLog] = useState<ActivityEntry[]>([]);
   const [mode, setMode] = useState<SyncMode>('local');
@@ -611,7 +614,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
       })
       .catch((err) => {
         console.error('[useCatGame] boot failed', err);
-        noticeRef.current({ text: 'Could not load Oli. Please reload the app.', tone: 'warn' });
+        if (!cancelled) setBootError(true);
       });
 
     return () => {
@@ -1471,7 +1474,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
     const mutator = (b: CatState): CatState => ({ ...materialize(b, Date.now()), is_sleeping: target });
     const message = target ? `Tucked ${live.name} in for a cozy nap` : `Gently woke ${live.name} up from his nap`;
     void commit(mutator, SLEEP_ACTION_ID, message);
-  }, [live, busy, player, playEvent, commit, triggerRefusal]);
+  }, [live, busy, player, playEvent, commit, triggerRefusal, setSpot]);
 
   /** Freezes or unfreezes time drift so travel/flights don't cause unintended decay or neglect. */
   const togglePause = useCallback(() => {
@@ -1554,6 +1557,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
 
   return {
     ready,
+    bootError,
     live,
     mood,
     tummyAche,

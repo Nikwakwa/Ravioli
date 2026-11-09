@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { APP_VERSION } from '../data/changelog';
+import { timeoutSignal } from '../utils/net';
 
 const CHECK_INTERVAL_MS = 60_000;
 export const VERSION_RE = /^v?(\d{1,3}\.\d{1,3}\.\d{1,3})$/;
@@ -41,7 +42,7 @@ export function useVersionCheck() {
       const res = await fetch(`${baseUrl}version.json?t=${Date.now()}`, {
         cache: 'no-store',
         headers: { pragma: 'no-cache', 'cache-control': 'no-cache' },
-        signal: AbortSignal.timeout(6000),
+        signal: timeoutSignal(6000),
       });
       if (!res.ok) return;
       const data = (await res.json()) as { version?: unknown };

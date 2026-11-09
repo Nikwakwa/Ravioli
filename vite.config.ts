@@ -15,6 +15,9 @@ export default defineConfig({
     react(),
     tailwindcss(),
     {
+      // The one and only Content Security Policy, added to the built app.
+      // (Kept out of dev so Vite's hot reload keeps working; never add a second copy in index.html —
+      // browsers enforce every policy at once, so the strictest copy silently wins.)
       name: 'ravioli-csp',
       apply: 'build',
       transformIndexHtml(html) {
@@ -24,7 +27,7 @@ export default defineConfig({
           "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
           "font-src 'self' https://fonts.gstatic.com",
           "img-src 'self' data: blob:",
-          "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
+          "connect-src 'self' https://api.open-meteo.com https://*.supabase.co wss://*.supabase.co",
           "worker-src 'self' blob:",
           "manifest-src 'self'",
           "object-src 'none'",
@@ -81,6 +84,23 @@ export default defineConfig({
         navigateFallback: `${base}index.html`,
         // Never cache Supabase API / realtime traffic or version.json.
         navigateFallbackDenylist: [/^\/rest\//, /^\/realtime\//, /version\.json$/],
+        // Keep the Fredoka / Nunito fonts available offline so the app looks the same without signal.
+        runtimeCaching: [
+          {
+            urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
+            handler: 'StaleWhileRevalidate',
+            options: { cacheName: 'google-fonts-stylesheets' },
+          },
+          {
+            urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'google-fonts-webfonts',
+              expiration: { maxEntries: 20, maxAgeSeconds: 60 * 60 * 24 * 365 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+        ],
       },
     }),
   ],

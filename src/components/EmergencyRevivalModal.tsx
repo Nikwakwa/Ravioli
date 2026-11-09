@@ -26,6 +26,9 @@ export function EmergencyRevivalModal({
       >
         <motion.div
           key="revival-card"
+          role="alertdialog"
+          aria-modal="true"
+          aria-labelledby="revival-title"
           initial={{ opacity: 0, scale: 0.9, y: 16 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.92, y: 12 }}
@@ -54,7 +57,7 @@ export function EmergencyRevivalModal({
 
           {/* Heading */}
           <div className="mb-3 text-center">
-            <h2 className="font-display text-lg font-black tracking-tight text-amber-100">
+            <h2 id="revival-title" className="font-display text-lg font-black tracking-tight text-amber-100">
               Oli Needs You 💔
             </h2>
             <p className="mt-1 text-xs font-semibold leading-relaxed text-amber-200/80">

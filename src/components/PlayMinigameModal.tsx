@@ -563,6 +563,9 @@ export function PlayMinigameModal({
       >
         <motion.div
           key="minigame-card"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="minigame-title"
           initial={{ opacity: 0, scale: 0.88, y: 18 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.9, y: 12 }}
@@ -577,7 +580,7 @@ export function PlayMinigameModal({
               </span>
               <div>
                 <div className="flex items-center gap-1.5">
-                  <h2 className="font-display text-sm font-extrabold leading-tight text-amber-950">
+                  <h2 id="minigame-title" className="font-display text-sm font-extrabold leading-tight text-amber-950">
                     {headerTitle}
                   </h2>
                   {whimActive && (
@@ -594,6 +597,8 @@ export function PlayMinigameModal({
             </div>
 
             <div className="flex items-center gap-1">
+              {/* Skip only while a round is live: once scored, it would throw away the earned result */}
+              {roundFeedback === null && !finished && (
               <button
                 type="button"
                 onClick={() => onComplete(1)}
@@ -603,6 +608,7 @@ export function PlayMinigameModal({
                 <FastForward className="h-3 w-3" />
                 <span>Skip</span>
               </button>
+              )}
               <button
                 type="button"
                 onClick={onCancel}

@@ -4,6 +4,14 @@ All updates to **Oli** are listed here.
 
 ---
 
+## `v0.20.7` — 2026-11-09
+### Weather & Bug Fixes 🌦️
+- Live Luxembourg weather and sunset now actually work in the app.
+- One tap on Oli now counts as one pet (no more double Joy).
+- Skip no longer erases a finished minigame score.
+
+---
+
 ## `v0.20.6` — 2026-11-09
 ### Security & Stability Hardening 🛡️
 - Hardened app security policy against plugin and injection risks.
