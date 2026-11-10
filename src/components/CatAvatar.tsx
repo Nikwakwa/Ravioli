@@ -1,6 +1,7 @@
 import { AnimatePresence, motion, type TargetAndTransition, type Transition } from 'framer-motion';
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import type { CatAnimation, Mood } from '../types';
+import { HeadAccessories } from './CatAccessories';
 
 /**
  * Oli — hand-drawn SVG ginger cat.
@@ -488,6 +489,8 @@ function Head({
         <path d="M122 105 L150 106" />
         <path d="M121 109 L146 115" />
       </motion.g>
+
+      <HeadAccessories />
     </g>
   );
 }
@@ -538,6 +541,8 @@ function BackOfHead({ earDroop, earTwitch }: { earDroop: boolean; earTwitch: boo
         <path d="M73 52 Q77 64 84 72" />
         <path d="M127 52 Q123 64 116 72" />
       </g>
+
+      <HeadAccessories back />
     </g>
   );
 }

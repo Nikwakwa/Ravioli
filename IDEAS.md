@@ -17,23 +17,7 @@ When an idea gets picked up, move it into [ROADMAP.md](ROADMAP.md) as a new phas
 
 ---
 
-## 🎀 2. Dress-Up & Cute Accessories (Oli's Closet)
-
-**The idea:** Let Athina customize Oli with adorable, lightweight accessories that appear on his avatar across all his cozy spots.
-
-### What it adds
-- **Cute Accessories:**
-  - Red gentleman bowtie
-  - Flower crown / floral collar
-  - Cozy knit winter scarf
-  - Tiny detective cap
-  - Cool sunglasses when lounging on the sunny balcony
-- **Closet Wardrobe:** A simple hanger icon opens a cozy closet drawer where you can equip or remove items anytime.
-- **Unlockable Rewards:** Earn new accessories by keeping up care streaks, completing Churu point goals, or reaching co-op bond milestones.
-
----
-
-## 🍼 3. Growing Up: From Baby Oli to Adult Oli (Tamagotchi-style life stages)
+## 🍼 2. Growing Up: From Baby Oli to Adult Oli (Tamagotchi-style life stages)
 
 **The idea:** Oli starts as a tiny baby kitten and grows up through a few life stages, like a Tamagotchi. Once he becomes an adult he **stays an adult forever**, just like the real Oli today. He never gets old and never dies of old age.
 

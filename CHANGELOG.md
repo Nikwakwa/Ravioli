@@ -4,6 +4,14 @@ All updates to **Oli** are listed here.
 
 ---
 
+## `v0.22.0` — 2026-11-10
+### Oli's Closet 🎀
+- Oli has a closet: tap the hanger to dress him up.
+- Bowtie is free. Earn Churus to unlock 4 more accessories.
+- Accessories show in every room and pose.
+
+---
+
 ## `v0.21.0` — 2026-11-10
 ### Purrs, Chirps & Cozy Sounds 🐾🔊
 - Oli now purrs when petted and chirps when he moves or wants something.

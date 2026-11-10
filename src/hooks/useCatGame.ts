@@ -59,6 +59,7 @@ import {
   type ParticleKind,
 } from '../data/actions';
 import { celebrate, vibrate } from '../utils/feedback';
+import { recordChurusEarned } from '../utils/closet';
 import { playActionSound, playSound } from '../utils/sound';
 import {
   evaluateStatThresholds,
@@ -474,6 +475,17 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
       setChuruProgress(result.progress);
       if (result.tubesEarned > 0) {
         updateChuruStash((c) => c + result.tubesEarned);
+        // Earned Churus also unlock accessories in Oli's closet.
+        const unlocked = recordChurusEarned(result.tubesEarned);
+        if (unlocked.length > 0) {
+          window.setTimeout(() => {
+            playSound('chime');
+            noticeRef.current({
+              text: `🎀 New in Oli's closet: ${unlocked.map((a) => a.name).join(' & ')}!`,
+              tone: 'info',
+            });
+          }, 2200);
+        }
         return `+${result.tubesEarned} Churu 🍬!${result.dailyLimitReached ? ' (last one today)' : ''}`;
       }
       if (result.dailyLimitReached) return 'Churu limit reached for today 🍬';

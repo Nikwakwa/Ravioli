@@ -7,6 +7,16 @@ export interface ReleaseEntry {
 
 export const CHANGELOG: ReleaseEntry[] = [
   {
+    version: 'v0.22.0',
+    date: '2026-11-10',
+    title: 'Oli’s Closet 🎀',
+    changes: [
+      'Oli has a closet: tap the hanger to dress him up.',
+      'Bowtie is free. Earn Churus to unlock 4 more accessories.',
+      'Accessories show in every room and pose.',
+    ],
+  },
+  {
     version: 'v0.21.0',
     date: '2026-11-10',
     title: 'Purrs, Chirps & Cozy Sounds 🐾🔊',
