@@ -2,6 +2,7 @@ import { AnimatePresence, MotionConfig, motion } from 'framer-motion';
 import { RefreshCw } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActionDock } from './components/ActionDock';
+import { ClosetDrawer, HangerIcon, useCloset } from './components/ClosetDrawer';
 import { EmergencyRevivalModal } from './components/EmergencyRevivalModal';
 import { FloatingEffects } from './components/FloatingEffects';
 import { MenuPage, type MenuTab } from './components/MenuPage';
@@ -52,6 +53,9 @@ const SCENE_FLOOR_FOCUS_Y = { living_room: 418, balcony: 458 } as const;
 
 export function App() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [closetOpen, setClosetOpen] = useState(false);
+  const closeCloset = useCallback(() => setClosetOpen(false), []);
+  const closetHasNew = useCloset().hasNew;
   const [menuTab, setMenuTab] = useState<MenuTab>('rules');
   const [notifPrefs, setNotifPrefs] = useState<NotificationPrefs>(() => loadNotificationPrefs());
   const [notice, setNotice] = useState<Notice | null>(null);
@@ -486,6 +490,24 @@ export function App() {
           />
           {scene === 'living_room' && <RoomMesses messes={messes} onClean={cleanMess} />}
 
+          {/* Oli's Closet button */}
+          <button
+            type="button"
+            onClick={() => setClosetOpen(true)}
+            title="Oli's Closet"
+            aria-label="Open Oli's Closet"
+            className={`pointer-events-auto absolute right-3 bottom-1.5 z-20 flex h-9 w-9 items-center justify-center rounded-full border shadow-md backdrop-blur-md transition-all active:scale-95 ${
+              isNight
+                ? 'border-white/10 bg-slate-900/80 text-amber-300'
+                : 'border-amber-900/12 bg-white/90 text-amber-700'
+            }`}
+          >
+            <HangerIcon className="h-4.5 w-4.5" />
+            {closetHasNew && (
+              <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-pink-500 ring-2 ring-white" />
+            )}
+          </button>
+
           {/* Quick Room Switcher Pill (Living Room / Balcony) */}
           <div
             ref={switcherRef}
@@ -575,6 +597,9 @@ export function App() {
         />
 
         <EmergencyRevivalModal live={live} onRevive={reviveOli} />
+
+        {/* Oli's Closet (dress-up drawer) */}
+        <AnimatePresence>{closetOpen && <ClosetDrawer onClose={closeCloset} />}</AnimatePresence>
 
         {/* Separate Menu Page (Rules, Vacation Pause, Version/Updates, Notifications) */}
         <AnimatePresence>
