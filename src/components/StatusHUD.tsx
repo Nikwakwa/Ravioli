@@ -72,7 +72,7 @@ export function StatusHUD({
                   emoji: '🧹',
                 }
               : MOOD_BADGE[mood];
-  const night = live.isSleeping || isNight;
+  const night = isNight;
 
   const surface = night
     ? 'bg-slate-900/80 text-amber-50 border-white/10'

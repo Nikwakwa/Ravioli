@@ -7,6 +7,15 @@ export interface ReleaseEntry {
 
 export const CHANGELOG: ReleaseEntry[] = [
   {
+    version: 'v0.20.8',
+    date: '2026-11-10',
+    title: 'Daytime Naps Stay Sunny ☀️😴',
+    changes: [
+      'Daytime naps no longer turn the screen dark: the light follows the real clock.',
+      'At night the whole balcony goes dark now, not just the sky.',
+    ],
+  },
+  {
     version: 'v0.20.7',
     date: '2026-11-09',
     title: 'Weather & Bug Fixes 🌦️',

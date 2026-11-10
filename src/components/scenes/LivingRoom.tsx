@@ -18,7 +18,6 @@ import type { TimeOfDay } from '../../utils/atmosphere';
  * - Empty Amazon delivery cardboard box on the floor ("If it fits, I sits!")
  */
 export function LivingRoom({
-  sleeping,
   fountainBoost,
   timeOfDay = 'day',
   isRaining = false,
@@ -32,7 +31,6 @@ export function LivingRoom({
   catAnimationKey = 0,
   onPetCat,
 }: {
-  sleeping: boolean;
   fountainBoost: boolean;
   timeOfDay?: TimeOfDay;
   isRaining?: boolean;
@@ -46,8 +44,9 @@ export function LivingRoom({
   catAnimationKey?: number;
   onPetCat?: () => void;
 }) {
-  const isNight = sleeping || timeOfDay === 'night';
-  const isSunset = !sleeping && timeOfDay === 'sunset';
+  // Lighting follows the real time of day, even when Oli naps during the day.
+  const isNight = timeOfDay === 'night';
+  const isSunset = timeOfDay === 'sunset';
   return (
     <svg viewBox="0 0 400 600" preserveAspectRatio="xMidYMid slice" className="pointer-events-none absolute inset-0 h-full w-full">
       <defs>

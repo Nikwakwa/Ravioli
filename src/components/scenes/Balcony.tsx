@@ -43,16 +43,16 @@ function PansyBloom({
   scale = 1,
   rotate = 0,
   variant = 'yellow-top',
-  sleeping = false,
+  night = false,
 }: {
   cx: number;
   cy: number;
   scale?: number;
   rotate?: number;
   variant?: 'yellow-top' | 'purple-top';
-  sleeping?: boolean;
+  night?: boolean;
 }) {
-  const dim = sleeping ? 0.68 : 1;
+  const dim = night ? 0.68 : 1;
   const purple = variant === 'purple-top' ? '#581c87' : '#6b21a8';
   const yellow = variant === 'yellow-top' ? '#facc15' : '#eab308';
   return (
@@ -79,13 +79,13 @@ function PansyBloom({
 function HangingPlanterBox({
   xLeft,
   xRight,
-  sleeping,
+  night,
   hasBurgundyLeft = false,
   pansies,
 }: {
   xLeft: number;
   xRight: number;
-  sleeping: boolean;
+  night: boolean;
   hasBurgundyLeft?: boolean;
   pansies: { xRatio: number; dy: number; scale?: number; rotate?: number; variant?: 'yellow-top' | 'purple-top' }[];
 }) {
@@ -96,12 +96,12 @@ function HangingPlanterBox({
   const yBot = 69;
   const inset = 2.4;
 
-  const bodySide = sleeping ? '#464a56' : '#5c6169';
-  const rimFront = sleeping ? '#676c7a' : '#858b94';
-  const rimTop = sleeping ? '#797f8f' : '#9aa0a9';
-  const soilFill = sleeping ? '#252129' : '#3d2f24';
-  const hookFill = sleeping ? '#8a8e9e' : '#dcd6ca';
-  const hookStroke = sleeping ? '#575b6b' : '#9e9688';
+  const bodySide = night ? '#464a56' : '#5c6169';
+  const rimFront = night ? '#676c7a' : '#858b94';
+  const rimTop = night ? '#797f8f' : '#9aa0a9';
+  const soilFill = night ? '#252129' : '#3d2f24';
+  const hookFill = night ? '#8a8e9e' : '#dcd6ca';
+  const hookStroke = night ? '#575b6b' : '#9e9688';
 
   const hookXs = [xLeft + 13, xRight - 13];
   const [boxLeftPx, boxTopPy] = proj(xLeft, yRimTop, zFront);
@@ -125,9 +125,9 @@ function HangingPlanterBox({
       <g>
         {hasBurgundyLeft && (
           <g>
-            <circle cx={boxLeftPx + 8} cy={boxTopPy - 7.5} r="7.8" fill={sleeping ? '#3e2334' : '#681e34'} />
-            <circle cx={boxLeftPx + 17} cy={boxTopPy - 10} r="7" fill={sleeping ? '#4b293d' : '#7f2640'} />
-            <circle cx={boxLeftPx + 13} cy={boxTopPy - 3.5} r="6.2" fill={sleeping ? '#361e2d' : '#541628'} />
+            <circle cx={boxLeftPx + 8} cy={boxTopPy - 7.5} r="7.8" fill={night ? '#3e2334' : '#681e34'} />
+            <circle cx={boxLeftPx + 17} cy={boxTopPy - 10} r="7" fill={night ? '#4b293d' : '#7f2640'} />
+            <circle cx={boxLeftPx + 13} cy={boxTopPy - 3.5} r="6.2" fill={night ? '#361e2d' : '#541628'} />
           </g>
         )}
         {/* Varied organic green leaf clusters */}
@@ -149,7 +149,7 @@ function HangingPlanterBox({
                 cy={ly}
                 r={leaf.r}
                 fill={
-                  sleeping
+                  night
                     ? leaf.shade
                       ? '#354f3e'
                       : '#2a4032'
@@ -162,7 +162,7 @@ function HangingPlanterBox({
                 cx={lx + (idx % 2 === 0 ? 3.2 : -3.2)}
                 cy={ly + 3.8}
                 r={leaf.r * 0.68}
-                fill={sleeping ? '#23362a' : '#3d6230'}
+                fill={night ? '#23362a' : '#3d6230'}
               />
             </g>
           );
@@ -177,7 +177,7 @@ function HangingPlanterBox({
             scale={p.scale ?? 0.95}
             rotate={p.rotate ?? 0}
             variant={p.variant ?? (idx % 2 === 0 ? 'yellow-top' : 'purple-top')}
-            sleeping={sleeping}
+            night={night}
           />
         ))}
       </g>
@@ -237,7 +237,7 @@ function HangingPlanterBox({
           [xLeft + inset, yBot, zFront + inset],
         )}
         fill="url(#bal-planter-front)"
-        stroke={sleeping ? '#3e424e' : '#525760'}
+        stroke={night ? '#3e424e' : '#525760'}
         strokeWidth="0.9"
         strokeLinejoin="round"
       />
@@ -270,7 +270,7 @@ function HangingPlanterBox({
           [xLeft - 0.8, yRimBot, zFront - 0.6],
         )}
         fill={rimFront}
-        stroke={sleeping ? '#4b4f5c' : '#636872'}
+        stroke={night ? '#4b4f5c' : '#636872'}
         strokeWidth="0.7"
       />
       {/* Subtle highlight along top front edge */}
@@ -279,7 +279,7 @@ function HangingPlanterBox({
         y1={proj(xLeft, yRimTop, zFront - 0.8)[1]}
         x2={proj(xRight, yRimTop, zFront - 0.8)[0]}
         y2={proj(xRight, yRimTop, zFront - 0.8)[1]}
-        stroke={sleeping ? '#9197a8' : '#b7bec7'}
+        stroke={night ? '#9197a8' : '#b7bec7'}
         strokeWidth="0.9"
       />
 
@@ -290,7 +290,7 @@ function HangingPlanterBox({
         rx="4.2"
         ry="2.3"
         transform={`rotate(18 ${boxLeftPx + boxWidthPx * 0.31} ${boxTopPy + 1.8})`}
-        fill={sleeping ? '#2c4435' : '#538040'}
+        fill={night ? '#2c4435' : '#538040'}
       />
       <ellipse
         cx={boxLeftPx + boxWidthPx * 0.72}
@@ -298,7 +298,7 @@ function HangingPlanterBox({
         rx="3.8"
         ry="2.1"
         transform={`rotate(-15 ${boxLeftPx + boxWidthPx * 0.72} ${boxTopPy + 1.6})`}
-        fill={sleeping ? '#2c4435' : '#538040'}
+        fill={night ? '#2c4435' : '#538040'}
       />
 
       {/* 6. Two Compact Curved Metal Hanging Clips hooking cleanly over the steel handrail */}
@@ -319,7 +319,7 @@ function HangingPlanterBox({
               strokeWidth="0.75"
               strokeLinejoin="round"
             />
-            <circle cx={midX} cy={clipBotY - 2.2} r="0.8" fill={sleeping ? '#555868' : '#7d766a'} />
+            <circle cx={midX} cy={clipBotY - 2.2} r="0.8" fill={night ? '#555868' : '#7d766a'} />
           </g>
         );
       })}
@@ -336,13 +336,13 @@ function FoldingBistroChair({
   xSeatInner,
   zFront,
   zBack,
-  sleeping,
+  night,
 }: {
   side: 'left' | 'right';
   xSeatInner: number;
   zFront: number;
   zBack: number;
-  sleeping: boolean;
+  night: boolean;
 }) {
   const seatDepth = 25;
   const xSeatOuter = side === 'left' ? xSeatInner - seatDepth : xSeatInner + seatDepth;
@@ -350,11 +350,11 @@ function FoldingBistroChair({
   const ySeat = 41;
   const yBackTop = 78;
 
-  const metalFar = sleeping ? '#1a1c24' : '#262930';
-  const metalNear = sleeping ? '#12141a' : '#1b1e24';
-  const woodStroke = sleeping ? '#4c4657' : '#6c5f50';
-  const woodSide = sleeping ? '#575063' : '#7d6e5d';
-  const slatPalette = sleeping
+  const metalFar = night ? '#1a1c24' : '#262930';
+  const metalNear = night ? '#12141a' : '#1b1e24';
+  const woodStroke = night ? '#4c4657' : '#6c5f50';
+  const woodSide = night ? '#575063' : '#7d6e5d';
+  const slatPalette = night
     ? ['#736c80', '#6b6478', '#777084', '#6e677b']
     : ['#b5a490', '#a79682', '#b9a894', '#ab9a86'];
 
@@ -572,7 +572,6 @@ function FoldingBistroChair({
  *     3. 'balcony_floor' — Rolling belly-up in the sunny foreground on the warm sandstone tiles
  */
 export function Balcony({
-  sleeping,
   timeOfDay = 'day',
   isRaining = false,
   activeSpot = 'planter',
@@ -582,7 +581,6 @@ export function Balcony({
   catAnimationKey = 0,
   onPetCat,
 }: {
-  sleeping: boolean;
   timeOfDay?: TimeOfDay;
   isRaining?: boolean;
   activeSpot?: CatSpot;
@@ -592,8 +590,10 @@ export function Balcony({
   catAnimationKey?: number;
   onPetCat?: () => void;
 }) {
-  const isNight = sleeping || timeOfDay === 'night';
-  const isSunset = !sleeping && timeOfDay === 'sunset';
+  // Lighting follows the real time of day, even when Oli naps during the day.
+  const night = timeOfDay === 'night';
+  const isNight = night;
+  const isSunset = timeOfDay === 'sunset';
 
   // Back railing & right side return geometry in 3D world space (relative to VP_X = 236)
   const zRailBack = 290;
@@ -762,21 +762,21 @@ export function Balcony({
 
       {/* 2. Background Left: Golden autumn trees & evergreen conifers across the quiet street */}
       <g>
-        <circle cx="96" cy="122" r="34" fill={sleeping ? '#2c352d' : '#dfa93a'} />
-        <circle cx="128" cy="136" r="28" fill={sleeping ? '#333d32' : '#ebc054'} />
-        <circle cx="72" cy="138" r="28" fill={sleeping ? '#232e26' : '#668749'} />
-        <polygon points="88,78 60,174 116,174" fill={sleeping ? '#1c2822' : '#355630'} />
-        <polygon points="108,94 80,186 136,186" fill={sleeping ? '#223129' : '#40663a'} />
-        <polygon points="134,114 112,198 156,198" fill={sleeping ? '#1d2b24' : '#365831'} />
-        <rect x="48" y="156" width="118" height="58" fill={sleeping ? '#202f27' : '#3d6136'} />
+        <circle cx="96" cy="122" r="34" fill={night ? '#2c352d' : '#dfa93a'} />
+        <circle cx="128" cy="136" r="28" fill={night ? '#333d32' : '#ebc054'} />
+        <circle cx="72" cy="138" r="28" fill={night ? '#232e26' : '#668749'} />
+        <polygon points="88,78 60,174 116,174" fill={night ? '#1c2822' : '#355630'} />
+        <polygon points="108,94 80,186 136,186" fill={night ? '#223129' : '#40663a'} />
+        <polygon points="134,114 112,198 156,198" fill={night ? '#1d2b24' : '#365831'} />
+        <rect x="48" y="156" width="118" height="58" fill={night ? '#202f27' : '#3d6136'} />
       </g>
 
       {/* 3. Background Center-Right: Neighboring European cream-stucco house */}
       <g>
         <polygon
           points="154,112 186,78 352,82 376,114"
-          fill={sleeping ? '#2b2a3a' : '#655f58'}
-          stroke={sleeping ? '#201f2c' : '#524d47'}
+          fill={night ? '#2b2a3a' : '#655f58'}
+          stroke={night ? '#201f2c' : '#524d47'}
           strokeWidth="1"
         />
         <rect
@@ -785,11 +785,11 @@ export function Balcony({
           width="36"
           height="16"
           rx="1"
-          fill={sleeping ? '#464a5e' : '#dce1e6'}
-          stroke={sleeping ? '#2b2a3a' : '#655f58'}
+          fill={night ? '#464a5e' : '#dce1e6'}
+          stroke={night ? '#2b2a3a' : '#655f58'}
           strokeWidth="0.9"
         />
-        <polygon points="216,102 260,102 264,108 212,108" fill={sleeping ? '#5b6076' : '#bcc4cc'} />
+        <polygon points="216,102 260,102 264,108 212,108" fill={night ? '#5b6076' : '#bcc4cc'} />
 
         <polygon points="158,112 182,108 182,252 158,252" fill={isNight ? '#646075' : isSunset ? '#f1dbce' : '#e5ddd0'} />
         <rect x="182" y="108" width="128" height="146" fill={isNight ? '#736f86' : isSunset ? '#fbeae0' : '#f3ece0'} />
@@ -821,16 +821,16 @@ export function Balcony({
 
       {/* 4. Quiet street & lush green garden hedges visible through the balcony railing balusters */}
       <g>
-        <rect x="48" y="210" width="124" height="108" fill={sleeping ? '#343544' : '#b8b2a8'} />
-        <line x1="48" y1="252" x2="172" y2="252" stroke={sleeping ? '#494a5c' : '#d4cec4'} strokeWidth="2" />
+        <rect x="48" y="210" width="124" height="108" fill={night ? '#343544' : '#b8b2a8'} />
+        <line x1="48" y1="252" x2="172" y2="252" stroke={night ? '#494a5c' : '#d4cec4'} strokeWidth="2" />
 
-        <rect x="160" y="214" width="240" height="190" fill={sleeping ? '#1e2b23' : '#3e5e35'} />
-        <circle cx="182" cy="236" r="24" fill={sleeping ? '#26372c' : '#4e7342'} />
-        <circle cx="222" cy="232" r="28" fill={sleeping ? '#2c3f32' : '#587f4a'} />
-        <circle cx="268" cy="234" r="30" fill={sleeping ? '#243429' : '#486c3c'} />
-        <circle cx="318" cy="238" r="32" fill={sleeping ? '#2b3d31' : '#557b47'} />
-        <circle cx="364" cy="254" r="36" fill={sleeping ? '#233328' : '#45683a'} />
-        <circle cx="382" cy="306" r="40" fill={sleeping ? '#2a3c30' : '#507643'} />
+        <rect x="160" y="214" width="240" height="190" fill={night ? '#1e2b23' : '#3e5e35'} />
+        <circle cx="182" cy="236" r="24" fill={night ? '#26372c' : '#4e7342'} />
+        <circle cx="222" cy="232" r="28" fill={night ? '#2c3f32' : '#587f4a'} />
+        <circle cx="268" cy="234" r="30" fill={night ? '#243429' : '#486c3c'} />
+        <circle cx="318" cy="238" r="32" fill={night ? '#2b3d31' : '#557b47'} />
+        <circle cx="364" cy="254" r="36" fill={night ? '#233328' : '#45683a'} />
+        <circle cx="382" cy="306" r="40" fill={night ? '#2a3c30' : '#507643'} />
       </g>
 
       {/* 5. Warm Square Sandstone Balcony Floor Tiles (40x40cm slabs projected from VP) */}
@@ -841,7 +841,7 @@ export function Balcony({
         />
 
         {/* Perspective tile grout grid — longitudinal rays from VP & foreshortened transverse rows */}
-        <g stroke={sleeping ? '#282436' : '#a69682'} strokeWidth="1.15" opacity="0.58">
+        <g stroke={night ? '#282436' : '#a69682'} strokeWidth="1.15" opacity="0.58">
           {[-148, -110, -72, -34, 4, 42, 80].map((tileX) => {
             const [x1, y1] = proj(tileX, 0, zRailBack);
             const [x2, y2] = proj(tileX, 0, 92);
@@ -864,7 +864,7 @@ export function Balcony({
             [xCornerRight, 9, zRailBack],
             [xWallLeft, 9, zRailBack],
           )}
-          fill={sleeping ? '#9894aa' : '#faf8f3'}
+          fill={night ? '#9894aa' : '#faf8f3'}
         />
         <polygon
           points={pts(
@@ -873,8 +873,8 @@ export function Balcony({
             [xCornerRight, 0, zRailBack],
             [xWallLeft, 0, zRailBack],
           )}
-          fill={sleeping ? '#817d93' : '#ebe6dc'}
-          stroke={sleeping ? '#656176' : '#cfc8ba'}
+          fill={night ? '#817d93' : '#ebe6dc'}
+          stroke={night ? '#656176' : '#cfc8ba'}
           strokeWidth="0.9"
         />
 
@@ -885,7 +885,7 @@ export function Balcony({
             [xCornerRight + 6, 9, zReturnFront],
             [xCornerRight, 9, zReturnFront],
           )}
-          fill={sleeping ? '#9894aa' : '#faf8f3'}
+          fill={night ? '#9894aa' : '#faf8f3'}
         />
         <polygon
           points={pts(
@@ -894,8 +894,8 @@ export function Balcony({
             [xCornerRight, 0, zReturnFront],
             [xCornerRight, 0, zRailBack],
           )}
-          fill={sleeping ? '#777388' : '#e2dcd0'}
-          stroke={sleeping ? '#5e5a6e' : '#c7bfb0'}
+          fill={night ? '#777388' : '#e2dcd0'}
+          stroke={night ? '#5e5a6e' : '#c7bfb0'}
           strokeWidth="0.9"
         />
       </g>
@@ -905,7 +905,7 @@ export function Balcony({
         <polygon
           points={`0,0 ${proj(xWallLeft, 164, zRailBack)[0]},0 ${proj(xWallLeft, 0, zRailBack).join(',')} ${proj(xWallLeft, 0, 224).join(',')}`}
           fill="url(#bal-wall-left)"
-          stroke={sleeping ? '#383447' : '#cdc3b3'}
+          stroke={night ? '#383447' : '#cdc3b3'}
           strokeWidth="1.1"
         />
         {/* Subtle stone skirting baseboard along the receding wall base */}
@@ -916,28 +916,28 @@ export function Balcony({
             [xWallLeft, 0, 224],
             [xWallLeft, 7, 224],
           )}
-          fill={sleeping ? '#433f54' : '#ded5c5'}
-          stroke={sleeping ? '#343042' : '#c6bba8'}
+          fill={night ? '#433f54' : '#ded5c5'}
+          stroke={night ? '#343042' : '#c6bba8'}
           strokeWidth="0.8"
         />
         {/* Front exterior wall return face */}
         <polygon
           points={`0,0 18,0 18,${proj(xWallLeft, 0, 232)[1]} 0,${proj(xWallLeft, 0, 232)[1]}`}
-          fill={sleeping ? '#59556d' : '#f8f4ec'}
+          fill={night ? '#59556d' : '#f8f4ec'}
         />
         <rect
           x="0"
           y={proj(xWallLeft, 0, 232)[1] - 8}
           width="18"
           height="8"
-          fill={sleeping ? '#4b475e' : '#e7dfd0'}
+          fill={night ? '#4b475e' : '#e7dfd0'}
         />
         <line
           x1="18"
           y1="0"
           x2="18"
           y2={proj(xWallLeft, 0, 232)[1]}
-          stroke={sleeping ? '#3d394f' : '#d5ccb9'}
+          stroke={night ? '#3d394f' : '#d5ccb9'}
           strokeWidth="1.2"
         />
         <line
@@ -945,7 +945,7 @@ export function Balcony({
           y1={proj(xWallLeft, 0, 232)[1]}
           x2="18"
           y2={proj(xWallLeft, 0, 232)[1]}
-          stroke={sleeping ? '#383447' : '#c7beae'}
+          stroke={night ? '#383447' : '#c7beae'}
           strokeWidth="1.2"
         />
       </g>
@@ -962,7 +962,7 @@ export function Balcony({
               y1={yTop}
               x2={xTop}
               y2={yBot}
-              stroke={sleeping ? '#6e748a' : '#bcc5ce'}
+              stroke={night ? '#6e748a' : '#bcc5ce'}
               strokeWidth="2.1"
             />
           );
@@ -973,7 +973,7 @@ export function Balcony({
           y1={proj(xWallLeft, 93, zRailBack)[1]}
           x2={proj(xCornerRight, 93, zRailBack)[0]}
           y2={proj(xCornerRight, 93, zRailBack)[1]}
-          stroke={sleeping ? '#7d849c' : '#ced5dd'}
+          stroke={night ? '#7d849c' : '#ced5dd'}
           strokeWidth="3"
         />
         <line
@@ -981,7 +981,7 @@ export function Balcony({
           y1={proj(xWallLeft, 14, zRailBack)[1]}
           x2={proj(xCornerRight, 14, zRailBack)[0]}
           y2={proj(xCornerRight, 14, zRailBack)[1]}
-          stroke={sleeping ? '#7d849c' : '#ced5dd'}
+          stroke={night ? '#7d849c' : '#ced5dd'}
           strokeWidth="3"
         />
 
@@ -1001,7 +1001,7 @@ export function Balcony({
               y1={ryTop}
               x2={rx}
               y2={ryBot}
-              stroke={sleeping ? '#686e84' : '#b2bcc6'}
+              stroke={night ? '#686e84' : '#b2bcc6'}
               strokeWidth="2.3"
             />
           );
@@ -1011,7 +1011,7 @@ export function Balcony({
           y1={proj(xCornerRight, 93, zRailBack)[1]}
           x2={proj(xCornerRight, 93, zReturnFront)[0]}
           y2={proj(xCornerRight, 93, zReturnFront)[1]}
-          stroke={sleeping ? '#7a8199' : '#c6ced7'}
+          stroke={night ? '#7a8199' : '#c6ced7'}
           strokeWidth="3.2"
         />
         <line
@@ -1019,7 +1019,7 @@ export function Balcony({
           y1={proj(xCornerRight, 14, zRailBack)[1]}
           x2={proj(xCornerRight, 14, zReturnFront)[0]}
           y2={proj(xCornerRight, 14, zReturnFront)[1]}
-          stroke={sleeping ? '#7a8199' : '#c6ced7'}
+          stroke={night ? '#7a8199' : '#c6ced7'}
           strokeWidth="3.2"
         />
 
@@ -1031,7 +1031,7 @@ export function Balcony({
           height="6.8"
           rx="3.4"
           fill="url(#bal-steel-h)"
-          stroke={sleeping ? '#4b5063' : '#8b95a1'}
+          stroke={night ? '#4b5063' : '#8b95a1'}
           strokeWidth="0.8"
         />
         <polygon
@@ -1042,7 +1042,7 @@ export function Balcony({
             [xCornerRight - 1, 98, zReturnFront],
           )}
           fill="url(#bal-steel-h)"
-          stroke={sleeping ? '#4b5063' : '#8b95a1'}
+          stroke={night ? '#4b5063' : '#8b95a1'}
           strokeWidth="0.8"
           strokeLinejoin="round"
         />
@@ -1099,7 +1099,7 @@ export function Balcony({
         <HangingPlanterBox
           xLeft={-92}
           xRight={-22}
-          sleeping={sleeping}
+          night={night}
           hasBurgundyLeft
           pansies={[
             { xRatio: 0.32, dy: -6, scale: 0.94, rotate: -8, variant: 'yellow-top' },
@@ -1112,7 +1112,7 @@ export function Balcony({
         <HangingPlanterBox
           xLeft={-4}
           xRight={66}
-          sleeping={sleeping}
+          night={night}
           pansies={[
             { xRatio: 0.2, dy: -5.8, scale: 0.93, rotate: 7, variant: 'purple-top' },
             { xRatio: 0.43, dy: -8.8, scale: 1.0, rotate: -6, variant: 'yellow-top' },
@@ -1128,14 +1128,14 @@ export function Balcony({
           <path
             d={`M ${potRimCx - 19.5} ${potRimCy + 3} L ${potBaseCx - 15} ${potBaseCy - 1} A 15 4.4 0 0 0 ${potBaseCx + 15} ${potBaseCy - 1} L ${potRimCx + 19.5} ${potRimCy + 3} Z`}
             fill="url(#bal-pot-cyl)"
-            stroke={sleeping ? '#3d404d' : '#525760'}
+            stroke={night ? '#3d404d' : '#525760'}
             strokeWidth="0.9"
           />
 
           <path
             d={`M ${potRimCx - 21} ${potRimCy - 3} L ${potRimCx - 20.2} ${potRimCy + 4} A 20.2 5 0 0 0 ${potRimCx + 20.2} ${potRimCy + 4} L ${potRimCx + 21} ${potRimCy - 3} Z`}
             fill="url(#bal-pot-cyl)"
-            stroke={sleeping ? '#3d404d' : '#50555e'}
+            stroke={night ? '#3d404d' : '#50555e'}
             strokeWidth="0.9"
           />
           <ellipse
@@ -1143,11 +1143,11 @@ export function Balcony({
             cy={potRimCy - 3}
             rx="21"
             ry="5"
-            fill={sleeping ? '#787d8f' : '#9ba1ab'}
-            stroke={sleeping ? '#4b4f5e' : '#636973'}
+            fill={night ? '#787d8f' : '#9ba1ab'}
+            stroke={night ? '#4b4f5e' : '#636973'}
             strokeWidth="0.8"
           />
-          <ellipse cx={potRimCx} cy={potRimCy - 3} rx="18" ry="3.9" fill={sleeping ? '#241f26' : '#3b2d22'} />
+          <ellipse cx={potRimCx} cy={potRimCy - 3} rx="18" ry="3.9" fill={night ? '#241f26' : '#3b2d22'} />
 
           {/* Natural Layered Botanical Cypress Fronds (no cartoony noodle lines!) */}
           <g>
@@ -1161,7 +1161,7 @@ export function Balcony({
                   C ${potRimCx + 19} ${potRimCy - 5}, ${potRimCx + 20} ${potRimCy - 17}, ${potRimCx + 15} ${potRimCy - 29}
                   C ${potRimCx + 18} ${potRimCy - 43}, ${potRimCx + 16} ${potRimCy - 59}, ${potRimCx + 10} ${potRimCy - 73}
                   C ${potRimCx + 11} ${potRimCy - 86}, ${potRimCx + 6} ${potRimCy - 102}, ${potRimCx} ${potRimCy - 116} Z`}
-              fill={sleeping ? '#213529' : '#365c30'}
+              fill={night ? '#213529' : '#365c30'}
             />
             {/* Tiered upward cypress tufts (mid-green) */}
             <path
@@ -1173,7 +1173,7 @@ export function Balcony({
                   C ${potRimCx + 12} ${potRimCy - 12}, ${potRimCx + 11} ${potRimCy - 25}, ${potRimCx + 6} ${potRimCy - 35}
                   C ${potRimCx + 11} ${potRimCy - 47}, ${potRimCx + 10} ${potRimCy - 61}, ${potRimCx + 4} ${potRimCy - 71}
                   C ${potRimCx + 7} ${potRimCy - 83}, ${potRimCx + 4} ${potRimCy - 98}, ${potRimCx - 0.5} ${potRimCy - 112} Z`}
-              fill={sleeping ? '#2c4636' : '#4d7d41'}
+              fill={night ? '#2c4636' : '#4d7d41'}
             />
             {/* Warm sunlit sage-green frond highlights on the sunlit left side */}
             <path
@@ -1183,7 +1183,7 @@ export function Balcony({
                   C ${potRimCx - 11} ${potRimCy - 30}, ${potRimCx - 11} ${potRimCy - 14}, ${potRimCx - 5} ${potRimCy - 5}
                   C ${potRimCx - 1} ${potRimCy - 12}, ${potRimCx - 1} ${potRimCy - 26}, ${potRimCx + 1} ${potRimCy - 36}
                   C ${potRimCx + 2} ${potRimCy - 50}, ${potRimCx + 2} ${potRimCy - 66}, ${potRimCx} ${potRimCy - 80} Z`}
-              fill={sleeping ? '#375643' : '#659954'}
+              fill={night ? '#375643' : '#659954'}
             />
           </g>
         </g>
@@ -1223,15 +1223,15 @@ export function Balcony({
         />
 
         {/* A. Right Folding Bistro Chair (facing left toward the open right side of the table) */}
-        <FoldingBistroChair side="right" xSeatInner={42} zFront={204} zBack={232} sleeping={sleeping} />
+        <FoldingBistroChair side="right" xSeatInner={42} zFront={204} zBack={232} night={night} />
 
         {/* B. Left Folding Bistro Chair (facing right toward the open left side of the table) */}
-        <FoldingBistroChair side="left" xSeatInner={-12} zFront={204} zBack={232} sleeping={sleeping} />
+        <FoldingBistroChair side="left" xSeatInner={-12} zFront={204} zBack={232} night={night} />
 
         {/* C. Center Square Wooden-Slat Folding Bistro Table (with iconic crossed X-legs on back & front!) */}
         <g>
           {/* 1. Back black steel X-leg frame (Z = tZBack - 3, leaving left & right knee sides open!) */}
-          <g stroke={sleeping ? '#1a1d26' : '#282c35'} strokeWidth="2.4" strokeLinecap="round">
+          <g stroke={night ? '#1a1d26' : '#282c35'} strokeWidth="2.4" strokeLinecap="round">
             <line
               x1={proj(tX0 + 3.5, tY - 1.5, tZBack - 3)[0]}
               y1={proj(tX0 + 3.5, tY - 1.5, tZBack - 3)[1]}
@@ -1254,13 +1254,13 @@ export function Balcony({
             y1={proj((tX0 + tX1) / 2, (tY - 1.5) * 0.5, tZBack - 3)[1]}
             x2={proj((tX0 + tX1) / 2, (tY - 1.5) * 0.5, tZFront + 3)[0]}
             y2={proj((tX0 + tX1) / 2, (tY - 1.5) * 0.5, tZFront + 3)[1]}
-            stroke={sleeping ? '#181a22' : '#22262e'}
+            stroke={night ? '#181a22' : '#22262e'}
             strokeWidth="2.2"
             strokeLinecap="round"
           />
 
           {/* 3. Front black steel X-leg frame (Z = tZFront + 3) */}
-          <g stroke={sleeping ? '#12141b' : '#1b1e24'} strokeWidth="2.8" strokeLinecap="round">
+          <g stroke={night ? '#12141b' : '#1b1e24'} strokeWidth="2.8" strokeLinecap="round">
             <line
               x1={proj(tX0 + 3.5, tY - 1.5, tZFront + 3)[0]}
               y1={proj(tX0 + 3.5, tY - 1.5, tZFront + 3)[1]}
@@ -1308,7 +1308,7 @@ export function Balcony({
                     [tX1, tY, slat.zF],
                     [tX0, tY, slat.zF],
                   )}
-                  fill={sleeping ? '#4e4859' : '#736453'}
+                  fill={night ? '#4e4859' : '#736453'}
                 />
                 {/* Warm sunlit top wood plank surface */}
                 <polygon
@@ -1319,7 +1319,7 @@ export function Balcony({
                     [tX0, yTop, slat.zF],
                   )}
                   fill={slat.color}
-                  stroke={sleeping ? '#4b4556' : '#6c5e4e'}
+                  stroke={night ? '#4b4556' : '#6c5e4e'}
                   strokeWidth="0.65"
                   strokeLinejoin="round"
                 />

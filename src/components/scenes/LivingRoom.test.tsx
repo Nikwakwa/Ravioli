@@ -60,7 +60,7 @@ function parseTranslate(transform?: string): { x: number; y: number } {
 
 describe('LivingRoom — SVG Layer Ordering (Prevent Covered/Occluded Items)', () => {
   it('renders the water fountain AFTER the rug in SVG painter order so it is never covered by the rug', () => {
-    const tree = LivingRoom({ sleeping: false, fountainBoost: false, activeSpot: 'rug', onTapFountain: () => {} }) as AnyElement;
+    const tree = LivingRoom({ fountainBoost: false, activeSpot: 'rug', onTapFountain: () => {} }) as AnyElement;
     const children = tree.props.children as AnyElement[];
 
     const rugIndex = children.findIndex((el) => {
@@ -80,7 +80,7 @@ describe('LivingRoom — SVG Layer Ordering (Prevent Covered/Occluded Items)', (
   });
 
   it('renders the water fountain AFTER the coffee table, wall, and floor layers', () => {
-    const tree = LivingRoom({ sleeping: false, fountainBoost: false, activeSpot: 'rug', onTapFountain: () => {} }) as AnyElement;
+    const tree = LivingRoom({ fountainBoost: false, activeSpot: 'rug', onTapFountain: () => {} }) as AnyElement;
     const children = tree.props.children as AnyElement[];
 
     const fountainIndex = children.findIndex((el) => {
@@ -93,7 +93,7 @@ describe('LivingRoom — SVG Layer Ordering (Prevent Covered/Occluded Items)', (
   });
 
   it('renders the litter box in front of background wall and floor layers', () => {
-    const tree = LivingRoom({ sleeping: false, fountainBoost: false, activeSpot: 'rug', onTapLitterBox: () => {} }) as AnyElement;
+    const tree = LivingRoom({ fountainBoost: false, activeSpot: 'rug', onTapLitterBox: () => {} }) as AnyElement;
     const children = tree.props.children as AnyElement[];
 
     const litterBoxIndex = children.findIndex((el) => {
@@ -105,7 +105,7 @@ describe('LivingRoom — SVG Layer Ordering (Prevent Covered/Occluded Items)', (
   });
 
   it('physically nestles Oli inside the bolster bed (CatAvatar between inner cushion and front bolster wall)', () => {
-    const tree = LivingRoom({ sleeping: false, fountainBoost: false, activeSpot: 'sofa_bed' }) as AnyElement;
+    const tree = LivingRoom({ fountainBoost: false, activeSpot: 'sofa_bed' }) as AnyElement;
     const bolsterBed = findElements(tree, (el) => {
       const label = el.props?.['aria-label'] || '';
       return typeof label === 'string' && label.toLowerCase().includes('bolster bed');
@@ -133,7 +133,7 @@ describe('LivingRoom — SVG Layer Ordering (Prevent Covered/Occluded Items)', (
   });
 
   it('physically nestles Oli inside the delivery box (CatAvatar between box interior and front panel)', () => {
-    const tree = LivingRoom({ sleeping: false, fountainBoost: false, activeSpot: 'box' }) as AnyElement;
+    const tree = LivingRoom({ fountainBoost: false, activeSpot: 'box' }) as AnyElement;
     const boxGroup = findElements(tree, (el) => {
       const label = el.props?.['aria-label'] || '';
       return typeof label === 'string' && label.toLowerCase().includes('delivery box');
@@ -163,7 +163,7 @@ describe('LivingRoom — SVG Layer Ordering (Prevent Covered/Occluded Items)', (
 
 describe('LivingRoom — Mobile Safe Bounds (No Partially Off-Screen Items)', () => {
   it('positions the water fountain 100% inside the visible mobile screen bounds', () => {
-    const tree = LivingRoom({ sleeping: false, fountainBoost: false, onTapFountain: () => {} }) as AnyElement;
+    const tree = LivingRoom({ fountainBoost: false, onTapFountain: () => {} }) as AnyElement;
     const fountain = findElements(tree, (el) => {
       const label = el.props?.['aria-label'] || '';
       return (typeof label === 'string' && label.toLowerCase().includes('fountain')) || el.props?.transform?.includes('404');
@@ -185,7 +185,7 @@ describe('LivingRoom — Mobile Safe Bounds (No Partially Off-Screen Items)', ()
   });
 
   it('positions the litter box 100% inside the visible mobile screen bounds (no longer half off-screen)', () => {
-    const tree = LivingRoom({ sleeping: false, fountainBoost: false, onTapLitterBox: () => {} }) as AnyElement;
+    const tree = LivingRoom({ fountainBoost: false, onTapLitterBox: () => {} }) as AnyElement;
     const litterBox = findElements(tree, (el) => {
       const label = el.props?.['aria-label'] || '';
       return (typeof label === 'string' && label.toLowerCase().includes('litter box')) || el.props?.transform?.includes('62 0');
@@ -207,7 +207,7 @@ describe('LivingRoom — Mobile Safe Bounds (No Partially Off-Screen Items)', ()
   });
 
   it('positions the bolster bed on the sofa 100% inside the visible mobile screen bounds', () => {
-    const tree = LivingRoom({ sleeping: false, fountainBoost: false }) as AnyElement;
+    const tree = LivingRoom({ fountainBoost: false }) as AnyElement;
     const bed = findElements(tree, (el) => {
       const label = el.props?.['aria-label'] || '';
       return typeof label === 'string' && label.toLowerCase().includes('bolster bed');
@@ -229,7 +229,7 @@ describe('LivingRoom — Mobile Safe Bounds (No Partially Off-Screen Items)', ()
   });
 
   it('positions the delivery cardboard box 100% inside the visible mobile screen bounds', () => {
-    const tree = LivingRoom({ sleeping: false, fountainBoost: false }) as AnyElement;
+    const tree = LivingRoom({ fountainBoost: false }) as AnyElement;
     const box = findElements(tree, (el) => {
       const label = el.props?.['aria-label'] || '';
       return typeof label === 'string' && label.toLowerCase().includes('delivery box');
@@ -249,7 +249,7 @@ describe('LivingRoom — Mobile Safe Bounds (No Partially Off-Screen Items)', ()
   });
 
   it('positions the windowsill cozy spot 100% inside the visible mobile screen bounds', () => {
-    const tree = LivingRoom({ sleeping: false, fountainBoost: false }) as AnyElement;
+    const tree = LivingRoom({ fountainBoost: false }) as AnyElement;
     const sill = findElements(tree, (el) => {
       const label = el.props?.['aria-label'] || '';
       return typeof label === 'string' && label.toLowerCase().includes('windowsill');
@@ -264,7 +264,7 @@ describe('LivingRoom — Mobile Safe Bounds (No Partially Off-Screen Items)', ()
   });
 
   it('renders the clean white coffee table completely within the visible screen', () => {
-    const tree = LivingRoom({ sleeping: false, fountainBoost: false }) as AnyElement;
+    const tree = LivingRoom({ fountainBoost: false }) as AnyElement;
     const tableTop = findElements(tree, (el) => {
       return el.type === 'polygon' && el.props?.fill === '#ffffff' && el.props?.points?.includes('262,354');
     })[0];
@@ -276,7 +276,7 @@ describe('LivingRoom — Mobile Safe Bounds (No Partially Off-Screen Items)', ()
     const spots: CatSpot[] = ['rug', 'sofa_bed', 'box', 'window'];
 
     for (const spot of spots) {
-      const tree = LivingRoom({ sleeping: false, fountainBoost: false, activeSpot: spot }) as AnyElement;
+      const tree = LivingRoom({ fountainBoost: false, activeSpot: spot }) as AnyElement;
       const avatarList = findElements(tree, (el) => typeof el.type === 'function' && el.type.name === 'CatAvatar');
       expect(avatarList.length, `Oli must render when activeSpot is ${spot}`).toBe(1);
 
@@ -308,7 +308,7 @@ describe('LivingRoom — Mobile Safe Bounds (No Partially Off-Screen Items)', ()
 
 describe('LivingRoom — Cat Care Hygiene & Layout Rules', () => {
   it('enforces biological separation between the litter box and water fountain (minimum 120 units apart)', () => {
-    const tree = LivingRoom({ sleeping: false, fountainBoost: false, onTapFountain: () => {}, onTapLitterBox: () => {} }) as AnyElement;
+    const tree = LivingRoom({ fountainBoost: false, onTapFountain: () => {}, onTapLitterBox: () => {} }) as AnyElement;
 
     const litterBox = findElements(tree, (el) => (el.props?.['aria-label'] || '').includes('litter box'))[0];
     const fountain = findElements(tree, (el) => (el.props?.['aria-label'] || '').includes('fountain'))[0];
@@ -335,7 +335,6 @@ describe('LivingRoom — Cat Care Hygiene & Layout Rules', () => {
 describe('LivingRoom — Touch Targets and Accessibility', () => {
   it('provides generous minimum touch targets (>= 40x40) with pointer-events enabled for all interactive items', () => {
     const tree = LivingRoom({
-      sleeping: false,
       fountainBoost: false,
       onTapFountain: () => {},
       onTapLitterBox: () => {},
