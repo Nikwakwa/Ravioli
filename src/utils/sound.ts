@@ -28,8 +28,6 @@ let ctx: AudioContext | null = null;
 let master: GainNode | null = null;
 let noiseBuffer: AudioBuffer | null = null;
 let muted = loadMuted();
-let windWanted = false;
-let windStop: (() => void) | null = null;
 let listenersBound = false;
 const lastPlayedAt = new Map<SoundName, number>();
 const muteListeners = new Set<() => void>();
@@ -60,13 +58,8 @@ export function setMuted(next: boolean): void {
   } catch {
     /* no-op */
   }
-  if (next) {
-    stopWind();
-    void ctx?.suspend().catch(() => undefined);
-  } else {
-    void ctx?.resume().catch(() => undefined);
-    if (windWanted) startWind();
-  }
+  if (next) void ctx?.suspend().catch(() => undefined);
+  else void ctx?.resume().catch(() => undefined);
   muteListeners.forEach((l) => l());
 }
 
@@ -387,63 +380,4 @@ export function soundForAction(actionId: string): SoundName | null {
 export function playActionSound(actionId: string): void {
   const name = soundForAction(actionId);
   if (name) playSound(name);
-}
-
-// ---------------------------------------------------------------------------
-// Balcony wind (looping background)
-// ---------------------------------------------------------------------------
-function startWind(): void {
-  if (windStop) return;
-  const c = getCtx();
-  if (!c || !master) return;
-  try {
-    const t0 = c.currentTime;
-    const src = c.createBufferSource();
-    src.buffer = getNoise(c);
-    src.loop = true;
-    const tone = filter(c, 'bandpass', 480, 0.7);
-    const level = c.createGain();
-    level.gain.setValueAtTime(0.0001, t0);
-    level.gain.linearRampToValueAtTime(0.07, t0 + 1.5);
-
-    // Slow gusts: the pitch and loudness drift up and down.
-    const gust = c.createOscillator();
-    gust.frequency.value = 0.11;
-    const gustPitch = c.createGain();
-    gustPitch.gain.value = 190;
-    const gustLevel = c.createGain();
-    gustLevel.gain.value = 0.03;
-    gust.connect(gustPitch).connect(tone.frequency);
-    gust.connect(gustLevel).connect(level.gain);
-
-    src.connect(tone).connect(level).connect(master);
-    src.start(t0);
-    gust.start(t0);
-
-    windStop = () => {
-      const t = c.currentTime;
-      level.gain.cancelScheduledValues(t);
-      level.gain.setTargetAtTime(0.0001, t, 0.25);
-      src.stop(t + 1.2);
-      gust.stop(t + 1.2);
-    };
-  } catch {
-    windStop = null;
-  }
-}
-
-function stopWind(): void {
-  try {
-    windStop?.();
-  } catch {
-    /* no-op */
-  }
-  windStop = null;
-}
-
-/** Turns the quiet balcony wind on or off (it stays silent while muted). */
-export function setWind(on: boolean): void {
-  windWanted = on;
-  if (on) startWind();
-  else stopWind();
 }
