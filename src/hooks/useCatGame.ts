@@ -59,6 +59,7 @@ import {
   type ParticleKind,
 } from '../data/actions';
 import { celebrate, vibrate } from '../utils/feedback';
+import { playActionSound, playSound } from '../utils/sound';
 import {
   evaluateStatThresholds,
   loadAlertedMap,
@@ -537,6 +538,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
 
   const playEvent = useCallback((ev: Omit<GameEvent, 'key'>) => {
     setEvent({ ...ev, key: ++eventSeq });
+    playActionSound(ev.actionId);
     setEventPlaying(true);
     window.clearTimeout(eventTimer.current);
     eventTimer.current = window.setTimeout(() => setEventPlaying(false), ev.durationMs + 100);
@@ -666,6 +668,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
       saveLastRoamAt(Date.now());
       if (!silent) {
         vibrate(20);
+        playSound('chirp');
         const lines: Record<CatSpot, string> = {
           sofa_bed: '🛋️ Curled up on the sofa bed',
           box: '📦 Hopped into his delivery box',
@@ -895,6 +898,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
         expiresAt: Date.now() + WHIM_DURATION_MS,
       };
       setWhim(nextWhim);
+      playSound('meow');
       saveActiveWhim(nextWhim);
       saveLastWhimAt(Date.now());
       vibrate([20, 40, 20]);
@@ -1344,7 +1348,10 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
     }
     vibrate([25, 25, 35, 25, 25]);
 
-    if (live.isSleeping) return;
+    if (live.isSleeping) {
+      playSound('purr_soft');
+      return;
+    }
 
     const nowMs = Date.now();
     // If Oli has a tummy ache, rubbing his belly soothes it right away!
@@ -1402,6 +1409,9 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
 
       const mutator = (b: CatState): CatState => applyEffect(materialize(b, nowMs), boost);
       void commit(mutator, PET_ACTION_ID, `Gave ${live.name} chin scratches — purr session!`);
+    } else {
+      // Petted again too soon for more Joy: he still answers with a little "mrp?"
+      playSound('chirp');
     }
   }, [base, live, busy, tummyAche, whim, messes.length, litterBoxDirty, player, playEvent, commit, clearTummyAche, clearWhim, triggerRefusal]);
 

@@ -33,42 +33,7 @@ When an idea gets picked up, move it into [ROADMAP.md](ROADMAP.md) as a new phas
 
 ---
 
-## 📸 3. Polaroid Scrapbook (Memory Album)
-
-**The idea:** A camera feature to capture Oli's funniest and cutest moments and save them into a keepsake photo album.
-
-### What it adds
-- **Snap a Polaroid:** Tap a little camera icon in the corner to snap a candid Polaroid-style photo of Oli wherever he's lounging (loafing in his delivery box, belly-up on the balcony, watching the street, or curled in bed).
-- **Oli's Thoughts & Date Stamp:** Each photo gets stamped with the date and a funny thought bubble from Oli (e.g., *"Caught napping on duty"*, *"Surveying my kingdom"*, *"Sun warmed my belly just right"*).
-- **Scrapbook Album:** A pastel photo album you can flip through from the menu to look back on all your favorite snapshots and save them to your phone.
-
----
-
-## 🐾 4. Purrs, Chirps & Cozy Sound Effects
-
-**The idea:** Bring Oli to life with gentle, soothing sounds and tactile feedback.
-
-### What it adds
-- **Purring on Pets:** A soft, rhythmic purring sound and subtle vibration whenever Athina rubs Oli's chin or pets his soft belly.
-- **Cute Cat Chirps & Meows:** A gentle "mrp?" or friendly chirp when calling Oli over to a new spot or tapping him while awake.
-- **Cozy Room Sounds:** Crisp crunching when eating a Chicken Heart, soft slurping for Churu treats, gentle water trickling at the fountain, and quiet autumn wind on the balcony.
-- **Discreet Mute Switch:** An easy sound toggle in the corner so she can mute it instantly in public or at work.
-
----
-
-## 🌅 5. Real-Time Day & Night Atmosphere
-
-**The idea:** Make the living room and balcony mirror the real-world time of day and cozy weather.
-
-### What it adds
-- **Daylight (Morning & Afternoon):** Bright, warm sunshine with soft sunbeams stretching across the Moroccan shag rug.
-- **Golden Hour (Late Afternoon / Sunset):** Beautiful amber and orange lighting across the balcony railing and living room walls.
-- **Cozy Night Mode:** The room gently dims, the little white windowsill lamp turns on with a warm golden glow, and Oli curls up peacefully in his bolster bed for the night.
-- **Rainy Day Cat TV:** Gentle raindrops sliding down the living room window glass for Oli (and Athina) to watch.
-
----
-
-## 🍼 6. Growing Up: From Baby Oli to Adult Oli (Tamagotchi-style life stages)
+## 🍼 3. Growing Up: From Baby Oli to Adult Oli (Tamagotchi-style life stages)
 
 **The idea:** Oli starts as a tiny baby kitten and grows up through a few life stages, like a Tamagotchi. Once he becomes an adult he **stays an adult forever**, just like the real Oli today. He never gets old and never dies of old age.
 

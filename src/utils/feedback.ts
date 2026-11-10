@@ -1,4 +1,5 @@
 import confetti from 'canvas-confetti';
+import { playSound } from './sound';
 
 /** Android haptics (silently ignored where unsupported, e.g. iOS / desktop). */
 export function vibrate(pattern: number | number[]): void {
@@ -13,6 +14,7 @@ const CONFETTI_COLORS = ['#f08a3c', '#ffd27a', '#ef5f8f', '#7cc6ef', '#8fd19e', 
 
 /** Celebratory burst when Oli becomes "thriving". */
 export function celebrate(): void {
+  playSound('chime');
   const base = { colors: CONFETTI_COLORS, disableForReducedMotion: true, zIndex: 60 } as const;
   void confetti({ ...base, particleCount: 70, spread: 75, startVelocity: 38, origin: { x: 0.5, y: 0.62 } });
   window.setTimeout(() => {

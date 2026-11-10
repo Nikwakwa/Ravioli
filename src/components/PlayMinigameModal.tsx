@@ -11,6 +11,7 @@ import {
   type CareAction,
 } from '../data/actions';
 import { vibrate } from '../utils/feedback';
+import { playSound } from '../utils/sound';
 
 export const MINIGAME_ROUND_TIME_SEC = 10.0;
 export const FEATHER_ROUND_TIME_SEC = 10.0;
@@ -316,6 +317,7 @@ export function PlayMinigameModal({
             };
 
             vibrate([20, 35]);
+            playSound('pop');
             setBatBouncePos({ x: nx, y: PAW_LINE_Y });
             safeTimeout(() => {
               setBatBouncePos(null);
@@ -397,8 +399,10 @@ export function PlayMinigameModal({
 
     if (outcome === 'hit') {
       vibrate([30, 45, 30]);
+      playSound('pop');
     } else {
       vibrate(35);
+      playSound('miss');
     }
 
     if (nextResults.length >= MINIGAME_ROUNDS) {

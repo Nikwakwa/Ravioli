@@ -7,6 +7,16 @@ export interface ReleaseEntry {
 
 export const CHANGELOG: ReleaseEntry[] = [
   {
+    version: 'v0.21.0',
+    date: '2026-11-10',
+    title: 'Purrs, Chirps & Cozy Sounds 🐾🔊',
+    changes: [
+      'Oli now purrs when petted and chirps when he moves or wants something.',
+      'Eating, drinking, brushing and the balcony wind all have gentle sounds.',
+      'New sound button next to Menu mutes everything in one tap.',
+    ],
+  },
+  {
     version: 'v0.20.8',
     date: '2026-11-10',
     title: 'Daytime Naps Stay Sunny ☀️😴',
