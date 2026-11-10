@@ -15,6 +15,7 @@ import { actionById } from './data/actions';
 import { useCatGame, type Notice } from './hooks/useCatGame';
 import { useVersionCheck } from './hooks/useVersionCheck';
 import type { CatSpot } from './types';
+import { setWind } from './utils/sound';
 import {
   loadNotificationPrefs,
   requestNotificationAccess,
@@ -130,6 +131,12 @@ export function App() {
 
   const effectiveTime = resolveTimeOfDay(new Date(now), luxData);
   const isRaining = isRainingNow(luxData, now);
+
+  // Quiet wind while out on the balcony
+  useEffect(() => {
+    setWind(scene === 'balcony');
+    return () => setWind(false);
+  }, [scene]);
   // Light follows the real clock in Luxembourg only. A daytime nap stays in daylight.
   const isNight = effectiveTime === 'night';
   const isSunset = effectiveTime === 'sunset';

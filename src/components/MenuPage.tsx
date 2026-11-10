@@ -164,6 +164,7 @@ export function MenuPage({
                 <li><strong>Pet Oli:</strong> Tap him anytime (+{PET_JOY_BOOST} Joy).</li>
                 <li><strong>Living Room &amp; Balcony:</strong> Use the bottom switcher or tap any cozy spot (sofa bed, box, window, rug, flower boxes, bistro chair, or balcony tiles).</li>
                 <li><strong>Fountain:</strong> Tap to refresh his water (+40 Water).</li>
+                <li><strong>Sound:</strong> Tap the speaker next to Menu to mute or unmute.</li>
               </ul>
             </div>
 

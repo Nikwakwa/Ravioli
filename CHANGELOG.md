@@ -4,6 +4,14 @@ All updates to **Oli** are listed here.
 
 ---
 
+## `v0.21.0` — 2026-11-10
+### Purrs, Chirps & Cozy Sounds 🐾🔊
+- Oli now purrs when petted and chirps when he moves or wants something.
+- Eating, drinking, brushing and the balcony wind all have gentle sounds.
+- New sound button next to Menu mutes everything in one tap.
+
+---
+
 ## `v0.20.8` — 2026-11-10
 ### Daytime Naps Stay Sunny ☀️😴
 - Daytime naps no longer turn the screen dark: the light follows the real clock.

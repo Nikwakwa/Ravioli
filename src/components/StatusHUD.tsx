@@ -1,8 +1,10 @@
 import { motion } from 'framer-motion';
-import { BookOpen } from 'lucide-react';
+import { useSyncExternalStore } from 'react';
+import { BookOpen, Volume2, VolumeX } from 'lucide-react';
 import { CHURU_POINTS_PER_TUBE, DEFAULT_CHURU_STASH, STAT_META } from '../data/actions';
 import { STAT_KEYS, type LiveCat, type Mood } from '../types';
 import { NEED_THRESHOLD } from '../utils/decayEngine';
+import { isMuted, playSound, setMuted, subscribeMuted } from '../utils/sound';
 import { STAT_ICONS } from './statIcons';
 
 const MOOD_BADGE: Record<Mood, { label: string; emoji: string }> = {
@@ -18,6 +20,31 @@ const MOOD_BADGE: Record<Mood, { label: string; emoji: string }> = {
   grubby: { label: 'Needs a brush', emoji: '🪮' },
   deceased: { label: 'Needs emergency care', emoji: '👼' },
 };
+
+/** Speaker button that mutes / unmutes all sound in one tap. */
+function SoundToggle({ night, surface }: { night: boolean; surface: string }) {
+  const soundMuted = useSyncExternalStore(subscribeMuted, isMuted, () => false);
+  const toggleSound = () => {
+    setMuted(!soundMuted);
+    if (soundMuted) playSound('chirp');
+  };
+  return (
+    <button
+      type="button"
+      onClick={toggleSound}
+      title={soundMuted ? 'Sound off' : 'Sound on'}
+      aria-label={soundMuted ? 'Turn sound on' : 'Turn sound off'}
+      aria-pressed={!soundMuted}
+      className={`flex h-9 w-9 items-center justify-center rounded-full border shadow-sm backdrop-blur-md transition-all active:scale-95 ${surface}`}
+    >
+      {soundMuted ? (
+        <VolumeX className={`h-4 w-4 ${night ? 'text-white/50' : 'text-amber-900/45'}`} />
+      ) : (
+        <Volume2 className={`h-4 w-4 ${night ? 'text-amber-300' : 'text-amber-600'}`} />
+      )}
+    </button>
+  );
+}
 
 export interface StatusHUDProps {
   live: LiveCat;
@@ -145,6 +172,8 @@ export function StatusHUD({
               ))}
             </span>
           </div>
+
+          <SoundToggle night={night} surface={surface} />
 
           {/* Menu / Guide button */}
           <button
