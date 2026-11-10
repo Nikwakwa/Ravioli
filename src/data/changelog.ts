@@ -7,6 +7,12 @@ export interface ReleaseEntry {
 
 export const CHANGELOG: ReleaseEntry[] = [
   {
+    version: 'v0.22.1',
+    date: '2026-11-10',
+    title: 'Quieter Balcony 🌿',
+    changes: ['Removed the wind sound on the balcony.'],
+  },
+  {
     version: 'v0.22.0',
     date: '2026-11-10',
     title: 'Oli’s Closet 🎀',

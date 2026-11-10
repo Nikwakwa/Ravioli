@@ -4,6 +4,12 @@ All updates to **Oli** are listed here.
 
 ---
 
+## `v0.22.1` — 2026-11-10
+### Quieter Balcony 🌿
+- Removed the wind sound on the balcony.
+
+---
+
 ## `v0.22.0` — 2026-11-10
 ### Oli's Closet 🎀
 - Oli has a closet: tap the hanger to dress him up.
