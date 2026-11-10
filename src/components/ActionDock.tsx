@@ -74,6 +74,8 @@ export interface ActionDockProps {
   busy: boolean;
   onAction: (action: CareAction) => void;
   onToggleSleep: () => void;
+  /** Dark look for real night-time (follows the clock, not whether Oli is napping). */
+  night?: boolean;
 }
 
 function refusalHint(
@@ -109,6 +111,7 @@ export function ActionDock({
   busy,
   onAction,
   onToggleSleep,
+  night = false,
 }: ActionDockProps) {
   const [category, setCategory] = useState<ActionCategory>('feed');
   const actions = CARE_ACTIONS.filter((a) => a.category === category);
@@ -116,12 +119,12 @@ export function ActionDock({
   const whimCategory = whimActionId ? actionById(whimActionId)?.category ?? null : null;
   const cleanNeededCount = (litterBoxDirty ? 1 : 0) + messCount;
 
-  const shellClass = isSleeping
+  const shellClass = night
     ? 'bg-slate-900/85 border-white/10 text-amber-50'
     : 'bg-white/92 border-amber-900/10 text-amber-950';
 
-  // Readable "why not" chip in both day and night (sleep) themes
-  const hintChip = isSleeping ? 'bg-indigo-400/25 text-indigo-100' : 'bg-amber-950/10 text-amber-900';
+  // Readable "why not" chip in both day and night themes
+  const hintChip = night ? 'bg-indigo-400/25 text-indigo-100' : 'bg-amber-950/10 text-amber-900';
 
   const napRefusal = !isSleeping && live.energy >= MAX_SLEEP_ENERGY
     ? '⚡ Not Tired'
@@ -140,7 +143,7 @@ export function ActionDock({
       className={`relative z-20 mx-3 mb-2.5 rounded-3xl border p-2.5 shadow-lg backdrop-blur-md transition-colors duration-500 ${shellClass}`}
     >
       {/* Category tabs */}
-      <div className={`mb-2 grid grid-cols-4 gap-1 rounded-2xl p-1 ${isSleeping ? 'bg-white/5' : 'bg-amber-950/6'}`}>
+      <div className={`mb-2 grid grid-cols-4 gap-1 rounded-2xl p-1 ${night ? 'bg-white/5' : 'bg-amber-950/6'}`}>
         {CATEGORIES.map((c) => {
           const Icon = CATEGORY_ICONS[c.id];
           const active = category === c.id;
@@ -155,7 +158,7 @@ export function ActionDock({
               className={`relative flex items-center justify-center gap-1.5 rounded-xl py-1.5 text-xs font-extrabold transition-colors ${
                 active
                   ? 'text-amber-950'
-                  : isSleeping
+                  : night
                     ? 'text-indigo-200/70 hover:text-white'
                     : 'text-amber-900/60 hover:text-amber-900'
               }`}
@@ -163,7 +166,7 @@ export function ActionDock({
               {active && (
                 <motion.span
                   layoutId="dock-tab"
-                  className={`absolute inset-0 rounded-xl shadow-xs ${isSleeping ? 'bg-amber-300' : 'bg-white'}`}
+                  className={`absolute inset-0 rounded-xl shadow-xs ${night ? 'bg-amber-300' : 'bg-white'}`}
                   transition={{ type: 'spring', stiffness: 380, damping: 30 }}
                 />
               )}
@@ -233,10 +236,10 @@ export function ActionDock({
                     : isWhimMatch
                       ? 'border-amber-400 bg-gradient-to-b from-amber-50 to-pink-50/80 text-amber-950 ring-1 ring-amber-400/50'
                       : muted
-                        ? isSleeping
+                        ? night
                           ? 'border-white/5 bg-white/5 opacity-60'
                           : 'border-amber-900/10 bg-amber-950/5 opacity-65'
-                        : isSleeping
+                        : night
                           ? 'border-white/10 bg-slate-800/90 text-amber-50 shadow-xs'
                           : 'border-amber-900/10 bg-gradient-to-b from-amber-50/95 to-orange-50/70 text-amber-950 shadow-xs'
                 }`}
@@ -245,7 +248,7 @@ export function ActionDock({
                   className={`hidden h-7 w-7 shrink-0 items-center justify-center rounded-xl min-[360px]:flex ${
                     isUrgentScoop
                       ? 'bg-rose-500/15 text-rose-700'
-                      : isSleeping
+                      : night
                         ? 'bg-amber-400/20 text-amber-300'
                         : 'bg-amber-500/15 text-amber-700'
                   }`}
@@ -278,17 +281,23 @@ export function ActionDock({
               onClick={onToggleSleep}
               className={`col-span-2 flex h-full min-w-0 items-center gap-2 rounded-2xl border px-2.5 py-1.5 text-left transition-all ${
                 napRefusal
-                  ? isSleeping
+                  ? night
                     ? 'border-white/5 bg-white/5 opacity-55'
                     : 'border-amber-900/10 bg-amber-950/5 opacity-65'
                   : isSleeping
-                    ? 'border-amber-300/40 bg-gradient-to-b from-amber-400/25 to-indigo-900/60 text-amber-100 shadow-xs'
+                    ? night
+                      ? 'border-amber-300/40 bg-gradient-to-b from-amber-400/25 to-indigo-900/60 text-amber-100 shadow-xs'
+                      : 'border-amber-400/60 bg-gradient-to-b from-amber-100 to-amber-50 text-amber-950 shadow-xs'
                     : 'border-indigo-900/15 bg-gradient-to-b from-indigo-50/90 to-amber-50/60 text-amber-950 shadow-xs'
               }`}
             >
               <span
                 className={`hidden h-7 w-7 shrink-0 items-center justify-center rounded-xl min-[360px]:flex ${
-                  isSleeping ? 'bg-amber-300/25 text-amber-200' : 'bg-indigo-500/15 text-indigo-700'
+                  isSleeping
+                    ? night
+                      ? 'bg-amber-300/25 text-amber-200'
+                      : 'bg-amber-400/25 text-amber-700'
+                    : 'bg-indigo-500/15 text-indigo-700'
                 }`}
               >
                 {isSleeping ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}

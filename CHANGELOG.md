@@ -4,6 +4,13 @@ All updates to **Oli** are listed here.
 
 ---
 
+## `v0.20.8` — 2026-11-10
+### Daytime Naps Stay Sunny ☀️😴
+- Daytime naps no longer turn the screen dark: the light follows the real clock.
+- At night the whole balcony goes dark now, not just the sky.
+
+---
+
 ## `v0.20.7` — 2026-11-09
 ### Weather & Bug Fixes 🌦️
 - Live Luxembourg weather and sunset now actually work in the app.

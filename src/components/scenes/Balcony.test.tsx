@@ -56,7 +56,7 @@ describe('Balcony — Scenery & Mobile Safe Bounds', () => {
     const spots: CatSpot[] = ['planter', 'bistro_chair', 'balcony_floor'];
 
     for (const spot of spots) {
-      const tree = Balcony({ sleeping: false, activeSpot: spot }) as AnyElement;
+      const tree = Balcony({ activeSpot: spot }) as AnyElement;
       const avatarList = findElements(tree, (el) => typeof el.type === 'function' && el.type.name === 'CatAvatar');
       expect(avatarList.length, `Oli must render when activeSpot is ${spot}`).toBe(1);
 
@@ -80,7 +80,7 @@ describe('Balcony — Scenery & Mobile Safe Bounds', () => {
   });
 
   it('perches Oli cleanly on top of the wooden bistro table after the table and chair layers so he is never sliced by furniture slats', () => {
-    const tree = Balcony({ sleeping: false, activeSpot: 'bistro_chair' }) as AnyElement;
+    const tree = Balcony({ activeSpot: 'bistro_chair' }) as AnyElement;
     const bistroGroup = findElements(tree, (el) => {
       const label = el.props?.['aria-label'] || '';
       return typeof label === 'string' && label.toLowerCase().includes('bistro');
@@ -103,7 +103,7 @@ describe('Balcony — Scenery & Mobile Safe Bounds', () => {
   });
 
   it('draws Oli in the street-watch corner behind the closer planter boxes and cypress pot', () => {
-    const tree = Balcony({ sleeping: false, activeSpot: 'planter' }) as AnyElement;
+    const tree = Balcony({ activeSpot: 'planter' }) as AnyElement;
     const cornerGroup = findElements(tree, (el) => el.props?.role === 'button' && el.props?.['aria-current'] === 'true')[0];
     expect(cornerGroup).toBeDefined();
     const children = cornerGroup.props.children as AnyElement[];
@@ -120,7 +120,7 @@ describe('Balcony — Scenery & Mobile Safe Bounds', () => {
   });
 
   it('renders the balcony_floor spot after the bistro table in SVG painter order so Oli is never overlapped by table legs', () => {
-    const tree = Balcony({ sleeping: false, activeSpot: 'balcony_floor' }) as AnyElement;
+    const tree = Balcony({ activeSpot: 'balcony_floor' }) as AnyElement;
     const interactiveGroups = findElements(tree, (el) => el.props?.role === 'button');
     expect(interactiveGroups.length).toBe(3);
 
@@ -134,7 +134,6 @@ describe('Balcony — Scenery & Mobile Safe Bounds', () => {
 
   it('provides generous touch targets (>= 40x40) with pointer-events enabled for all 3 balcony spots', () => {
     const tree = Balcony({
-      sleeping: false,
       onSelectSpot: () => {},
     }) as AnyElement;
 

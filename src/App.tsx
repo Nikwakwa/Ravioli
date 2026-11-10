@@ -130,8 +130,9 @@ export function App() {
 
   const effectiveTime = resolveTimeOfDay(new Date(now), luxData);
   const isRaining = isRainingNow(luxData, now);
-  const isNight = Boolean(live?.isSleeping || effectiveTime === 'night');
-  const isSunset = Boolean(!live?.isSleeping && effectiveTime === 'sunset');
+  // Light follows the real clock in Luxembourg only. A daytime nap stays in daylight.
+  const isNight = effectiveTime === 'night';
+  const isSunset = effectiveTime === 'sunset';
 
   // Automatically refresh Luxembourg atmosphere (weather, real sunrise/sunset) on launch and resume
   useEffect(() => {
@@ -345,7 +346,6 @@ export function App() {
                 <Balcony
                   timeOfDay={effectiveTime}
                   isRaining={isRaining}
-                  sleeping={live.isSleeping}
                   activeSpot={spot}
                   onSelectSpot={setSpot}
                   catMood={mood}
@@ -366,7 +366,6 @@ export function App() {
                 <LivingRoom
                   timeOfDay={effectiveTime}
                   isRaining={isRaining}
-                  sleeping={live.isSleeping}
                   fountainBoost={eventPlaying && event?.actionId === 'fountain'}
                   onTapFountain={handleTapFountain}
                   litterBoxDirty={litterBoxDirty}
@@ -382,7 +381,7 @@ export function App() {
             )}
           </AnimatePresence>
 
-          {/* Subtle sleep/sunset/night ambient vignette */}
+          {/* Subtle sunset/night ambient vignette */}
           <motion.div
             className="pointer-events-none absolute inset-0 bg-indigo-950"
             initial={false}
@@ -555,6 +554,7 @@ export function App() {
             busy={busy}
             onAction={perform}
             onToggleSleep={toggleSleep}
+            night={isNight}
           />
         </div>
 
