@@ -6,6 +6,9 @@ export function useOutfit(): Outfit {
   return useSyncExternalStore(subscribeCloset, getCloset, getEmptyCloset).outfit;
 }
 
+/** Colors of the Fancy Suit (drawn on Oli's body by CatAvatar). */
+export const SUIT = { jacket: '#2b3550', line: '#4c5a7d', shirt: '#fbfaf6', button: '#e6c15a' } as const;
+
 // All shapes are drawn in the head's own coordinates (head spans roughly x 39–161, y 30–124),
 // so they follow Oli's head in every pose.
 
@@ -123,6 +126,9 @@ function AccessoryShape({ id, back }: { id: AccessoryId; back: boolean }) {
       return back ? <BowtieBack /> : <Bowtie />;
     case 'scarf':
       return <Scarf back={back} />;
+    case 'suit':
+      // Worn on the body: CatAvatar draws it for each pose.
+      return null;
   }
 }
 
@@ -138,19 +144,34 @@ export function HeadAccessories({ back = false }: { back?: boolean }) {
   );
 }
 
+function SuitIcon() {
+  return (
+    <g>
+      <path d="M18 6 L30 12 L42 6 L55 14 L50 30 L45 28 V56 H15 V28 L10 30 L5 14 Z" fill={SUIT.jacket} />
+      <path d="M22 7 L30 34 L38 7 L30 12 Z" fill={SUIT.shirt} />
+      <path d="M19 6 L30 36 L23 30 L17 16 Z" fill={SUIT.line} />
+      <path d="M41 6 L30 36 L37 30 L43 16 Z" fill={SUIT.line} />
+      <circle cx={30} cy={42} r={1.8} fill={SUIT.button} />
+      <circle cx={30} cy={49} r={1.8} fill={SUIT.button} />
+      <path d="M37 24 l6 -1 l-1 4.5 z" fill={SUIT.shirt} />
+    </g>
+  );
+}
+
 const ICON_VIEWBOX: Record<AccessoryId, string> = {
   bowtie: '70 108 60 40',
   flower_crown: '48 18 104 44',
   scarf: '44 104 112 60',
   detective_cap: '54 4 92 56',
   sunglasses: '40 60 120 40',
+  suit: '0 0 60 60',
 };
 
 /** Small picture of one accessory for the closet cards. */
 export function AccessoryIcon({ id, className }: { id: AccessoryId; className?: string }) {
   return (
     <svg viewBox={ICON_VIEWBOX[id]} className={className} aria-hidden="true">
-      <AccessoryShape id={id} back={false} />
+      {id === 'suit' ? <SuitIcon /> : <AccessoryShape id={id} back={false} />}
     </svg>
   );
 }

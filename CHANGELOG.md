@@ -4,6 +4,14 @@ All updates to **Oli** are listed here.
 
 ---
 
+## `v0.23.0` — 2026-11-11
+### Closet Shop & Fancy Suit 🤵
+- Closet items are now bought with Churus (what you already had stays yours).
+- New Fancy Suit: the priciest item at 20 Churus.
+- Nicer sounds for scooping the litter box and sweeping fur.
+
+---
+
 ## `v0.22.1` — 2026-11-10
 ### Quieter Balcony 🌿
 - Removed the wind sound on the balcony.

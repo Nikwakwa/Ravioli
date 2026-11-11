@@ -1,14 +1,15 @@
-import { useEffect, useSyncExternalStore } from 'react';
+import { useEffect, useState, useSyncExternalStore } from 'react';
 import { motion } from 'framer-motion';
-import { Check, Lock, X } from 'lucide-react';
+import { Check, X } from 'lucide-react';
 import {
   ACCESSORIES,
+  canAfford,
   getCloset,
   getEmptyCloset,
-  isUnlocked,
-  markClosetSeen,
+  isOwned,
   subscribeCloset,
   toggleAccessory,
+  type AccessoryId,
   type ClosetState,
 } from '../utils/closet';
 import { vibrate } from '../utils/feedback';
@@ -30,12 +31,22 @@ export function HangerIcon({ className }: { className?: string }) {
   );
 }
 
-/** Bottom drawer where accessories are put on or taken off. */
-export function ClosetDrawer({ onClose }: { onClose: () => void }) {
+/** Bottom drawer where accessories are bought with Churus, put on or taken off. */
+export function ClosetDrawer({
+  churuStash,
+  onBuy,
+  onClose,
+}: {
+  churuStash: number;
+  /** Pays for the accessory with Churus. Returns false if it could not be bought. */
+  onBuy: (id: AccessoryId) => boolean;
+  onClose: () => void;
+}) {
   const closet = useCloset();
+  // Buying takes two taps (price, then confirm) so Churus are never spent by accident.
+  const [confirming, setConfirming] = useState<AccessoryId | null>(null);
 
   useEffect(() => {
-    markClosetSeen();
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
     };
@@ -72,8 +83,8 @@ export function ClosetDrawer({ onClose }: { onClose: () => void }) {
           </div>
           <div className="min-w-0 flex-1">
             <h2 className="font-display text-base font-bold">Oli’s Closet</h2>
-            <p className="text-xs font-semibold text-amber-900/75">Tap to put on or take off.</p>
-            <p className="mt-0.5 text-[11px] font-bold text-pink-700">🍬 {closet.churusEarned} Churus earned</p>
+            <p className="text-xs font-semibold text-amber-900/75">Buy with Churus, then tap to wear.</p>
+            <p className="mt-0.5 text-[11px] font-bold text-pink-700">🍬 {churuStash} to spend</p>
           </div>
           <button
             type="button"
@@ -87,31 +98,51 @@ export function ClosetDrawer({ onClose }: { onClose: () => void }) {
 
         <ul className="grid grid-cols-2 gap-2">
           {ACCESSORIES.map((item) => {
-            const unlocked = isUnlocked(item, closet.churusEarned);
+            const owned = isOwned(closet, item.id);
             const wearing = closet.outfit[item.slot] === item.id;
-            const missing = item.unlockAt - closet.churusEarned;
+            const affordable = canAfford(item, churuStash);
+            const isConfirming = confirming === item.id;
+            const handleTap = () => {
+              if (owned) {
+                vibrate(15);
+                playSound('pop');
+                toggleAccessory(item.id);
+                return;
+              }
+              if (!affordable) {
+                vibrate([20, 40, 20]);
+                playSound('miss');
+                return;
+              }
+              if (!isConfirming) {
+                vibrate(15);
+                playSound('pop');
+                setConfirming(item.id);
+                return;
+              }
+              onBuy(item.id);
+              setConfirming(null);
+            };
             return (
               <li key={item.id}>
                 <button
                   type="button"
-                  disabled={!unlocked}
-                  aria-pressed={wearing}
-                  onClick={() => {
-                    vibrate(15);
-                    playSound('pop');
-                    toggleAccessory(item.id);
-                  }}
+                  aria-pressed={owned ? wearing : undefined}
+                  aria-disabled={!owned && !affordable}
+                  onClick={handleTap}
                   className={`flex w-full items-center gap-2 rounded-2xl border p-2 text-left transition-all active:scale-[0.98] ${
                     wearing
                       ? 'border-emerald-500/60 bg-emerald-50 shadow-xs'
-                      : unlocked
-                        ? 'border-amber-900/10 bg-white'
-                        : 'border-amber-900/8 bg-amber-950/4'
+                      : isConfirming
+                        ? 'border-pink-500/70 bg-pink-50 shadow-xs'
+                        : owned || affordable
+                          ? 'border-amber-900/10 bg-white'
+                          : 'border-amber-900/8 bg-amber-950/4'
                   }`}
                 >
                   <span
                     className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-amber-100/80 ${
-                      unlocked ? '' : 'opacity-40 grayscale'
+                      owned || affordable ? '' : 'opacity-45 grayscale'
                     }`}
                   >
                     <AccessoryIcon id={item.id} className="h-8 w-9" />
@@ -122,11 +153,17 @@ export function ClosetDrawer({ onClose }: { onClose: () => void }) {
                       <span className="flex items-center gap-0.5 text-[10px] font-bold text-emerald-700">
                         <Check className="h-3 w-3" /> Wearing
                       </span>
-                    ) : unlocked ? (
+                    ) : owned ? (
                       <span className="text-[10px] font-bold text-amber-800/70">Tap to wear</span>
+                    ) : isConfirming ? (
+                      <span className="text-[10px] font-black text-pink-700">Tap again to buy</span>
+                    ) : affordable ? (
+                      <span className="inline-block rounded-full bg-pink-500 px-1.5 py-0.5 text-[10px] font-black text-white">
+                        Buy 🍬 {item.price}
+                      </span>
                     ) : (
-                      <span className="flex items-center gap-0.5 text-[10px] font-bold text-amber-900/55">
-                        <Lock className="h-3 w-3" /> {missing} more 🍬
+                      <span className="text-[10px] font-bold text-amber-900/55">
+                        🍬 {item.price} · need {item.price - churuStash} more
                       </span>
                     )}
                   </span>

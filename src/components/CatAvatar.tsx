@@ -1,7 +1,7 @@
 import { AnimatePresence, motion, type TargetAndTransition, type Transition } from 'framer-motion';
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import type { CatAnimation, Mood } from '../types';
-import { HeadAccessories } from './CatAccessories';
+import { HeadAccessories, SUIT, useOutfit } from './CatAccessories';
 
 /**
  * Oli — hand-drawn SVG ginger cat.
@@ -941,6 +941,7 @@ export function CatAvatar({ mood, animation, animationKey, onPet, className, x, 
   const sad = expr.earDroop;
 
   const showProps = !(pose === 'look_out' && !sleeping);
+  const suit = useOutfit().body === 'suit';
   const isPlayAnim = anim === 'playing' || anim === 'laser' || anim === 'tail_chase' || anim === 'red_ball';
   const tailSpeed =
     anim === 'tail_chase' ? 0.32 : isPlayAnim ? 0.6 : mood === 'ecstatic' || mood === 'happy' ? 2.2 : sad ? 5 : 3.4;
@@ -1030,6 +1031,14 @@ export function CatAvatar({ mood, animation, animationKey, onPet, className, x, 
                       <path d="M130 142 Q134 152 130 160" />
                       <path d="M156 156 Q156 166 150 172" />
                     </g>
+                    {suit && (
+                      <g>
+                        <path d="M26 198 C22 160 60 136 102 136 C144 136 180 160 175 198 C174 206 28 206 26 198 Z" fill={SUIT.jacket} />
+                        <path d="M112 138 Q120 170 116 204" stroke={SUIT.line} strokeWidth={1.6} fill="none" strokeLinecap="round" />
+                        <path d="M138 158 l11 2 l-3 7 z" fill={SUIT.shirt} />
+                        <path d="M40 196 H164" stroke={SUIT.line} strokeWidth={1.4} strokeLinecap="round" opacity={0.7} />
+                      </g>
+                    )}
                   </motion.g>
                   <TailStripes d="M168 194 C172 212 120 214 96 210 C80 208 64 206 56 200" width={13} />
                   <ellipse cx={82} cy={200} rx={11} ry={5} fill={C.cream} />
@@ -1093,6 +1102,22 @@ export function CatAvatar({ mood, animation, animationKey, onPet, className, x, 
                       <path d="M93 164 Q79 167 66 178" opacity={0.85} />
                       <path d="M107 164 Q121 167 134 178" opacity={0.85} />
                     </g>
+                    {suit && (
+                      <g>
+                        <path
+                          d="M100 100 C80 100 68 116 64 138 C60 158 52 174 52 190 C52 204 72 208 100 208 C128 208 148 204 148 190 C148 174 140 158 136 138 C132 116 120 100 100 100 Z"
+                          fill={SUIT.jacket}
+                        />
+                        <ellipse cx={66} cy={188} rx={21} ry={19} fill={SUIT.jacket} />
+                        <ellipse cx={134} cy={188} rx={21} ry={19} fill={SUIT.jacket} />
+                        <g stroke={SUIT.line} strokeWidth={1.6} fill="none" strokeLinecap="round">
+                          <path d="M100 118 V178" />
+                          <path d="M100 178 L95 206 M100 178 L105 206" />
+                          <path d="M72 132 Q100 122 128 132" />
+                          <path d="M81 172 Q75 188 83 204 M119 172 Q125 188 117 204" />
+                        </g>
+                      </g>
+                    )}
                   </motion.g>
 
                   {/* Fluffy striped tail curled on the tiles, tip flicking while he watches */}
@@ -1171,25 +1196,25 @@ export function CatAvatar({ mood, animation, animationKey, onPet, className, x, 
                       style={{ originX: 0.5, originY: 1 }}
                       transition={{ duration: petting ? 0.9 : 3, repeat: Infinity, ease: 'easeInOut' }}
                     >
-                      <path d="M150 174 Q153 152 160 134" stroke={C.coat} strokeWidth={14} fill="none" strokeLinecap="round" />
-                      <path d="M150 174 Q153 152 160 134" stroke={C.stripe} strokeWidth={14} fill="none" pathLength={100} strokeDasharray="0 30 7 14 7 100" opacity={0.6} />
+                      <path d="M150 174 Q153 152 160 134" stroke={suit ? SUIT.jacket : C.coat} strokeWidth={14} fill="none" strokeLinecap="round" />
+                      <path d="M150 174 Q153 152 160 134" stroke={C.stripe} strokeWidth={14} fill="none" pathLength={100} strokeDasharray="0 30 7 14 7 100" opacity={suit ? 0 : 0.6} />
                       <ToeBeans cx={161} cy={129} rotate={14} />
                     </motion.g>
                     <motion.g
                       animate={{ y: [0, -3, 0] }}
                       transition={{ duration: petting ? 0.45 : 2.4, repeat: Infinity, ease: 'easeInOut' }}
                     >
-                      <path d="M100 166 Q95 146 103 133" stroke={C.coat} strokeWidth={12} fill="none" strokeLinecap="round" />
+                      <path d="M100 166 Q95 146 103 133" stroke={suit ? SUIT.jacket : C.coat} strokeWidth={12} fill="none" strokeLinecap="round" />
                       <ToeBeans cx={105} cy={129} rotate={-16} small />
                     </motion.g>
 
                     {/* Round bean-shaped body lying on its back */}
                     <path
                       d="M70 182 C66 164 84 152 112 152 C142 152 168 160 170 180 C172 196 152 203 114 203 C86 203 72 196 70 182 Z"
-                      fill={C.coat}
+                      fill={suit ? SUIT.jacket : C.coat}
                     />
                     {/* Flank stripes along the side resting on the tiles */}
-                    <g stroke={C.stripe} strokeWidth={3} strokeLinecap="round" fill="none">
+                    <g stroke={suit ? SUIT.line : C.stripe} strokeWidth={suit ? 1.6 : 3} strokeLinecap="round" fill="none">
                       <path d="M94 192 Q98 198 104 200" />
                       <path d="M118 193 Q122 199 128 200" />
                       <path d="M142 190 Q147 196 153 196" />
@@ -1197,10 +1222,22 @@ export function CatAvatar({ mood, animation, animationKey, onPet, className, x, 
                     {/* Big fluffy cream tummy facing the sky */}
                     <path
                       d="M84 175 C85 163 101 157 118 157 C138 157 155 163 157 173 C158 183 143 190 118 190 C98 190 83 186 84 175 Z"
-                      fill={C.cream}
+                      fill={suit ? SUIT.shirt : C.cream}
+                      stroke={suit ? SUIT.line : 'none'}
+                      strokeWidth={suit ? 2.4 : 0}
                     />
-                    <path d="M101 167 l4 3 l4 -3 l4 3 l4 -3 l4 3 l4 -3" stroke={C.creamShade} strokeWidth={1.3} fill="none" strokeLinecap="round" strokeLinejoin="round" />
-                    <path d="M108 179 l4 3 l4 -3 l4 3 l4 -3 l4 3" stroke={C.creamShade} strokeWidth={1.2} fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                    {suit ? (
+                      <g fill={SUIT.button}>
+                        <circle cx={104} cy={173} r={2} />
+                        <circle cx={120} cy={174} r={2} />
+                        <circle cx={136} cy={174} r={2} />
+                      </g>
+                    ) : (
+                      <>
+                        <path d="M101 167 l4 3 l4 -3 l4 3 l4 -3 l4 3 l4 -3" stroke={C.creamShade} strokeWidth={1.3} fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                        <path d="M108 179 l4 3 l4 -3 l4 3 l4 -3 l4 3" stroke={C.creamShade} strokeWidth={1.2} fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                      </>
+                    )}
 
                     {/* Near hind leg kicking up happily */}
                     <motion.g
@@ -1208,8 +1245,8 @@ export function CatAvatar({ mood, animation, animationKey, onPet, className, x, 
                       style={{ originX: 0, originY: 1 }}
                       transition={{ duration: petting ? 0.9 : 3.4, repeat: Infinity, ease: 'easeInOut' }}
                     >
-                      <path d="M150 184 Q170 176 176 154" stroke={C.coat} strokeWidth={15} fill="none" strokeLinecap="round" />
-                      <path d="M150 184 Q170 176 176 154" stroke={C.stripe} strokeWidth={15} fill="none" pathLength={100} strokeDasharray="0 34 7 14 7 100" opacity={0.6} />
+                      <path d="M150 184 Q170 176 176 154" stroke={suit ? SUIT.jacket : C.coat} strokeWidth={15} fill="none" strokeLinecap="round" />
+                      <path d="M150 184 Q170 176 176 154" stroke={C.stripe} strokeWidth={15} fill="none" pathLength={100} strokeDasharray="0 34 7 14 7 100" opacity={suit ? 0 : 0.6} />
                       <ToeBeans cx={177} cy={149} rotate={24} />
                     </motion.g>
 
@@ -1218,7 +1255,7 @@ export function CatAvatar({ mood, animation, animationKey, onPet, className, x, 
                       animate={{ y: [0, -3.5, 0] }}
                       transition={{ duration: petting ? 0.45 : 2.4, repeat: Infinity, ease: 'easeInOut', delay: 0.3 }}
                     >
-                      <path d="M106 182 Q108 162 121 154" stroke={C.coat} strokeWidth={13} fill="none" strokeLinecap="round" />
+                      <path d="M106 182 Q108 162 121 154" stroke={suit ? SUIT.jacket : C.coat} strokeWidth={13} fill="none" strokeLinecap="round" />
                       <ToeBeans cx={124} cy={150} rotate={-34} small />
                     </motion.g>
                   </motion.g>
@@ -1279,6 +1316,25 @@ export function CatAvatar({ mood, animation, animationKey, onPet, className, x, 
                     <rect x={73} y={150} width={19} height={54} rx={9.5} fill={C.coat} />
                     <rect x={108} y={150} width={19} height={54} rx={9.5} fill={C.coat} />
                     <path d="M74 168 h17 M74 180 h17 M109 168 h17 M109 180 h17" stroke={C.stripe} strokeWidth={2.4} strokeLinecap="round" opacity={0.6} />
+                    {suit && (
+                      <g>
+                        <path d="M66 112 C46 136 37 176 47 198 C53 209 147 209 153 198 C163 176 154 136 134 112 Z" fill={SUIT.jacket} />
+                        <ellipse cx={58} cy={188} rx={19} ry={17} fill={SUIT.jacket} />
+                        <ellipse cx={142} cy={188} rx={19} ry={17} fill={SUIT.jacket} />
+                        {/* Shirt front, lapels, buttons and pocket square */}
+                        <path d="M86 113 L100 168 L114 113 Z" fill={SUIT.shirt} />
+                        <path d="M83 114 L100 170 L91 160 L77 134 Z" fill={SUIT.line} />
+                        <path d="M117 114 L100 170 L109 160 L123 134 Z" fill={SUIT.line} />
+                        <circle cx={100} cy={178} r={2.1} fill={SUIT.button} />
+                        <circle cx={100} cy={189} r={2.1} fill={SUIT.button} />
+                        <path d="M124 143 l9 -1 l-1.5 6.5 z" fill={SUIT.shirt} />
+                        {/* Sleeves with white cuffs */}
+                        <rect x={73} y={150} width={19} height={48} rx={9.5} fill={SUIT.jacket} stroke={SUIT.line} strokeWidth={1.2} />
+                        <rect x={108} y={150} width={19} height={48} rx={9.5} fill={SUIT.jacket} stroke={SUIT.line} strokeWidth={1.2} />
+                        <rect x={73.5} y={191} width={18} height={5} rx={2} fill={SUIT.shirt} />
+                        <rect x={108.5} y={191} width={18} height={5} rx={2} fill={SUIT.shirt} />
+                      </g>
+                    )}
                     <ellipse cx={83} cy={203} rx={13} ry={8} fill={C.cream} />
                     <ellipse cx={117} cy={203} rx={13} ry={8} fill={C.cream} />
                     <path d="M79 200 v5 M85 200 v5 M113 200 v5 M119 200 v5" stroke={C.creamShade} strokeWidth={1.4} strokeLinecap="round" />
