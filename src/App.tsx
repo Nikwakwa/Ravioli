@@ -16,6 +16,7 @@ import { actionById } from './data/actions';
 import { useCatGame, type Notice } from './hooks/useCatGame';
 import { useVersionCheck } from './hooks/useVersionCheck';
 import type { CatSpot } from './types';
+import { hasAffordableItem } from './utils/closet';
 import {
   loadNotificationPrefs,
   requestNotificationAccess,
@@ -54,7 +55,7 @@ export function App() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [closetOpen, setClosetOpen] = useState(false);
   const closeCloset = useCallback(() => setClosetOpen(false), []);
-  const closetHasNew = useCloset().hasNew;
+  const closet = useCloset();
   const [menuTab, setMenuTab] = useState<MenuTab>('rules');
   const [notifPrefs, setNotifPrefs] = useState<NotificationPrefs>(() => loadNotificationPrefs());
   const [notice, setNotice] = useState<Notice | null>(null);
@@ -106,6 +107,7 @@ export function App() {
     litterBoxDirty,
     churuStash,
     churuProgress,
+    buyAccessory,
     whim,
     activeMinigame,
     event,
@@ -496,7 +498,7 @@ export function App() {
             }`}
           >
             <HangerIcon className="h-4.5 w-4.5" />
-            {closetHasNew && (
+            {hasAffordableItem(closet, churuStash) && (
               <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-pink-500 ring-2 ring-white" />
             )}
           </button>
@@ -592,7 +594,7 @@ export function App() {
         <EmergencyRevivalModal live={live} onRevive={reviveOli} />
 
         {/* Oli's Closet (dress-up drawer) */}
-        <AnimatePresence>{closetOpen && <ClosetDrawer onClose={closeCloset} />}</AnimatePresence>
+        <AnimatePresence>{closetOpen && <ClosetDrawer churuStash={churuStash} onBuy={buyAccessory} onClose={closeCloset} />}</AnimatePresence>
 
         {/* Separate Menu Page (Rules, Vacation Pause, Version/Updates, Notifications) */}
         <AnimatePresence>

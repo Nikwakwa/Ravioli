@@ -59,8 +59,8 @@ import {
   type ParticleKind,
 } from '../data/actions';
 import { celebrate, vibrate } from '../utils/feedback';
-import { recordChurusEarned } from '../utils/closet';
-import { playActionSound, playSound } from '../utils/sound';
+import { accessoryById, addPurchase, canAfford, getCloset, isOwned, type AccessoryId } from '../utils/closet';
+import { playActionSound, playSound, type SoundName } from '../utils/sound';
 import {
   evaluateStatThresholds,
   loadAlertedMap,
@@ -475,21 +475,29 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
       setChuruProgress(result.progress);
       if (result.tubesEarned > 0) {
         updateChuruStash((c) => c + result.tubesEarned);
-        // Earned Churus also unlock accessories in Oli's closet.
-        const unlocked = recordChurusEarned(result.tubesEarned);
-        if (unlocked.length > 0) {
-          window.setTimeout(() => {
-            playSound('chime');
-            noticeRef.current({
-              text: `🎀 New in Oli's closet: ${unlocked.map((a) => a.name).join(' & ')}!`,
-              tone: 'info',
-            });
-          }, 2200);
-        }
         return `+${result.tubesEarned} Churu 🍬!${result.dailyLimitReached ? ' (last one today)' : ''}`;
       }
       if (result.dailyLimitReached) return 'Churu limit reached for today 🍬';
       return `🍬 ${result.progress.points}/${CHURU_POINTS_PER_TUBE}`;
+    },
+    [updateChuruStash],
+  );
+
+  /** Buys an accessory for Oli's closet with Churu tubes from the stash. */
+  const buyAccessory = useCallback(
+    (id: AccessoryId): boolean => {
+      const item = accessoryById(id);
+      if (!item || isOwned(getCloset(), id)) return false;
+      if (!canAfford(item, loadChuruStash())) {
+        vibrate([20, 40, 20]);
+        return false;
+      }
+      updateChuruStash((c) => c - item.price);
+      addPurchase(id);
+      vibrate([25, 35, 25, 35, 40]);
+      playSound('chime');
+      noticeRef.current({ text: `🎀 Oli got a new ${item.name}!`, tone: 'info' });
+      return true;
     },
     [updateChuruStash],
   );
@@ -548,9 +556,10 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
   const eventTimer = useRef<number | undefined>(undefined);
   useEffect(() => () => window.clearTimeout(eventTimer.current), []);
 
-  const playEvent = useCallback((ev: Omit<GameEvent, 'key'>) => {
+  const playEvent = useCallback((ev: Omit<GameEvent, 'key'>, sound?: SoundName) => {
     setEvent({ ...ev, key: ++eventSeq });
-    playActionSound(ev.actionId);
+    if (sound) playSound(sound);
+    else playActionSound(ev.actionId);
     setEventPlaying(true);
     window.clearTimeout(eventTimer.current);
     eventTimer.current = window.setTimeout(() => setEventPlaying(false), ev.durationMs + 100);
@@ -1100,7 +1109,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
         particles: scoopAction.particles,
         animation: live.isSleeping ? 'idle' : scoopAction.animation,
         durationMs: scoopAction.durationMs,
-      });
+      }, target.kind === 'fur_clump' ? 'sweep' : 'wipe');
 
       const willThrive = remaining.length === 0 && !litterBoxDirty && isThriving(applyEffect(live, scoopAction.effect));
       if (willThrive) window.setTimeout(celebrate, 450);
@@ -1587,6 +1596,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
     litterBoxDirty,
     churuStash,
     churuProgress,
+    buyAccessory,
     whim,
     activeMinigame,
     log,

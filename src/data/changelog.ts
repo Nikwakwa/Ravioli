@@ -7,6 +7,16 @@ export interface ReleaseEntry {
 
 export const CHANGELOG: ReleaseEntry[] = [
   {
+    version: 'v0.23.0',
+    date: '2026-11-11',
+    title: 'Closet Shop & Fancy Suit 🤵',
+    changes: [
+      'Closet items are now bought with Churus (what you already had stays yours).',
+      'New Fancy Suit: the priciest item at 20 Churus.',
+      'Nicer sounds for scooping the litter box and sweeping fur.',
+    ],
+  },
+  {
     version: 'v0.22.1',
     date: '2026-11-10',
     title: 'Quieter Balcony 🌿',

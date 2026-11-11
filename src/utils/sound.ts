@@ -15,6 +15,8 @@ export type SoundName =
   | 'brush'
   | 'mist'
   | 'scoop'
+  | 'sweep'
+  | 'wipe'
   | 'refuse'
   | 'yawn'
   | 'pop'
@@ -204,6 +206,31 @@ function voice(
   osc.stop(t0 + o.dur + 0.05);
 }
 
+/** A sprinkle of tiny clicks (litter grains sifting and falling). */
+function grains(
+  c: AudioContext,
+  out: AudioNode,
+  t0: number,
+  o: { dur: number; count: number; peak: number; low: number; high: number },
+): void {
+  for (let i = 0; i < o.count; i++) {
+    burst(c, out, t0 + Math.random() * o.dur, {
+      dur: 0.012 + Math.random() * 0.014,
+      peak: o.peak * (0.45 + Math.random() * 0.55),
+      attack: 0.002,
+      type: 'highpass',
+      from: o.low + Math.random() * (o.high - o.low),
+      q: 0.7,
+    });
+  }
+}
+
+/** Two tiny high pings: "all clean!" */
+function sparkle(c: AudioContext, out: AudioNode, t0: number): void {
+  voice(c, out, t0, { dur: 0.32, peak: 0.09, freqs: [2093, 2093], wave: 'sine', attack: 0.006 });
+  voice(c, out, t0 + 0.08, { dur: 0.4, peak: 0.09, freqs: [2794, 2794], wave: 'sine', attack: 0.006 });
+}
+
 /** Rhythmic purr: soft rumble pulsing ~25 times a second, breathing in and out. */
 function purr(c: AudioContext, out: AudioNode, t0: number, dur: number, peak: number): void {
   const src = noiseSource(c, t0, dur);
@@ -298,11 +325,32 @@ const SOUNDS: Record<SoundName, Player> = {
     burst(c, out, t + 0.45, { dur: 0.3, peak: 0.16, attack: 0.02, type: 'highpass', from: 4200, q: 0.5 });
   },
 
-  // Gritty litter scoops / sweeping
+  // Litter box: the scoop digs in, clean litter sifts back through, then a soft drop in the bag
   scoop: (c, out, t) => {
-    for (let i = 0; i < 3; i++) {
-      burst(c, out, t + i * 0.27, { dur: 0.2, peak: 0.36, attack: 0.04, from: 1500, to: 2600, q: 0.8 });
-    }
+    burst(c, out, t, { dur: 0.26, peak: 0.3, attack: 0.05, from: 1900, to: 3400, q: 0.7 });
+    grains(c, out, t, { dur: 0.24, count: 16, peak: 0.2, low: 2600, high: 5200 });
+    grains(c, out, t + 0.3, { dur: 0.42, count: 34, peak: 0.24, low: 3400, high: 7000 });
+    burst(c, out, t + 0.82, { dur: 0.2, peak: 0.24, attack: 0.04, from: 2100, to: 3600, q: 0.7 });
+    grains(c, out, t + 1.02, { dur: 0.3, count: 22, peak: 0.2, low: 3400, high: 7000 });
+    voice(c, out, t + 1.38, { dur: 0.1, peak: 0.3, freqs: [190, 110], wave: 'sine', attack: 0.004 });
+    sparkle(c, out, t + 1.5);
+  },
+
+  // Fur tumbleweed: two soft broom strokes, a quick "fwip" into the pan, then a clean sparkle
+  sweep: (c, out, t) => {
+    burst(c, out, t, { dur: 0.34, peak: 0.3, attack: 0.13, from: 700, to: 2600, q: 0.6 });
+    burst(c, out, t + 0.36, { dur: 0.3, peak: 0.26, attack: 0.11, from: 2400, to: 900, q: 0.6 });
+    burst(c, out, t + 0.74, { dur: 0.16, peak: 0.3, attack: 0.09, from: 500, to: 4200, q: 1.1 });
+    sparkle(c, out, t + 0.95);
+  },
+
+  // Rug mess: two squeaky-clean wipes
+  wipe: (c, out, t) => {
+    [0, 0.34].forEach((at, i) => {
+      burst(c, out, t + at, { dur: 0.26, peak: 0.26, attack: 0.09, from: 1100, to: 2000 + i * 300, q: 0.8 });
+      voice(c, out, t + at + 0.08, { dur: 0.13, peak: 0.07, freqs: [1250 + i * 150, 1700 + i * 200], wave: 'sine', attack: 0.03 });
+    });
+    sparkle(c, out, t + 0.78);
   },
 
   // Grumbly "mrr" when he says no
