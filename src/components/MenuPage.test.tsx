@@ -106,7 +106,8 @@ describe('MenuPage Server Rendering & Content', () => {
       />
     );
 
-    expect(html).toContain('Discovery Badges');
+    expect(html).toContain('Badges');
+    expect(html).not.toContain('Discovery Badges');
     expect(html).toContain('Medals');
     expect(html).toContain('If It Fits I Sits');
     expect(html).toContain('Bronze');
@@ -189,5 +190,19 @@ describe('StatusHUD Simplified Layout', () => {
     expect(pausedBtn).toBeDefined();
     pausedBtn?.props?.onClick();
     expect(handleOpenPause).toHaveBeenCalledTimes(1);
+  });
+
+  it('renders a notification dot on the Menu button when hasUnseenBadges is true', () => {
+    const tree = StatusHUD({
+      live: mockLive,
+      mood: 'content',
+      churuStash: 3,
+      onOpenMenu: vi.fn(),
+      hasUnseenBadges: true,
+    }) as AnyElement;
+
+    const html = renderToString(tree);
+    expect(html).toContain('data-testid="menu-badge-dot"');
+    expect(html).toContain('New badge');
   });
 });

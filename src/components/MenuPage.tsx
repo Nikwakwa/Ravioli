@@ -11,7 +11,7 @@ import {
   RefreshCw,
   Sun,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   AUTO_NAP_ENERGY,
   CHURU_POINTS_PER_TUBE,
@@ -81,6 +81,12 @@ export function MenuPage({
   const badgeState = useBadges();
   const medals = countEarnedMedals(badgeState);
   const maxMedals = BADGES.length * 3;
+
+  useEffect(() => {
+    if (activeTab === 'badges') {
+      markBadgesSeen();
+    }
+  }, [activeTab]);
 
   const handleSaveName = (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -452,7 +458,7 @@ Time: ${new Date().toISOString()}`;
                   </span>
                   <div>
                     <h3 className="font-display text-sm font-black text-amber-950">
-                      Discovery Badges
+                      Badges
                     </h3>
                     <p className="text-[11px] font-bold text-amber-800/80">
                       {`${medals.total} of ${maxMedals} Medals · 🥇 ${medals.gold} 🥈 ${medals.silver} 🥉 ${medals.bronze}`}

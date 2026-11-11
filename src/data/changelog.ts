@@ -7,6 +7,16 @@ export interface ReleaseEntry {
 
 export const CHANGELOG: ReleaseEntry[] = [
   {
+    version: 'v1.1.0',
+    date: '2026-11-11',
+    title: 'Celebration Animation & Badges Polish 🏆',
+    changes: [
+      'Big animated celebration pop-up whenever you unlock or level up a badge.',
+      'Notification dot on the Menu button when you have a new badge to check out.',
+      'Simplified naming: discovery badges are now simply called Badges.',
+    ],
+  },
+  {
     version: 'v1.0.0',
     date: '2026-11-11',
     title: 'Welcome to Ravioli v1.0! 🐾',

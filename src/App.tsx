@@ -18,8 +18,9 @@ import { useCatGame, type Notice } from './hooks/useCatGame';
 import { useVersionCheck } from './hooks/useVersionCheck';
 import { hasAffordableItem } from './utils/closet';
 import { canAffordFortune, getTodayDateString, isFortuneReady, isFortuneUnlocked } from './utils/fortune';
-import { trackBalconyVisit, trackBoxNap, trackDayVisit, trackRainWatch } from './utils/badges';
+import { trackBalconyVisit, trackBoxNap, trackDayVisit, trackRainWatch, useBadges } from './utils/badges';
 import { OnboardingModal } from './components/OnboardingModal';
+import { BadgeCelebrationModal } from './components/BadgeCelebrationModal';
 import { hasSeenOnboarding, loadPlayer, markOnboardingSeen, savePlayer } from './utils/player';
 import type { CatSpot } from './types';
 import {
@@ -119,6 +120,8 @@ export function App() {
     buyAccessory,
     buyFortuneCookie,
     handleBadgeUnlocks,
+    badgeCelebration,
+    dismissBadgeCelebration,
     whim,
     activeMinigame,
     event,
@@ -141,6 +144,7 @@ export function App() {
     setScene,
     now,
   } = useCatGame(playerName, pushNotice);
+  const badgeState = useBadges();
   const { availableVersion, reloading, applyUpdate } = useVersionCheck();
 
   const [luxData, setLuxData] = useState<LiveLuxembourgData | null>(() => loadCachedLuxembourgData());
@@ -187,7 +191,7 @@ export function App() {
     };
   }, []);
 
-  // Track secret discovery badges for Oli's real habits & routines
+  // Track badges for Oli's real habits & routines
   useEffect(() => {
     handleBadgeUnlocks(trackDayVisit(getTodayDateString(new Date(now))));
   }, [now, handleBadgeUnlocks]);
@@ -257,8 +261,9 @@ export function App() {
     };
   }, [spot, containerSize, sceneShift, stageTop]);
 
-  const handleOpenMenu = (tab: MenuTab = 'rules') => {
-    setMenuTab(tab);
+  const handleOpenMenu = (tab?: MenuTab) => {
+    const defaultTab: MenuTab = tab ?? (badgeState.hasUnseen ? 'badges' : live?.isPaused ? 'pause' : 'rules');
+    setMenuTab(defaultTab);
     setMenuOpen(true);
   };
 
@@ -454,9 +459,10 @@ export function App() {
             churuStash={churuStash}
             churuPoints={churuProgress.points}
             onBalcony={scene === 'balcony'}
-            onOpenMenu={() => handleOpenMenu(live.isPaused ? 'pause' : 'rules')}
+            onOpenMenu={() => handleOpenMenu()}
             onOpenPause={() => handleOpenMenu('pause')}
             hasUpdate={Boolean(availableVersion)}
+            hasUnseenBadges={badgeState.hasUnseen}
             isNight={isNight}
           />
 
@@ -716,6 +722,21 @@ export function App() {
         {showOnboarding && ready && Boolean(live) && (
           <OnboardingModal initialName={playerName} onComplete={handleCompleteOnboarding} />
         )}
+
+        {/* Animated Badge Celebration Pop-up */}
+        <AnimatePresence>
+          {badgeCelebration && (
+            <BadgeCelebrationModal
+              key={`${badgeCelebration.badge.id}-${badgeCelebration.tier}`}
+              unlock={badgeCelebration}
+              onClose={dismissBadgeCelebration}
+              onViewBadges={() => {
+                dismissBadgeCelebration();
+                handleOpenMenu('badges');
+              }}
+            />
+          )}
+        </AnimatePresence>
       </main>
     </div>
     </MotionConfig>

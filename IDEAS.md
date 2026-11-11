@@ -101,7 +101,7 @@ When an idea gets picked up, move it into [ROADMAP.md](ROADMAP.md) as a new phas
 
 ## ✅ Completed Ideas
 
-- **Secret Discovery Badges (Shipped in v0.25.0–v0.26.0):**
+- **Badges (Shipped in v0.25.0–v0.26.0):**
   - 12 quirky cat achievements tracking Oli's authentic habits and routines with Bronze 🥉, Silver 🥈, and Gold 🥇 tiers (36 total medals).
   - Rewards +1 Churu tube for each tier unlocked.
   - Trophy Shelf view in the Menu page with completion progress, unlocked badges, tier milestones, and hints for locked ones.

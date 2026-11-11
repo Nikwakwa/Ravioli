@@ -499,6 +499,12 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
     [updateChuruStash],
   );
 
+  const [badgeUnlockQueue, setBadgeUnlockQueue] = useState<BadgeUnlock[]>([]);
+
+  const dismissBadgeCelebration = useCallback(() => {
+    setBadgeUnlockQueue((prev) => prev.slice(1));
+  }, []);
+
   const handleBadgeUnlocks = useCallback(
     (unlocks: BadgeUnlock[]) => {
       if (unlocks.length === 0) return;
@@ -506,15 +512,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
       celebrate();
       playSound('chime');
       vibrate([40, 60, 40, 60, 40]);
-      for (const u of unlocks) {
-        const medal = u.tier === 'gold' ? '🥇' : u.tier === 'silver' ? '🥈' : '🥉';
-        const tierName = u.tier === 'gold' ? 'Gold' : u.tier === 'silver' ? 'Silver' : 'Bronze';
-        const actionWord = u.isLevelUp ? 'Leveled Up' : 'Unlocked';
-        noticeRef.current({
-          text: `🏆 Badge ${actionWord}: ${u.badge.name} (${tierName} ${medal})! (+1 🍬)`,
-          tone: 'info',
-        });
-      }
+      setBadgeUnlockQueue((prev) => [...prev, ...unlocks]);
     },
     [updateChuruStash],
   );
@@ -1678,6 +1676,8 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
     buyAccessory,
     buyFortuneCookie,
     handleBadgeUnlocks,
+    badgeCelebration: badgeUnlockQueue[0] ?? null,
+    dismissBadgeCelebration,
     whim,
     activeMinigame,
     log,

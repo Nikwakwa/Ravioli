@@ -23,7 +23,7 @@ const mockState: BadgeState = {
   hasUnseen: false,
 };
 
-describe('secret discovery badges utility (Bronze, Silver, Gold tiers)', () => {
+describe('badges utility (Bronze, Silver, Gold tiers)', () => {
   beforeEach(() => {
     setBadgeState({ ...mockState, levels: {}, stats: { ...INITIAL_STATS, foodsTried: [], daysVisited: [] } });
   });
