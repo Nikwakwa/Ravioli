@@ -104,9 +104,11 @@ describe('MenuPage Server Rendering & Content', () => {
     );
 
     expect(html).toContain('Discovery Badges');
-    expect(html).toContain('secret badges');
+    expect(html).toContain('Medals');
     expect(html).toContain('If It Fits I Sits');
-    expect(html).toContain('+1 🍬 each');
+    expect(html).toContain('Bronze');
+    expect(html).toContain('Silver');
+    expect(html).toContain('Gold');
   });
 
   it('renders pause clock controls when initialTab is pause', () => {

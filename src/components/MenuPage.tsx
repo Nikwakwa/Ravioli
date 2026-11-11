@@ -29,7 +29,14 @@ import {
   NEGLECT_DEATH_HOURS,
 } from '../utils/decayEngine';
 import { CRITICAL_THRESHOLD, type NotificationPrefs } from '../utils/notifications';
-import { BADGES, isBadgeUnlocked, markBadgesSeen, useBadges } from '../utils/badges';
+import {
+  BADGES,
+  countEarnedMedals,
+  getBadgeLevel,
+  getBadgeProgress,
+  markBadgesSeen,
+  useBadges,
+} from '../utils/badges';
 import { STAT_ICONS } from './statIcons';
 
 export type MenuTab = 'rules' | 'badges' | 'pause' | 'version' | 'notifications';
@@ -63,7 +70,8 @@ export function MenuPage({
 }: MenuPageProps) {
   const [activeTab, setActiveTab] = useState<MenuTab>(initialTab);
   const badgeState = useBadges();
-  const unlockedBadgesCount = badgeState.unlockedIds.length;
+  const medals = countEarnedMedals(badgeState);
+  const maxMedals = BADGES.length * 3;
 
   const toggleNotifFlag = (key: 'lowNeed' | 'critical' | 'wakeUp' | 'partner') => {
     onChangeNotifPrefs({ ...notifPrefs, [key]: !notifPrefs[key] });
@@ -282,75 +290,160 @@ export function MenuPage({
                       Discovery Badges
                     </h3>
                     <p className="text-[11px] font-bold text-amber-800/80">
-                      {`${unlockedBadgesCount} of ${BADGES.length} Unlocked · +1 🍬 each`}
+                      {`${medals.total} of ${maxMedals} Medals · 🥇 ${medals.gold} 🥈 ${medals.silver} 🥉 ${medals.bronze}`}
                     </p>
                   </div>
                 </div>
                 <span className="rounded-full bg-amber-950/10 px-2.5 py-1 font-display text-xs font-black text-amber-950">
-                  {`${Math.round((unlockedBadgesCount / BADGES.length) * 100)}%`}
+                  {`${Math.round((medals.total / maxMedals) * 100)}%`}
                 </span>
               </div>
 
               {/* Progress bar */}
               <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-amber-900/10">
                 <div
-                  className="h-full rounded-full bg-gradient-to-r from-amber-400 to-pink-500 transition-all duration-500"
-                  style={{ width: `${(unlockedBadgesCount / BADGES.length) * 100}%` }}
+                  className="h-full rounded-full bg-gradient-to-r from-amber-400 via-orange-400 to-pink-500 transition-all duration-500"
+                  style={{ width: `${(medals.total / maxMedals) * 100}%` }}
                 />
               </div>
               <p className="mt-2 text-[11px] font-semibold text-amber-900/70">
-                Discover Oli’s quirky habits and routines to unlock all 12 secret badges!
+                Level up each badge from Bronze to Silver and Gold for +1 🍬 at every tier!
               </p>
             </div>
 
             {/* Badges List */}
-            <ul className="flex flex-col gap-2">
+            <ul className="flex flex-col gap-2.5">
               {BADGES.map((badge) => {
-                const unlocked = isBadgeUnlocked(badgeState, badge.id);
+                const currentLevel = getBadgeLevel(badgeState, badge.id);
+                const progress = getBadgeProgress(badge.id, badgeState.stats, currentLevel);
+                const isGold = currentLevel === 'gold';
+                const isSilver = currentLevel === 'silver';
+                const isBronze = currentLevel === 'bronze';
+                const isLocked = !currentLevel;
+
                 return (
                   <li
                     key={badge.id}
-                    className={`flex items-center gap-3 rounded-2xl border p-3 transition-all ${
-                      unlocked
-                        ? 'border-amber-300/80 bg-white shadow-xs'
-                        : 'border-amber-900/10 bg-amber-950/3 opacity-80'
+                    className={`flex flex-col gap-2 rounded-2xl border p-3 transition-all ${
+                      isGold
+                        ? 'border-amber-400 bg-gradient-to-br from-amber-50 to-orange-50/60 shadow-xs'
+                        : isSilver
+                          ? 'border-slate-300 bg-slate-50/80 shadow-xs'
+                          : isBronze
+                            ? 'border-amber-700/30 bg-amber-900/4 shadow-xs'
+                            : 'border-amber-900/10 bg-amber-950/3 opacity-80'
                     }`}
                   >
-                    <span
-                      className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-2xl shadow-2xs ${
-                        unlocked ? 'bg-amber-100 ring-2 ring-amber-300/60' : 'bg-amber-950/8 grayscale opacity-50'
-                      }`}
-                    >
-                      {badge.emoji}
-                    </span>
-
-                    <div className="min-w-0 flex-1 leading-tight">
-                      <div className="flex items-center gap-1.5">
-                        <h4 className="font-display text-xs font-black text-amber-950 truncate">
-                          {badge.name}
-                        </h4>
-                        {unlocked && (
-                          <span className="rounded-full bg-emerald-100 px-1.5 py-0.2 text-[9px] font-black text-emerald-800">
-                            ✓ +1 🍬
+                    <div className="flex items-center gap-3">
+                      <div className="relative shrink-0">
+                        <span
+                          className={`flex h-12 w-12 items-center justify-center rounded-2xl text-2xl shadow-2xs ${
+                            isGold
+                              ? 'bg-amber-100 ring-2 ring-amber-400'
+                              : isSilver
+                                ? 'bg-slate-200 ring-2 ring-slate-300'
+                                : isBronze
+                                  ? 'bg-amber-200/50 ring-2 ring-amber-700/40'
+                                  : 'bg-amber-950/8 grayscale opacity-50'
+                          }`}
+                        >
+                          {badge.emoji}
+                        </span>
+                        {!isLocked && (
+                          <span className="absolute -bottom-1 -right-1 text-sm drop-shadow-xs">
+                            {isGold ? '🥇' : isSilver ? '🥈' : '🥉'}
                           </span>
                         )}
                       </div>
-                      <p className="mt-0.5 text-[11px] font-semibold text-amber-900/80">
-                        {unlocked ? badge.description : badge.hint}
-                      </p>
+
+                      <div className="min-w-0 flex-1 leading-tight">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <h4 className="font-display text-xs font-black text-amber-950 truncate">
+                            {badge.name}
+                          </h4>
+                          {isGold && (
+                            <span className="rounded-full border border-amber-400/80 bg-amber-400/25 px-1.5 py-0.5 text-[9px] font-black text-amber-950">
+                              🥇 Gold (Max ✨)
+                            </span>
+                          )}
+                          {isSilver && (
+                            <span className="rounded-full border border-slate-300 bg-slate-200 px-1.5 py-0.5 text-[9px] font-black text-slate-800">
+                              🥈 Silver
+                            </span>
+                          )}
+                          {isBronze && (
+                            <span className="rounded-full border border-amber-700/30 bg-amber-900/10 px-1.5 py-0.5 text-[9px] font-black text-amber-900">
+                              🥉 Bronze
+                            </span>
+                          )}
+                          {isLocked && (
+                            <span className="rounded-full bg-amber-950/8 px-1.5 py-0.5 text-[9px] font-bold text-amber-900/60">
+                              🔒 Locked
+                            </span>
+                          )}
+                        </div>
+                        <p className="mt-1 text-[11px] font-semibold text-amber-900/80">
+                          {isLocked ? badge.hint : badge.description}
+                        </p>
+                      </div>
                     </div>
 
-                    <div className="shrink-0 text-right">
-                      {unlocked ? (
-                        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 text-white shadow-2xs">
-                          <Check className="h-3.5 w-3.5" />
-                        </span>
-                      ) : (
-                        <span className="text-xs text-amber-900/40" title="Locked">
-                          🔒
-                        </span>
-                      )}
+                    {/* Tier Milestones Row */}
+                    <div className="grid grid-cols-3 gap-1.5 pt-1 border-t border-amber-900/6">
+                      {(['bronze', 'silver', 'gold'] as const).map((tier) => {
+                        const tierDef = badge.tiers[tier];
+                        const tierUnlocked =
+                          tier === 'bronze'
+                            ? Boolean(isBronze || isSilver || isGold)
+                            : tier === 'silver'
+                              ? Boolean(isSilver || isGold)
+                              : Boolean(isGold);
+                        const medalIcon = tier === 'gold' ? '🥇' : tier === 'silver' ? '🥈' : '🥉';
+                        const tierLabel = tier === 'gold' ? 'Gold' : tier === 'silver' ? 'Silver' : 'Bronze';
+
+                        return (
+                          <div
+                            key={tier}
+                            className={`flex flex-col items-center justify-center rounded-xl p-1 text-center transition-colors ${
+                              tierUnlocked
+                                ? tier === 'gold'
+                                  ? 'bg-amber-400/25 border border-amber-400/70 text-amber-950'
+                                  : tier === 'silver'
+                                    ? 'bg-slate-200/90 border border-slate-300 text-slate-800'
+                                    : 'bg-amber-900/10 border border-amber-700/30 text-amber-900'
+                                : 'bg-amber-950/4 border border-dashed border-amber-900/15 text-amber-900/50'
+                            }`}
+                          >
+                            <span className="text-[10px] font-black flex items-center gap-0.5">
+                              <span>{medalIcon}</span>
+                              <span>{tierLabel}</span>
+                              {tierUnlocked && <span className="text-emerald-700 text-[9px]">✓</span>}
+                            </span>
+                            <span className="text-[9px] font-semibold truncate max-w-full">
+                              {tierDef.label}
+                            </span>
+                          </div>
+                        );
+                      })}
                     </div>
+
+                    {/* Progress to next tier */}
+                    {!isGold && (
+                      <div className="pt-0.5">
+                        <div className="flex items-center justify-between text-[10px] font-bold text-amber-900/70 mb-1">
+                          <span>{`Next: ${progress.label}`}</span>
+                          <span className="tabular-nums font-mono">{`${progress.current} / ${progress.target}`}</span>
+                        </div>
+                        <div className="h-1.5 w-full overflow-hidden rounded-full bg-amber-900/10">
+                          <div
+                            className="h-full rounded-full bg-amber-500 transition-all duration-300"
+                            style={{
+                              width: `${Math.min(100, Math.round((progress.current / progress.target) * 100))}%`,
+                            }}
+                          />
+                        </div>
+                      </div>
+                    )}
                   </li>
                 );
               })}

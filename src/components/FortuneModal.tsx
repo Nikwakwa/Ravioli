@@ -14,7 +14,7 @@ import {
   type Fortune,
   type FortuneState,
 } from '../utils/fortune';
-import { trackFortuneCrack, type BadgeDefinition } from '../utils/badges';
+import { trackFortuneCrack, type BadgeUnlock } from '../utils/badges';
 import { vibrate } from '../utils/feedback';
 import { playSound } from '../utils/sound';
 
@@ -115,7 +115,7 @@ export function FortuneModal({
 }: {
   churuStash: number;
   onUnlock: () => boolean;
-  onUnlockBadges?: (unlocks: BadgeDefinition[]) => void;
+  onUnlockBadges?: (unlocks: BadgeUnlock[]) => void;
   onClose: () => void;
 }) {
   const fortuneState = useFortune();

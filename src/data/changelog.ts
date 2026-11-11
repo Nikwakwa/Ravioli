@@ -7,6 +7,16 @@ export interface ReleaseEntry {
 
 export const CHANGELOG: ReleaseEntry[] = [
   {
+    version: 'v0.26.0',
+    date: '2026-11-11',
+    title: 'Tiered Medals & Closet Polish 🥇',
+    changes: [
+      'Badges now have Bronze, Silver, and Gold tiers with rewards at each level.',
+      'Track your progress toward next tiers and view earned medals on the Trophy Shelf.',
+      'Removed duplicate cookie banner from the closet to keep it focused on outfits.',
+    ],
+  },
+  {
     version: 'v0.25.0',
     date: '2026-11-11',
     title: 'Secret Discovery Badges 🏆',

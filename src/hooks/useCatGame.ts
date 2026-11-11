@@ -74,7 +74,7 @@ import {
   trackMinigameWin,
   trackPet,
   trackThriving,
-  type BadgeDefinition,
+  type BadgeUnlock,
 } from '../utils/badges';
 import { playActionSound, playSound, type SoundName } from '../utils/sound';
 import {
@@ -500,14 +500,20 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
   );
 
   const handleBadgeUnlocks = useCallback(
-    (unlocks: BadgeDefinition[]) => {
+    (unlocks: BadgeUnlock[]) => {
       if (unlocks.length === 0) return;
       updateChuruStash((c) => c + unlocks.length);
       celebrate();
       playSound('chime');
       vibrate([40, 60, 40, 60, 40]);
-      for (const b of unlocks) {
-        noticeRef.current({ text: `🏆 Badge Unlocked: ${b.name}! (+1 🍬)`, tone: 'info' });
+      for (const u of unlocks) {
+        const medal = u.tier === 'gold' ? '🥇' : u.tier === 'silver' ? '🥈' : '🥉';
+        const tierName = u.tier === 'gold' ? 'Gold' : u.tier === 'silver' ? 'Silver' : 'Bronze';
+        const actionWord = u.isLevelUp ? 'Leveled Up' : 'Unlocked';
+        noticeRef.current({
+          text: `🏆 Badge ${actionWord}: ${u.badge.name} (${tierName} ${medal})! (+1 🍬)`,
+          tone: 'info',
+        });
       }
     },
     [updateChuruStash],
@@ -527,7 +533,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
       vibrate([25, 35, 25, 35, 40]);
       playSound('chime');
       noticeRef.current({ text: `🎀 Oli got a new ${item.name}!`, tone: 'info' });
-      const badgeUnlocks = trackAccessoryDressed();
+      const badgeUnlocks = trackAccessoryDressed(getCloset().owned.length);
       handleBadgeUnlocks(badgeUnlocks);
       return true;
     },

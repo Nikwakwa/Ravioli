@@ -12,12 +12,10 @@ import {
   type AccessoryId,
   type ClosetState,
 } from '../utils/closet';
-import { hasOpenedToday, isFortuneReady, isFortuneUnlocked } from '../utils/fortune';
 import { vibrate } from '../utils/feedback';
 import { playSound } from '../utils/sound';
 import { AccessoryIcon } from './CatAccessories';
 import { CatAvatar } from './CatAvatar';
-import { useFortune } from './FortuneModal';
 
 export function useCloset(): ClosetState {
   return useSyncExternalStore(subscribeCloset, getCloset, getEmptyCloset);
@@ -37,19 +35,14 @@ export function HangerIcon({ className }: { className?: string }) {
 export function ClosetDrawer({
   churuStash,
   onBuy,
-  onOpenFortune,
   onClose,
 }: {
   churuStash: number;
   /** Pays for the accessory with Churus. Returns false if it could not be bought. */
   onBuy: (id: AccessoryId) => boolean;
-  onOpenFortune?: () => void;
   onClose: () => void;
 }) {
   const closet = useCloset();
-  const fortune = useFortune();
-  const fortuneUnlocked = isFortuneUnlocked(fortune);
-  const fortuneReady = isFortuneReady(fortune);
   // Buying takes two taps (price, then confirm) so Churus are never spent by accident.
   const [confirming, setConfirming] = useState<AccessoryId | null>(null);
 
@@ -102,55 +95,6 @@ export function ClosetDrawer({
             <X className="h-4 w-4" />
           </button>
         </div>
-
-        {/* Special Item: Daily Fortune Cookie */}
-        {onOpenFortune && (
-          <div className="mb-2.5">
-            <button
-              type="button"
-              onClick={() => {
-                playSound('pop');
-                vibrate(15);
-                onOpenFortune();
-              }}
-              className="flex w-full items-center justify-between rounded-2xl border border-amber-300/60 bg-gradient-to-r from-amber-50 to-orange-50 p-2.5 text-left shadow-xs transition-all active:scale-[0.98]"
-            >
-              <div className="flex min-w-0 items-center gap-2.5">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-xl shadow-xs">
-                  🥠
-                </span>
-                <div className="min-w-0 leading-tight">
-                  <div className="flex items-center gap-1.5">
-                    <span className="truncate text-xs font-extrabold text-amber-950">Daily Fortune Cookie</span>
-                    {fortuneReady && (
-                      <span className="animate-pulse rounded-full bg-amber-400 px-1.5 py-0.5 text-[9px] font-black text-amber-950">
-                        Ready ✨
-                      </span>
-                    )}
-                  </div>
-                  <p className="mt-0.5 text-[10px] font-semibold text-amber-800/75">
-                    {fortuneUnlocked
-                      ? hasOpenedToday(fortune)
-                        ? "Today's fortune revealed · Tap to read"
-                        : 'Fresh fortune waiting! Tap to crack'
-                      : 'Crack open daily cat wisdom and compliments'}
-                  </p>
-                </div>
-              </div>
-              <div className="shrink-0 pl-2">
-                {fortuneUnlocked ? (
-                  <span className="rounded-full bg-amber-900/10 px-2 py-1 text-[10px] font-bold text-amber-900">
-                    Open
-                  </span>
-                ) : (
-                  <span className="rounded-full bg-pink-500 px-2 py-1 text-[10px] font-black text-white">
-                    🍬 5
-                  </span>
-                )}
-              </div>
-            </button>
-          </div>
-        )}
 
         <ul className="grid grid-cols-2 gap-2">
           {ACCESSORIES.map((item) => {

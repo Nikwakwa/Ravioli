@@ -651,10 +651,6 @@ export function App() {
             <ClosetDrawer
               churuStash={churuStash}
               onBuy={buyAccessory}
-              onOpenFortune={() => {
-                setClosetOpen(false);
-                setFortuneOpen(true);
-              }}
               onClose={closeCloset}
             />
           )}
