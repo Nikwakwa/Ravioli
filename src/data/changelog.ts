@@ -7,6 +7,16 @@ export interface ReleaseEntry {
 
 export const CHANGELOG: ReleaseEntry[] = [
   {
+    version: 'v1.0.0',
+    date: '2026-11-11',
+    title: 'Welcome to Ravioli v1.0! 🐾',
+    changes: [
+      'New welcome screen to introduce Oli to first-time caretakers.',
+      'Personalized caretaker name with easy editing in the menu.',
+      'Beta feedback and quick game reset buttons to make testing easy.',
+    ],
+  },
+  {
     version: 'v0.26.0',
     date: '2026-11-11',
     title: 'Tiered Medals & Closet Polish 🥇',

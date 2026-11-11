@@ -85,6 +85,9 @@ describe('MenuPage Server Rendering & Content', () => {
     expect(html).toContain('Updates');
     expect(html).toContain('Alerts');
     expect(html).toContain('100 Energy');
+    expect(html).toContain('Caretaker');
+    expect(html).toContain('Beta Feedback');
+    expect(html).toContain('Start Over (Reset Game)');
     // Cozy spots and Ambience tabs are scrapped
     expect(html).not.toContain('Cozy Spots');
   });

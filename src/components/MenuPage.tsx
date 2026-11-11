@@ -37,6 +37,7 @@ import {
   markBadgesSeen,
   useBadges,
 } from '../utils/badges';
+import { resetAllGameData, sanitizePlayerName } from '../utils/player';
 import { STAT_ICONS } from './statIcons';
 
 export type MenuTab = 'rules' | 'badges' | 'pause' | 'version' | 'notifications';
@@ -45,6 +46,8 @@ export interface MenuPageProps {
   onClose: () => void;
   initialTab?: MenuTab;
   live: LiveCat;
+  playerName?: string;
+  onChangePlayerName?: (name: string) => void;
   onTogglePause: () => void;
   availableVersion?: string | null;
   reloading?: boolean;
@@ -59,6 +62,8 @@ export function MenuPage({
   onClose,
   initialTab = 'rules',
   live,
+  playerName = 'Friend',
+  onChangePlayerName,
   onTogglePause,
   availableVersion,
   reloading,
@@ -69,9 +74,40 @@ export function MenuPage({
   onTestNotification,
 }: MenuPageProps) {
   const [activeTab, setActiveTab] = useState<MenuTab>(initialTab);
+  const [editingName, setEditingName] = useState(false);
+  const [tempName, setTempName] = useState(playerName);
+  const [copiedDiagnostics, setCopiedDiagnostics] = useState(false);
+  const [confirmingReset, setConfirmingReset] = useState(false);
   const badgeState = useBadges();
   const medals = countEarnedMedals(badgeState);
   const maxMedals = BADGES.length * 3;
+
+  const handleSaveName = (e?: React.FormEvent) => {
+    e?.preventDefault();
+    const clean = sanitizePlayerName(tempName) || 'Friend';
+    onChangePlayerName?.(clean);
+    setEditingName(false);
+  };
+
+  const handleCopyDiagnostics = async () => {
+    const statsSummary = STAT_KEYS.map((k) => `${k}: ${Math.round(live[k])}`).join(', ');
+    const text = `Ravioli v${APP_VERSION}
+Caretaker: ${playerName}
+Cat: Oli (Lives: ${live.livesLeft}/9, Paused: ${live.isPaused ? 'Yes' : 'No'})
+Stats: ${statsSummary}
+Medals: ${medals.total}/${maxMedals} (${medals.gold}🥇 ${medals.silver}🥈 ${medals.bronze}🥉)
+Time: ${new Date().toISOString()}`;
+
+    try {
+      if (navigator.clipboard) {
+        await navigator.clipboard.writeText(text);
+      }
+      setCopiedDiagnostics(true);
+      window.setTimeout(() => setCopiedDiagnostics(false), 2500);
+    } catch {
+      /* no-op */
+    }
+  };
 
   const toggleNotifFlag = (key: 'lowNeed' | 'critical' | 'wakeUp' | 'partner') => {
     onChangeNotifPrefs({ ...notifPrefs, [key]: !notifPrefs[key] });
@@ -168,6 +204,54 @@ export function MenuPage({
                 </button>
               </div>
             )}
+
+            {/* Caretaker Profile Card */}
+            <div className="flex items-center justify-between rounded-2xl border border-amber-900/10 bg-white p-3 shadow-2xs">
+              <div className="flex items-center gap-2.5">
+                <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-500/15 text-sm">
+                  👤
+                </span>
+                <div>
+                  <span className="text-[10px] font-extrabold uppercase tracking-wide text-amber-900/60">
+                    Caretaker
+                  </span>
+                  <div className="font-display text-xs font-black text-amber-950">
+                    {editingName ? (
+                      <form onSubmit={handleSaveName} className="mt-0.5 flex items-center gap-1.5">
+                        <input
+                          type="text"
+                          value={tempName}
+                          maxLength={20}
+                          onChange={(e) => setTempName(e.target.value)}
+                          className="w-28 rounded-lg border border-amber-400 bg-amber-50/50 px-2 py-0.5 text-xs font-black text-amber-950 focus:outline-hidden"
+                          autoFocus
+                        />
+                        <button
+                          type="submit"
+                          className="rounded-lg bg-amber-500 px-2 py-0.5 text-[10px] font-black text-amber-950"
+                        >
+                          Save
+                        </button>
+                      </form>
+                    ) : (
+                      <span>{playerName}</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+              {!editingName && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setTempName(playerName);
+                    setEditingName(true);
+                  }}
+                  className="rounded-xl bg-amber-900/8 px-2.5 py-1 text-[11px] font-bold text-amber-900 hover:bg-amber-900/15 active:scale-95"
+                >
+                  Edit Name
+                </button>
+              )}
+            </div>
 
             {/* Quick Rule Cards */}
             <div className="rounded-2xl border border-amber-900/8 bg-white p-3 shadow-2xs">
@@ -271,6 +355,87 @@ export function MenuPage({
                   );
                 })}
               </div>
+            </div>
+
+            {/* Beta Feedback Card */}
+            <div className="rounded-2xl border border-amber-900/10 bg-white p-3.5 shadow-2xs">
+              <div className="flex items-center gap-2.5">
+                <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-sky-500/15 text-sm">
+                  💬
+                </span>
+                <div>
+                  <h3 className="font-display text-xs font-bold text-amber-950">Beta Feedback</h3>
+                  <p className="text-[11px] font-medium text-amber-900/75">
+                    Share thoughts, bugs, or ideas with the creator.
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-3 flex items-center gap-2">
+                <a
+                  href="mailto:nikwakwa@gmail.com?subject=Ravioli%20Beta%20Feedback&body=Hi!%0A%0AHere%20is%20my%20feedback%20for%20Ravioli:%0A%0A"
+                  className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-amber-500 py-2 text-xs font-extrabold text-amber-950 shadow-xs hover:bg-amber-400 active:scale-95"
+                >
+                  <span>✉️ Email Feedback</span>
+                </a>
+                <button
+                  type="button"
+                  onClick={() => void handleCopyDiagnostics()}
+                  className="flex items-center gap-1 rounded-xl border border-amber-900/15 bg-amber-50 px-3 py-2 text-xs font-bold text-amber-900 hover:bg-amber-100/50 active:scale-95"
+                  title="Copy game version and stats to clipboard"
+                >
+                  <span>{copiedDiagnostics ? '✓ Copied!' : '📋 Copy Info'}</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Reset / Start Over Card */}
+            <div className="rounded-2xl border border-rose-300/60 bg-rose-50/50 p-3.5">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="font-display text-xs font-bold text-rose-950">Start Over (Reset Game)</h3>
+                  <p className="text-[11px] font-medium text-rose-900/75">
+                    Clear all saved data and start fresh from Day 1.
+                  </p>
+                </div>
+                {!confirmingReset && (
+                  <button
+                    type="button"
+                    onClick={() => setConfirmingReset(true)}
+                    className="rounded-xl border border-rose-300 bg-white px-3 py-1.5 text-xs font-bold text-rose-700 shadow-2xs hover:bg-rose-100 active:scale-95"
+                  >
+                    Reset…
+                  </button>
+                )}
+              </div>
+
+              {confirmingReset && (
+                <div className="mt-3 rounded-xl border border-rose-300 bg-white p-3 text-rose-950">
+                  <p className="text-xs font-bold">⚠️ Are you sure you want to reset everything?</p>
+                  <p className="mt-1 text-[11px] font-medium text-rose-800">
+                    This clears Oli’s needs, outfits, fortunes, and badges so you can test from scratch.
+                  </p>
+                  <div className="mt-2.5 flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        resetAllGameData();
+                        window.location.reload();
+                      }}
+                      className="rounded-xl bg-rose-600 px-3.5 py-1.5 text-xs font-black text-white shadow-xs active:scale-95 hover:bg-rose-700"
+                    >
+                      Yes, Reset Everything
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setConfirmingReset(false)}
+                      className="rounded-xl bg-rose-100 px-3 py-1.5 text-xs font-bold text-rose-900 active:scale-95"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}

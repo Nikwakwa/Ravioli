@@ -360,7 +360,7 @@ export class SupabaseCatStorage implements CatStorage {
         let entry: ActivityEntry | null = null;
         if (activity) {
           const safePayload: NewActivity = {
-            player: cleanText(activity.player, 24) || 'Nico',
+            player: cleanText(activity.player, 24) || 'You',
             action_id: cleanText(activity.action_id, 48),
             message: cleanText(activity.message, 160),
             device_id: activity.device_id ? cleanText(activity.device_id, 64) : null,

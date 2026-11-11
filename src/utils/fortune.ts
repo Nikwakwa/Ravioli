@@ -150,10 +150,10 @@ export const FORTUNES: Fortune[] = [
   },
   {
     id: 20,
-    text: 'Athina and Nico are officially voted the #1 cat humans on the planet.',
+    text: 'You are officially voted the #1 cat human on the planet.',
     luckySpot: 'Bolster Bed',
     luckySnack: 'Churu Tube',
-    luckyVibe: 'Best Parents 💖',
+    luckyVibe: 'Pure Love 💖',
   },
   {
     id: 21,

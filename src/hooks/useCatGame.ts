@@ -886,7 +886,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
       maybeMessage?: string,
     ) => {
       const storage = storageRef.current;
-      const actor = player ?? 'Nico';
+      const actor = player ?? 'You';
       if (!storage) return;
       setBase((prev) => (prev ? mutator(prev) : prev));
       setNow(Date.now());
@@ -1067,7 +1067,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
       });
       playEvent({
         actionId: SLEEP_ACTION_ID,
-        player: player ?? 'Nico',
+        player: player ?? 'You',
         remote: false,
         effect: {},
         particles: [],
@@ -1106,7 +1106,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
     });
     playEvent({
       actionId: scoopAction.id,
-      player: player ?? 'Nico',
+      player: player ?? 'You',
       remote: false,
       effect: scoopAction.effect,
       particles: scoopAction.particles,
@@ -1161,7 +1161,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
       });
       playEvent({
         actionId: scoopAction.id,
-        player: player ?? 'Nico',
+        player: player ?? 'You',
         remote: false,
         effect: scoopAction.effect,
         particles: scoopAction.particles,
@@ -1295,7 +1295,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
           });
           playEvent({
             actionId: 'tummy_ache',
-            player: player ?? 'Nico',
+            player: player ?? 'You',
             remote: false,
             effect: achePenalty,
             particles: [],
@@ -1371,7 +1371,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
       lockFor(Math.min(action.durationMs, 1800));
       playEvent({
         actionId: action.id,
-        player: player ?? 'Nico',
+        player: player ?? 'You',
         remote: false,
         effect: finalEffect,
         particles:
@@ -1456,7 +1456,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
       });
       playEvent({
         actionId: PET_ACTION_ID,
-        player: player ?? 'Nico',
+        player: player ?? 'You',
         remote: false,
         effect: boost,
         particles: ['purr', 'hearts'],
@@ -1486,7 +1486,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
 
       playEvent({
         actionId: PET_ACTION_ID,
-        player: player ?? 'Nico',
+        player: player ?? 'You',
         remote: false,
         effect: boost,
         particles: ['purr', 'hearts'],
@@ -1574,7 +1574,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
     lockFor(1200);
     playEvent({
       actionId: SLEEP_ACTION_ID,
-      player: player ?? 'Nico',
+      player: player ?? 'You',
       remote: false,
       effect: {},
       particles: [],

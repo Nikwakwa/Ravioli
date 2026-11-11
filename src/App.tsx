@@ -19,6 +19,8 @@ import { useVersionCheck } from './hooks/useVersionCheck';
 import { hasAffordableItem } from './utils/closet';
 import { canAffordFortune, getTodayDateString, isFortuneReady, isFortuneUnlocked } from './utils/fortune';
 import { trackBalconyVisit, trackBoxNap, trackDayVisit, trackRainWatch } from './utils/badges';
+import { OnboardingModal } from './components/OnboardingModal';
+import { hasSeenOnboarding, loadPlayer, markOnboardingSeen, savePlayer } from './utils/player';
 import type { CatSpot } from './types';
 import {
   loadNotificationPrefs,
@@ -55,6 +57,8 @@ export const SPOT_HEAD_SVG: Record<CatSpot, { x: number; y: number }> = {
 const SCENE_FLOOR_FOCUS_Y = { living_room: 418, balcony: 458 } as const;
 
 export function App() {
+  const [playerName, setPlayerName] = useState<string>(() => loadPlayer());
+  const [showOnboarding, setShowOnboarding] = useState<boolean>(() => !hasSeenOnboarding());
   const [menuOpen, setMenuOpen] = useState(false);
   const [closetOpen, setClosetOpen] = useState(false);
   const closeCloset = useCallback(() => setClosetOpen(false), []);
@@ -136,7 +140,7 @@ export function App() {
     scene,
     setScene,
     now,
-  } = useCatGame('Nico', pushNotice);
+  } = useCatGame(playerName, pushNotice);
   const { availableVersion, reloading, applyUpdate } = useVersionCheck();
 
   const [luxData, setLuxData] = useState<LiveLuxembourgData | null>(() => loadCachedLuxembourgData());
@@ -279,6 +283,18 @@ export function App() {
   const handleChangeNotifPrefs = (next: NotificationPrefs) => {
     saveNotificationPrefs(next);
     setNotifPrefs(next);
+  };
+
+  const handleCompleteOnboarding = (name: string) => {
+    savePlayer(name);
+    setPlayerName(name);
+    markOnboardingSeen();
+    setShowOnboarding(false);
+  };
+
+  const handleChangePlayerName = (name: string) => {
+    savePlayer(name);
+    setPlayerName(name);
   };
 
   const handleToggleMasterNotifications = async () => {
@@ -681,6 +697,8 @@ export function App() {
                 onClose={() => setMenuOpen(false)}
                 initialTab={menuTab}
                 live={live}
+                playerName={playerName}
+                onChangePlayerName={handleChangePlayerName}
                 onTogglePause={togglePause}
                 availableVersion={availableVersion}
                 reloading={reloading}
@@ -693,6 +711,11 @@ export function App() {
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* First-time player onboarding */}
+        {showOnboarding && ready && Boolean(live) && (
+          <OnboardingModal initialName={playerName} onComplete={handleCompleteOnboarding} />
+        )}
       </main>
     </div>
     </MotionConfig>
