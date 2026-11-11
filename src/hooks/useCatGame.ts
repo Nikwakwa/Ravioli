@@ -67,6 +67,15 @@ import {
   isFortuneUnlocked,
   unlockFortune,
 } from '../utils/fortune';
+import {
+  trackAccessoryDressed,
+  trackClean,
+  trackFeed,
+  trackMinigameWin,
+  trackPet,
+  trackThriving,
+  type BadgeDefinition,
+} from '../utils/badges';
 import { playActionSound, playSound, type SoundName } from '../utils/sound';
 import {
   evaluateStatThresholds,
@@ -490,6 +499,20 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
     [updateChuruStash],
   );
 
+  const handleBadgeUnlocks = useCallback(
+    (unlocks: BadgeDefinition[]) => {
+      if (unlocks.length === 0) return;
+      updateChuruStash((c) => c + unlocks.length);
+      celebrate();
+      playSound('chime');
+      vibrate([40, 60, 40, 60, 40]);
+      for (const b of unlocks) {
+        noticeRef.current({ text: `🏆 Badge Unlocked: ${b.name}! (+1 🍬)`, tone: 'info' });
+      }
+    },
+    [updateChuruStash],
+  );
+
   /** Buys an accessory for Oli's closet with Churu tubes from the stash. */
   const buyAccessory = useCallback(
     (id: AccessoryId): boolean => {
@@ -504,9 +527,11 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
       vibrate([25, 35, 25, 35, 40]);
       playSound('chime');
       noticeRef.current({ text: `🎀 Oli got a new ${item.name}!`, tone: 'info' });
+      const badgeUnlocks = trackAccessoryDressed();
+      handleBadgeUnlocks(badgeUnlocks);
       return true;
     },
-    [updateChuruStash],
+    [updateChuruStash, handleBadgeUnlocks],
   );
 
   /** Unlocks the daily fortune cookie with Churu tubes from the stash. */
@@ -1084,11 +1109,16 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
     });
 
     const willThrive = messes.length === 0 && isThriving(applyEffect(live, scoopAction.effect));
-    if (willThrive) window.setTimeout(celebrate, 450);
+    if (willThrive) {
+      window.setTimeout(celebrate, 450);
+      handleBadgeUnlocks(trackThriving());
+    }
+
+    handleBadgeUnlocks(trackClean());
 
     const mutator = (b: CatState): CatState => applyEffect(materialize(b, Date.now()), scoopAction.effect);
     void commit(mutator, scoopAction.id, formatLog(scoopAction.log, live.name));
-  }, [base, live, busy, litterBoxDirty, messes.length, player, playEvent, commit]);
+  }, [base, live, busy, litterBoxDirty, messes.length, player, playEvent, commit, handleBadgeUnlocks]);
 
   /** Cleans a specific mess on the rug (by id) or the oldest mess when called from the Care dock. */
   const cleanMess = useCallback(
@@ -1134,7 +1164,12 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
       }, target.kind === 'fur_clump' ? 'sweep' : 'wipe');
 
       const willThrive = remaining.length === 0 && !litterBoxDirty && isThriving(applyEffect(live, scoopAction.effect));
-      if (willThrive) window.setTimeout(celebrate, 450);
+      if (willThrive) {
+        window.setTimeout(celebrate, 450);
+        handleBadgeUnlocks(trackThriving());
+      }
+
+      handleBadgeUnlocks(trackClean());
 
       const logMsg =
         target.kind === 'fur_clump'
@@ -1143,7 +1178,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
       const mutator = (b: CatState): CatState => applyEffect(materialize(b, Date.now()), scoopAction.effect);
       void commit(mutator, scoopAction.id, logMsg);
     },
-    [base, live, busy, messes, litterBoxDirty, scoopLitterBox, player, playEvent, commit],
+    [base, live, busy, messes, litterBoxDirty, scoopLitterBox, player, playEvent, commit, handleBadgeUnlocks],
   );
 
   const perform = useCallback(
@@ -1346,6 +1381,12 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
       if ((!wasThriving && willThrive) || mgReward?.tier === 'perfect') {
         window.setTimeout(celebrate, 350);
       }
+      if (willThrive) {
+        handleBadgeUnlocks(trackThriving());
+      }
+      if (action.category === 'feed') {
+        handleBadgeUnlocks(trackFeed(action.id, new Date().getHours()));
+      }
 
       const mutator = (b: CatState): CatState => {
         const t = Date.now();
@@ -1378,6 +1419,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
       earnChuruPoints,
       spot,
       setSpot,
+      handleBadgeUnlocks,
     ],
   );
 
@@ -1448,15 +1490,21 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
 
       const wasThriving = messes.length === 0 && !litterBoxDirty && isThriving(live);
       const willThrive = messes.length === 0 && !litterBoxDirty && isThriving(applyEffect(live, boost));
-      if (!wasThriving && willThrive) window.setTimeout(celebrate, 500);
+      if (!wasThriving && willThrive) {
+        window.setTimeout(celebrate, 500);
+        handleBadgeUnlocks(trackThriving(nowMs));
+      }
+
+      handleBadgeUnlocks(trackPet(nowMs));
 
       const mutator = (b: CatState): CatState => applyEffect(materialize(b, nowMs), boost);
       void commit(mutator, PET_ACTION_ID, `Gave ${live.name} chin scratches — purr session!`);
     } else {
       // Petted again too soon for more Joy: he still answers with a little "mrp?"
       playSound('chirp');
+      handleBadgeUnlocks(trackPet(nowMs));
     }
-  }, [base, live, busy, tummyAche, whim, messes.length, litterBoxDirty, player, playEvent, commit, clearTummyAche, clearWhim, triggerRefusal]);
+  }, [base, live, busy, tummyAche, whim, messes.length, litterBoxDirty, player, playEvent, commit, clearTummyAche, clearWhim, triggerRefusal, handleBadgeUnlocks]);
 
   /** Tapping the Whim thought bubble directly above Oli's head performs the requested action! */
   const fulfillWhim = useCallback(() => {
@@ -1474,9 +1522,12 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
       if (!activeMinigame) return;
       const action = activeMinigame;
       setActiveMinigame(null);
+      if (hits >= 3) {
+        handleBadgeUnlocks(trackMinigameWin());
+      }
       perform(action, hits);
     },
-    [activeMinigame, perform],
+    [activeMinigame, perform, handleBadgeUnlocks],
   );
 
   const cancelMinigame = useCallback(() => {
@@ -1620,6 +1671,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
     churuProgress,
     buyAccessory,
     buyFortuneCookie,
+    handleBadgeUnlocks,
     whim,
     activeMinigame,
     log,

@@ -14,6 +14,7 @@ import {
   type Fortune,
   type FortuneState,
 } from '../utils/fortune';
+import { trackFortuneCrack, type BadgeDefinition } from '../utils/badges';
 import { vibrate } from '../utils/feedback';
 import { playSound } from '../utils/sound';
 
@@ -109,10 +110,12 @@ function formatDateDisplay(d = new Date()): string {
 export function FortuneModal({
   churuStash,
   onUnlock,
+  onUnlockBadges,
   onClose,
 }: {
   churuStash: number;
   onUnlock: () => boolean;
+  onUnlockBadges?: (unlocks: BadgeDefinition[]) => void;
   onClose: () => void;
 }) {
   const fortuneState = useFortune();
@@ -145,6 +148,8 @@ export function FortuneModal({
     const opened = openTodayFortune();
     setActiveFortune(opened);
     setCracked(true);
+    const unlocks = trackFortuneCrack();
+    onUnlockBadges?.(unlocks);
   };
 
   const handleUnlock = () => {

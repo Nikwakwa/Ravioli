@@ -16,9 +16,10 @@ import { WhimBubble } from './components/WhimBubble';
 import { actionById } from './data/actions';
 import { useCatGame, type Notice } from './hooks/useCatGame';
 import { useVersionCheck } from './hooks/useVersionCheck';
-import type { CatSpot } from './types';
 import { hasAffordableItem } from './utils/closet';
-import { canAffordFortune, isFortuneReady, isFortuneUnlocked } from './utils/fortune';
+import { canAffordFortune, getTodayDateString, isFortuneReady, isFortuneUnlocked } from './utils/fortune';
+import { trackBalconyVisit, trackBoxNap, trackDayVisit, trackRainWatch } from './utils/badges';
+import type { CatSpot } from './types';
 import {
   loadNotificationPrefs,
   requestNotificationAccess,
@@ -113,6 +114,7 @@ export function App() {
     churuProgress,
     buyAccessory,
     buyFortuneCookie,
+    handleBadgeUnlocks,
     whim,
     activeMinigame,
     event,
@@ -180,6 +182,29 @@ export function App() {
       document.removeEventListener('visibilitychange', onVisibilityChange);
     };
   }, []);
+
+  // Track secret discovery badges for Oli's real habits & routines
+  useEffect(() => {
+    handleBadgeUnlocks(trackDayVisit(getTodayDateString(new Date(now))));
+  }, [now, handleBadgeUnlocks]);
+
+  useEffect(() => {
+    if (scene === 'balcony') {
+      handleBadgeUnlocks(trackBalconyVisit());
+    }
+  }, [scene, handleBadgeUnlocks]);
+
+  useEffect(() => {
+    if (isRaining && (spot === 'window' || scene === 'balcony')) {
+      handleBadgeUnlocks(trackRainWatch());
+    }
+  }, [isRaining, spot, scene, handleBadgeUnlocks]);
+
+  useEffect(() => {
+    if (spot === 'box') {
+      handleBadgeUnlocks(trackBoxNap());
+    }
+  }, [spot, handleBadgeUnlocks]);
 
   // Re-measure once the game screen is mounted (the loading screen has no frame to measure).
   const gameMounted = ready && Boolean(live);
@@ -640,6 +665,7 @@ export function App() {
           <FortuneModal
             churuStash={churuStash}
             onUnlock={buyFortuneCookie}
+            onUnlockBadges={handleBadgeUnlocks}
             onClose={() => setFortuneOpen(false)}
           />
         )}

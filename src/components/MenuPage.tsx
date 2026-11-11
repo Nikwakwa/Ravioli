@@ -29,9 +29,10 @@ import {
   NEGLECT_DEATH_HOURS,
 } from '../utils/decayEngine';
 import { CRITICAL_THRESHOLD, type NotificationPrefs } from '../utils/notifications';
+import { BADGES, isBadgeUnlocked, markBadgesSeen, useBadges } from '../utils/badges';
 import { STAT_ICONS } from './statIcons';
 
-export type MenuTab = 'rules' | 'pause' | 'version' | 'notifications';
+export type MenuTab = 'rules' | 'badges' | 'pause' | 'version' | 'notifications';
 
 export interface MenuPageProps {
   onClose: () => void;
@@ -61,6 +62,8 @@ export function MenuPage({
   onTestNotification,
 }: MenuPageProps) {
   const [activeTab, setActiveTab] = useState<MenuTab>(initialTab);
+  const badgeState = useBadges();
+  const unlockedBadgesCount = badgeState.unlockedIds.length;
 
   const toggleNotifFlag = (key: 'lowNeed' | 'critical' | 'wakeUp' | 'partner') => {
     onChangeNotifPrefs({ ...notifPrefs, [key]: !notifPrefs[key] });
@@ -75,9 +78,10 @@ export function MenuPage({
 
   const tabs: Array<{ id: MenuTab; label: string; icon: string; badge?: boolean }> = [
     { id: 'rules', label: 'Rules', icon: '📖' },
+    { id: 'badges', label: 'Badges', icon: '🏆', badge: badgeState.hasUnseen },
     { id: 'pause', label: live.isPaused ? 'Paused' : 'Vacation', icon: '✈️' },
-    { id: 'version', label: 'Updates', icon: '✨', badge: Boolean(availableVersion) },
     { id: 'notifications', label: 'Alerts', icon: notifPrefs.enabled ? '🔔' : '🔕' },
+    { id: 'version', label: 'Updates', icon: '✨', badge: Boolean(availableVersion) },
   ];
 
   return (
@@ -98,16 +102,19 @@ export function MenuPage({
           <h1 className="truncate font-display text-sm font-extrabold text-amber-950">Guide & Settings</h1>
         </div>
 
-        {/* 4-Column Segmented Tab Bar */}
-        <nav className="mt-2.5 grid grid-cols-4 gap-1 rounded-2xl bg-amber-950/6 p-1" role="tablist" aria-label="Menu Sections">
+        {/* 5-Column Segmented Tab Bar */}
+        <nav className="mt-2.5 grid grid-cols-5 gap-1 rounded-2xl bg-amber-950/6 p-1" role="tablist" aria-label="Menu Sections">
           {tabs.map((t) => {
             const active = activeTab === t.id;
             return (
               <button
                 key={t.id}
                 type="button"
-                onClick={() => setActiveTab(t.id)}
-                className={`relative flex min-w-0 flex-col items-center justify-center gap-0.5 rounded-xl py-1.5 text-[11px] transition-all active:scale-95 ${
+                onClick={() => {
+                  if (t.id === 'badges') markBadgesSeen();
+                  setActiveTab(t.id);
+                }}
+                className={`relative flex min-w-0 flex-col items-center justify-center gap-0.5 rounded-xl py-1.5 text-[10px] sm:text-[11px] transition-all active:scale-95 ${
                   active
                     ? 'bg-white text-amber-950 shadow-xs font-black'
                     : 'text-amber-900/70 hover:text-amber-950 font-bold'
@@ -118,7 +125,7 @@ export function MenuPage({
                 <span className="text-base leading-none" aria-hidden="true">{t.icon}</span>
                 <span className="max-w-full truncate">{t.label}</span>
                 {t.badge && (
-                  <span className="absolute top-1 right-2 flex h-2 w-2">
+                  <span className="absolute top-1 right-1.5 flex h-2 w-2">
                     <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
                     <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500 ring-1 ring-white" />
                   </span>
@@ -257,6 +264,97 @@ export function MenuPage({
                 })}
               </div>
             </div>
+          </div>
+        )}
+
+        {/* TAB: BADGES & TROPHY SHELF */}
+        {activeTab === 'badges' && (
+          <div className="flex flex-col gap-3">
+            {/* Header progress card */}
+            <div className="rounded-3xl border border-amber-300/60 bg-gradient-to-br from-amber-100/90 via-amber-50 to-orange-50 p-4 shadow-sm">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-amber-400/30 text-2xl shadow-xs">
+                    🏆
+                  </span>
+                  <div>
+                    <h3 className="font-display text-sm font-black text-amber-950">
+                      Discovery Badges
+                    </h3>
+                    <p className="text-[11px] font-bold text-amber-800/80">
+                      {`${unlockedBadgesCount} of ${BADGES.length} Unlocked · +1 🍬 each`}
+                    </p>
+                  </div>
+                </div>
+                <span className="rounded-full bg-amber-950/10 px-2.5 py-1 font-display text-xs font-black text-amber-950">
+                  {`${Math.round((unlockedBadgesCount / BADGES.length) * 100)}%`}
+                </span>
+              </div>
+
+              {/* Progress bar */}
+              <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-amber-900/10">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-amber-400 to-pink-500 transition-all duration-500"
+                  style={{ width: `${(unlockedBadgesCount / BADGES.length) * 100}%` }}
+                />
+              </div>
+              <p className="mt-2 text-[11px] font-semibold text-amber-900/70">
+                Discover Oli’s quirky habits and routines to unlock all 12 secret badges!
+              </p>
+            </div>
+
+            {/* Badges List */}
+            <ul className="flex flex-col gap-2">
+              {BADGES.map((badge) => {
+                const unlocked = isBadgeUnlocked(badgeState, badge.id);
+                return (
+                  <li
+                    key={badge.id}
+                    className={`flex items-center gap-3 rounded-2xl border p-3 transition-all ${
+                      unlocked
+                        ? 'border-amber-300/80 bg-white shadow-xs'
+                        : 'border-amber-900/10 bg-amber-950/3 opacity-80'
+                    }`}
+                  >
+                    <span
+                      className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-2xl shadow-2xs ${
+                        unlocked ? 'bg-amber-100 ring-2 ring-amber-300/60' : 'bg-amber-950/8 grayscale opacity-50'
+                      }`}
+                    >
+                      {badge.emoji}
+                    </span>
+
+                    <div className="min-w-0 flex-1 leading-tight">
+                      <div className="flex items-center gap-1.5">
+                        <h4 className="font-display text-xs font-black text-amber-950 truncate">
+                          {badge.name}
+                        </h4>
+                        {unlocked && (
+                          <span className="rounded-full bg-emerald-100 px-1.5 py-0.2 text-[9px] font-black text-emerald-800">
+                            ✓ +1 🍬
+                          </span>
+                        )}
+                      </div>
+                      <p className="mt-0.5 text-[11px] font-semibold text-amber-900/80">
+                        {unlocked ? badge.description : badge.hint}
+                      </p>
+                    </div>
+
+                    <div className="shrink-0 text-right">
+                      {unlocked ? (
+                        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 text-white shadow-2xs">
+                          <Check className="h-3.5 w-3.5" />
+                        </span>
+                      ) : (
+                        <span className="text-xs text-amber-900/40" title="Locked">
+                          🔒
+                        </span>
+                      )}
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
           </div>
         )}
 

@@ -64,7 +64,7 @@ const defaultNotifPrefs = {
 };
 
 describe('MenuPage Server Rendering & Content', () => {
-  it('renders all 4 navigation tabs and rules by default (Cozy Spots scrapped)', () => {
+  it('renders all 5 navigation tabs and rules by default (Cozy Spots scrapped)', () => {
     const html = renderToString(
       <MenuPage
         onClose={vi.fn()}
@@ -79,6 +79,7 @@ describe('MenuPage Server Rendering & Content', () => {
 
     expect(html).toContain('Back to Oli');
     expect(html).toContain('Rules');
+    expect(html).toContain('Badges');
     expect(html).not.toContain('Ambience');
     expect(html).toContain('Vacation');
     expect(html).toContain('Updates');
@@ -86,6 +87,26 @@ describe('MenuPage Server Rendering & Content', () => {
     expect(html).toContain('100 Energy');
     // Cozy spots and Ambience tabs are scrapped
     expect(html).not.toContain('Cozy Spots');
+  });
+
+  it('renders badges and trophy shelf when initialTab is badges', () => {
+    const html = renderToString(
+      <MenuPage
+        onClose={vi.fn()}
+        initialTab="badges"
+        live={mockLive}
+        onTogglePause={vi.fn()}
+        notifPrefs={defaultNotifPrefs}
+        onToggleMasterNotifications={vi.fn()}
+        onChangeNotifPrefs={vi.fn()}
+        onTestNotification={vi.fn()}
+      />
+    );
+
+    expect(html).toContain('Discovery Badges');
+    expect(html).toContain('secret badges');
+    expect(html).toContain('If It Fits I Sits');
+    expect(html).toContain('+1 🍬 each');
   });
 
   it('renders pause clock controls when initialTab is pause', () => {

@@ -78,22 +78,7 @@ When an idea gets picked up, move it into [ROADMAP.md](ROADMAP.md) as a new phas
 
 ---
 
-## 🏆 6. Secret Discovery Badges
-
-**The idea:** Hidden achievements that reward players for discovering Oli's real quirks and routines.
-
-### What it adds
-- **Quirky Cat Badges:**
-  - *"If It Fits I Sits"* (take 10 naps in the cardboard box)
-  - *"Midnight Munchies"* (feed Oli a late-night snack after 11 PM)
-  - *"Rainy Day Cat TV"* (watch the rain together by the window for 2 minutes)
-  - *"Treat Connoisseur"* (taste every single food and treat item)
-  - *"Zoomie Master"* (win 5 feather wand rounds in a row)
-- **Trophy Shelf:** A simple badge screen to view all unlocked stickers and hints for the locked ones.
-
----
-
-## 🔔 7. Notifications even when the app is closed (web push)
+## 🔔 6. Notifications even when the app is closed (web push)
 
 **Problem today:** alerts ("Oli is hungry", "Oli woke up") only arrive while the app is open, because they come from timers running inside the app. Phones don't let a closed web app run code.
 
@@ -116,6 +101,10 @@ When an idea gets picked up, move it into [ROADMAP.md](ROADMAP.md) as a new phas
 
 ## ✅ Completed Ideas
 
+- **Secret Discovery Badges (Shipped in v0.25.0):**
+  - 12 quirky cat achievements tracking Oli's authentic habits and routines (box naps, midnight munchies, watching rain, dressing up, cracking fortunes, pounce combos, trying all foods, purr motor, tidy room, balcony lounging, peak floof, daily streak).
+  - Rewards +1 Churu tube for each unlocked badge.
+  - Trophy Shelf view in the Menu page with completion progress, unlocked badges, and subtle hints for locked ones.
 - **Oli’s Daily Fortune Cookie (Shipped in v0.24.0):**
   - Unlockable in the shop for 5 Churus.
   - Interactive SVG fortune cookie with crack animation and sound.

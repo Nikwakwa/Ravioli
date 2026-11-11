@@ -7,6 +7,16 @@ export interface ReleaseEntry {
 
 export const CHANGELOG: ReleaseEntry[] = [
   {
+    version: 'v0.25.0',
+    date: '2026-11-11',
+    title: 'Secret Discovery Badges 🏆',
+    changes: [
+      'Unlock 12 secret badges by discovering Oli’s quirky habits and routines.',
+      'Earn +1 Churu tube each time you unlock a new badge.',
+      'Check out your collection and hints on the new Trophy Shelf in the Menu.',
+    ],
+  },
+  {
     version: 'v0.24.0',
     date: '2026-11-11',
     title: 'Daily Fortune Cookie 🥠',
