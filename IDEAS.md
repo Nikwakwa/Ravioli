@@ -64,18 +64,7 @@ When an idea gets picked up, move it into [ROADMAP.md](ROADMAP.md) as a new phas
 
 ---
 
-## 🥠 5. Oli’s Daily Fortune Cookie (Churu Shop Unlock)
-
-**The idea:** A charming daily check-in feature unlocked using Churu points in the closet shop.
-
-### What it adds
-- **Unlockable in Shop:** Purchase "Oli's Fortune Jar" using saved Churu treats from the closet shop.
-- **Daily Cat Wisdom:** Once unlocked, tapping Oli each morning pops up a funny, heartwarming thought bubble or compliment for Athina (e.g., *"Today you will conquer every mountain, but first: a nap"*, *"10/10 humans agree you deserve a treat today"*).
-- **Daily Habit:** Gives players a quick 10-second smile and reason to check in every morning.
-
----
-
-## 🪴 6. Cozy Room Customization
+## 🪴 5. Cozy Room Customization
 
 **The idea:** Let players personalize Nico & Athina's apartment by spending earned Churu treats on cozy room decor.
 
@@ -89,7 +78,7 @@ When an idea gets picked up, move it into [ROADMAP.md](ROADMAP.md) as a new phas
 
 ---
 
-## 🏆 7. Secret Discovery Badges
+## 🏆 6. Secret Discovery Badges
 
 **The idea:** Hidden achievements that reward players for discovering Oli's real quirks and routines.
 
@@ -104,7 +93,7 @@ When an idea gets picked up, move it into [ROADMAP.md](ROADMAP.md) as a new phas
 
 ---
 
-## 🔔 8. Notifications even when the app is closed (web push)
+## 🔔 7. Notifications even when the app is closed (web push)
 
 **Problem today:** alerts ("Oli is hungry", "Oli woke up") only arrive while the app is open, because they come from timers running inside the app. Phones don't let a closed web app run code.
 
@@ -122,3 +111,20 @@ When an idea gets picked up, move it into [ROADMAP.md](ROADMAP.md) as a new phas
 - Fits in Supabase's free plan. Needs a push key pair; the private half stays as a Supabase secret.
 - Notifications need to be switched on again once after this ships, so the phone can register.
 - **Ruled out:** on-device scheduled notifications (dropped by browsers, never on iPhone), Android "background sync" (unreliable, Android only), GitHub scheduled jobs as the sender (often 15–60 min late).
+
+---
+
+## ✅ Completed Ideas
+
+- **Oli’s Daily Fortune Cookie (Shipped in v0.24.0):**
+  - Unlockable in the shop for 5 Churus.
+  - Interactive SVG fortune cookie with crack animation and sound.
+  - 36 unique cat wisdom fortunes and daily compliments with lucky spot/snack/vibe.
+  - Resets daily; viewable anytime from the bottom bar and closet shop.
+- **Oli’s Closet & Accessories (Shipped in v0.22.0–v0.23.0):**
+  - Closet drawer with unlockable bowtie, flower crown, scarf, detective cap, sunglasses, and fancy suit.
+- **Purrs, Chirps & Cozy Sound Effects (Shipped in v0.21.0):**
+  - Purrs when petted, cute meows, chirps, eating crunches, water trickling, and instant mute button.
+- **Real-Time Day & Night Atmosphere (Shipped in v0.20.0–v0.20.3):**
+  - Automatic daylight, golden hour, and cozy night lamp matching Luxembourg sunrise & sunset.
+  - Automatic rain sync matching live outside Luxembourg weather with window and balcony raindrops.

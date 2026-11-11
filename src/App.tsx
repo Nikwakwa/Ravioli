@@ -5,6 +5,7 @@ import { ActionDock } from './components/ActionDock';
 import { ClosetDrawer, HangerIcon, useCloset } from './components/ClosetDrawer';
 import { EmergencyRevivalModal } from './components/EmergencyRevivalModal';
 import { FloatingEffects } from './components/FloatingEffects';
+import { FortuneModal, useFortune } from './components/FortuneModal';
 import { MenuPage, type MenuTab } from './components/MenuPage';
 import { PlayMinigameModal } from './components/PlayMinigameModal';
 import { RoomMesses } from './components/RoomMesses';
@@ -17,6 +18,7 @@ import { useCatGame, type Notice } from './hooks/useCatGame';
 import { useVersionCheck } from './hooks/useVersionCheck';
 import type { CatSpot } from './types';
 import { hasAffordableItem } from './utils/closet';
+import { canAffordFortune, isFortuneReady, isFortuneUnlocked } from './utils/fortune';
 import {
   loadNotificationPrefs,
   requestNotificationAccess,
@@ -56,6 +58,8 @@ export function App() {
   const [closetOpen, setClosetOpen] = useState(false);
   const closeCloset = useCallback(() => setClosetOpen(false), []);
   const closet = useCloset();
+  const [fortuneOpen, setFortuneOpen] = useState(false);
+  const fortune = useFortune();
   const [menuTab, setMenuTab] = useState<MenuTab>('rules');
   const [notifPrefs, setNotifPrefs] = useState<NotificationPrefs>(() => loadNotificationPrefs());
   const [notice, setNotice] = useState<Notice | null>(null);
@@ -108,6 +112,7 @@ export function App() {
     churuStash,
     churuProgress,
     buyAccessory,
+    buyFortuneCookie,
     whim,
     activeMinigame,
     event,
@@ -485,6 +490,28 @@ export function App() {
           />
           {scene === 'living_room' && <RoomMesses messes={messes} onClean={cleanMess} />}
 
+          {/* Oli's Daily Fortune Cookie button */}
+          <button
+            type="button"
+            onClick={() => setFortuneOpen(true)}
+            title="Oli's Fortune Cookie"
+            aria-label="Open Oli's Fortune Cookie"
+            className={`pointer-events-auto absolute left-3 bottom-1.5 z-20 flex h-9 w-9 items-center justify-center rounded-full border shadow-md backdrop-blur-md transition-all active:scale-95 ${
+              isNight
+                ? 'border-white/10 bg-slate-900/80 text-amber-300'
+                : 'border-amber-900/12 bg-white/90 text-amber-700'
+            }`}
+          >
+            <span className="text-base leading-none select-none">🥠</span>
+            {isFortuneReady(fortune) ? (
+              <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-amber-400 text-[9px] font-black text-amber-950 ring-2 ring-white animate-pulse">
+                ✨
+              </span>
+            ) : !isFortuneUnlocked(fortune) && canAffordFortune(churuStash) ? (
+              <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-pink-500 ring-2 ring-white" />
+            ) : null}
+          </button>
+
           {/* Oli's Closet button */}
           <button
             type="button"
@@ -594,7 +621,28 @@ export function App() {
         <EmergencyRevivalModal live={live} onRevive={reviveOli} />
 
         {/* Oli's Closet (dress-up drawer) */}
-        <AnimatePresence>{closetOpen && <ClosetDrawer churuStash={churuStash} onBuy={buyAccessory} onClose={closeCloset} />}</AnimatePresence>
+        <AnimatePresence>
+          {closetOpen && (
+            <ClosetDrawer
+              churuStash={churuStash}
+              onBuy={buyAccessory}
+              onOpenFortune={() => {
+                setClosetOpen(false);
+                setFortuneOpen(true);
+              }}
+              onClose={closeCloset}
+            />
+          )}
+        </AnimatePresence>
+
+        {/* Oli's Daily Fortune Cookie Modal */}
+        {fortuneOpen && (
+          <FortuneModal
+            churuStash={churuStash}
+            onUnlock={buyFortuneCookie}
+            onClose={() => setFortuneOpen(false)}
+          />
+        )}
 
         {/* Separate Menu Page (Rules, Vacation Pause, Version/Updates, Notifications) */}
         <AnimatePresence>

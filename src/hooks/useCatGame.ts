@@ -60,6 +60,13 @@ import {
 } from '../data/actions';
 import { celebrate, vibrate } from '../utils/feedback';
 import { accessoryById, addPurchase, canAfford, getCloset, isOwned, type AccessoryId } from '../utils/closet';
+import {
+  FORTUNE_COOKIE_PRICE,
+  canAffordFortune,
+  getFortuneState,
+  isFortuneUnlocked,
+  unlockFortune,
+} from '../utils/fortune';
 import { playActionSound, playSound, type SoundName } from '../utils/sound';
 import {
   evaluateStatThresholds,
@@ -501,6 +508,21 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
     },
     [updateChuruStash],
   );
+
+  /** Unlocks the daily fortune cookie with Churu tubes from the stash. */
+  const buyFortuneCookie = useCallback((): boolean => {
+    if (isFortuneUnlocked(getFortuneState())) return false;
+    if (!canAffordFortune(loadChuruStash())) {
+      vibrate([20, 40, 20]);
+      return false;
+    }
+    updateChuruStash((c) => c - FORTUNE_COOKIE_PRICE);
+    unlockFortune();
+    vibrate([25, 35, 25, 35, 40]);
+    playSound('chime');
+    noticeRef.current({ text: '🥠 Unlocked Oli’s Daily Fortune Cookie!', tone: 'info' });
+    return true;
+  }, [updateChuruStash]);
 
   const clearWhim = useCallback(() => {
     setWhim(null);
@@ -1597,6 +1619,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
     churuStash,
     churuProgress,
     buyAccessory,
+    buyFortuneCookie,
     whim,
     activeMinigame,
     log,

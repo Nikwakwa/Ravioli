@@ -7,6 +7,16 @@ export interface ReleaseEntry {
 
 export const CHANGELOG: ReleaseEntry[] = [
   {
+    version: 'v0.24.0',
+    date: '2026-11-11',
+    title: 'Daily Fortune Cookie 🥠',
+    changes: [
+      'Unlock Oli’s Daily Fortune Cookie in the closet shop for 5 Churus.',
+      'Crack open a fresh cat fortune and cute thought every morning.',
+      'Tap the cookie icon on the screen anytime to re-read today’s fortune.',
+    ],
+  },
+  {
     version: 'v0.23.0',
     date: '2026-11-11',
     title: 'Closet Shop & Fancy Suit 🤵',
