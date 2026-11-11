@@ -40,15 +40,71 @@ When an idea gets picked up, move it into [ROADMAP.md](ROADMAP.md) as a new phas
 - **Baby photo album:** save a snapshot at each stage so you can look back at how small he was.
 - **Real-Oli details appear as he grows:** e.g. the ear tattoo shows up once he's an adult, matching real life.
 
-### Things to decide before building
-- Should the current adult Oli stay as is, with "start as a baby" only for a new game? Or offer a one-time "relive Oli's kittenhood" story from the Menu?
-- Exact stage lengths (days vs. growth points).
-- New drawings needed: newborn, kitten and teen versions of every pose (sit, loaf, sleeping, belly-up, back view).
-- How the 9-lives neglect rule applies to a baby (probably gentler: a baby gets "rescued" rather than losing a life).
+---
+
+## 🕊️ 3. Balcony Bird Watching
+
+**The idea:** Bring the balcony to life with visiting wildlife that catches Oli's attention.
+
+### What it adds
+- **Visiting Birds & Butterflies:** Pigeons, robins, or colorful butterflies randomly land along the balcony railing.
+- **Interactive Reactions:** Tapping a visitor makes Oli perk his ears, focus intently, wiggle his rear, and make a playful pounce attempt toward the railing.
+- **Time-of-Day Visitors:** Morning doves during daylight, butterflies in the afternoon, and moths fluttering near the balcony light in the evening.
 
 ---
 
-## 🔔 Notifications even when the app is closed (web push)
+## 🧶 4. Interactive Floor Toys (Physics Play)
+
+**The idea:** Give players a tactile, physics-based mini activity on the living room rug, even when Oli's care bars are already full.
+
+### What it adds
+- **Flickable Toys:** Drag and flick little toys across the rug (a crinkled paper receipt ball, a catnip mouse, or a bouncing ping-pong ball).
+- **Oli Bats Back:** Oli tracks the toy with his head and playfully bats it back across the rug with a quick paw tap.
+- **Playful Distraction:** Helps pass time and burn extra energy before naps without needing a structured minigame modal.
+
+---
+
+## 🥠 5. Oli’s Daily Fortune Cookie (Churu Shop Unlock)
+
+**The idea:** A charming daily check-in feature unlocked using Churu points in the closet shop.
+
+### What it adds
+- **Unlockable in Shop:** Purchase "Oli's Fortune Jar" using saved Churu treats from the closet shop.
+- **Daily Cat Wisdom:** Once unlocked, tapping Oli each morning pops up a funny, heartwarming thought bubble or compliment for Athina (e.g., *"Today you will conquer every mountain, but first: a nap"*, *"10/10 humans agree you deserve a treat today"*).
+- **Daily Habit:** Gives players a quick 10-second smile and reason to check in every morning.
+
+---
+
+## 🪴 6. Cozy Room Customization
+
+**The idea:** Let players personalize Nico & Athina's apartment by spending earned Churu treats on cozy room decor.
+
+### What it adds
+- **Room Swaps:**
+  - Balcony railing plants (lavender pot, cat grass tray)
+  - Living room rug patterns and warm colors
+  - Cozy fairy string lights draped above the window
+  - Silly delivery stickers on Oli's cardboard box
+- **Long-Term Goals:** Gives a fun, visible reward for regular caretaking and saving up Churu treats.
+
+---
+
+## 🏆 7. Secret Discovery Badges
+
+**The idea:** Hidden achievements that reward players for discovering Oli's real quirks and routines.
+
+### What it adds
+- **Quirky Cat Badges:**
+  - *"If It Fits I Sits"* (take 10 naps in the cardboard box)
+  - *"Midnight Munchies"* (feed Oli a late-night snack after 11 PM)
+  - *"Rainy Day Cat TV"* (watch the rain together by the window for 2 minutes)
+  - *"Treat Connoisseur"* (taste every single food and treat item)
+  - *"Zoomie Master"* (win 5 feather wand rounds in a row)
+- **Trophy Shelf:** A simple badge screen to view all unlocked stickers and hints for the locked ones.
+
+---
+
+## 🔔 8. Notifications even when the app is closed (web push)
 
 **Problem today:** alerts ("Oli is hungry", "Oli woke up") only arrive while the app is open, because they come from timers running inside the app. Phones don't let a closed web app run code.
 
