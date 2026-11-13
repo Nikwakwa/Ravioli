@@ -70,6 +70,9 @@ describe('FortuneModal component', () => {
 
     expect(html).toContain('Oli’s Daily Cat Wisdom');
     expect(html).toContain('If a problem feels too big to solve');
+    expect(html).not.toContain('Moroccan Shag Rug');
+    expect(html).not.toContain('Sleepy Loaf');
     expect(html).toContain('Come back tomorrow at sunrise');
+    expect(html).toContain('Close');
   });
 });

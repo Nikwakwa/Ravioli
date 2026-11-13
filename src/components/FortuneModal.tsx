@@ -291,22 +291,9 @@ export function FortuneModal({
                   ✨ Oli’s Daily Cat Wisdom ✨
                 </div>
 
-                <p className="font-display px-1 text-sm font-extrabold leading-snug text-amber-950 sm:text-base">
+                <p className="font-display px-2 py-1 text-sm font-extrabold leading-snug text-amber-950 sm:text-base">
                   “{activeFortune.text}”
                 </p>
-
-                {/* Lucky details */}
-                <div className="mt-3 flex flex-wrap items-center justify-center gap-1.5 border-t border-amber-900/10 pt-2.5 text-[10px] font-bold text-amber-900">
-                  <span className="rounded-full bg-amber-100 px-2 py-0.5">
-                    🛋️ {activeFortune.luckySpot}
-                  </span>
-                  <span className="rounded-full bg-amber-100 px-2 py-0.5">
-                    🍬 {activeFortune.luckySnack}
-                  </span>
-                  <span className="rounded-full bg-amber-100 px-2 py-0.5">
-                    {activeFortune.luckyVibe}
-                  </span>
-                </div>
               </motion.div>
 
               <p className="mt-3 text-[11px] font-semibold text-amber-900/60">
@@ -318,7 +305,7 @@ export function FortuneModal({
                 onClick={onClose}
                 className="mt-3 w-full rounded-2xl bg-amber-950/8 py-2.5 text-xs font-bold text-amber-900 transition-all hover:bg-amber-950/12 active:scale-[0.98]"
               >
-                Keep in Mind & Close
+                Close
               </button>
             </div>
           )}

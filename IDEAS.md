@@ -108,7 +108,7 @@ When an idea gets picked up, move it into [ROADMAP.md](ROADMAP.md) as a new phas
 - **Oli’s Daily Fortune Cookie (Shipped in v0.24.0):**
   - Unlockable in the shop for 5 Churus.
   - Interactive SVG fortune cookie with crack animation and sound.
-  - 36 unique cat wisdom fortunes and daily compliments with lucky spot/snack/vibe.
+  - 36 unique cat wisdom fortunes and daily compliments.
   - Resets daily; viewable anytime from the bottom bar and closet shop.
 - **Oli’s Closet & Accessories (Shipped in v0.22.0–v0.23.0):**
   - Closet drawer with unlockable bowtie, flower crown, scarf, detective cap, sunglasses, and fancy suit.
