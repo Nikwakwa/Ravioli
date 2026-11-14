@@ -24,12 +24,14 @@ import { BadgeCelebrationModal } from './components/BadgeCelebrationModal';
 import { hasSeenOnboarding, loadPlayer, markOnboardingSeen, savePlayer } from './utils/player';
 import type { CatSpot } from './types';
 import {
+  loadAlertedMap,
   loadNotificationPrefs,
   requestNotificationAccess,
   saveNotificationPrefs,
   sendSystemNotification,
   type NotificationPrefs,
 } from './utils/notifications';
+import { schedulePushSync, subscribeAndSyncPush, unsubscribePush } from './utils/pushSync';
 import {
   fetchLuxembourgAtmosphere,
   isRainingNow,
@@ -110,6 +112,7 @@ export function App() {
   const {
     ready,
     bootError,
+    base,
     live,
     mood,
     tummyAche,
@@ -285,9 +288,30 @@ export function App() {
     scoopLitterBox();
   };
 
+  useEffect(() => {
+    if (!ready || !base || !notifPrefs.enabled) return;
+    schedulePushSync({
+      state: base,
+      prefs: notifPrefs,
+      alerted: loadAlertedMap(),
+      wokeUpAlerted: !live?.isSleeping,
+    });
+  }, [ready, base, live?.isSleeping, notifPrefs]);
+
   const handleChangeNotifPrefs = (next: NotificationPrefs) => {
     saveNotificationPrefs(next);
     setNotifPrefs(next);
+    if (next.enabled && base) {
+      schedulePushSync(
+        {
+          state: base,
+          prefs: next,
+          alerted: loadAlertedMap(),
+          wokeUpAlerted: !live?.isSleeping,
+        },
+        300,
+      );
+    }
   };
 
   const handleCompleteOnboarding = (name: string) => {
@@ -305,6 +329,7 @@ export function App() {
   const handleToggleMasterNotifications = async () => {
     if (notifPrefs.enabled) {
       handleChangeNotifPrefs({ ...notifPrefs, enabled: false });
+      void unsubscribePush();
       pushNotice({ text: '🔕 Oli notifications muted', tone: 'info' });
       return;
     }
@@ -312,6 +337,14 @@ export function App() {
     if (res === 'granted') {
       const next = { ...notifPrefs, enabled: true };
       handleChangeNotifPrefs(next);
+      if (base) {
+        void subscribeAndSyncPush({
+          state: base,
+          prefs: next,
+          alerted: loadAlertedMap(),
+          wokeUpAlerted: !live?.isSleeping,
+        });
+      }
       pushNotice({ text: '🔔 Oli notifications enabled!', tone: 'info' });
       void sendSystemNotification(
         '🔔 Oli notifications enabled!',

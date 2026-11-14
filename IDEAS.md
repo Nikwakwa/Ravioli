@@ -78,28 +78,11 @@ When an idea gets picked up, move it into [ROADMAP.md](ROADMAP.md) as a new phas
 
 ---
 
-## 🔔 6. Notifications even when the app is closed (web push)
-
-**Problem today:** alerts ("Oli is hungry", "Oli woke up") only arrive while the app is open, because they come from timers running inside the app. Phones don't let a closed web app run code.
-
-**The fix:** web push, where a small server sends the alert through Apple's or Google's push service and the phone shows it even when the app is closed.
-
-### Plan
-1. **In the app:** when notifications are turned on, register the phone for push and save that registration on Supabase. Every time Oli's stats change, upload his latest snapshot and the alert preferences.
-2. **On Supabase:** a scheduled function (every ~5 minutes) works out which alerts are due and sends each one once. His stats change at fixed rates, so it can calculate exactly when a need drops below 25 or when he wakes up without running Oli on the server.
-3. **In the app's background script:** add handling for incoming push messages (show the alert, open Oli on tap). This means switching the PWA setup from the auto-generated background script to a custom one.
-
-### Good to know
-- We already have a Supabase project (kept awake by `.github/workflows/supabase-keepalive.yml`) plus the parked sync code in `src/services/catStorage.ts` and `supabase/schema.sql`.
-- **iPhone:** only works when the app is added to the Home Screen and opened from that icon (iOS 16.4+). Android works in the browser too.
-- Alerts may arrive up to ~5 minutes late (the check interval).
-- Fits in Supabase's free plan. Needs a push key pair; the private half stays as a Supabase secret.
-- Notifications need to be switched on again once after this ships, so the phone can register.
-- **Ruled out:** on-device scheduled notifications (dropped by browsers, never on iPhone), Android "background sync" (unreliable, Android only), GitHub scheduled jobs as the sender (often 15–60 min late).
-
----
-
 ## ✅ Completed Ideas
+
+- **Live Notifications Even When Closed (Web Push):**
+  - Background push alerts when Oli's needs drop below 25/5 or when he wakes up from a nap, even when the app is closed.
+  - Syncs each device's push subscription and Oli snapshot to Supabase, checked every 5 minutes by a scheduled Edge Function.
 
 - **Badges (Shipped in v0.25.0–v0.26.0):**
   - 12 quirky cat achievements tracking Oli's authentic habits and routines with Bronze 🥉, Silver 🥈, and Gold 🥇 tiers (36 total medals).

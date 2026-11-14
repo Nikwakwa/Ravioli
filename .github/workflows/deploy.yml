@@ -39,9 +39,12 @@ jobs:
       - name: Run tests
         run: npm test
 
-      # Co-op sync is parked (see ROADMAP.md), so the Supabase keys are not passed to the build.
-      # Add VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY back here when co-op returns.
+      # Co-op sync remains local-only (see catStorage.ts); these public keys power background Web Push alerts.
       - name: Build PWA
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          VITE_VAPID_PUBLIC_KEY: ${{ secrets.VITE_VAPID_PUBLIC_KEY }}
         run: npm run build
 
       - name: Configure Pages

@@ -1666,6 +1666,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
   return {
     ready,
     bootError,
+    base,
     live,
     mood,
     tummyAche,

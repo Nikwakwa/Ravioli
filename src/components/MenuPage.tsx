@@ -29,6 +29,7 @@ import {
   NEGLECT_DEATH_HOURS,
 } from '../utils/decayEngine';
 import { CRITICAL_THRESHOLD, type NotificationPrefs } from '../utils/notifications';
+import { isIosDevice, isPushConfigured, isStandalonePwa } from '../utils/pushSync';
 import {
   BADGES,
   countEarnedMedals,
@@ -762,7 +763,11 @@ Time: ${new Date().toISOString()}`;
                     {notifPrefs.enabled ? 'Notifications Active' : 'Notifications Muted'}
                   </h2>
                   <p className="text-[10px] font-medium text-amber-800/75">
-                    {notifPrefs.enabled ? 'Care alerts will be sent' : 'Turn on to get care alerts'}
+                    {notifPrefs.enabled
+                      ? isPushConfigured()
+                        ? 'Live alerts arrive even when closed'
+                        : 'Care alerts will be sent while open'
+                      : 'Turn on to get care alerts'}
                   </p>
                 </div>
               </div>
@@ -776,6 +781,12 @@ Time: ${new Date().toISOString()}`;
                 {notifPrefs.enabled ? 'Enabled ✓' : 'Enable'}
               </button>
             </div>
+
+            {isIosDevice() && !isStandalonePwa() && (
+              <p className="rounded-xl border border-amber-500/20 bg-amber-50 px-3 py-2 text-[11px] font-semibold text-amber-900">
+                📱 On iPhone, add Ravioli to your Home Screen first so alerts arrive when the app is closed.
+              </p>
+            )}
 
             {/* Test Alert Button */}
             {notifPrefs.enabled && (
