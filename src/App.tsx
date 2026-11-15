@@ -288,6 +288,10 @@ export function App() {
     scoopLitterBox();
   };
 
+  const alertedSnapshotKey = live
+    ? `${live.hunger < 25 ? (live.hunger <= 5 ? 'c' : 'l') : 'n'}-${live.hydration < 25 ? (live.hydration <= 5 ? 'c' : 'l') : 'n'}-${live.happiness < 25 ? (live.happiness <= 5 ? 'c' : 'l') : 'n'}-${live.energy < 25 ? (live.energy <= 5 ? 'c' : 'l') : 'n'}-${live.hygiene < 25 ? (live.hygiene <= 5 ? 'c' : 'l') : 'n'}`
+    : '';
+
   useEffect(() => {
     if (!ready || !base || !notifPrefs.enabled) return;
     schedulePushSync({
@@ -296,7 +300,7 @@ export function App() {
       alerted: loadAlertedMap(),
       wokeUpAlerted: !live?.isSleeping,
     });
-  }, [ready, base, live?.isSleeping, notifPrefs]);
+  }, [ready, base, live?.isSleeping, notifPrefs, alertedSnapshotKey]);
 
   const handleChangeNotifPrefs = (next: NotificationPrefs) => {
     saveNotificationPrefs(next);
@@ -360,6 +364,14 @@ export function App() {
   };
 
   const handleTestNotification = () => {
+    if (base && notifPrefs.enabled) {
+      void subscribeAndSyncPush({
+        state: base,
+        prefs: notifPrefs,
+        alerted: loadAlertedMap(),
+        wokeUpAlerted: !live?.isSleeping,
+      });
+    }
     pushNotice({ text: '🔔 Sent test notification!', tone: 'info' });
     void sendSystemNotification(
       '🐱 Meow from Oli!',

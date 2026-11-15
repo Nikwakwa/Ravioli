@@ -7,6 +7,15 @@ export interface ReleaseEntry {
 
 export const CHANGELOG: ReleaseEntry[] = [
   {
+    version: 'v1.1.2',
+    date: '2026-11-15',
+    title: 'Background Alerts Fix 🔔',
+    changes: [
+      'Devices with alerts already turned on now connect to background push automatically.',
+      'Opening the app after time away no longer spams all missed notifications at once.',
+    ],
+  },
+  {
     version: 'v1.1.1',
     date: '2026-11-13',
     title: 'Clean Fortune Cookie Slip 🥠',

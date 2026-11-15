@@ -250,6 +250,6 @@ Deno.serve(async () => {
 
   return new Response(
     JSON.stringify({ checked: rows?.length ?? 0, sent: sentCount, removed: removedCount }),
-    { headers: { 'Content-Type': 'application/json' } },
+    { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
   );
 });

@@ -152,10 +152,23 @@ export async function subscribeAndSyncPush(
     const reg = await navigator.serviceWorker.ready;
     let sub = await reg.pushManager.getSubscription();
     if (!sub) {
-      sub = await reg.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(env.vapidPublicKey),
-      });
+      if (typeof Notification !== 'undefined' && Notification.permission !== 'granted') {
+        return { ok: false, reason: 'permission_denied' };
+      }
+      const applicationServerKey = urlBase64ToUint8Array(env.vapidPublicKey);
+      try {
+        sub = await reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey,
+        });
+      } catch {
+        const stale = await reg.pushManager.getSubscription();
+        if (stale) await stale.unsubscribe();
+        sub = await reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey,
+        });
+      }
     }
 
     const json = sub.toJSON();
@@ -179,25 +192,7 @@ export async function subscribeAndSyncPush(
 
 export async function syncPushSnapshot(payload: PushSyncPayload): Promise<void> {
   if (!payload.prefs.enabled || !isPushSupported()) return;
-  const env = getPushEnv();
-  if (!env) return;
-
-  try {
-    const reg = await navigator.serviceWorker.ready;
-    const sub = await reg.pushManager.getSubscription();
-    if (!sub) return;
-
-    const json = sub.toJSON();
-    const p256dh = json.keys?.p256dh;
-    const auth = json.keys?.auth;
-    if (!sub.endpoint || !p256dh || !auth) return;
-
-    const record = buildPushRecord(sub.endpoint, p256dh, auth, payload);
-    const ok = await upsertPushRecord(env, record);
-    if (ok) saveEndpoint(sub.endpoint);
-  } catch {
-    // Non-fatal: background push sync will retry on next action or app open
-  }
+  await subscribeAndSyncPush(payload);
 }
 
 let syncTimer: number | null = null;

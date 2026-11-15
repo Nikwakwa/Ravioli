@@ -34,4 +34,14 @@ jobs:
               -H "Authorization: Bearer $SUPABASE_KEY"
             echo
           done
+          echo "Triggering send-push function check..."
+          HTTP_CODE=$(curl --silent --output /tmp/push-out.json --write-out "%{http_code}" --max-time 30 \
+            -X POST "${SUPABASE_URL%/}/functions/v1/send-push" \
+            -H "Content-Type: application/json" \
+            -H "apikey: $SUPABASE_KEY" \
+            -H "Authorization: Bearer $SUPABASE_KEY" \
+            -d '{}' || true)
+          echo "send-push HTTP status: $HTTP_CODE"
+          cat /tmp/push-out.json || true
+          echo
           echo "Supabase responded — project stays active."

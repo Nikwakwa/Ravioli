@@ -4,6 +4,13 @@ All updates to **Oli** are listed here.
 
 ---
 
+## `v1.1.2` — 2026-11-15
+### Background Alerts Fix 🔔
+- Devices with alerts already turned on now connect to background push automatically.
+- Opening the app after time away no longer spams all missed notifications at once.
+
+---
+
 ## `v0.23.0` — 2026-11-11
 ### Closet Shop & Fancy Suit 🤵
 - Closet items are now bought with Churus (what you already had stays yours).

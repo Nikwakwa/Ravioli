@@ -822,6 +822,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
   const alertedRef = useRef<AlertedMap | null>(null);
   useEffect(() => {
     if (!live || live.isPaused || live.isDeceased) return;
+    const isInitialBoot = alertedRef.current === null;
     alertedRef.current ??= loadAlertedMap();
     const prefs = loadNotificationPrefs();
     const { nextAlerted, alerts } = evaluateStatThresholds(live, alertedRef.current, prefs);
@@ -832,22 +833,28 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
       const first = alerts[0];
       noticeRef.current({ text: first.title, tone: first.tone });
       vibrate([30, 50, 30]);
-      for (const a of alerts) {
-        void sendSystemNotification(a.title, a.body, a.tag);
+      // Only send OS system notifications when the app is hidden in the background,
+      // never as a catch-up flood at the moment the player opens the app.
+      if (!isInitialBoot && typeof document !== 'undefined' && document.visibilityState === 'hidden') {
+        for (const a of alerts) {
+          void sendSystemNotification(a.title, a.body, a.tag);
+        }
       }
     }
   }, [live]);
 
-  // Send an urgent rescue alert if Oli ever succumbs to prolonged neglect
+  // Send an urgent rescue alert if Oli ever succumbs to prolonged neglect while backgrounded
   const deceasedAlertedRef = useRef(false);
   useEffect(() => {
     if (live?.isDeceased && !deceasedAlertedRef.current) {
       deceasedAlertedRef.current = true;
-      void sendSystemNotification(
-        '🚨 Oli needs you!',
-        'Oli was left alone too long. Open the app to revive him.',
-        'oli-emergency',
-      );
+      if (typeof document !== 'undefined' && document.visibilityState === 'hidden') {
+        void sendSystemNotification(
+          '🚨 Oli needs you!',
+          'Oli was left alone too long. Open the app to revive him.',
+          'oli-emergency',
+        );
+      }
     } else if (live && !live.isDeceased) {
       deceasedAlertedRef.current = false;
     }
@@ -862,7 +869,11 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
       noticeRef.current({ text: msg, tone: 'info' });
       saveLastMessAt(Date.now());
       saveLastLitterAt(Date.now());
-      if (loadNotificationPrefs().wakeUp) {
+      if (
+        loadNotificationPrefs().wakeUp &&
+        typeof document !== 'undefined' &&
+        document.visibilityState === 'hidden'
+      ) {
         void sendSystemNotification(`☀️ ${live.name} woke up!`, msg, 'oli-wake');
       }
       playEvent({ actionId: 'wake', player: '', remote: true, effect: {}, particles: [], animation: 'yawning', durationMs: 1600 });
