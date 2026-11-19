@@ -24,6 +24,13 @@ body,
   font-family: var(--font-sans);
 }
 
+input,
+textarea {
+  user-select: text;
+  -webkit-user-select: text;
+  touch-action: manipulation;
+}
+
 .safe-shell {
   padding-top: env(safe-area-inset-top, 0px);
   padding-bottom: env(safe-area-inset-bottom, 0px);

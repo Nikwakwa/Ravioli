@@ -19,14 +19,6 @@ export function GrowthCelebrationModal({ stage, onClose }: GrowthCelebrationModa
     celebrate();
   }, []);
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onClose]);
-
   return (
     <div
       role="dialog"
@@ -42,7 +34,7 @@ export function GrowthCelebrationModal({ stage, onClose }: GrowthCelebrationModa
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.82, y: -20 }}
         transition={{ type: 'spring', damping: 20, stiffness: 300 }}
-        className="relative w-full max-w-xs sm:max-w-sm overflow-hidden rounded-3xl border border-amber-900/15 bg-gradient-to-b from-[#fffaf3] via-[#fff5e6] to-[#ffeed6] p-5 text-center text-amber-950 shadow-2xl"
+        className="relative max-h-[calc(100dvh-2rem)] w-full max-w-xs sm:max-w-sm touch-pan-y overflow-y-auto rounded-3xl border border-amber-900/15 bg-gradient-to-b from-[#fffaf3] via-[#fff5e6] to-[#ffeed6] p-5 text-center text-amber-950 shadow-2xl"
       >
         <button
           type="button"

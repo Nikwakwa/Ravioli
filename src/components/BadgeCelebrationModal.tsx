@@ -25,19 +25,13 @@ export function BadgeCelebrationModal({
     celebrate();
   }, []);
 
-  // Keyboard navigation & auto-dismiss after 6.5s
+  // Auto-dismiss after 6.5s (Escape is handled top-down in App)
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
-    window.addEventListener('keydown', handleKeyDown);
-
     const timer = window.setTimeout(() => {
       onClose();
     }, 6500);
 
     return () => {
-      window.removeEventListener('keydown', handleKeyDown);
       window.clearTimeout(timer);
     };
   }, [onClose]);
@@ -57,7 +51,7 @@ export function BadgeCelebrationModal({
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.8, y: -20 }}
         transition={{ type: 'spring', damping: 20, stiffness: 300 }}
-        className="relative w-full max-w-xs sm:max-w-sm overflow-hidden rounded-3xl border border-amber-900/15 bg-gradient-to-b from-[#fffaf3] via-[#fff5e6] to-[#ffeed6] p-5 text-center text-amber-950 shadow-2xl"
+        className="relative max-h-[calc(100dvh-2rem)] w-full max-w-xs sm:max-w-sm touch-pan-y overflow-y-auto rounded-3xl border border-amber-900/15 bg-gradient-to-b from-[#fffaf3] via-[#fff5e6] to-[#ffeed6] p-5 text-center text-amber-950 shadow-2xl"
       >
         {/* Close Button */}
         <button

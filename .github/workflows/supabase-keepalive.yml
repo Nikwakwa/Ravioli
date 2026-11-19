@@ -21,6 +21,7 @@ jobs:
         env:
           SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          PUSH_CRON_SECRET: ${{ secrets.PUSH_CRON_SECRET }}
         run: |
           if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_KEY" ]; then
             echo "::error::Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY under Settings → Secrets and variables → Actions."
@@ -34,13 +35,21 @@ jobs:
             echo
           done
           echo "Triggering send-push function..."
+          EXTRA_ARGS=()
+          if [ -n "$PUSH_CRON_SECRET" ]; then
+            EXTRA_ARGS+=(-H "x-cron-secret: $PUSH_CRON_SECRET")
+          fi
           HTTP_CODE=$(curl --silent --output /tmp/push-out.json --write-out "%{http_code}" --max-time 30 \
             -X POST "${SUPABASE_URL%/}/functions/v1/send-push" \
             -H "Content-Type: application/json" \
             -H "apikey: $SUPABASE_KEY" \
             -H "Authorization: Bearer $SUPABASE_KEY" \
+            "${EXTRA_ARGS[@]}" \
             -d '{}' || true)
           echo "send-push HTTP status: $HTTP_CODE"
           cat /tmp/push-out.json || true
           echo
+          if [ "${HTTP_CODE:-0}" -ge 500 ]; then
+            echo "::warning::send-push returned HTTP $HTTP_CODE"
+          fi
           echo "Supabase responded — project stays active."

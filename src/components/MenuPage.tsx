@@ -34,7 +34,7 @@ import {
   stageIndex,
 } from '../utils/lifeStage';
 import { CRITICAL_THRESHOLD, type NotificationPrefs } from '../utils/notifications';
-import { isIosDevice, isPushConfigured, isStandalonePwa } from '../utils/pushSync';
+import { isIosDevice, isPushConfigured, isStandalonePwa, unsubscribePush } from '../utils/pushSync';
 import {
   BADGES,
   countEarnedMedals,
@@ -84,6 +84,7 @@ export function MenuPage({
   const [tempName, setTempName] = useState(playerName);
   const [copiedDiagnostics, setCopiedDiagnostics] = useState(false);
   const [confirmingReset, setConfirmingReset] = useState(false);
+  const [resetting, setResetting] = useState(false);
   const badgeState = useBadges();
   const medals = countEarnedMedals(badgeState);
   const maxMedals = BADGES.length * 3;
@@ -107,7 +108,7 @@ export function MenuPage({
 
   const handleCopyDiagnostics = async () => {
     const statsSummary = STAT_KEYS.map((k) => `${k}: ${Math.round(live[k])}`).join(', ');
-    const text = `Ravioli v${APP_VERSION}
+    const text = `Ravioli ${APP_VERSION}
 Caretaker: ${playerName}
 Cat: Oli (Stage: ${stageMeta.label}, Lives: ${live.livesLeft}/9, Paused: ${live.isPaused ? 'Yes' : 'No'})
 Stats: ${statsSummary}
@@ -115,14 +116,29 @@ Medals: ${medals.total}/${maxMedals} (${medals.gold}🥇 ${medals.silver}🥈 ${
 Time: ${new Date().toISOString()}`;
 
     try {
-      if (navigator.clipboard) {
+      if (navigator.clipboard?.writeText) {
         await navigator.clipboard.writeText(text);
+        setCopiedDiagnostics(true);
+        window.setTimeout(() => setCopiedDiagnostics(false), 2500);
       }
-      setCopiedDiagnostics(true);
-      window.setTimeout(() => setCopiedDiagnostics(false), 2500);
     } catch {
-      /* no-op */
+      /* clipboard unavailable or denied */
     }
+  };
+
+  const handleResetGame = async () => {
+    if (resetting) return;
+    setResetting(true);
+    try {
+      await Promise.race([
+        unsubscribePush(),
+        new Promise<void>((resolve) => window.setTimeout(resolve, 2000)),
+      ]);
+    } catch {
+      /* ignore push cleanup errors when offline */
+    }
+    resetAllGameData();
+    window.location.reload();
   };
 
   const toggleNotifFlag = (key: 'lowNeed' | 'critical' | 'wakeUp' | 'partner') => {
@@ -136,12 +152,12 @@ Time: ${new Date().toISOString()}`;
     });
   };
 
-  const tabs: Array<{ id: MenuTab; label: string; icon: string; badge?: boolean }> = [
+  const tabs: Array<{ id: MenuTab; label: string; icon: string; badge?: boolean; badgeTone?: 'amber' | 'emerald' }> = [
     { id: 'rules', label: 'Rules', icon: '📖' },
-    { id: 'badges', label: 'Badges', icon: '🏆', badge: badgeState.hasUnseen },
+    { id: 'badges', label: 'Badges', icon: '🏆', badge: badgeState.hasUnseen, badgeTone: 'amber' },
     { id: 'pause', label: live.isPaused ? 'Paused' : 'Vacation', icon: '✈️' },
     { id: 'notifications', label: 'Alerts', icon: notifPrefs.enabled ? '🔔' : '🔕' },
-    { id: 'version', label: 'Updates', icon: '✨', badge: Boolean(availableVersion) },
+    { id: 'version', label: 'Updates', icon: '✨', badge: Boolean(availableVersion), badgeTone: 'emerald' },
   ];
 
   return (
@@ -169,6 +185,7 @@ Time: ${new Date().toISOString()}`;
             return (
               <button
                 key={t.id}
+                id={`menu-tab-${t.id}`}
                 type="button"
                 onClick={() => {
                   if (t.id === 'badges') markBadgesSeen();
@@ -181,13 +198,22 @@ Time: ${new Date().toISOString()}`;
                 }`}
                 role="tab"
                 aria-selected={active}
+                aria-controls="menu-tabpanel"
               >
                 <span className="text-base leading-none" aria-hidden="true">{t.icon}</span>
                 <span className="max-w-full truncate">{t.label}</span>
                 {t.badge && (
                   <span className="absolute top-1 right-1.5 flex h-2 w-2">
-                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-                    <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500 ring-1 ring-white" />
+                    <span
+                      className={`absolute inline-flex h-full w-full animate-ping rounded-full opacity-75 ${
+                        t.badgeTone === 'amber' ? 'bg-amber-400' : 'bg-emerald-400'
+                      }`}
+                    />
+                    <span
+                      className={`relative inline-flex h-2 w-2 rounded-full ring-1 ring-white ${
+                        t.badgeTone === 'amber' ? 'bg-amber-500' : 'bg-emerald-500'
+                      }`}
+                    />
                   </span>
                 )}
               </button>
@@ -197,7 +223,12 @@ Time: ${new Date().toISOString()}`;
       </header>
 
       {/* Main Content Area */}
-      <main className="flex-1 touch-pan-y overflow-y-auto p-4 pb-12">
+      <div
+        id="menu-tabpanel"
+        role="tabpanel"
+        aria-labelledby={`menu-tab-${activeTab}`}
+        className="flex-1 touch-pan-y overflow-y-auto p-4 pb-12"
+      >
         {/* TAB 1: RULES & GUIDE */}
         {activeTab === 'rules' && (
           <div className="flex flex-col gap-2.5">
@@ -239,6 +270,12 @@ Time: ${new Date().toISOString()}`;
                           value={tempName}
                           maxLength={20}
                           onChange={(e) => setTempName(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Escape') {
+                              e.stopPropagation();
+                              setEditingName(false);
+                            }
+                          }}
                           className="w-28 rounded-lg border border-amber-400 bg-amber-50/50 px-2 py-0.5 text-xs font-black text-amber-950 focus:outline-hidden"
                           autoFocus
                         />
@@ -247,6 +284,13 @@ Time: ${new Date().toISOString()}`;
                           className="rounded-lg bg-amber-500 px-2 py-0.5 text-[10px] font-black text-amber-950"
                         >
                           Save
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setEditingName(false)}
+                          className="rounded-lg bg-amber-900/10 px-2 py-0.5 text-[10px] font-bold text-amber-900"
+                        >
+                          Cancel
                         </button>
                       </form>
                     ) : (
@@ -506,13 +550,11 @@ Time: ${new Date().toISOString()}`;
                   <div className="mt-2.5 flex items-center gap-2">
                     <button
                       type="button"
-                      onClick={() => {
-                        resetAllGameData();
-                        window.location.reload();
-                      }}
-                      className="rounded-xl bg-rose-600 px-3.5 py-1.5 text-xs font-black text-white shadow-xs active:scale-95 hover:bg-rose-700"
+                      disabled={resetting}
+                      onClick={() => void handleResetGame()}
+                      className="rounded-xl bg-rose-600 px-3.5 py-1.5 text-xs font-black text-white shadow-xs active:scale-95 hover:bg-rose-700 disabled:opacity-60"
                     >
-                      Yes, Reset Everything
+                      {resetting ? 'Resetting…' : 'Yes, Reset Everything'}
                     </button>
                     <button
                       type="button"
@@ -965,7 +1007,7 @@ Time: ${new Date().toISOString()}`;
             </fieldset>
           </div>
         )}
-      </main>
+      </div>
     </div>
   );
 }

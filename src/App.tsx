@@ -74,20 +74,12 @@ export function App() {
   const [notice, setNotice] = useState<Notice | null>(null);
   const [tapHeartKey, setTapHeartKey] = useState(0);
   const noticeTimer = useRef<number | undefined>(undefined);
+  const noticeSeqRef = useRef(0);
 
   useEffect(() => {
     return () => window.clearTimeout(noticeTimer.current);
   }, []);
 
-  useEffect(() => {
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && menuOpen) {
-        setMenuOpen(false);
-      }
-    };
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, [menuOpen]);
   const mainRef = useRef<HTMLElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const dockRef = useRef<HTMLDivElement>(null);
@@ -105,7 +97,7 @@ export function App() {
   const [stageTop, setStageTop] = useState(0);
 
   const pushNotice = useCallback((n: Omit<Notice, 'id'>) => {
-    setNotice({ ...n, id: Date.now() });
+    setNotice({ ...n, id: ++noticeSeqRef.current });
     window.clearTimeout(noticeTimer.current);
     noticeTimer.current = window.setTimeout(() => setNotice(null), 3200);
   }, []);
@@ -153,6 +145,35 @@ export function App() {
   const badgeState = useBadges();
   const { availableVersion, reloading, applyUpdate } = useVersionCheck();
 
+  // Single top-down Escape handler so pressing Escape closes only the top-most modal/drawer.
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape' || activeMinigame) return;
+      if (growthCelebration) {
+        dismissGrowthCelebration();
+      } else if (badgeCelebration) {
+        dismissBadgeCelebration();
+      } else if (fortuneOpen) {
+        setFortuneOpen(false);
+      } else if (closetOpen) {
+        setClosetOpen(false);
+      } else if (menuOpen) {
+        setMenuOpen(false);
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [
+    activeMinigame,
+    growthCelebration,
+    dismissGrowthCelebration,
+    badgeCelebration,
+    dismissBadgeCelebration,
+    fortuneOpen,
+    closetOpen,
+    menuOpen,
+  ]);
+
   const [luxData, setLuxData] = useState<LiveLuxembourgData | null>(() => loadCachedLuxembourgData());
 
   const effectiveTime = resolveTimeOfDay(new Date(now), luxData);
@@ -197,26 +218,38 @@ export function App() {
     };
   }, []);
 
-  // Track badges for Oli's real habits & routines
+  // Track badges for Oli's real habits & routines (only on real transitions, never double-counted on reload)
   useEffect(() => {
+    if (!ready) return;
     handleBadgeUnlocks(trackDayVisit(getTodayDateString(new Date(now))));
-  }, [now, handleBadgeUnlocks]);
+  }, [ready, now, handleBadgeUnlocks]);
 
+  const prevSceneRef = useRef(scene);
   useEffect(() => {
-    if (scene === 'balcony') {
-      handleBadgeUnlocks(trackBalconyVisit());
+    if (prevSceneRef.current !== scene) {
+      prevSceneRef.current = scene;
+      if (scene === 'balcony') {
+        handleBadgeUnlocks(trackBalconyVisit());
+      }
     }
   }, [scene, handleBadgeUnlocks]);
 
+  const watchingRain = isRaining && (spot === 'window' || scene === 'balcony');
+  const prevWatchingRainRef = useRef(false);
   useEffect(() => {
-    if (isRaining && (spot === 'window' || scene === 'balcony')) {
+    if (watchingRain && !prevWatchingRainRef.current) {
       handleBadgeUnlocks(trackRainWatch());
     }
-  }, [isRaining, spot, scene, handleBadgeUnlocks]);
+    prevWatchingRainRef.current = watchingRain;
+  }, [watchingRain, handleBadgeUnlocks]);
 
+  const prevSpotRef = useRef(spot);
   useEffect(() => {
-    if (spot === 'box') {
-      handleBadgeUnlocks(trackBoxNap());
+    if (prevSpotRef.current !== spot) {
+      prevSpotRef.current = spot;
+      if (spot === 'box') {
+        handleBadgeUnlocks(trackBoxNap());
+      }
     }
   }, [spot, handleBadgeUnlocks]);
 
@@ -278,8 +311,9 @@ export function App() {
     const t = Date.now();
     if (t - lastPetTapRef.current < PET_TAP_DEDUPE_MS) return;
     lastPetTapRef.current = t;
-    setTapHeartKey((k) => k + 1);
-    petOli();
+    if (petOli()) {
+      setTapHeartKey((k) => k + 1);
+    }
   };
 
   const handleTapFountain = () => {
@@ -601,7 +635,7 @@ export function App() {
             }`}
           >
             <span className="text-base leading-none select-none">🥠</span>
-            {isFortuneReady(fortune) ? (
+            {isFortuneReady(fortune, new Date(now)) ? (
               <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-amber-400 text-[9px] font-black text-amber-950 ring-2 ring-white animate-pulse">
                 ✨
               </span>
@@ -643,7 +677,7 @@ export function App() {
               type="button"
               onClick={() => setScene('living_room')}
               aria-pressed={scene === 'living_room'}
-              className={`relative flex items-center gap-1 whitespace-nowrap rounded-full px-3 py-1 text-[11px] font-extrabold transition-colors active:scale-95 ${
+              className={`relative flex items-center gap-1 whitespace-nowrap rounded-full px-2.5 sm:px-3 py-1 text-[11px] font-extrabold transition-colors active:scale-95 ${
                 scene === 'living_room'
                   ? 'text-amber-950'
                   : isNight
@@ -668,7 +702,7 @@ export function App() {
               type="button"
               onClick={() => setScene('balcony')}
               aria-pressed={scene === 'balcony'}
-              className={`relative flex items-center gap-1 whitespace-nowrap rounded-full px-3 py-1 text-[11px] font-extrabold transition-colors active:scale-95 ${
+              className={`relative flex items-center gap-1 whitespace-nowrap rounded-full px-2.5 sm:px-3 py-1 text-[11px] font-extrabold transition-colors active:scale-95 ${
                 scene === 'balcony'
                   ? 'text-amber-950'
                   : isNight
@@ -731,14 +765,17 @@ export function App() {
         </AnimatePresence>
 
         {/* Oli's Daily Fortune Cookie Modal */}
-        {fortuneOpen && (
-          <FortuneModal
-            churuStash={churuStash}
-            onUnlock={buyFortuneCookie}
-            onUnlockBadges={handleBadgeUnlocks}
-            onClose={() => setFortuneOpen(false)}
-          />
-        )}
+        <AnimatePresence>
+          {fortuneOpen && (
+            <FortuneModal
+              key="fortune-modal"
+              churuStash={churuStash}
+              onUnlock={buyFortuneCookie}
+              onUnlockBadges={handleBadgeUnlocks}
+              onClose={() => setFortuneOpen(false)}
+            />
+          )}
+        </AnimatePresence>
 
         {/* Separate Menu Page (Rules, Vacation Pause, Version/Updates, Notifications) */}
         <AnimatePresence>
@@ -771,13 +808,16 @@ export function App() {
         </AnimatePresence>
 
         {/* First-time player onboarding */}
-        {showOnboarding && ready && Boolean(live) && (
-          <OnboardingModal
-            initialName={playerName}
-            lifeStage={live.lifeStage}
-            onComplete={handleCompleteOnboarding}
-          />
-        )}
+        <AnimatePresence>
+          {showOnboarding && ready && Boolean(live) && (
+            <OnboardingModal
+              key="onboarding-modal"
+              initialName={playerName}
+              lifeStage={live.lifeStage}
+              onComplete={handleCompleteOnboarding}
+            />
+          )}
+        </AnimatePresence>
 
         {/* Growing-Up Stage Celebration Pop-up */}
         <AnimatePresence>

@@ -1,6 +1,18 @@
 // Web Push event handlers imported by the Workbox service worker.
 // Runs in the background even when the Ravioli app is closed.
 
+function toSameOriginUrl(raw, fallback) {
+  try {
+    const resolved = new URL(typeof raw === 'string' && raw ? raw : fallback, self.registration.scope);
+    if (resolved.origin === self.location.origin) {
+      return resolved.href;
+    }
+  } catch {
+    // fall through to safe fallback
+  }
+  return new URL(fallback, self.registration.scope).href;
+}
+
 self.addEventListener('push', (event) => {
   if (!event.data) return;
 
@@ -8,9 +20,9 @@ self.addEventListener('push', (event) => {
     title: '🐱 Oli needs you!',
     body: 'Open Ravioli to check on Oli.',
     tag: 'oli-alert',
-    icon: './pwa-192x192.png',
-    badge: './badge-96x96.png',
-    url: './',
+    icon: toSameOriginUrl('./pwa-192x192.png', './pwa-192x192.png'),
+    badge: toSameOriginUrl('./badge-96x96.png', './badge-96x96.png'),
+    url: self.registration.scope,
   };
 
   try {
@@ -18,17 +30,17 @@ self.addEventListener('push', (event) => {
     if (data && typeof data === 'object') {
       payload = {
         ...payload,
-        ...(typeof data.title === 'string' ? { title: data.title } : {}),
-        ...(typeof data.body === 'string' ? { body: data.body } : {}),
-        ...(typeof data.tag === 'string' ? { tag: data.tag } : {}),
-        ...(typeof data.icon === 'string' ? { icon: data.icon } : {}),
-        ...(typeof data.badge === 'string' ? { badge: data.badge } : {}),
-        ...(typeof data.url === 'string' ? { url: data.url } : {}),
+        ...(typeof data.title === 'string' ? { title: data.title.slice(0, 120) } : {}),
+        ...(typeof data.body === 'string' ? { body: data.body.slice(0, 240) } : {}),
+        ...(typeof data.tag === 'string' ? { tag: data.tag.slice(0, 64) } : {}),
+        icon: toSameOriginUrl(data.icon, './pwa-192x192.png'),
+        badge: toSameOriginUrl(data.badge, './badge-96x96.png'),
+        url: toSameOriginUrl(data.url, './'),
       };
     }
   } catch {
     const text = event.data.text();
-    if (text) payload.body = text;
+    if (text) payload.body = text.slice(0, 240);
   }
 
   event.waitUntil(
@@ -45,7 +57,7 @@ self.addEventListener('push', (event) => {
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  const targetUrl = new URL(event.notification.data?.url || './', self.registration.scope).href;
+  const targetUrl = toSameOriginUrl(event.notification.data?.url, './');
 
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {

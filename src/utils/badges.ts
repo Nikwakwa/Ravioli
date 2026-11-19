@@ -337,9 +337,9 @@ export function getBadgeProgress(
       current = stats.minigameWins;
       break;
     case 'gourmet_whiskers': {
-      const allTried = REQUIRED_FOODS.every((f) => stats.foodsTried.includes(f));
-      if (!allTried) {
-        current = stats.foodsTried.length;
+      const triedRequired = REQUIRED_FOODS.filter((f) => stats.foodsTried.includes(f)).length;
+      if (triedRequired < REQUIRED_FOODS.length) {
+        current = triedRequired;
       } else {
         current = stats.feedCount;
       }
@@ -456,11 +456,15 @@ export function evaluateBadges(
   return { nextState, newUnlocks };
 }
 
+function safeCount(value: unknown): number {
+  return typeof value === 'number' && Number.isFinite(value) && value >= 0 ? Math.floor(value) : 0;
+}
+
 export function sanitizeBadgeState(raw: unknown): BadgeState {
   if (!raw || typeof raw !== 'object') return EMPTY_STATE;
   const r = raw as Partial<BadgeState>;
   const unlockedIds = Array.isArray(r.unlockedIds)
-    ? r.unlockedIds.filter((id) => typeof id === 'string' && badgeById(id))
+    ? Array.from(new Set(r.unlockedIds.filter((id): id is string => typeof id === 'string' && Boolean(badgeById(id)))))
     : [];
 
   const levels: Record<string, BadgeTier> = {};
@@ -468,6 +472,7 @@ export function sanitizeBadgeState(raw: unknown): BadgeState {
     for (const [k, v] of Object.entries(r.levels)) {
       if (badgeById(k) && (v === 'bronze' || v === 'silver' || v === 'gold')) {
         levels[k] = v;
+        if (!unlockedIds.includes(k)) unlockedIds.push(k);
       }
     }
   }
@@ -485,42 +490,36 @@ export function sanitizeBadgeState(raw: unknown): BadgeState {
   }
 
   const rawStats = (r.stats && typeof r.stats === 'object' ? r.stats : {}) as Partial<BadgeStats>;
+  const foodsTried = Array.isArray(rawStats.foodsTried)
+    ? Array.from(new Set(rawStats.foodsTried.filter((f): f is string => typeof f === 'string' && f.length > 0 && f.length <= 48)))
+    : [];
+  const daysVisited = Array.isArray(rawStats.daysVisited)
+    ? Array.from(new Set(rawStats.daysVisited.filter((d): d is string => typeof d === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d))))
+    : [];
+  const thrivingCount =
+    typeof rawStats.thrivingCount === 'number' && Number.isFinite(rawStats.thrivingCount) && rawStats.thrivingCount >= 0
+      ? Math.floor(rawStats.thrivingCount)
+      : rawStats.thrivingAchieved
+        ? 1
+        : 0;
   const stats: BadgeStats = {
-    boxNaps: typeof rawStats.boxNaps === 'number' && rawStats.boxNaps >= 0 ? rawStats.boxNaps : 0,
-    midnightFeeds:
-      typeof rawStats.midnightFeeds === 'number' && rawStats.midnightFeeds >= 0 ? rawStats.midnightFeeds : 0,
-    rainWatches: typeof rawStats.rainWatches === 'number' && rawStats.rainWatches >= 0 ? rawStats.rainWatches : 0,
-    accessoriesDressed:
-      typeof rawStats.accessoriesDressed === 'number' && rawStats.accessoriesDressed >= 0
-        ? rawStats.accessoriesDressed
-        : 0,
-    fortuneCracks:
-      typeof rawStats.fortuneCracks === 'number' && rawStats.fortuneCracks >= 0 ? rawStats.fortuneCracks : 0,
-    minigameWins:
-      typeof rawStats.minigameWins === 'number' && rawStats.minigameWins >= 0 ? rawStats.minigameWins : 0,
-    foodsTried: Array.isArray(rawStats.foodsTried)
-      ? rawStats.foodsTried.filter((f) => typeof f === 'string')
-      : [],
+    boxNaps: safeCount(rawStats.boxNaps),
+    midnightFeeds: safeCount(rawStats.midnightFeeds),
+    rainWatches: safeCount(rawStats.rainWatches),
+    accessoriesDressed: safeCount(rawStats.accessoriesDressed),
+    fortuneCracks: safeCount(rawStats.fortuneCracks),
+    minigameWins: safeCount(rawStats.minigameWins),
+    foodsTried,
     feedCount:
-      typeof rawStats.feedCount === 'number' && rawStats.feedCount >= 0
-        ? rawStats.feedCount
-        : Array.isArray(rawStats.foodsTried)
-          ? rawStats.foodsTried.length
-          : 0,
-    petCount: typeof rawStats.petCount === 'number' && rawStats.petCount >= 0 ? rawStats.petCount : 0,
-    cleanCount: typeof rawStats.cleanCount === 'number' && rawStats.cleanCount >= 0 ? rawStats.cleanCount : 0,
-    balconyVisits:
-      typeof rawStats.balconyVisits === 'number' && rawStats.balconyVisits >= 0 ? rawStats.balconyVisits : 0,
-    thrivingCount:
-      typeof rawStats.thrivingCount === 'number' && rawStats.thrivingCount >= 0
-        ? rawStats.thrivingCount
-        : rawStats.thrivingAchieved
-          ? 1
-          : 0,
-    thrivingAchieved: Boolean(rawStats.thrivingAchieved || (rawStats.thrivingCount && rawStats.thrivingCount > 0)),
-    daysVisited: Array.isArray(rawStats.daysVisited)
-      ? rawStats.daysVisited.filter((d) => typeof d === 'string')
-      : [],
+      typeof rawStats.feedCount === 'number' && Number.isFinite(rawStats.feedCount) && rawStats.feedCount >= 0
+        ? Math.floor(rawStats.feedCount)
+        : foodsTried.length,
+    petCount: safeCount(rawStats.petCount),
+    cleanCount: safeCount(rawStats.cleanCount),
+    balconyVisits: safeCount(rawStats.balconyVisits),
+    thrivingCount,
+    thrivingAchieved: Boolean(rawStats.thrivingAchieved || thrivingCount > 0),
+    daysVisited,
   };
 
   return {

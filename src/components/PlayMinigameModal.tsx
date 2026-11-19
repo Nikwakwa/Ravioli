@@ -111,6 +111,8 @@ export function PlayMinigameModal({
   const timeLeftRef = useRef(roundDuration);
   const pouncesLeftRef = useRef(MAX_LASER_POUNCES);
   const pounceCooldownRef = useRef(false);
+  const roundLockedRef = useRef(false);
+  const completedHitsRef = useRef<number | null>(null);
   const arenaRef = useRef<HTMLDivElement | null>(null);
 
   const timersRef = useRef<number[]>([]);
@@ -151,6 +153,8 @@ export function PlayMinigameModal({
     pouncesLeftRef.current = MAX_LASER_POUNCES;
     setPouncesLeft(MAX_LASER_POUNCES);
     pounceCooldownRef.current = false;
+    roundLockedRef.current = false;
+    completedHitsRef.current = null;
 
     // Reset Feather state
     posRef.current = 12;
@@ -187,12 +191,23 @@ export function PlayMinigameModal({
     return () => clearTimers();
   }, [action]);
 
+  const handleCloseButton = () => {
+    if (completedHitsRef.current !== null) {
+      const hits = completedHitsRef.current;
+      completedHitsRef.current = null;
+      clearTimers();
+      onComplete(hits);
+      return;
+    }
+    onCancel();
+  };
+
   useEffect(() => {
     if (!action) return;
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         e.preventDefault();
-        onCancel();
+        handleCloseButton();
       } else if ((e.key === ' ' || e.key === 'Enter') && roundFeedback === null && !finished) {
         if (isFeather) {
           e.preventDefault();
@@ -219,7 +234,7 @@ export function PlayMinigameModal({
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [action, isFeather, isTail, isRedBall, round, roundFeedback, finished, onCancel]);
+  }, [action, isFeather, isTail, isRedBall, round, roundFeedback, finished, onCancel, onComplete]);
 
   // Main 60fps animation frame loop for movement & timer countdown
   useEffect(() => {
@@ -392,6 +407,8 @@ export function PlayMinigameModal({
     outcome: 'hit' | 'miss',
     reason?: 'caught' | 'miss_tap' | 'timeout' | 'out_of_pounces' | 'under_sofa',
   ) => {
+    if (roundLockedRef.current) return;
+    roundLockedRef.current = true;
     const nextResults = [...results, outcome];
     setResults(nextResults);
     setRoundFeedback(outcome);
@@ -406,12 +423,17 @@ export function PlayMinigameModal({
     }
 
     if (nextResults.length >= MINIGAME_ROUNDS) {
+      const totalHits = nextResults.filter((r) => r === 'hit').length;
+      completedHitsRef.current = totalHits;
       safeTimeout(() => {
         setFinished(true);
       }, 550);
       safeTimeout(() => {
-        const totalHits = nextResults.filter((r) => r === 'hit').length;
-        onComplete(totalHits);
+        if (completedHitsRef.current !== null) {
+          const hits = completedHitsRef.current;
+          completedHitsRef.current = null;
+          onComplete(hits);
+        }
       }, 1550);
     } else {
       safeTimeout(() => {
@@ -425,6 +447,7 @@ export function PlayMinigameModal({
         ballBatsRef.current = 0;
         setBallBats(0);
         pounceCooldownRef.current = false;
+        roundLockedRef.current = false;
 
         const dur = getRoundDurationSec(action.id);
         timeLeftRef.current = dur;
@@ -574,7 +597,7 @@ export function PlayMinigameModal({
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.9, y: 12 }}
           transition={{ type: 'spring', stiffness: 360, damping: 28 }}
-          className="relative w-full max-w-[360px] overflow-hidden rounded-3xl border-2 border-amber-400/70 bg-[#fff8ef] p-4 text-amber-950 shadow-2xl"
+          className="relative max-h-[calc(100dvh-2rem)] w-full max-w-[360px] touch-pan-y overflow-y-auto rounded-3xl border-2 border-amber-400/70 bg-[#fff8ef] p-4 text-amber-950 shadow-2xl"
         >
           {/* Header: Game title + Skip / Close */}
           <div className="mb-3 flex items-center justify-between gap-2">
@@ -615,8 +638,8 @@ export function PlayMinigameModal({
               )}
               <button
                 type="button"
-                onClick={onCancel}
-                aria-label="Cancel play"
+                onClick={handleCloseButton}
+                aria-label={finished ? 'Claim reward and close' : 'Cancel play'}
                 className="flex h-8 w-8 items-center justify-center rounded-full bg-amber-900/10 text-amber-900 hover:bg-amber-900/15 active:scale-95"
               >
                 <X className="h-4 w-4" />

@@ -80,28 +80,32 @@ export function StatusHUD({
   hasUnseenBadges = false,
   isNight = false,
 }: StatusHUDProps) {
+  const criticalNeed =
+    !live.isSleeping && (live.hunger < 10 || live.hydration < 10);
   const badge = live.isDeceased
     ? { label: 'Needs emergency care', emoji: '👼' }
     : live.isPaused
       ? { label: 'Vacation Mode is on', emoji: '✈️' }
       : tummyAche
         ? { label: 'Tummy ache — pet him', emoji: '🤢' }
-        : litterBoxDirty && messCount > 0 && !live.isSleeping
-          ? { label: 'Time to tidy up!', emoji: '🧹' }
-          : litterBoxDirty && !live.isSleeping
-            ? { label: 'Scoop the litter box', emoji: '🧹' }
-            : messCount > 0 && !live.isSleeping
-              ? {
-                  label: onBalcony
-                    ? messCount === 1
-                      ? 'A mess is waiting inside'
-                      : `${messCount} messes waiting inside`
-                    : messCount === 1
-                      ? 'Tap the mess to tidy'
-                      : `Tap ${messCount} messes to tidy`,
-                  emoji: '🧹',
-                }
-              : MOOD_BADGE[mood];
+        : criticalNeed
+          ? MOOD_BADGE[mood]
+          : litterBoxDirty && messCount > 0 && !live.isSleeping
+            ? { label: 'Time to tidy up!', emoji: '🧹' }
+            : litterBoxDirty && !live.isSleeping
+              ? { label: 'Scoop the litter box', emoji: '🧹' }
+              : messCount > 0 && !live.isSleeping
+                ? {
+                    label: onBalcony
+                      ? messCount === 1
+                        ? 'A mess is waiting inside'
+                        : `${messCount} messes waiting inside`
+                      : messCount === 1
+                        ? 'Tap the mess to tidy'
+                        : `Tap ${messCount} messes to tidy`,
+                    emoji: '🧹',
+                  }
+                : MOOD_BADGE[mood];
   const night = isNight;
   const stageMeta = STAGE_META[live.lifeStage];
   const nextStageMeta = live.nextStage ? STAGE_META[live.nextStage] : null;
@@ -239,7 +243,7 @@ export function StatusHUD({
             const barColor =
               val > 60
                 ? 'bg-emerald-500'
-                : val > NEED_THRESHOLD
+                : val >= NEED_THRESHOLD
                   ? 'bg-amber-400'
                   : 'bg-rose-500';
 

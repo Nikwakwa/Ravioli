@@ -1,5 +1,5 @@
 import { useEffect, useState, useSyncExternalStore } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Sparkles, X } from 'lucide-react';
 import {
   FORTUNE_COOKIE_PRICE,
@@ -132,14 +132,6 @@ export function FortuneModal({
     }
   }, [alreadyOpened, fortuneState]);
 
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [onClose]);
-
   const handleCrack = () => {
     if (cracked) return;
     vibrate([25, 45, 25]);
@@ -158,34 +150,29 @@ export function FortuneModal({
       playSound('miss');
       return;
     }
-    const ok = onUnlock();
-    if (ok) {
-      vibrate([25, 35, 40]);
-      playSound('chime');
-    }
+    onUnlock();
   };
 
   return (
-    <AnimatePresence>
+    <motion.div
+      key="fortune-backdrop"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      onClick={onClose}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
+    >
       <motion.div
-        key="fortune-backdrop"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        onClick={onClose}
-        className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Oli's Daily Fortune Cookie"
+        initial={{ opacity: 0, scale: 0.9, y: 16 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.92, y: 12 }}
+        transition={{ type: 'spring', stiffness: 320, damping: 28 }}
+        onClick={(e) => e.stopPropagation()}
+        className="relative max-h-[calc(100dvh-2rem)] w-full max-w-[370px] touch-pan-y overflow-y-auto rounded-3xl border border-amber-300/40 bg-[#fffdf9] p-5 text-amber-950 shadow-2xl"
       >
-        <motion.div
-          role="dialog"
-          aria-modal="true"
-          aria-label="Oli's Daily Fortune Cookie"
-          initial={{ opacity: 0, scale: 0.9, y: 16 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.92, y: 12 }}
-          transition={{ type: 'spring', stiffness: 320, damping: 28 }}
-          onClick={(e) => e.stopPropagation()}
-          className="relative w-full max-w-[370px] overflow-hidden rounded-3xl border border-amber-300/40 bg-[#fffdf9] p-5 text-amber-950 shadow-2xl"
-        >
           {/* Header */}
           <div className="mb-3 flex items-center justify-between border-b border-amber-900/10 pb-2">
             <div className="flex items-center gap-2">
@@ -309,8 +296,7 @@ export function FortuneModal({
               </button>
             </div>
           )}
-        </motion.div>
       </motion.div>
-    </AnimatePresence>
+    </motion.div>
   );
 }

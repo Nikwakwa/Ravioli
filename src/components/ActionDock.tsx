@@ -143,11 +143,15 @@ export function ActionDock({
   // Readable "why not" chip in both day and night themes
   const hintChip = night ? 'bg-indigo-400/25 text-indigo-100' : 'bg-amber-950/10 text-amber-900';
 
-  const napRefusal = !isSleeping && live.energy >= maxSleepEnergy
-    ? '⚡ Not Tired'
-    : isSleeping && live.energy < MIN_WAKE_ENERGY
-      ? '😴 Exhausted'
-      : null;
+  const napRefusal = live.isDeceased
+    ? '💔 Deceased'
+    : live.isPaused
+      ? '✈️ Paused'
+      : !isSleeping && live.energy >= maxSleepEnergy
+        ? '⚡ Not Tired'
+        : isSleeping && live.energy < MIN_WAKE_ENERGY
+          ? '😴 Exhausted'
+          : null;
 
   // Every tab uses the same 2×2 slot so switching tabs never jumps the layout.
   // Tabs with fewer cards let them stretch across the full row.
@@ -215,7 +219,7 @@ export function ActionDock({
             const Icon = ACTION_ICONS[action.id] ?? Sparkles;
             const hint = refusalHint(action, live, tummyAche, cleanNeededCount, churuStash);
             const muted = Boolean(hint);
-            const isUrgentScoop = action.id === 'scoop_mess' && cleanNeededCount > 0;
+            const isUrgentScoop = action.id === 'scoop_mess' && cleanNeededCount > 0 && !muted;
             const isWhimMatch = whimActionId === action.id && !muted;
 
             const badge = isUrgentScoop ? (
@@ -226,11 +230,11 @@ export function ActionDock({
               <span className="shrink-0 rounded-full bg-amber-400/25 px-1.5 py-0.5 text-[9px] font-extrabold leading-none text-amber-900">
                 💭 2×
               </span>
-            ) : action.soothesTummy && tummyAche ? (
+            ) : action.soothesTummy && tummyAche && !muted ? (
               <span className="shrink-0 whitespace-nowrap rounded-full bg-emerald-500/20 px-1.5 py-0.5 text-[9px] font-extrabold leading-none text-emerald-700">
                 Soothes 🧡
               </span>
-            ) : action.id === 'churu' && churuStash > 0 ? (
+            ) : action.id === 'churu' && churuStash > 0 && !muted ? (
               <span className="shrink-0 rounded-full bg-pink-500/15 px-1.5 py-0.5 text-[9px] font-extrabold leading-none text-pink-700">
                 ×{churuStash}
               </span>

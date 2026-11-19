@@ -1,4 +1,4 @@
-import { useEffect, useState, useSyncExternalStore } from 'react';
+import { useState, useSyncExternalStore } from 'react';
 import { motion } from 'framer-motion';
 import { Check, X } from 'lucide-react';
 import {
@@ -48,14 +48,6 @@ export function ClosetDrawer({
   // Buying takes two taps (price, then confirm) so Churus are never spent by accident.
   const [confirming, setConfirming] = useState<AccessoryId | null>(null);
 
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [onClose]);
-
   return (
     <motion.div
       key="closet-backdrop"
@@ -75,7 +67,7 @@ export function ClosetDrawer({
         exit={{ y: '100%' }}
         transition={{ type: 'spring', stiffness: 320, damping: 32 }}
         onClick={(e) => e.stopPropagation()}
-        className="w-full rounded-t-3xl bg-[#fff7ee] px-4 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))] text-amber-950 shadow-2xl"
+        className="max-h-[85dvh] w-full touch-pan-y overflow-y-auto rounded-t-3xl bg-[#fff7ee] px-4 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))] text-amber-950 shadow-2xl"
       >
         <div className="mx-auto mb-2 h-1 w-10 rounded-full bg-amber-900/15" />
 

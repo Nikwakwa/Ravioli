@@ -211,4 +211,31 @@ describe('StatusHUD Simplified Layout', () => {
     expect(html).toContain('data-testid="menu-badge-dot"');
     expect(html).toContain('New badge');
   });
+
+  it('shows critical hunger mood instead of litter box reminder when starving', () => {
+    const html = renderToString(
+      <StatusHUD
+        live={{ ...mockLive, hunger: 5 }}
+        mood="hungry"
+        litterBoxDirty={true}
+        churuStash={3}
+        onOpenMenu={vi.fn()}
+      />
+    );
+    expect(html).toContain('Tummy rumbling');
+    expect(html).not.toContain('Scoop the litter box');
+  });
+
+  it('uses amber bar color at exactly 25 and rose only below 25', () => {
+    const html = renderToString(
+      <StatusHUD
+        live={{ ...mockLive, hunger: 25, hydration: 24 }}
+        mood="thirsty"
+        churuStash={3}
+        onOpenMenu={vi.fn()}
+      />
+    );
+    expect(html).toContain('bg-amber-400');
+    expect(html).toContain('bg-rose-500');
+  });
 });

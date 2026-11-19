@@ -32,8 +32,9 @@ export function OnboardingModal({ initialName, lifeStage = 'newborn', onComplete
       <motion.div
         initial={{ opacity: 0, scale: 0.94, y: 12 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.94, y: 8 }}
         transition={{ type: 'spring', stiffness: 340, damping: 28 }}
-        className="w-full max-w-sm rounded-3xl border border-amber-900/10 bg-[#fff7ee] p-5 text-amber-950 shadow-2xl"
+        className="max-h-[calc(100dvh-2rem)] w-full max-w-sm touch-pan-y overflow-y-auto rounded-3xl border border-amber-900/10 bg-[#fff7ee] p-5 text-amber-950 shadow-2xl"
       >
         {/* Cat Avatar Header */}
         <div className="flex flex-col items-center text-center">
@@ -46,7 +47,9 @@ export function OnboardingModal({ initialName, lifeStage = 'newborn', onComplete
 
           <h2 className="font-display text-lg font-black text-amber-950">Welcome to Ravioli!</h2>
           <p className="mt-0.5 text-xs font-semibold text-amber-900/75">
-            Meet Oli, your cozy virtual ginger cat.
+            {lifeStage === 'newborn'
+              ? 'Meet baby Oli — raise him from Newborn to Adult Oli!'
+              : 'Meet Oli, your cozy virtual ginger cat.'}
           </p>
         </div>
 
@@ -54,12 +57,14 @@ export function OnboardingModal({ initialName, lifeStage = 'newborn', onComplete
         <div className="mt-4 flex flex-col gap-2">
           <div className="flex items-start gap-2.5 rounded-2xl border border-amber-900/8 bg-white/80 p-2.5 shadow-2xs">
             <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-amber-500/15 text-sm">
-              🍗
+              {lifeStage === 'newborn' ? '🍼' : '🍗'}
             </span>
             <div className="text-left leading-tight">
               <h3 className="font-display text-xs font-bold text-amber-950">Daily Care</h3>
               <p className="mt-0.5 text-[11px] font-medium text-amber-900/80">
-                Keep Oli fed, watered, and happy. Tap him directly on the rug anytime for purrs!
+                {lifeStage === 'newborn'
+                  ? 'Feed warm Kitten Milk, let him nap, and tap him for purrs to help him grow!'
+                  : 'Keep Oli fed, watered, and happy. Tap him directly on the rug anytime for purrs!'}
               </p>
             </div>
           </div>
@@ -69,7 +74,7 @@ export function OnboardingModal({ initialName, lifeStage = 'newborn', onComplete
               🎮
             </span>
             <div className="text-left leading-tight">
-              <h3 className="font-display text-xs font-bold text-amber-950">Play &amp; Whims</h3>
+              <h3 className="font-display text-xs font-bold text-amber-950">Play &amp; Cravings</h3>
               <p className="mt-0.5 text-[11px] font-medium text-amber-900/80">
                 Win minigames and fulfill cravings to earn delicious Churu treats (🍬).
               </p>

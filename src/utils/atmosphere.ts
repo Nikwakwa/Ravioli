@@ -113,8 +113,21 @@ export function calculateLuxembourgSunTimes(date: Date = new Date()): { sunrise:
   };
 }
 
-function sameLocalDay(a: Date, b: Date): boolean {
-  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+function isSameSunDay(sunriseRaw: string, apiSunrise: Date, now: Date): boolean {
+  // Open-Meteo unix timestamps are converted to UTC ISO strings (ending in 'Z'):
+  // compare UTC calendar days so travelers in other time zones still match Luxembourg's day.
+  if (sunriseRaw.endsWith('Z')) {
+    return (
+      apiSunrise.getUTCFullYear() === now.getUTCFullYear() &&
+      apiSunrise.getUTCMonth() === now.getUTCMonth() &&
+      apiSunrise.getUTCDate() === now.getUTCDate()
+    );
+  }
+  return (
+    apiSunrise.getFullYear() === now.getFullYear() &&
+    apiSunrise.getMonth() === now.getMonth() &&
+    apiSunrise.getDate() === now.getDate()
+  );
 }
 
 /**
@@ -133,7 +146,8 @@ export function resolveTimeOfDay(
   let sunriseDate: Date;
   let sunsetDate: Date;
 
-  const apiSunrise = typeof sunTimes?.sunrise === 'string' ? new Date(sunTimes.sunrise) : null;
+  const sunriseRaw = typeof sunTimes?.sunrise === 'string' ? sunTimes.sunrise : '';
+  const apiSunrise = sunriseRaw ? new Date(sunriseRaw) : null;
   const apiSunset = typeof sunTimes?.sunset === 'string' ? new Date(sunTimes.sunset) : null;
 
   // Only trust saved sunrise/sunset for the same day: yesterday's times would turn today into night.
@@ -142,7 +156,7 @@ export function resolveTimeOfDay(
     apiSunset &&
     Number.isFinite(apiSunrise.getTime()) &&
     Number.isFinite(apiSunset.getTime()) &&
-    sameLocalDay(apiSunrise, safeDate)
+    isSameSunDay(sunriseRaw, apiSunrise, safeDate)
   ) {
     sunriseDate = apiSunrise;
     sunsetDate = apiSunset;
@@ -185,11 +199,15 @@ export async function fetchLuxembourgAtmosphere(): Promise<LiveLuxembourgData> {
   if (!res.ok) {
     throw new Error(`Weather request failed with status ${res.status}`);
   }
-  const data = await res.json();
-  const current = data.current ?? {};
-  const daily = data.daily ?? {};
+  const raw = (await res.json()) as Record<string, unknown> | null;
+  if (!raw || typeof raw !== 'object') {
+    throw new Error('Weather response was not a JSON object');
+  }
+  const current = (raw.current && typeof raw.current === 'object' ? raw.current : {}) as Record<string, unknown>;
+  const daily = (raw.daily && typeof raw.daily === 'object' ? raw.daily : {}) as Record<string, unknown>;
 
-  const finite = (v: unknown, fallback: number) => (Number.isFinite(Number(v)) && v !== null ? Number(v) : fallback);
+  const finite = (v: unknown, fallback: number) =>
+    v !== null && v !== undefined && v !== '' && Number.isFinite(Number(v)) ? Number(v) : fallback;
   const code = finite(current.weather_code, 0);
   const temp = finite(current.temperature_2m, 15);
   const precip = finite(current.precipitation, 0);
@@ -199,8 +217,10 @@ export async function fetchLuxembourgAtmosphere(): Promise<LiveLuxembourgData> {
 
   const isRaining = isRainingFromWeather(code, precip, rain, showers);
   // Unix timestamps are time-zone proof (correct even if the phone is set to another zone).
-  const sunrise = toIsoTime(daily.sunrise?.[0]);
-  const sunset = toIsoTime(daily.sunset?.[0]);
+  const sunriseArr = Array.isArray(daily.sunrise) ? daily.sunrise : [];
+  const sunsetArr = Array.isArray(daily.sunset) ? daily.sunset : [];
+  const sunrise = toIsoTime(sunriseArr[0]);
+  const sunset = toIsoTime(sunsetArr[0]);
 
   const live: LiveLuxembourgData = {
     temperatureC: temp,

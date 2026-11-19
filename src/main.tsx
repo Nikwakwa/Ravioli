@@ -2,6 +2,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import './index.css';
 import App from './App';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 // Block iOS Safari pinch-zoom gesture & multi-touch zoom so the PWA feels locked like a native game.
 document.addEventListener('gesturestart', (e) => e.preventDefault());
@@ -16,6 +17,8 @@ document.addEventListener('contextmenu', (e) => e.preventDefault());
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <App />
+    <ErrorBoundary>
+      <App />
+    </ErrorBoundary>
   </StrictMode>,
 );

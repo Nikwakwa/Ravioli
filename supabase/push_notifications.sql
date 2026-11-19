@@ -18,6 +18,9 @@ create table if not exists public.push_subscriptions (
   updated_at      timestamptz not null default now()
 );
 
+create index if not exists push_subscriptions_updated_at_idx
+  on public.push_subscriptions (updated_at desc);
+
 -- Keep subscriptions private: anon clients cannot SELECT other users' endpoints.
 alter table public.push_subscriptions enable row level security;
 
@@ -42,9 +45,43 @@ language plpgsql
 security definer
 set search_path = public
 as $$
+declare
+  v_prefs        jsonb := coalesce(p_prefs, '{}'::jsonb);
+  v_cat_snapshot jsonb := coalesce(p_cat_snapshot, '{}'::jsonb);
+  v_alerted      jsonb := coalesce(p_alerted, '{}'::jsonb);
+  v_app_url      text  := coalesce(p_app_url, './');
+  v_icon_url     text  := coalesce(p_icon_url, './pwa-192x192.png');
+  v_badge_url    text  := coalesce(p_badge_url, './badge-96x96.png');
 begin
-  if char_length(p_endpoint) < 10 or char_length(p_endpoint) > 2048 then
+  if p_endpoint is null
+     or char_length(p_endpoint) < 20
+     or char_length(p_endpoint) > 2048
+     or p_endpoint !~ '^https://' then
     raise exception 'Invalid push endpoint';
+  end if;
+
+  if p_p256dh is null or char_length(p_p256dh) < 20 or char_length(p_p256dh) > 256 then
+    raise exception 'Invalid push p256dh key';
+  end if;
+
+  if p_auth is null or char_length(p_auth) < 10 or char_length(p_auth) > 128 then
+    raise exception 'Invalid push auth key';
+  end if;
+
+  if octet_length(v_prefs::text) > 4096
+     or octet_length(v_cat_snapshot::text) > 4096
+     or octet_length(v_alerted::text) > 1024 then
+    raise exception 'Push payload exceeds size limit';
+  end if;
+
+  if char_length(v_app_url) > 512 or v_app_url !~ '^(\./|https://)' then
+    v_app_url := './';
+  end if;
+  if char_length(v_icon_url) > 512 or v_icon_url !~ '^(\./|https://)' then
+    v_icon_url := './pwa-192x192.png';
+  end if;
+  if char_length(v_badge_url) > 512 or v_badge_url !~ '^(\./|https://)' then
+    v_badge_url := './badge-96x96.png';
   end if;
 
   insert into public.push_subscriptions (
@@ -52,10 +89,10 @@ begin
     woke_up_alerted, app_url, icon_url, badge_url, updated_at
   )
   values (
-    p_endpoint, p_p256dh, p_auth, coalesce(p_prefs, '{}'::jsonb),
-    coalesce(p_cat_snapshot, '{}'::jsonb), coalesce(p_alerted, '{}'::jsonb),
-    coalesce(p_woke_up_alerted, false), coalesce(p_app_url, './'),
-    coalesce(p_icon_url, './pwa-192x192.png'), coalesce(p_badge_url, './badge-96x96.png'),
+    p_endpoint, p_p256dh, p_auth, v_prefs,
+    v_cat_snapshot, v_alerted,
+    coalesce(p_woke_up_alerted, false), v_app_url,
+    v_icon_url, v_badge_url,
     now()
   )
   on conflict (endpoint) do update set
@@ -80,6 +117,9 @@ security definer
 set search_path = public
 as $$
 begin
+  if p_endpoint is null or char_length(p_endpoint) < 20 or char_length(p_endpoint) > 2048 then
+    return;
+  end if;
   delete from public.push_subscriptions where endpoint = p_endpoint;
 end;
 $$;

@@ -7,6 +7,16 @@ export interface ReleaseEntry {
 
 export const CHANGELOG: ReleaseEntry[] = [
   {
+    version: 'v1.2.1',
+    date: '2026-11-19',
+    title: 'Polish, Stability & Alerts Fix 🛠️',
+    changes: [
+      'Fixed background push alerts so they send reliably and match Oli’s current life stage.',
+      'Fixed badge progress tracking, minigame double-taps, and Oli moving off his spot when refusing an action.',
+      'Made pop-ups scroll smoothly on smaller phones and kept push alerts connected across app updates.',
+    ],
+  },
+  {
     version: 'v1.2.0',
     date: '2026-11-19',
     title: 'Growing Up: Baby to Adult Oli 🍼',

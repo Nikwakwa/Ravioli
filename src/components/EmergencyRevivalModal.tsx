@@ -13,28 +13,27 @@ export function EmergencyRevivalModal({
   const isDeceased = live.isDeceased;
   const livesLeft = live.livesLeft ?? MAX_LIVES;
 
-  if (!isDeceased) return null;
-
   return (
     <AnimatePresence>
-      <motion.div
-        key="revival-backdrop"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm"
-      >
+      {isDeceased && (
         <motion.div
-          key="revival-card"
-          role="alertdialog"
-          aria-modal="true"
-          aria-labelledby="revival-title"
-          initial={{ opacity: 0, scale: 0.9, y: 16 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.92, y: 12 }}
-          transition={{ type: 'spring', stiffness: 320, damping: 28 }}
-          className="relative w-full max-w-[380px] overflow-hidden rounded-3xl border-2 border-amber-400/50 bg-gradient-to-b from-[#1a1424] via-[#231b2e] to-[#15101e] p-5 text-amber-50 shadow-2xl"
+          key="revival-backdrop"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm"
         >
+          <motion.div
+            key="revival-card"
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="revival-title"
+            initial={{ opacity: 0, scale: 0.9, y: 16 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.92, y: 12 }}
+            transition={{ type: 'spring', stiffness: 320, damping: 28 }}
+            className="relative max-h-[calc(100dvh-2rem)] w-full max-w-[380px] touch-pan-y overflow-y-auto rounded-3xl border-2 border-amber-400/50 bg-gradient-to-b from-[#1a1424] via-[#231b2e] to-[#15101e] p-5 text-amber-50 shadow-2xl"
+          >
           {/* Subtle starry glow */}
           <div className="pointer-events-none absolute -top-12 left-1/2 -translate-x-1/2 h-36 w-36 rounded-full bg-amber-400/15 blur-2xl" />
 
@@ -122,8 +121,9 @@ export function EmergencyRevivalModal({
           <p className="mt-2.5 text-center text-[10px] font-semibold text-amber-300/60">
             He'll wake up hungry and thirsty!
           </p>
+          </motion.div>
         </motion.div>
-      </motion.div>
+      )}
     </AnimatePresence>
   );
 }

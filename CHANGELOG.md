@@ -4,6 +4,14 @@ All updates to **Oli** are listed here.
 
 ---
 
+## `v1.2.1` — 2026-11-19
+### Polish, Stability & Alerts Fix 🛠️
+- Fixed background push alerts so they send reliably and match Oli’s current life stage.
+- Fixed badge progress tracking, minigame double-taps, and Oli moving off his spot when refusing an action.
+- Made pop-ups scroll smoothly on smaller phones and kept push alerts connected across app updates.
+
+---
+
 ## `v1.2.0` — 2026-11-19
 ### Growing Up: Baby to Adult Oli 🍼
 - New games start Oli as a Newborn kitten and raise him through Kitten and Teen into Adult Oli forever (he never dies of old age).

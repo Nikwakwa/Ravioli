@@ -234,5 +234,19 @@ describe('Luxembourg Real-Time Atmosphere', () => {
         globalThis.fetch = originalFetch;
       }
     });
+
+    it('rejects null JSON responses cleanly', async () => {
+      const originalFetch = globalThis.fetch;
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => null,
+      } as any);
+
+      try {
+        await expect(fetchLuxembourgAtmosphere()).rejects.toThrow('Weather response was not a JSON object');
+      } finally {
+        globalThis.fetch = originalFetch;
+      }
+    });
   });
 });

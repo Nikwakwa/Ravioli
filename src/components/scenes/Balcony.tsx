@@ -1061,7 +1061,7 @@ export function Balcony({
           }
         }}
         tabIndex={0}
-        className="pointer-events-auto cursor-pointer focus:outline-none"
+        className="pointer-events-auto cursor-pointer"
         style={{ pointerEvents: 'auto', cursor: 'pointer' }}
         role="button"
         aria-current={activeSpot === 'planter' ? 'true' : undefined}
@@ -1204,7 +1204,7 @@ export function Balcony({
           }
         }}
         tabIndex={0}
-        className="pointer-events-auto cursor-pointer focus:outline-none"
+        className="pointer-events-auto cursor-pointer"
         style={{ pointerEvents: 'auto', cursor: 'pointer' }}
         role="button"
         aria-current={activeSpot === 'bistro_chair' ? 'true' : undefined}
@@ -1366,7 +1366,7 @@ export function Balcony({
           }
         }}
         tabIndex={0}
-        className="pointer-events-auto cursor-pointer focus:outline-none"
+        className="pointer-events-auto cursor-pointer"
         style={{ pointerEvents: 'auto', cursor: 'pointer' }}
         role="button"
         aria-current={activeSpot === 'balcony_floor' ? 'true' : undefined}

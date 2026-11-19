@@ -1,4 +1,5 @@
 import type { CatState } from '../types';
+import { timeoutSignal } from './net';
 import { getNotificationAssetUrls, type AlertedMap, type NotificationPrefs } from './notifications';
 
 const LS_PUSH_ENDPOINT = 'ravioli:v1:push_endpoint';
@@ -29,7 +30,13 @@ function getPushEnv(): { url: string; anonKey: string; vapidPublicKey: string } 
   const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY?.trim();
   const vapidPublicKey = import.meta.env.VITE_VAPID_PUBLIC_KEY?.trim();
   if (!url || !anonKey || !vapidPublicKey) return null;
-  return { url: url.replace(/\/+$/, ''), anonKey, vapidPublicKey };
+  try {
+    const parsed = new URL(url);
+    if (parsed.protocol !== 'https:') return null;
+    return { url: parsed.origin, anonKey, vapidPublicKey };
+  } catch {
+    return null;
+  }
 }
 
 export function isPushSupported(): boolean {
@@ -137,6 +144,7 @@ async function upsertPushRecord(
       p_icon_url: record.icon_url,
       p_badge_url: record.badge_url,
     }),
+    signal: timeoutSignal(8000),
   });
   return res.ok;
 }
@@ -200,7 +208,11 @@ let syncTimer: number | null = null;
 /** Debounces snapshot uploads so rapid interactions (like petting) batch into one sync. */
 export function schedulePushSync(payload: PushSyncPayload, delayMs = 1500): void {
   if (typeof window === 'undefined') return;
-  if (syncTimer !== null) window.clearTimeout(syncTimer);
+  if (syncTimer !== null) {
+    window.clearTimeout(syncTimer);
+    syncTimer = null;
+  }
+  if (!payload.prefs.enabled) return;
   syncTimer = window.setTimeout(() => {
     syncTimer = null;
     void syncPushSnapshot(payload);
@@ -241,6 +253,7 @@ export async function unsubscribePush(): Promise<void> {
           Authorization: `Bearer ${env.anonKey}`,
         },
         body: JSON.stringify({ p_endpoint: endpoint }),
+        signal: timeoutSignal(6000),
       });
     } catch {
       // ignore network errors on cleanup

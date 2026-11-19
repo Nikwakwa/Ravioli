@@ -205,7 +205,15 @@ export interface Notice {
 }
 
 let bootPromise: Promise<StorageBootstrap> | null = null;
-const bootOnce = () => (bootPromise ??= initCatStorage());
+const bootOnce = () => {
+  if (!bootPromise) {
+    bootPromise = initCatStorage().catch((err) => {
+      bootPromise = null;
+      throw err;
+    });
+  }
+  return bootPromise;
+};
 
 let eventSeq = 0;
 
@@ -475,17 +483,34 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
   const [busy, setBusy] = useState(false);
   const [tummyAcheUntil, setTummyAcheUntil] = useState<number>(() => loadTummyAcheUntil());
   const [messes, setMesses] = useState<RoomMess[]>(() => loadMesses());
+  const messesRef = useRef<RoomMess[]>(messes);
+  messesRef.current = messes;
   const [litterBoxDirty, setLitterBoxDirty] = useState<boolean>(() => loadLitterBoxDirty());
   const [churuStash, setChuruStash] = useState<number>(() => loadChuruStash());
+  const churuStashRef = useRef<number>(churuStash);
+  churuStashRef.current = churuStash;
   const [churuProgress, setChuruProgress] = useState<ChuruProgress>(() => loadChuruProgress());
   const [whim, setWhim] = useState<CatWhim | null>(() => loadActiveWhim());
   const [activeMinigame, setActiveMinigame] = useState<CareAction | null>(null);
   const [spot, setSpotState] = useState<CatSpot>(() => loadCatSpot());
   const busyTimer = useRef<number | undefined>(undefined);
+  const delayedTimersRef = useRef<number[]>([]);
   const lastPetRef = useRef<number>(0);
 
+  const scheduleDelayed = useCallback((fn: () => void, ms: number) => {
+    const id = window.setTimeout(() => {
+      delayedTimersRef.current = delayedTimersRef.current.filter((t) => t !== id);
+      fn();
+    }, ms);
+    delayedTimersRef.current.push(id);
+  }, []);
+
   useEffect(() => {
-    return () => window.clearTimeout(busyTimer.current);
+    return () => {
+      window.clearTimeout(busyTimer.current);
+      delayedTimersRef.current.forEach((t) => window.clearTimeout(t));
+      delayedTimersRef.current = [];
+    };
   }, []);
 
   const tummyAche = tummyAcheUntil > now;
@@ -501,12 +526,10 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
   }, []);
 
   const updateChuruStash = useCallback((updater: (prev: number) => number): number => {
-    let nextVal = DEFAULT_CHURU_STASH;
-    setChuruStash((prev) => {
-      nextVal = Math.max(0, Math.min(MAX_CHURU_STASH, updater(prev)));
-      saveChuruStash(nextVal);
-      return nextVal;
-    });
+    const nextVal = Math.max(0, Math.min(MAX_CHURU_STASH, updater(churuStashRef.current)));
+    churuStashRef.current = nextVal;
+    saveChuruStash(nextVal);
+    setChuruStash(nextVal);
     return nextVal;
   }, []);
 
@@ -544,8 +567,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
     (unlocks: BadgeUnlock[]) => {
       if (unlocks.length === 0) return;
       updateChuruStash((c) => c + unlocks.length);
-      celebrate();
-      playSound('chime');
+      // BadgeCelebrationModal fires celebrate() (confetti + chime) when it opens.
       vibrate([40, 60, 40, 60, 40]);
       setBadgeUnlockQueue((prev) => [...prev, ...unlocks]);
     },
@@ -557,7 +579,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
     (id: AccessoryId): boolean => {
       const item = accessoryById(id);
       if (!item || isOwned(getCloset(), id)) return false;
-      if (!canAfford(item, loadChuruStash())) {
+      if (!canAfford(item, churuStashRef.current)) {
         vibrate([20, 40, 20]);
         return false;
       }
@@ -576,7 +598,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
   /** Unlocks the daily fortune cookie with Churu tubes from the stash. */
   const buyFortuneCookie = useCallback((): boolean => {
     if (isFortuneUnlocked(getFortuneState())) return false;
-    if (!canAffordFortune(loadChuruStash())) {
+    if (!canAffordFortune(churuStashRef.current)) {
       vibrate([20, 40, 20]);
       return false;
     }
@@ -601,29 +623,27 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
   }, []);
 
   const spawnMess = useCallback((kind: MessKind, announce?: string): boolean => {
-    let spawned = false;
-    setMesses((prev) => {
-      const slot = pickFreeMessSlot(prev);
-      if (slot === null) return prev;
-      spawned = true;
-      const next: RoomMess[] = [
-        ...prev,
-        {
-          id: `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`,
-          kind,
-          slot,
-          created_at: new Date().toISOString(),
-        },
-      ];
-      saveMesses(next);
-      saveLastMessAt(Date.now());
-      return next;
-    });
-    if (spawned && announce) {
+    const prev = messesRef.current;
+    const slot = pickFreeMessSlot(prev);
+    if (slot === null) return false;
+    const next: RoomMess[] = [
+      ...prev,
+      {
+        id: `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`,
+        kind,
+        slot,
+        created_at: new Date().toISOString(),
+      },
+    ];
+    messesRef.current = next;
+    saveMesses(next);
+    saveLastMessAt(Date.now());
+    setMesses(next);
+    if (announce) {
       noticeRef.current({ text: announce, tone: 'warn' });
       vibrate([25, 45, 25]);
     }
-    return spawned;
+    return true;
   }, []);
 
   /** Accept a state only if it is not older than what we already have. */
@@ -832,6 +852,13 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
     }
   }, [now, live, busy, spot]);
 
+  // Cancel any open minigame if Oli falls asleep, pauses, or becomes deceased
+  useEffect(() => {
+    if (activeMinigame && (!live || live.isSleeping || live.isPaused || live.isDeceased)) {
+      setActiveMinigame(null);
+    }
+  }, [activeMinigame, live?.isSleeping, live?.isPaused, live?.isDeceased]);
+
   // Growing up celebration: detect when Oli advances to a new life stage
   useEffect(() => {
     if (!ready || !live || live.isDeceased) return;
@@ -843,8 +870,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
     if (stageIndex(live.lifeStage) > stageIndex(seen)) {
       saveLastSeenStage(live.lifeStage);
       updateChuruStash((c) => c + 1);
-      celebrate();
-      playSound('chime');
+      // GrowthCelebrationModal fires celebrate() (confetti + chime) when it opens.
       vibrate([40, 60, 40, 60, 40]);
       setGrowthCelebration(live.lifeStage);
       // Clear any active craving that Oli has just outgrown (e.g. Kitten Milk on reaching Teen)
@@ -1099,22 +1125,21 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
     saveLastMessAt(messClock);
     if (countToSpawn <= 0) return;
 
-    setMesses((prev) => {
-      const next = [...prev];
-      for (let i = 0; i < countToSpawn; i++) {
-        const slot = pickFreeMessSlot(next);
-        if (slot === null) break;
-        const kind: MessKind = live.hygiene < 45 && i % 2 === 1 ? 'vomit' : 'fur_clump';
-        next.push({
-          id: `${messClock.toString(36)}-${i}-${Math.random().toString(36).slice(2, 5)}`,
-          kind,
-          slot,
-          created_at: new Date(messClock).toISOString(),
-        });
-      }
-      saveMesses(next);
-      return next;
-    });
+    const next = [...messesRef.current];
+    for (let i = 0; i < countToSpawn; i++) {
+      const slot = pickFreeMessSlot(next);
+      if (slot === null) break;
+      const kind: MessKind = live.hygiene < 45 && i % 2 === 1 ? 'vomit' : 'fur_clump';
+      next.push({
+        id: `${messClock.toString(36)}-${i}-${Math.random().toString(36).slice(2, 5)}`,
+        kind,
+        slot,
+        created_at: new Date(messClock).toISOString(),
+      });
+    }
+    messesRef.current = next;
+    saveMesses(next);
+    setMesses(next);
 
     // Apply a hygiene/joy penalty for unattended shedding
     const penalty: Partial<CatStats> = {
@@ -1156,6 +1181,15 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
   /** Scoops and cleans Oli’s enclosed corner litter box. */
   const scoopLitterBox = useCallback(() => {
     if (!base || !live || busy) return;
+    if (live.isDeceased) {
+      noticeRef.current({ text: '💔 Oli needs emergency revival first.', tone: 'warn' });
+      vibrate([20, 40, 20]);
+      return;
+    }
+    if (live.isPaused) {
+      triggerRefusal('✈️ Care clock is paused. Resume in Menu or header.');
+      return;
+    }
     if (!litterBoxDirty) {
       noticeRef.current({
         text: '✨ Litter box is already clean.',
@@ -1188,7 +1222,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
 
     const willThrive = messes.length === 0 && isThriving(applyEffect(live, scoopAction.effect));
     if (willThrive) {
-      window.setTimeout(celebrate, 450);
+      scheduleDelayed(celebrate, 450);
       handleBadgeUnlocks(trackThriving());
     }
 
@@ -1197,12 +1231,21 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
     const mutator = (b: CatState): CatState =>
       addGrowthBonus(applyEffect(materialize(b, Date.now()), scoopAction.effect), CARE_ACTION_GROWTH_BONUS);
     void commit(mutator, scoopAction.id, formatLog(scoopAction.log, live.name));
-  }, [base, live, busy, litterBoxDirty, messes.length, player, playEvent, commit, handleBadgeUnlocks]);
+  }, [base, live, busy, litterBoxDirty, messes.length, player, playEvent, commit, handleBadgeUnlocks, triggerRefusal, scheduleDelayed]);
 
   /** Cleans a specific mess on the rug (by id) or the oldest mess when called from the Care dock. */
   const cleanMess = useCallback(
     (messId?: string) => {
       if (!base || !live || busy) return;
+      if (live.isDeceased) {
+        noticeRef.current({ text: '💔 Oli needs emergency revival first.', tone: 'warn' });
+        vibrate([20, 40, 20]);
+        return;
+      }
+      if (live.isPaused) {
+        triggerRefusal('✈️ Care clock is paused. Resume in Menu or header.');
+        return;
+      }
       const target = messId ? messes.find((m) => m.id === messId) : messes[0];
       if (!target) {
         if (litterBoxDirty) {
@@ -1219,6 +1262,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
 
       const scoopAction = actionById('scoop_mess')!;
       const remaining = messes.filter((m) => m.id !== target.id);
+      messesRef.current = remaining;
       setMesses(remaining);
       saveMesses(remaining);
       saveLastMessAt(Date.now());
@@ -1244,7 +1288,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
 
       const willThrive = remaining.length === 0 && !litterBoxDirty && isThriving(applyEffect(live, scoopAction.effect));
       if (willThrive) {
-        window.setTimeout(celebrate, 450);
+        scheduleDelayed(celebrate, 450);
         handleBadgeUnlocks(trackThriving());
       }
 
@@ -1258,7 +1302,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
         addGrowthBonus(applyEffect(materialize(b, Date.now()), scoopAction.effect), CARE_ACTION_GROWTH_BONUS);
       void commit(mutator, scoopAction.id, logMsg);
     },
-    [base, live, busy, messes, litterBoxDirty, scoopLitterBox, player, playEvent, commit, handleBadgeUnlocks],
+    [base, live, busy, messes, litterBoxDirty, scoopLitterBox, player, playEvent, commit, handleBadgeUnlocks, triggerRefusal, scheduleDelayed],
   );
 
   const perform = useCallback(
@@ -1310,18 +1354,6 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
         return;
       }
 
-      // When doing an active care action, awake Oli trots to the floor of his current scenery
-      // (or inside to the living room rug if using the indoor water fountain).
-      if (action.id !== 'scoop_mess' && !live.isSleeping) {
-        if (action.id === 'fountain') {
-          if (spot !== 'rug') setSpot('rug', true);
-        } else if (isBalconySpot(spot)) {
-          if (spot !== 'balcony_floor') setSpot('balcony_floor', true);
-        } else if (spot !== 'rug') {
-          setSpot('rug', true);
-        }
-      }
-
       // 1. Sleeping check
       if (action.requiresAwake && live.isSleeping) {
         noticeRef.current({ text: `Shh… ${live.name} is napping. Wake him in Rest.`, tone: 'info' });
@@ -1364,6 +1396,18 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
         vibrate(15);
         setActiveMinigame(action);
         return;
+      }
+
+      // When actually executing an active care action, awake Oli trots to the floor of his current scenery
+      // (or inside to the living room rug if using the indoor water fountain).
+      if (!live.isSleeping) {
+        if (action.id === 'fountain') {
+          if (spot !== 'rug') setSpot('rug', true);
+        } else if (isBalconySpot(spot)) {
+          if (spot !== 'balcony_floor') setSpot('balcony_floor', true);
+        } else if (spot !== 'rug') {
+          setSpot('rug', true);
+        }
       }
 
       // 7. Overfeeding / Treat-spam check (4th treat in 15m triggers a Tummy Ache + Throw-up!)
@@ -1450,7 +1494,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
       if (action.id === 'kitten_milk' || action.id === 'wet_food' || action.id === 'quail_egg') {
         const meals = incrementCounter(LS_MEAL_COUNT);
         if (meals % 2 === 0) {
-          window.setTimeout(() => {
+          scheduleDelayed(() => {
             dirtyLitterBox('🚽 Litter box needs scooping.');
           }, action.durationMs + 200);
         }
@@ -1474,7 +1518,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
       const wasThriving = messes.length === 0 && !litterBoxDirty && isThriving(live);
       const willThrive = messes.length === 0 && !litterBoxDirty && isThriving(applyEffect(live, finalEffect));
       if ((!wasThriving && willThrive) || mgReward?.tier === 'perfect') {
-        window.setTimeout(celebrate, 350);
+        scheduleDelayed(celebrate, 350);
       }
       if (willThrive) {
         handleBadgeUnlocks(trackThriving());
@@ -1516,22 +1560,23 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
       spot,
       setSpot,
       handleBadgeUnlocks,
+      scheduleDelayed,
     ],
   );
 
-  /** Direct interactive petting on Oli's rug avatar (replaces the old Chin Scratches dock button). */
-  const petOli = useCallback(() => {
-    if (!base || !live || busy) return;
-    if (live.isDeceased) return;
+  /** Direct interactive petting on Oli's avatar. Returns true when a pet reaction should show. */
+  const petOli = useCallback((): boolean => {
+    if (!base || !live || busy) return false;
+    if (live.isDeceased) return false;
     if (live.isPaused) {
       triggerRefusal('✈️ Care clock is paused. Resume in Menu or header.');
-      return;
+      return false;
     }
     vibrate([25, 25, 35, 25, 25]);
 
     if (live.isSleeping) {
       playSound('purr_soft');
-      return;
+      return true;
     }
 
     const nowMs = Date.now();
@@ -1556,7 +1601,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
       const mutator = (b: CatState): CatState =>
         addGrowthBonus(applyEffect(materialize(b, nowMs), boost), CARE_ACTION_GROWTH_BONUS);
       void commit(mutator, PET_ACTION_ID, `Gave ${live.name} chin scratches — purr session!`);
-      return;
+      return true;
     }
 
     // If Oli's active whim is Chin Scratches, fulfill it immediately even if on pet cooldown!
@@ -1588,7 +1633,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
       const wasThriving = messes.length === 0 && !litterBoxDirty && isThriving(live);
       const willThrive = messes.length === 0 && !litterBoxDirty && isThriving(applyEffect(live, boost));
       if (!wasThriving && willThrive) {
-        window.setTimeout(celebrate, 500);
+        scheduleDelayed(celebrate, 500);
         handleBadgeUnlocks(trackThriving(nowMs));
       }
 
@@ -1603,7 +1648,8 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
       playSound('chirp');
       handleBadgeUnlocks(trackPet(nowMs));
     }
-  }, [base, live, busy, tummyAche, whim, messes.length, litterBoxDirty, player, playEvent, commit, clearTummyAche, clearWhim, triggerRefusal, handleBadgeUnlocks]);
+    return true;
+  }, [base, live, busy, tummyAche, whim, messes.length, litterBoxDirty, player, playEvent, commit, clearTummyAche, clearWhim, triggerRefusal, handleBadgeUnlocks, scheduleDelayed]);
 
   /** Tapping the Whim thought bubble directly above Oli's head performs the requested action! */
   const fulfillWhim = useCallback(() => {

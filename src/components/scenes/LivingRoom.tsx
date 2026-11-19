@@ -336,7 +336,7 @@ export function LivingRoom({
             }
           }}
           tabIndex={0}
-          className="pointer-events-auto cursor-pointer focus:outline-none"
+          className="pointer-events-auto cursor-pointer"
           style={{ pointerEvents: 'auto', cursor: 'pointer' }}
           role="button"
           aria-current={activeSpot === 'window' ? 'true' : undefined}
@@ -569,7 +569,7 @@ export function LivingRoom({
             }
           }}
           tabIndex={0}
-          className="pointer-events-auto cursor-pointer focus:outline-none"
+          className="pointer-events-auto cursor-pointer"
           style={{ pointerEvents: 'auto', cursor: 'pointer' }}
           role="button"
           aria-current={activeSpot === 'sofa_bed' ? 'true' : undefined}
@@ -647,7 +647,7 @@ export function LivingRoom({
           }
         }}
         tabIndex={onTapLitterBox ? 0 : undefined}
-        className={onTapLitterBox ? 'pointer-events-auto cursor-pointer focus:outline-none' : undefined}
+        className={onTapLitterBox ? 'pointer-events-auto cursor-pointer' : undefined}
         style={onTapLitterBox ? { pointerEvents: 'auto', cursor: 'pointer' } : undefined}
         role={onTapLitterBox ? 'button' : undefined}
         aria-label={onTapLitterBox ? (litterBoxDirty ? 'Scoop Oli’s litter box' : 'Oli’s litter box') : undefined}
@@ -844,7 +844,7 @@ export function LivingRoom({
           }
         }}
         tabIndex={0}
-        className="pointer-events-auto cursor-pointer focus:outline-none"
+        className="pointer-events-auto cursor-pointer"
         style={{ pointerEvents: 'auto', cursor: 'pointer' }}
         role="button"
         aria-current={activeSpot === 'box' ? 'true' : undefined}
@@ -920,7 +920,7 @@ export function LivingRoom({
           }
         }}
         tabIndex={0}
-        className="pointer-events-auto cursor-pointer focus:outline-none"
+        className="pointer-events-auto cursor-pointer"
         style={{ pointerEvents: 'auto', cursor: 'pointer' }}
         role="button"
         aria-current={activeSpot === 'rug' ? 'true' : undefined}
@@ -993,7 +993,7 @@ export function LivingRoom({
           }
         }}
         tabIndex={onTapFountain ? 0 : undefined}
-        className={onTapFountain ? 'pointer-events-auto cursor-pointer focus:outline-none' : undefined}
+        className={onTapFountain ? 'pointer-events-auto cursor-pointer' : undefined}
         style={onTapFountain ? { pointerEvents: 'auto', cursor: 'pointer' } : undefined}
         role={onTapFountain ? 'button' : undefined}
         aria-label={onTapFountain ? 'Refresh Oli’s water fountain' : undefined}

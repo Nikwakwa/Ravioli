@@ -66,7 +66,7 @@ function isoOr(value: unknown, fallback: string | null): string | null {
 export function cleanText(input: string, maxLen: number): string {
   return input
     .replace(/<[^>]*>/g, '')
-    .replace(/https?:\/\/\S+/gi, '')
+    .replace(/(?:https?|javascript|data):\S*/gi, '')
     .replace(/[\u0000-\u001F\u007F<>`"']/g, '')
     .replace(/\s+/g, ' ')
     .trim()

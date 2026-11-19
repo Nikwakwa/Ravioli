@@ -80,7 +80,24 @@ export function useVersionCheck() {
     try {
       if ('serviceWorker' in navigator) {
         const regs = await navigator.serviceWorker.getRegistrations();
-        await Promise.all(regs.map((r) => r.unregister()));
+        await Promise.all(
+          regs.map(async (r) => {
+            // Keep the service worker registered if a Web Push subscription is active
+            // so updating the app never silently breaks background notifications.
+            let hasPush = false;
+            try {
+              hasPush = Boolean(await r.pushManager?.getSubscription());
+            } catch {
+              hasPush = false;
+            }
+            if (hasPush) {
+              await r.update().catch(() => undefined);
+              r.waiting?.postMessage({ type: 'SKIP_WAITING' });
+            } else {
+              await r.unregister();
+            }
+          }),
+        );
       }
       if ('caches' in window) {
         const keys = await caches.keys();

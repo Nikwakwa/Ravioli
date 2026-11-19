@@ -155,5 +155,33 @@ describe('badges utility (Bronze, Silver, Gold tiers)', () => {
     expect(legacy.stats.boxNaps).toBe(5);
     expect(legacy.stats.petCount).toBe(0);
     expect(legacy.hasUnseen).toBe(true);
+
+    // Non-finite numbers and duplicates must be stripped cleanly
+    const tampered = sanitizeBadgeState({
+      unlockedIds: ['box_sitter', 'box_sitter'],
+      stats: {
+        boxNaps: Number.POSITIVE_INFINITY,
+        petCount: Number.NaN,
+        foodsTried: ['wet_food', 'wet_food'],
+        daysVisited: ['2026-11-19', '2026-11-19', 'bad-date'],
+      },
+    });
+    expect(tampered.unlockedIds).toEqual(['box_sitter']);
+    expect(tampered.stats.boxNaps).toBe(0);
+    expect(tampered.stats.petCount).toBe(0);
+    expect(tampered.stats.foodsTried).toEqual(['wet_food']);
+    expect(tampered.stats.daysVisited).toEqual(['2026-11-19']);
+  });
+
+  it('does not count kitten_milk toward Gourmet Whiskers 4-food progress', () => {
+    const stats = {
+      ...INITIAL_STATS,
+      foodsTried: ['kitten_milk', 'wet_food', 'chicken_heart', 'churu'],
+      feedCount: 10,
+    };
+    expect(checkBadgeTier('gourmet_whiskers', 'bronze', stats)).toBe(false);
+    const prog = getBadgeProgress('gourmet_whiskers', stats, null);
+    expect(prog.current).toBe(3);
+    expect(prog.target).toBe(4);
   });
 });

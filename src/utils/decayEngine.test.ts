@@ -520,4 +520,10 @@ describe('Churu economy (points, daily limit) & craving pacing', () => {
       expect(wait).toBeLessThan(20 * 60_000);
     }
   });
+
+  it('strips http, javascript, and data URIs in cleanText', () => {
+    expect(cleanText('Visit https://evil.test now', 64)).toBe('Visit now');
+    expect(cleanText('Click javascript:alert(1) here', 64)).toBe('Click here');
+    expect(cleanText('Load data:text/html,hi ok', 64)).toBe('Load ok');
+  });
 });
