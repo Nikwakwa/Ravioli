@@ -4,6 +4,7 @@ import { BookOpen, Volume2, VolumeX } from 'lucide-react';
 import { CHURU_POINTS_PER_TUBE, DEFAULT_CHURU_STASH, STAT_META } from '../data/actions';
 import { STAT_KEYS, type LiveCat, type Mood } from '../types';
 import { NEED_THRESHOLD } from '../utils/decayEngine';
+import { formatRemainingGrowth, STAGE_META } from '../utils/lifeStage';
 import { isMuted, playSound, setMuted, subscribeMuted } from '../utils/sound';
 import { STAT_ICONS } from './statIcons';
 
@@ -102,6 +103,9 @@ export function StatusHUD({
                 }
               : MOOD_BADGE[mood];
   const night = isNight;
+  const stageMeta = STAGE_META[live.lifeStage];
+  const nextStageMeta = live.nextStage ? STAGE_META[live.nextStage] : null;
+  const growthPct = Math.round(live.stageProgress * 100);
 
   const surface = night
     ? 'bg-slate-900/80 text-amber-50 border-white/10'
@@ -118,6 +122,16 @@ export function StatusHUD({
           <div className="min-w-0 leading-tight">
             <div className="flex items-center gap-1.5 flex-wrap">
               <span className="font-display text-sm font-bold">{live.name}</span>
+              <span
+                title={stageMeta.fullName}
+                className={`rounded-full px-1.5 py-0.5 text-[10px] font-extrabold leading-none ${
+                  night
+                    ? 'bg-amber-400/20 text-amber-200'
+                    : 'bg-amber-500/15 text-amber-900'
+                }`}
+              >
+                {stageMeta.emoji} {stageMeta.label}
+              </span>
               {live.isPaused && (
                 <button
                   type="button"
@@ -209,84 +223,131 @@ export function StatusHUD({
         </div>
       </div>
 
-      {/* Row 2: 5 stat meters — vertical stack per tile so labels never clip on mobile */}
+      {/* Row 2: 5 stat meters (+ compact growth bar while Oli is still growing up) */}
       <div
-        className={`grid grid-cols-5 gap-1.5 rounded-2xl border p-2 shadow-sm backdrop-blur-md transition-colors duration-500 ${surface}`}
+        className={`flex flex-col gap-1.5 rounded-2xl border p-2 shadow-sm backdrop-blur-md transition-colors duration-500 ${surface}`}
       >
-        {STAT_KEYS.map((key) => {
-          const meta = STAT_META[key];
-          const Icon = STAT_ICONS[key];
-          const val = Math.round(live[key]);
-          const low = val < NEED_THRESHOLD;
-          const pct = Math.max(0, Math.min(100, val));
+        <div className="grid grid-cols-5 gap-1.5">
+          {STAT_KEYS.map((key) => {
+            const meta = STAT_META[key];
+            const Icon = STAT_ICONS[key];
+            const val = Math.round(live[key]);
+            const low = val < NEED_THRESHOLD;
+            const pct = Math.max(0, Math.min(100, val));
 
-          // Color ramp based on current value
-          const barColor =
-            val > 60
-              ? 'bg-emerald-500'
-              : val > NEED_THRESHOLD
-                ? 'bg-amber-400'
-                : 'bg-rose-500';
+            // Color ramp based on current value
+            const barColor =
+              val > 60
+                ? 'bg-emerald-500'
+                : val > NEED_THRESHOLD
+                  ? 'bg-amber-400'
+                  : 'bg-rose-500';
 
-          const pulse = low && !live.isSleeping;
+            const pulse = low && !live.isSleeping;
 
-          return (
-            <div
-              key={key}
-              title={`${meta.label}: ${val}/100`}
-              className={`flex flex-col items-center gap-1 rounded-xl p-1 transition-transform ${
-                pulse ? 'animate-pulse' : ''
-              }`}
-            >
-              {/* Icon + small numerical value */}
-              <div className="flex items-center gap-0.5 leading-none">
-                <Icon
-                  className={`h-3 w-3 ${
-                    low
-                      ? night ? 'text-rose-300' : 'text-rose-600'
-                      : night
-                        ? 'text-indigo-200'
-                        : 'text-amber-900/80'
-                  }`}
-                />
-                <span
-                  className={`font-mono text-[10px] font-extrabold tabular-nums ${
-                    low
-                      ? night ? 'text-rose-300' : 'text-rose-600'
-                      : night
-                        ? 'text-indigo-100'
-                        : 'text-amber-950'
+            return (
+              <div
+                key={key}
+                title={`${meta.label}: ${val}/100`}
+                className={`flex flex-col items-center gap-1 rounded-xl p-1 transition-transform ${
+                  pulse ? 'animate-pulse' : ''
+                }`}
+              >
+                {/* Icon + small numerical value */}
+                <div className="flex items-center gap-0.5 leading-none">
+                  <Icon
+                    className={`h-3 w-3 ${
+                      low
+                        ? night ? 'text-rose-300' : 'text-rose-600'
+                        : night
+                          ? 'text-indigo-200'
+                          : 'text-amber-900/80'
+                    }`}
+                  />
+                  <span
+                    className={`font-mono text-[10px] font-extrabold tabular-nums ${
+                      low
+                        ? night ? 'text-rose-300' : 'text-rose-600'
+                        : night
+                          ? 'text-indigo-100'
+                          : 'text-amber-950'
+                    }`}
+                  >
+                    {val}
+                  </span>
+                </div>
+
+                {/* Progress bar */}
+                <div
+                  className={`h-1.5 w-full overflow-hidden rounded-full ${
+                    night ? 'bg-white/10' : 'bg-amber-950/10'
                   }`}
                 >
-                  {val}
+                  <motion.div
+                    className={`h-full rounded-full ${barColor}`}
+                    initial={false}
+                    animate={{ width: `${pct}%` }}
+                    transition={{ type: 'spring', stiffness: 220, damping: 28 }}
+                  />
+                </div>
+
+                {/* Compact label */}
+                <span
+                  className={`text-[10px] font-extrabold tracking-tight ${
+                    night ? 'text-indigo-200/70' : 'text-amber-900/70'
+                  }`}
+                >
+                  {meta.label}
                 </span>
               </div>
+            );
+          })}
+        </div>
 
-              {/* Progress bar */}
-              <div
-                className={`h-1.5 w-full overflow-hidden rounded-full ${
-                  night ? 'bg-white/10' : 'bg-amber-950/10'
-                }`}
-              >
-                <motion.div
-                  className={`h-full rounded-full ${barColor}`}
-                  initial={false}
-                  animate={{ width: `${pct}%` }}
-                  transition={{ type: 'spring', stiffness: 220, damping: 28 }}
-                />
-              </div>
-
-              {/* Compact label */}
-              <span
-                className={`text-[10px] font-extrabold tracking-tight ${
-                  night ? 'text-indigo-200/70' : 'text-amber-900/70'
-                }`}
-              >
-                {meta.label}
-              </span>
+        {/* Visible growth progress bar (shown while Newborn, Kitten, or Teen; hidden once Adult forever) */}
+        {nextStageMeta && (
+          <div
+            data-testid="growth-progress-bar"
+            className={`flex items-center gap-2 border-t px-1 pt-1.5 ${
+              night ? 'border-white/10' : 'border-amber-900/8'
+            }`}
+            title={`Growing into ${nextStageMeta.fullName}: ${growthPct}% (${formatRemainingGrowth(live.hoursToNextStage)})`}
+          >
+            <span className={`shrink-0 text-[10px] font-extrabold leading-none ${night ? 'text-amber-200' : 'text-amber-900'}`}>
+              {stageMeta.emoji} → {nextStageMeta.emoji} {nextStageMeta.label}
+            </span>
+            <div
+              className={`h-1.5 flex-1 overflow-hidden rounded-full ${
+                night ? 'bg-white/12' : 'bg-amber-950/10'
+              }`}
+              role="progressbar"
+              aria-label={`Growth toward ${nextStageMeta.label}`}
+              aria-valuenow={growthPct}
+              aria-valuemin={0}
+              aria-valuemax={100}
+            >
+              <motion.div
+                className="h-full rounded-full bg-gradient-to-r from-amber-400 via-orange-400 to-pink-500"
+                initial={false}
+                animate={{ width: `${Math.max(growthPct, 2)}%` }}
+                transition={{ type: 'spring', stiffness: 200, damping: 28 }}
+              />
             </div>
-          );
-        })}
+            <span
+              className={`shrink-0 text-[10px] font-extrabold tabular-nums leading-none ${
+                !live.isGrowingNow && !live.isPaused && !live.isDeceased
+                  ? night ? 'text-rose-300' : 'text-rose-600'
+                  : night ? 'text-indigo-200/80' : 'text-amber-900/75'
+              }`}
+            >
+              {live.isPaused
+                ? 'Paused'
+                : !live.isGrowingNow && !live.isDeceased
+                  ? 'Low need'
+                  : `${growthPct}% · ${formatRemainingGrowth(live.hoursToNextStage)}`}
+            </span>
+          </div>
+        )}
       </div>
     </header>
   );

@@ -1,8 +1,15 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { STAT_META, type ParticleKind } from '../data/actions';
 import type { GameEvent } from '../hooks/useCatGame';
-import { STAT_KEYS, type CatSpot, type Mood, type StatKey } from '../types';
+import { STAT_KEYS, type CatSpot, type LifeStage, type Mood, type StatKey } from '../types';
 import { STAT_ICONS } from './statIcons';
+
+const NEWBORN_PET_LINES = [
+  'Tiny sleepy mew… 🍼',
+  'Warm cuddles please~ 🧡',
+  'Little shaky kitten purr… ✨',
+  'Making tiny biscuits! 🐾',
+];
 
 const PET_LINES: Record<Mood, string[]> = {
   sleeping: ['Zzz… dreaming of a Churu tube…', 'Purr… five more minutes… 😴', 'Soft sleepy purrs… 🌙'],
@@ -78,12 +85,14 @@ export function FloatingEffects({
   mood,
   targetPos,
   spot = 'rug',
+  lifeStage = 'adult',
 }: {
   event: GameEvent | null;
   tapHeartKey: number;
   mood: Mood;
   targetPos?: { x: number; y: number };
   spot?: CatSpot;
+  lifeStage?: LifeStage;
 }) {
   const deltas: { key: StatKey; delta: number }[] = event
     ? STAT_KEYS.flatMap((k) => {
@@ -92,11 +101,14 @@ export function FloatingEffects({
       })
     : [];
 
-  const petLines = PET_LINES[mood] ?? PET_LINES.content;
+  const petLines =
+    lifeStage === 'newborn' && mood !== 'sleeping' && mood !== 'deceased'
+      ? NEWBORN_PET_LINES
+      : (PET_LINES[mood] ?? PET_LINES.content);
   const spotLines = SPOT_PET_LINES[spot] ?? SPOT_PET_LINES.rug;
   // Alternate between mood line and cozy spot line
   const petLine =
-    tapHeartKey % 2 === 1 && spot !== 'rug'
+    tapHeartKey % 2 === 1 && spot !== 'rug' && lifeStage !== 'newborn'
       ? spotLines[Math.floor(tapHeartKey / 2) % spotLines.length]
       : petLines[tapHeartKey % petLines.length];
 

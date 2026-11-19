@@ -46,6 +46,12 @@ const mockLive: LiveCat = {
   isPaused: false,
   isDeceased: false,
   livesLeft: 9,
+  lifeStage: 'adult',
+  growthHours: 432,
+  stageProgress: 1,
+  nextStage: null,
+  hoursToNextStage: 0,
+  isGrowingNow: false,
 };
 
 const defaultNotifPrefs = {

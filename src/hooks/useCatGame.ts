@@ -7,6 +7,7 @@ import type {
   CatState,
   CatStats,
   CatWhim,
+  LifeStage,
   LiveCat,
   MessKind,
   Mood,
@@ -17,6 +18,7 @@ import type {
 } from '../types';
 import { isBalconySpot, sceneForSpot } from '../types';
 import {
+  addGrowthBonus,
   applyEffect,
   computeLiveStats,
   deriveMood,
@@ -27,15 +29,23 @@ import {
   nextNeed,
 } from '../utils/decayEngine';
 import {
+  CARE_ACTION_GROWTH_BONUS,
+  getMaxSleepEnergy,
+  isValidLifeStage,
+  STAGE_META,
+  stageIndex,
+  WHIM_GROWTH_BONUS,
+} from '../utils/lifeStage';
+import {
   actionById,
   addChuruPoints,
   AUTO_NAP_ENERGY,
   computeMinigameReward,
   DEFAULT_CHURU_STASH,
   formatLog,
+  isActionUnlockedForStage,
   MAX_CHURU_STASH,
   MAX_ROOM_MESSES,
-  MAX_SLEEP_ENERGY,
   CHURU_POINTS_PER_TUBE,
   MAX_TREATS_IN_WINDOW,
   MESS_SPAWN_HOURS,
@@ -104,6 +114,26 @@ const LS_ACTIVE_WHIM = 'ravioli:v1:active_whim';
 const LS_LAST_WHIM_AT = 'ravioli:v1:last_whim_at';
 const LS_SPOT = 'ravioli:v1:cat_spot';
 const LS_LAST_ROAM_AT = 'ravioli:v1:last_roam_at';
+const LS_LAST_SEEN_STAGE = 'ravioli:v1:last_seen_stage';
+
+const NEWBORN_SPOTS: readonly CatSpot[] = ['sofa_bed', 'rug', 'box'];
+
+function loadLastSeenStage(): LifeStage | null {
+  try {
+    const raw = window.localStorage.getItem(LS_LAST_SEEN_STAGE);
+    return isValidLifeStage(raw) ? raw : null;
+  } catch {
+    return null;
+  }
+}
+
+function saveLastSeenStage(stage: LifeStage): void {
+  try {
+    window.localStorage.setItem(LS_LAST_SEEN_STAGE, stage);
+  } catch {
+    // ignore
+  }
+}
 
 const VALID_SPOTS: readonly CatSpot[] = [
   'rug',
@@ -500,9 +530,14 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
   );
 
   const [badgeUnlockQueue, setBadgeUnlockQueue] = useState<BadgeUnlock[]>([]);
+  const [growthCelebration, setGrowthCelebration] = useState<LifeStage | null>(null);
 
   const dismissBadgeCelebration = useCallback(() => {
     setBadgeUnlockQueue((prev) => prev.slice(1));
+  }, []);
+
+  const dismissGrowthCelebration = useCallback(() => {
+    setGrowthCelebration(null);
   }, []);
 
   const handleBadgeUnlocks = useCallback(
@@ -788,13 +823,41 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
     const elapsed = now - lastRoam;
     if (elapsed > 15 * 60_000) {
       saveLastRoamAt(now);
-      const nextSpot = VALID_SPOTS[Math.floor(Math.random() * VALID_SPOTS.length)];
+      const pool = live.lifeStage === 'newborn' ? NEWBORN_SPOTS : VALID_SPOTS;
+      const nextSpot = pool[Math.floor(Math.random() * pool.length)];
       if (nextSpot !== spot) {
         setSpotState(nextSpot);
         saveCatSpot(nextSpot);
       }
     }
   }, [now, live, busy, spot]);
+
+  // Growing up celebration: detect when Oli advances to a new life stage
+  useEffect(() => {
+    if (!ready || !live || live.isDeceased) return;
+    const seen = loadLastSeenStage();
+    if (!seen) {
+      saveLastSeenStage(live.lifeStage);
+      return;
+    }
+    if (stageIndex(live.lifeStage) > stageIndex(seen)) {
+      saveLastSeenStage(live.lifeStage);
+      updateChuruStash((c) => c + 1);
+      celebrate();
+      playSound('chime');
+      vibrate([40, 60, 40, 60, 40]);
+      setGrowthCelebration(live.lifeStage);
+      // Clear any active craving that Oli has just outgrown (e.g. Kitten Milk on reaching Teen)
+      if (whim && whim.actionId !== PET_ACTION_ID) {
+        const act = actionById(whim.actionId);
+        if (act && !isActionUnlockedForStage(act, live.lifeStage)) {
+          clearWhim();
+        }
+      }
+    } else if (stageIndex(live.lifeStage) < stageIndex(seen)) {
+      saveLastSeenStage(live.lifeStage);
+    }
+  }, [ready, live?.lifeStage, live?.isDeceased, updateChuruStash, whim, clearWhim]);
 
   // Derive mood with tummy-ache, room-mess, litter box & deceased overrides (messes block 'ecstatic'!)
   const mood: Mood = useMemo(() => {
@@ -1013,7 +1076,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
     let effectiveLitterBase = loadLastLitterAt(messClock);
 
     if (base?.is_sleeping) {
-      const napHours = hoursUntilNaturalWake(base.energy);
+      const napHours = hoursUntilNaturalWake(base.energy, live.lifeStage);
       const napEndMs = Date.parse(base.last_updated_at) + napHours * MS_PER_HOUR;
       if (Number.isFinite(napEndMs)) {
         if (effectiveMessBase < napEndMs) effectiveMessBase = napEndMs;
@@ -1131,7 +1194,8 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
 
     handleBadgeUnlocks(trackClean());
 
-    const mutator = (b: CatState): CatState => applyEffect(materialize(b, Date.now()), scoopAction.effect);
+    const mutator = (b: CatState): CatState =>
+      addGrowthBonus(applyEffect(materialize(b, Date.now()), scoopAction.effect), CARE_ACTION_GROWTH_BONUS);
     void commit(mutator, scoopAction.id, formatLog(scoopAction.log, live.name));
   }, [base, live, busy, litterBoxDirty, messes.length, player, playEvent, commit, handleBadgeUnlocks]);
 
@@ -1190,7 +1254,8 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
         target.kind === 'fur_clump'
           ? `Swept up ${live.name}’s fur tumbleweed`
           : `Cleaned up ${live.name}’s mess`;
-      const mutator = (b: CatState): CatState => applyEffect(materialize(b, Date.now()), scoopAction.effect);
+      const mutator = (b: CatState): CatState =>
+        addGrowthBonus(applyEffect(materialize(b, Date.now()), scoopAction.effect), CARE_ACTION_GROWTH_BONUS);
       void commit(mutator, scoopAction.id, logMsg);
     },
     [base, live, busy, messes, litterBoxDirty, scoopLitterBox, player, playEvent, commit, handleBadgeUnlocks],
@@ -1208,6 +1273,21 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
 
       if (live.isPaused) {
         triggerRefusal('✈️ Care clock is paused. Resume in Menu or header.');
+        return;
+      }
+
+      // Life-stage unlock check (Newborn drinks milk & naps; Kitten unlocks simple play; Teen unlocks all)
+      if (!isActionUnlockedForStage(action, live.lifeStage)) {
+        const req = action.minStage;
+        if (live.lifeStage === 'newborn' && action.category === 'play') {
+          triggerRefusal(`🍼 Little ${live.name} is too tiny for games — give him cuddles and naps!`);
+        } else if (live.lifeStage === 'newborn' && action.category === 'feed') {
+          triggerRefusal('🍼 Too tiny for solid food — give him warm Kitten Milk!');
+        } else if (req) {
+          triggerRefusal(`${STAGE_META[req].emoji} Unlocks when ${live.name} becomes a ${STAGE_META[req].label}!`);
+        } else {
+          triggerRefusal(`✨ ${live.name} has outgrown that!`);
+        }
         return;
       }
 
@@ -1366,8 +1446,8 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
         });
       }
 
-      // 11. Digestion: every 2nd meal (Wet Food or Quail Egg) uses Oli’s corner litter box!
-      if (action.id === 'wet_food' || action.id === 'quail_egg') {
+      // 11. Digestion: every 2nd meal (Kitten Milk, Wet Food, or Quail Egg) uses Oli’s corner litter box!
+      if (action.id === 'kitten_milk' || action.id === 'wet_food' || action.id === 'quail_egg') {
         const meals = incrementCounter(LS_MEAL_COUNT);
         if (meals % 2 === 0) {
           window.setTimeout(() => {
@@ -1403,9 +1483,10 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
         handleBadgeUnlocks(trackFeed(action.id, new Date().getHours()));
       }
 
+      const growthBonus = matchedWhim ? WHIM_GROWTH_BONUS : CARE_ACTION_GROWTH_BONUS;
       const mutator = (b: CatState): CatState => {
         const t = Date.now();
-        const next = applyEffect(materialize(b, t), finalEffect);
+        const next = addGrowthBonus(applyEffect(materialize(b, t), finalEffect), growthBonus);
         if (action.calmMinutes) next.calm_until = new Date(t + action.calmMinutes * 60_000).toISOString();
         return next;
       };
@@ -1472,7 +1553,8 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
         animation: 'purring',
         durationMs: 2200,
       });
-      const mutator = (b: CatState): CatState => applyEffect(materialize(b, nowMs), boost);
+      const mutator = (b: CatState): CatState =>
+        addGrowthBonus(applyEffect(materialize(b, nowMs), boost), CARE_ACTION_GROWTH_BONUS);
       void commit(mutator, PET_ACTION_ID, `Gave ${live.name} chin scratches — purr session!`);
       return;
     }
@@ -1512,7 +1594,9 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
 
       handleBadgeUnlocks(trackPet(nowMs));
 
-      const mutator = (b: CatState): CatState => applyEffect(materialize(b, nowMs), boost);
+      const growthBonus = matchedWhim ? WHIM_GROWTH_BONUS : CARE_ACTION_GROWTH_BONUS;
+      const mutator = (b: CatState): CatState =>
+        addGrowthBonus(applyEffect(materialize(b, nowMs), boost), growthBonus);
       void commit(mutator, PET_ACTION_ID, `Gave ${live.name} chin scratches — purr session!`);
     } else {
       // Petted again too soon for more Joy: he still answers with a little "mrp?"
@@ -1556,11 +1640,16 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
       return;
     }
     const target = !live.isSleeping;
+    const maxSleepEnergy = getMaxSleepEnergy(live.lifeStage);
 
     // Sleep rules:
-    // 1. Cannot force Oli to nap if he's already full of energy (>= 85)
-    if (target && live.energy >= MAX_SLEEP_ENERGY) {
-      triggerRefusal(`⚡ ${live.name} has too much energy to nap! Play with him first.`);
+    // 1. Cannot force Oli to nap if he's already full of energy
+    if (target && live.energy >= maxSleepEnergy) {
+      triggerRefusal(
+        live.lifeStage === 'newborn'
+          ? `🍼 ${live.name} is wide awake right now — give him cuddles or warm milk!`
+          : `⚡ ${live.name} has too much energy to nap! Play with him first.`,
+      );
       return;
     }
 
@@ -1690,6 +1779,8 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
     handleBadgeUnlocks,
     badgeCelebration: badgeUnlockQueue[0] ?? null,
     dismissBadgeCelebration,
+    growthCelebration,
+    dismissGrowthCelebration,
     whim,
     activeMinigame,
     log,

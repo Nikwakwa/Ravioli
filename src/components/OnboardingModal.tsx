@@ -7,10 +7,11 @@ import { sanitizePlayerName } from '../utils/player';
 
 export interface OnboardingModalProps {
   initialName: string;
+  lifeStage?: import('../types').LifeStage;
   onComplete: (name: string) => void;
 }
 
-export function OnboardingModal({ initialName, onComplete }: OnboardingModalProps) {
+export function OnboardingModal({ initialName, lifeStage = 'newborn', onComplete }: OnboardingModalProps) {
   const [name, setName] = useState(initialName === 'You' ? '' : initialName);
 
   const handleSubmit = (e?: React.FormEvent) => {
@@ -37,9 +38,9 @@ export function OnboardingModal({ initialName, onComplete }: OnboardingModalProp
         {/* Cat Avatar Header */}
         <div className="flex flex-col items-center text-center">
           <div className="relative mb-2 flex h-20 w-20 items-end justify-center rounded-2xl bg-amber-200/50 shadow-inner">
-            <CatAvatar mood="ecstatic" animation="idle" animationKey={0} className="h-18 w-16" />
+            <CatAvatar mood="ecstatic" animation="idle" animationKey={0} lifeStage={lifeStage} className="h-18 w-16" />
             <span className="absolute -top-1.5 -right-1.5 rounded-full bg-amber-400 px-1.5 py-0.5 text-[10px] font-black shadow-xs">
-              🐾
+              {lifeStage === 'newborn' ? '🍼' : '🐾'}
             </span>
           </div>
 

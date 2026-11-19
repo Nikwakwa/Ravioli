@@ -4,6 +4,14 @@ All updates to **Oli** are listed here.
 
 ---
 
+## `v1.2.0` — 2026-11-19
+### Growing Up: Baby to Adult Oli 🍼
+- New games start Oli as a Newborn kitten and raise him through Kitten and Teen into Adult Oli forever (he never dies of old age).
+- Newborns drink warm Kitten Milk and nap, with meals and minigames unlocking as he grows.
+- Track growth with a live progress bar and confetti celebration pop-ups at each new stage (existing Olis stay Adult).
+
+---
+
 ## `v1.1.2` — 2026-11-15
 ### Background Alerts Fix 🔔
 - Devices with alerts already turned on now connect to background push automatically.

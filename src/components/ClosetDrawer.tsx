@@ -34,10 +34,12 @@ export function HangerIcon({ className }: { className?: string }) {
 /** Bottom drawer where accessories are bought with Churus, put on or taken off. */
 export function ClosetDrawer({
   churuStash,
+  lifeStage = 'adult',
   onBuy,
   onClose,
 }: {
   churuStash: number;
+  lifeStage?: import('../types').LifeStage;
   /** Pays for the accessory with Churus. Returns false if it could not be bought. */
   onBuy: (id: AccessoryId) => boolean;
   onClose: () => void;
@@ -79,7 +81,7 @@ export function ClosetDrawer({
 
         <div className="mb-3 flex items-center gap-3">
           <div className="flex h-20 w-20 shrink-0 items-end justify-center overflow-hidden rounded-2xl bg-amber-100/70">
-            <CatAvatar mood="happy" animation="idle" animationKey={0} className="h-[76px] w-[70px]" />
+            <CatAvatar mood="happy" animation="idle" animationKey={0} lifeStage={lifeStage} className="h-[76px] w-[70px]" />
           </div>
           <div className="min-w-0 flex-1">
             <h2 className="font-display text-base font-bold">Oli’s Closet</h2>

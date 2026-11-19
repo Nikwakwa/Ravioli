@@ -21,6 +21,7 @@ import { canAffordFortune, getTodayDateString, isFortuneReady, isFortuneUnlocked
 import { trackBalconyVisit, trackBoxNap, trackDayVisit, trackRainWatch, useBadges } from './utils/badges';
 import { OnboardingModal } from './components/OnboardingModal';
 import { BadgeCelebrationModal } from './components/BadgeCelebrationModal';
+import { GrowthCelebrationModal } from './components/GrowthCelebrationModal';
 import { hasSeenOnboarding, loadPlayer, markOnboardingSeen, savePlayer } from './utils/player';
 import type { CatSpot } from './types';
 import {
@@ -125,6 +126,8 @@ export function App() {
     handleBadgeUnlocks,
     badgeCelebration,
     dismissBadgeCelebration,
+    growthCelebration,
+    dismissGrowthCelebration,
     whim,
     activeMinigame,
     event,
@@ -453,6 +456,7 @@ export function App() {
                   catMood={mood}
                   catAnimation={catAnimation}
                   catAnimationKey={event?.key ?? 0}
+                  catLifeStage={live.lifeStage}
                   onPetCat={handlePetOli}
                 />
               </motion.div>
@@ -477,6 +481,7 @@ export function App() {
                   catMood={mood}
                   catAnimation={catAnimation}
                   catAnimationKey={event?.key ?? 0}
+                  catLifeStage={live.lifeStage}
                   onPetCat={handlePetOli}
                 />
               </motion.div>
@@ -569,6 +574,7 @@ export function App() {
             tapHeartKey={tapHeartKey}
             mood={mood}
             spot={spot}
+            lifeStage={live.lifeStage}
             // Keep short-lived pet/stat bubbles from sliding under the HUD on short phones
             targetPos={{ x: targetHeadPos.x, y: Math.max(targetHeadPos.y, 56) }}
           />
@@ -717,6 +723,7 @@ export function App() {
           {closetOpen && (
             <ClosetDrawer
               churuStash={churuStash}
+              lifeStage={live.lifeStage}
               onBuy={buyAccessory}
               onClose={closeCloset}
             />
@@ -765,12 +772,27 @@ export function App() {
 
         {/* First-time player onboarding */}
         {showOnboarding && ready && Boolean(live) && (
-          <OnboardingModal initialName={playerName} onComplete={handleCompleteOnboarding} />
+          <OnboardingModal
+            initialName={playerName}
+            lifeStage={live.lifeStage}
+            onComplete={handleCompleteOnboarding}
+          />
         )}
+
+        {/* Growing-Up Stage Celebration Pop-up */}
+        <AnimatePresence>
+          {growthCelebration && (
+            <GrowthCelebrationModal
+              key={`growth-${growthCelebration}`}
+              stage={growthCelebration}
+              onClose={dismissGrowthCelebration}
+            />
+          )}
+        </AnimatePresence>
 
         {/* Animated Badge Celebration Pop-up */}
         <AnimatePresence>
-          {badgeCelebration && (
+          {badgeCelebration && !growthCelebration && (
             <BadgeCelebrationModal
               key={`${badgeCelebration.badge.id}-${badgeCelebration.tier}`}
               unlock={badgeCelebration}

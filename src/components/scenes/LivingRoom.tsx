@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { CatAvatar } from '../CatAvatar';
-import type { CatAnimation, CatSpot, Mood } from '../../types';
+import type { CatAnimation, CatSpot, LifeStage, Mood } from '../../types';
 import type { TimeOfDay } from '../../utils/atmosphere';
 
 /**
@@ -29,6 +29,7 @@ export function LivingRoom({
   catMood = 'content',
   catAnimation = 'idle',
   catAnimationKey = 0,
+  catLifeStage = 'adult',
   onPetCat,
 }: {
   fountainBoost: boolean;
@@ -42,6 +43,7 @@ export function LivingRoom({
   catMood?: Mood;
   catAnimation?: CatAnimation;
   catAnimationKey?: number;
+  catLifeStage?: LifeStage;
   onPetCat?: () => void;
 }) {
   // Lighting follows the real time of day, even when Oli naps during the day.
@@ -359,6 +361,7 @@ export function LivingRoom({
                 mood={catMood}
                 animation={catAnimation}
                 animationKey={catAnimationKey}
+              lifeStage={catLifeStage}
                 onPet={onPetCat}
                 className="pointer-events-auto"
               />
@@ -598,6 +601,7 @@ export function LivingRoom({
                 mood={catMood}
                 animation={catAnimation}
                 animationKey={catAnimationKey}
+              lifeStage={catLifeStage}
                 onPet={onPetCat}
                 className="pointer-events-auto"
               />
@@ -874,6 +878,7 @@ export function LivingRoom({
               mood={catMood}
               animation={catAnimation}
               animationKey={catAnimationKey}
+              lifeStage={catLifeStage}
               onPet={onPetCat}
               className="pointer-events-auto"
             />
@@ -969,6 +974,7 @@ export function LivingRoom({
               mood={catMood}
               animation={catAnimation}
               animationKey={catAnimationKey}
+              lifeStage={catLifeStage}
               onPet={onPetCat}
               className="pointer-events-auto"
             />

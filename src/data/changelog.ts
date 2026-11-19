@@ -7,6 +7,16 @@ export interface ReleaseEntry {
 
 export const CHANGELOG: ReleaseEntry[] = [
   {
+    version: 'v1.2.0',
+    date: '2026-11-19',
+    title: 'Growing Up: Baby to Adult Oli 🍼',
+    changes: [
+      'New games start Oli as a Newborn kitten and raise him through Kitten and Teen into Adult Oli forever (he never dies of old age).',
+      'Newborns drink warm Kitten Milk and nap, with meals and minigames unlocking as he grows.',
+      'Track growth with a live progress bar and confetti celebration pop-ups at each new stage (existing Olis stay Adult).',
+    ],
+  },
+  {
     version: 'v1.1.2',
     date: '2026-11-15',
     title: 'Background Alerts Fix 🔔',

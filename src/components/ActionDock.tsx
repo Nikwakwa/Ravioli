@@ -21,15 +21,16 @@ import {
 import { useState, type ComponentType } from 'react';
 import {
   actionById,
-  CARE_ACTIONS,
   CATEGORIES,
-  MAX_SLEEP_ENERGY,
+  getVisibleActionsForCategory,
+  isActionUnlockedForStage,
   MIN_WAKE_ENERGY,
   STAT_META,
   type ActionCategory,
   type CareAction,
 } from '../data/actions';
 import { STAT_KEYS, type CatStats, type LiveCat } from '../types';
+import { getMaxSleepEnergy, getStageDecayRates, STAGE_META } from '../utils/lifeStage';
 import { STAT_ICONS } from './statIcons';
 
 function RedBallIcon({ className }: { className?: string }) {
@@ -42,6 +43,16 @@ function RedBallIcon({ className }: { className?: string }) {
   );
 }
 
+function BabyBottleIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.1} strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <path d="M10 3h4v2.5l1.5 1.5h-7L10 5.5V3z" />
+      <rect x="7.5" y="7" width="9" height="14" rx="3" />
+      <path d="M10.5 11h3M10.5 14.5h2M10.5 18h3" />
+    </svg>
+  );
+}
+
 const CATEGORY_ICONS: Record<ActionCategory, LucideIcon> = {
   feed: Utensils,
   play: Feather,
@@ -50,6 +61,7 @@ const CATEGORY_ICONS: Record<ActionCategory, LucideIcon> = {
 };
 
 const ACTION_ICONS: Record<string, ComponentType<{ className?: string }>> = {
+  kitten_milk: BabyBottleIcon,
   churu: IceCreamCone,
   wet_food: Drumstick,
   chicken_heart: Heart,
@@ -87,6 +99,9 @@ function refusalHint(
 ): string | null {
   if (live.isDeceased) return '💔 Deceased';
   if (live.isPaused) return '✈️ Paused';
+  if (!isActionUnlockedForStage(action, live.lifeStage) && action.minStage) {
+    return `🔒 ${STAGE_META[action.minStage].label}`;
+  }
   if (action.id === 'scoop_mess') {
     return cleanNeededCount === 0 ? '✨ Spotless' : null;
   }
@@ -114,10 +129,12 @@ export function ActionDock({
   night = false,
 }: ActionDockProps) {
   const [category, setCategory] = useState<ActionCategory>('feed');
-  const actions = CARE_ACTIONS.filter((a) => a.category === category);
+  const actions = getVisibleActionsForCategory(category, live.lifeStage);
   const isSleeping = live.isSleeping;
   const whimCategory = whimActionId ? actionById(whimActionId)?.category ?? null : null;
   const cleanNeededCount = (litterBoxDirty ? 1 : 0) + messCount;
+  const maxSleepEnergy = getMaxSleepEnergy(live.lifeStage);
+  const sleepEnergyRate = getStageDecayRates(live.lifeStage).sleeping.energy;
 
   const shellClass = night
     ? 'bg-slate-900/85 border-white/10 text-amber-50'
@@ -126,7 +143,7 @@ export function ActionDock({
   // Readable "why not" chip in both day and night themes
   const hintChip = night ? 'bg-indigo-400/25 text-indigo-100' : 'bg-amber-950/10 text-amber-900';
 
-  const napRefusal = !isSleeping && live.energy >= MAX_SLEEP_ENERGY
+  const napRefusal = !isSleeping && live.energy >= maxSleepEnergy
     ? '⚡ Not Tired'
     : isSleeping && live.energy < MIN_WAKE_ENERGY
       ? '😴 Exhausted'
@@ -315,7 +332,7 @@ export function ActionDock({
                         : 'bg-indigo-100 text-indigo-900'
                   }`}
                 >
-                  {napRefusal ?? (isSleeping ? '☀️ Wake' : '+15 Energy/h')}
+                  {napRefusal ?? (isSleeping ? '☀️ Wake' : `+${sleepEnergyRate} Energy/h`)}
                 </span>
               </div>
             </motion.button>

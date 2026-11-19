@@ -1,4 +1,5 @@
-import type { CatAnimation, CatStats, CatWhim, LiveCat, StatKey } from '../types';
+import type { CatAnimation, CatStats, CatWhim, LifeStage, LiveCat, StatKey } from '../types';
+import { isStageAtLeast, isStageAtMost } from '../utils/lifeStage';
 
 export type ActionCategory = 'feed' | 'play' | 'care' | 'rest';
 
@@ -34,6 +35,10 @@ export interface CareAction {
   isTreat?: boolean;
   /** Helps soothe a tummy ache when Oli overate treats. */
   soothesTummy?: boolean;
+  /** Earliest life stage at which this action unlocks (defaults to 'newborn'). */
+  minStage?: LifeStage;
+  /** Latest life stage at which this action is offered (e.g. Kitten Milk is weaned at Teen). */
+  maxStage?: LifeStage;
 }
 
 /** Sleep & overfeeding rule constants. */
@@ -116,8 +121,23 @@ export const CATEGORIES: { id: ActionCategory; label: string }[] = [
 
 export const CARE_ACTIONS: CareAction[] = [
   // ---------------------------------------------------------------------------
-  // FEED — Differentiated meals & treats with fullness + messy whiskers trade-offs
+  // FEED — Kitten milk bottle (Newborn & Kitten) + adult meals & treats
   // ---------------------------------------------------------------------------
+  {
+    id: 'kitten_milk',
+    category: 'feed',
+    name: 'Warm Kitten Milk',
+    short: 'Kitten Milk',
+    effect: { hunger: 34, hydration: 22, happiness: 10 },
+    animation: 'drinking_milk',
+    particles: ['hearts', 'ripples'],
+    log: 'Bottle-fed {cat} warm kitten milk',
+    requiresAwake: true,
+    haptic: [15, 30, 15],
+    durationMs: 2800,
+    maxHunger: 88,
+    maxStage: 'kitten',
+  },
   {
     id: 'wet_food',
     category: 'feed',
@@ -131,6 +151,7 @@ export const CARE_ACTIONS: CareAction[] = [
     haptic: 25,
     durationMs: 2600,
     maxHunger: 85,
+    minStage: 'kitten',
   },
   {
     id: 'quail_egg',
@@ -145,6 +166,7 @@ export const CARE_ACTIONS: CareAction[] = [
     haptic: 25,
     durationMs: 2400,
     maxHunger: 90,
+    minStage: 'teen',
   },
   {
     id: 'chicken_heart',
@@ -159,6 +181,7 @@ export const CARE_ACTIONS: CareAction[] = [
     haptic: [20, 40, 20],
     durationMs: 2200,
     isTreat: true,
+    minStage: 'kitten',
   },
   {
     id: 'churu',
@@ -173,10 +196,11 @@ export const CARE_ACTIONS: CareAction[] = [
     haptic: [25, 35, 25, 35, 40],
     durationMs: 3000,
     isTreat: true,
+    minStage: 'kitten',
   },
 
   // ---------------------------------------------------------------------------
-  // PLAY — Active workouts that boost Joy and burn Energy + Hunger
+  // PLAY — Active workouts that unlock as Oli grows (Kitten: simple, Teen+: all)
   // ---------------------------------------------------------------------------
   {
     id: 'feather_wand',
@@ -191,6 +215,7 @@ export const CARE_ACTIONS: CareAction[] = [
     haptic: [30, 60, 30, 60, 30],
     durationMs: 3200,
     minEnergy: 15,
+    minStage: 'kitten',
   },
   {
     id: 'laser_pointer',
@@ -205,6 +230,7 @@ export const CARE_ACTIONS: CareAction[] = [
     haptic: [25, 40, 25, 40, 25, 40, 30],
     durationMs: 3200,
     minEnergy: 25,
+    minStage: 'teen',
   },
   {
     id: 'tail_chase',
@@ -219,6 +245,7 @@ export const CARE_ACTIONS: CareAction[] = [
     haptic: [20, 40, 20, 40, 25],
     durationMs: 3000,
     minEnergy: 12,
+    minStage: 'kitten',
   },
   {
     id: 'red_ball',
@@ -233,6 +260,7 @@ export const CARE_ACTIONS: CareAction[] = [
     haptic: [25, 45, 25, 45, 30],
     durationMs: 3200,
     minEnergy: 20,
+    minStage: 'teen',
   },
 
   // ---------------------------------------------------------------------------
@@ -321,9 +349,30 @@ export function formatLog(template: string, catName: string): string {
   return template.replaceAll('{cat}', catName);
 }
 
+/** True when Oli's current life stage is allowed to use this action. */
+export function isActionUnlockedForStage(action: CareAction, stage: LifeStage): boolean {
+  if (action.minStage && !isStageAtLeast(stage, action.minStage)) return false;
+  if (action.maxStage && !isStageAtMost(stage, action.maxStage)) return false;
+  return true;
+}
+
+/**
+ * Returns the 4 Feed cards displayed in the 2×2 ActionDock for the given life stage:
+ * - Newborn & Kitten: Kitten Milk, Wet Food, Chicken Heart, Churu Tube (Newborn shows solid food locked until Kitten)
+ * - Teen & Adult: Wet Food, Quail Egg, Chicken Heart, Churu Tube (weaned off milk!)
+ */
+export function getVisibleActionsForCategory(category: ActionCategory, stage: LifeStage): CareAction[] {
+  const all = CARE_ACTIONS.filter((a) => a.category === category);
+  if (category !== 'feed') return all;
+  if (stage === 'newborn' || stage === 'kitten') {
+    return all.filter((a) => a.id !== 'quail_egg');
+  }
+  return all.filter((a) => a.id !== 'kitten_milk');
+}
+
 /**
  * Selects a context-aware whim/craving that Oli can actually perform right now
- * (never picks a meal when he's too full or a play workout when he's too tired).
+ * (respects life stage unlocks, never picks a meal when full or play when tired).
  */
 export function pickCandidateWhim(
   live: LiveCat,
@@ -331,32 +380,41 @@ export function pickCandidateWhim(
 ): Omit<CatWhim, 'id' | 'expiresAt'> | null {
   if (live.isSleeping) return null;
 
+  const stage = live.lifeStage;
+  const canUse = (id: string) => {
+    const act = actionById(id);
+    return act ? isActionUnlockedForStage(act, stage) : false;
+  };
+
   const candidates: Omit<CatWhim, 'id' | 'expiresAt'>[] = [
-    { actionId: PET_ACTION_ID, label: 'Chin Scratches', emoji: '🐾' },
+    { actionId: PET_ACTION_ID, label: stage === 'newborn' ? 'Warm Cuddles' : 'Chin Scratches', emoji: '🐾' },
   ];
 
-  if (live.hunger < 80) {
+  if (canUse('kitten_milk') && live.hunger < 82) {
+    candidates.push({ actionId: 'kitten_milk', label: 'Kitten Milk', emoji: '🍼' });
+  }
+  if (canUse('wet_food') && live.hunger < 80) {
     candidates.push({ actionId: 'wet_food', label: 'Wet Food', emoji: '🍖' });
   }
-  if (live.hunger < 85) {
+  if (canUse('quail_egg') && live.hunger < 85) {
     candidates.push({ actionId: 'quail_egg', label: 'Quail Egg', emoji: '🥚' });
   }
-  if (live.hunger < 92) {
+  if (canUse('chicken_heart') && live.hunger < 92) {
     candidates.push({ actionId: 'chicken_heart', label: 'Chicken Heart', emoji: '🧡' });
   }
   if (live.hydration < 85) {
     candidates.push({ actionId: 'fountain', label: 'Fresh Water', emoji: '💧' });
   }
-  if (live.energy >= 18) {
+  if (canUse('tail_chase') && live.energy >= 18) {
     candidates.push({ actionId: 'tail_chase', label: 'Chase Tail', emoji: '🌀' });
   }
-  if (live.energy >= 20) {
+  if (canUse('feather_wand') && live.energy >= 20) {
     candidates.push({ actionId: 'feather_wand', label: 'Feather Wand', emoji: '🪶' });
   }
-  if (live.energy >= 25) {
+  if (canUse('red_ball') && live.energy >= 25) {
     candidates.push({ actionId: 'red_ball', label: 'Red Ball', emoji: '🔴' });
   }
-  if (live.energy >= 30) {
+  if (canUse('laser_pointer') && live.energy >= 30) {
     candidates.push({ actionId: 'laser_pointer', label: 'Laser Pointer', emoji: '⚡' });
   }
   if (live.hygiene < 92) {

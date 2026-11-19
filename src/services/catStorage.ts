@@ -16,7 +16,9 @@
 import { createClient, type RealtimeChannel, type SupabaseClient } from '@supabase/supabase-js';
 import { actionById, formatLog, PAUSE_ACTION_ID, PET_ACTION_ID, REVIVE_ACTION_ID, SLEEP_ACTION_ID } from '../data/actions';
 import type { ActivityEntry, CatState, NewActivity, SyncMode, SyncStatus } from '../types';
-import { clampStat, createDefaultCatState } from '../utils/decayEngine';
+import { clampStat, createDefaultCatState, createNewGameCatState } from '../utils/decayEngine';
+import { ADULT_GROWTH_HOURS, roundGrowthHours, sanitizeGrowthHours } from '../utils/lifeStage';
+import { hasSeenOnboarding } from '../utils/player';
 
 export const ACTIVITY_LIMIT = 10;
 
@@ -92,6 +94,8 @@ export function sanitizeCatState(raw: unknown): CatState {
       typeof r.lives_left === 'number' && Number.isFinite(r.lives_left)
         ? Math.max(0, Math.min(9, Math.floor(r.lives_left)))
         : 9,
+    // Existing saves without `growth_hours` migrate directly to Adult Oli forever.
+    growth_hours: roundGrowthHours(sanitizeGrowthHours(r.growth_hours, ADULT_GROWTH_HOURS)),
   };
 }
 
@@ -154,6 +158,7 @@ function toRow(state: CatState) {
     paused_at: state.paused_at ?? null,
     deceased_at: state.deceased_at ?? null,
     lives_left: state.lives_left ?? 9,
+    growth_hours: state.growth_hours ?? ADULT_GROWTH_HOURS,
   };
 }
 
@@ -238,7 +243,8 @@ export class LocalCatStorage implements CatStorage {
   private readState(): CatState {
     const raw = readJson(LS_STATE);
     if (!raw) {
-      const fresh = createDefaultCatState();
+      // Brand-new or freshly reset games start as a Newborn kitten; returning caretakers stay Adult.
+      const fresh = hasSeenOnboarding() ? createDefaultCatState(Date.now(), 'adult') : createNewGameCatState();
       safeStorage.set(LS_STATE, JSON.stringify(fresh));
       return fresh;
     }

@@ -10,17 +10,25 @@
  * Every function in this module is pure and deterministic (time is injected),
  * which keeps it trivially unit-testable.
  */
-import type { CatState, CatStats, LiveCat, Mood, StatKey } from '../types';
+import type { CatState, CatStats, LifeStage, LiveCat, Mood, StatKey } from '../types';
 import { STAT_KEYS } from '../types';
+import {
+  ADULT_GROWTH_HOURS,
+  clampGrowthHours,
+  getStageDecayRates,
+  getStageProgressInfo,
+  roundGrowthHours,
+  sanitizeGrowthHours,
+  STAGE_DECAY_RATES,
+  STAGE_THRESHOLDS,
+  stageFromGrowthHours,
+} from './lifeStage';
 
 export const STAT_MIN = 0;
 export const STAT_MAX = 100;
 
-/** Points per hour. Negative = decay, positive = regeneration. */
-export const DECAY_RATES = {
-  awake: { hunger: -6, hydration: -8, happiness: -5, energy: -4, hygiene: -2 },
-  sleeping: { hunger: -3, hydration: -8, happiness: -5, energy: 15, hygiene: -1 },
-} as const satisfies Record<'awake' | 'sleeping', Record<StatKey, number>>;
+/** Points per hour for Adult Oli (classic baseline). Negative = decay, positive = regeneration. */
+export const DECAY_RATES = STAGE_DECAY_RATES.adult;
 
 /** A nap always lasts at least this long, even if energy is already full. */
 export const MIN_NAP_HOURS = 0.25;
@@ -83,36 +91,73 @@ export function driftStats(stats: CatStats, rates: Record<StatKey, number>, hour
 }
 
 /** How long (hours) Oli keeps sleeping from a base snapshot before waking up on his own. */
-export function hoursUntilNaturalWake(energy: number): number {
-  const toFull = (STAT_MAX - clampStat(energy)) / DECAY_RATES.sleeping.energy;
+export function hoursUntilNaturalWake(energy: number, stage: LifeStage = 'adult'): number {
+  const rates = getStageDecayRates(stage);
+  const toFull = (STAT_MAX - clampStat(energy)) / rates.sleeping.energy;
   return Math.max(toFull, MIN_NAP_HOURS);
 }
 
 /**
  * Calculates how many hours from the current snapshot until BOTH Hunger and Hydration reach 0.
- * Hydration decays at 8/h. Hunger decays at 3/h while sleeping, then 6/h when awake.
+ * Hydration decays at stage rate. Hunger decays slower while sleeping, then at awake rate.
  */
-export function hoursUntilBothZero(baseStats: CatStats, isSleeping: boolean): number {
-  const hoursHydration = baseStats.hydration / Math.abs(DECAY_RATES.awake.hydration);
-  const napHours = isSleeping ? hoursUntilNaturalWake(baseStats.energy) : 0;
-  const hungerLostNap = napHours * Math.abs(DECAY_RATES.sleeping.hunger);
+export function hoursUntilBothZero(baseStats: CatStats, isSleeping: boolean, stage: LifeStage = 'adult'): number {
+  const rates = getStageDecayRates(stage);
+  const hoursHydration = baseStats.hydration / Math.abs(rates.awake.hydration);
+  const napHours = isSleeping ? hoursUntilNaturalWake(baseStats.energy, stage) : 0;
+  const hungerLostNap = napHours * Math.abs(rates.sleeping.hunger);
   const hungerAfterNap = Math.max(0, baseStats.hunger - hungerLostNap);
-  const hoursHunger = napHours + hungerAfterNap / Math.abs(DECAY_RATES.awake.hunger);
+  const hoursHunger = napHours + hungerAfterNap / Math.abs(rates.awake.hunger);
   return Math.max(hoursHydration, hoursHunger);
 }
 
+/** True when Oli's needs are healthy enough (>= NEED_THRESHOLD) for growth to tick forward. */
+export function isHealthyForGrowth(stats: CatStats, isSleeping: boolean): boolean {
+  for (const key of STAT_KEYS) {
+    if (isSleeping && key === 'energy') continue;
+    if (stats[key] < NEED_THRESHOLD) return false;
+  }
+  return true;
+}
+
 /**
- * Computes the live stats from a base snapshot at time `now`.
+ * Computes how many hours within a single drift segment had all checked needs >= NEED_THRESHOLD.
+ * Time spent in the red contributes 0 growth (Oli simply grows more slowly, never harmed).
+ */
+export function healthyHoursInSegment(
+  startStats: CatStats,
+  rates: Record<StatKey, number>,
+  segHours: number,
+  isSleeping: boolean,
+): number {
+  const h = Math.max(0, segHours);
+  if (h <= 0) return 0;
+  let healthy = h;
+  for (const key of STAT_KEYS) {
+    if (isSleeping && key === 'energy') continue;
+    const startVal = startStats[key];
+    if (startVal < NEED_THRESHOLD) return 0;
+    const rate = rates[key];
+    if (rate < 0) {
+      const untilRed = (startVal - NEED_THRESHOLD) / -rate;
+      healthy = Math.min(healthy, untilRed);
+    }
+  }
+  return Math.max(0, healthy);
+}
+
+/**
+ * Computes the live stats and life-stage progress from a base snapshot at time `now`.
  *
  * Piecewise: if Oli is sleeping, he regenerates energy until it is full (or the
  * minimum nap elapses), then automatically wakes and awake rates apply for the
  * remaining time — so he wakes up even if nobody opens the app.
  *
- * If the care clock is paused (vacation/flight mode), stats are frozen at the
- * exact moment it was paused.
+ * Growth ticks forward during healthy hours (all needs >= 25) and caps permanently
+ * at Adult Oli (`ADULT_GROWTH_HOURS`). Oli NEVER ages past Adult and NEVER dies of old age.
  *
- * If prolonged extreme neglect occurred (48+ consecutive hours at 0 hunger & 0 hydration),
- * Oli enters the deceased state (which can be revived using one of his 9 lives).
+ * If the care clock is paused (vacation/flight mode), stats and growth are frozen at the
+ * exact moment it was paused.
  */
 export function computeLiveStats(base: CatState, now: TimeInput = Date.now()): LiveCat {
   const isPaused = Boolean(base.paused_at);
@@ -122,7 +167,12 @@ export function computeLiveStats(base: CatState, now: TimeInput = Date.now()): L
       ? Math.max(0, Math.min(MAX_LIVES, base.lives_left))
       : MAX_LIVES;
 
+  const baseGrowth = sanitizeGrowthHours(base.growth_hours, ADULT_GROWTH_HOURS);
+  const baseStage = stageFromGrowthHours(baseGrowth);
+  const stageRates = getStageDecayRates(baseStage);
+
   if (isAlreadyDeceased) {
+    const info = getStageProgressInfo(baseGrowth);
     return {
       hunger: 0,
       hydration: 0,
@@ -136,6 +186,12 @@ export function computeLiveStats(base: CatState, now: TimeInput = Date.now()): L
       isPaused: false,
       isDeceased: true,
       livesLeft,
+      lifeStage: info.stage,
+      growthHours: baseGrowth,
+      stageProgress: info.progress,
+      nextStage: info.nextStage,
+      hoursToNextStage: info.hoursRemaining,
+      isGrowingNow: false,
     };
   }
 
@@ -146,10 +202,11 @@ export function computeLiveStats(base: CatState, now: TimeInput = Date.now()): L
   let isSleeping = base.is_sleeping;
   let wokeNaturally = false;
 
-  // Check for extreme neglect death while unpaused
+  // Check for extreme neglect death while unpaused (never old age — Adult stays Adult forever)
   if (!isPaused) {
-    const timeToBothZero = hoursUntilBothZero(stats, isSleeping);
+    const timeToBothZero = hoursUntilBothZero(stats, isSleeping, baseStage);
     if (hours >= timeToBothZero + NEGLECT_DEATH_HOURS) {
+      const info = getStageProgressInfo(baseGrowth);
       return {
         hunger: 0,
         hydration: 0,
@@ -163,25 +220,41 @@ export function computeLiveStats(base: CatState, now: TimeInput = Date.now()): L
         isPaused: false,
         isDeceased: true,
         livesLeft,
+        lifeStage: info.stage,
+        growthHours: baseGrowth,
+        stageProgress: info.progress,
+        nextStage: info.nextStage,
+        hoursToNextStage: info.hoursRemaining,
+        isGrowingNow: false,
       };
     }
   }
 
+  let healthyElapsed = 0;
+
   if (isSleeping) {
-    const napHours = hoursUntilNaturalWake(stats.energy);
+    const napHours = hoursUntilNaturalWake(stats.energy, baseStage);
     if (hours >= napHours) {
-      stats = driftStats(stats, DECAY_RATES.sleeping, napHours);
-      stats = driftStats(stats, DECAY_RATES.awake, hours - napHours);
+      healthyElapsed += healthyHoursInSegment(stats, stageRates.sleeping, napHours, true);
+      stats = driftStats(stats, stageRates.sleeping, napHours);
+      const awakeHours = hours - napHours;
+      healthyElapsed += healthyHoursInSegment(stats, stageRates.awake, awakeHours, false);
+      stats = driftStats(stats, stageRates.awake, awakeHours);
       isSleeping = false;
       wokeNaturally = true;
     } else {
-      stats = driftStats(stats, DECAY_RATES.sleeping, hours);
+      healthyElapsed += healthyHoursInSegment(stats, stageRates.sleeping, hours, true);
+      stats = driftStats(stats, stageRates.sleeping, hours);
     }
   } else {
-    stats = driftStats(stats, DECAY_RATES.awake, hours);
+    healthyElapsed += healthyHoursInSegment(stats, stageRates.awake, hours, false);
+    stats = driftStats(stats, stageRates.awake, hours);
   }
 
+  const growthHours = clampGrowthHours(baseGrowth + (isPaused ? 0 : healthyElapsed));
+  const stageInfo = getStageProgressInfo(growthHours);
   const calmUntil = base.calm_until ? Date.parse(base.calm_until) : NaN;
+  const isGrowingNow = !isPaused && stageInfo.stage !== 'adult' && isHealthyForGrowth(stats, isSleeping);
 
   return {
     ...stats,
@@ -192,12 +265,18 @@ export function computeLiveStats(base: CatState, now: TimeInput = Date.now()): L
     isPaused,
     isDeceased: false,
     livesLeft,
+    lifeStage: stageInfo.stage,
+    growthHours,
+    stageProgress: stageInfo.progress,
+    nextStage: stageInfo.nextStage,
+    hoursToNextStage: stageInfo.hoursRemaining,
+    isGrowingNow,
   };
 }
 
 /**
- * Bakes the live stats into a fresh base snapshot stamped at `now`.
- * Must be called before applying any action so decay is never lost.
+ * Bakes the live stats and growth hours into a fresh base snapshot stamped at `now`.
+ * Must be called before applying any action so decay and growth are never lost.
  */
 export function materialize(base: CatState, now: TimeInput = Date.now()): CatState {
   const nowMs = toMs(now);
@@ -216,6 +295,7 @@ export function materialize(base: CatState, now: TimeInput = Date.now()): CatSta
     paused_at: base.paused_at ?? null,
     deceased_at: live.isDeceased ? (base.deceased_at ?? new Date(nowMs).toISOString()) : null,
     lives_left: live.livesLeft,
+    growth_hours: roundGrowthHours(live.growthHours),
   };
 }
 
@@ -227,6 +307,17 @@ export function applyEffect<T extends CatStats>(stats: T, effect: Partial<CatSta
     if (delta) out[key] = roundStat(stats[key] + delta);
   }
   return out;
+}
+
+/** Nudges growth forward on active care actions, capped permanently at Adult Oli. */
+export function addGrowthBonus(state: CatState, bonusHours: number): CatState {
+  if (bonusHours <= 0 || state.deceased_at || state.paused_at) return state;
+  const current = sanitizeGrowthHours(state.growth_hours, ADULT_GROWTH_HOURS);
+  if (current >= ADULT_GROWTH_HOURS) return state;
+  return {
+    ...state,
+    growth_hours: roundGrowthHours(current + bonusHours),
+  };
 }
 
 export function averageWellbeing(stats: CatStats): number {
@@ -257,7 +348,8 @@ export function deriveMood(live: LiveCat): Mood {
  * Returns null if nothing is decaying toward a need (or everything is already low).
  */
 export function nextNeed(live: LiveCat): { stat: StatKey; hours: number } | null {
-  const rates = live.isSleeping ? DECAY_RATES.sleeping : DECAY_RATES.awake;
+  const stageRates = getStageDecayRates(live.lifeStage);
+  const rates = live.isSleeping ? stageRates.sleeping : stageRates.awake;
   let best: { stat: StatKey; hours: number } | null = null;
   for (const key of STAT_KEYS) {
     const rate = rates[key];
@@ -268,7 +360,7 @@ export function nextNeed(live: LiveCat): { stat: StatKey; hours: number } | null
   return best;
 }
 
-export function createDefaultCatState(now: TimeInput = Date.now()): CatState {
+export function createDefaultCatState(now: TimeInput = Date.now(), stage: LifeStage = 'adult'): CatState {
   return {
     name: 'Oli',
     hunger: 70,
@@ -283,5 +375,18 @@ export function createDefaultCatState(now: TimeInput = Date.now()): CatState {
     paused_at: null,
     deceased_at: null,
     lives_left: 9,
+    growth_hours: STAGE_THRESHOLDS[stage],
+  };
+}
+
+/** Brand-new / reset games start Oli as a tiny Newborn kitten (0 growth hours). */
+export function createNewGameCatState(now: TimeInput = Date.now()): CatState {
+  return {
+    ...createDefaultCatState(now, 'newborn'),
+    hunger: 75,
+    hydration: 80,
+    happiness: 80,
+    energy: 75,
+    hygiene: 95,
   };
 }

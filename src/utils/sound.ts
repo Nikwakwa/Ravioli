@@ -399,6 +399,7 @@ export function soundForAction(actionId: string): SoundName | null {
     case 'chicken_heart':
       return 'crunch';
     case 'churu':
+    case 'kitten_milk':
       return 'slurp';
     case 'fountain':
       return 'water';

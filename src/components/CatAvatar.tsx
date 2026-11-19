@@ -1,14 +1,14 @@
 import { AnimatePresence, motion, type TargetAndTransition, type Transition } from 'framer-motion';
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
-import type { CatAnimation, Mood } from '../types';
+import type { CatAnimation, LifeStage, Mood } from '../types';
 import { HeadAccessories, SUIT, useOutfit } from './CatAccessories';
 
 /**
  * Oli — hand-drawn SVG ginger cat.
  * Warm amber eyes, white muzzle & bib, tabby stripes, tiny dark chin freckles, a
  * subtle ear tattoo inside both ears and a ringed tail with a white tip (as in
- * Oli's real photos). Deliberately kept simple & cute — not every real-life
- * detail belongs on the avatar. Everything is animated with Framer Motion.
+ * Oli's real photos). Adapts proportions and details across his 4 life stages
+ * (Newborn → Kitten → Teen → Adult forever) while keeping Adult Oli identical.
  */
 
 const C = {
@@ -24,6 +24,90 @@ const C = {
   irisEdge: '#b06d00',
   freckle: '#5a321d',
   tattoo: '#34456b',
+};
+
+interface StageVisuals {
+  scale: number;
+  headScale: number;
+  headDy: number;
+  earScale: number;
+  eyeScale: number;
+  stripeOpacity: number;
+  showTattoo: boolean;
+  showFreckles: boolean;
+  babyTail: boolean;
+  irisStops: [string, string, string];
+  irisEdge: string;
+  coatColor: string;
+  bodyScaleX: number;
+  bodyScaleY: number;
+}
+
+const STAGE_VISUALS: Record<LifeStage, StageVisuals> = {
+  newborn: {
+    scale: 0.66,
+    headScale: 1.15,
+    headDy: 10,
+    earScale: 0.72,
+    eyeScale: 1.05,
+    stripeOpacity: 0.42,
+    showTattoo: false,
+    showFreckles: false,
+    babyTail: true,
+    irisStops: ['#d2e8ff', '#8ab4e0', '#5a82ad'],
+    irisEdge: '#4a6b8f',
+    coatColor: '#f49a52',
+    bodyScaleX: 0.94,
+    bodyScaleY: 0.86,
+  },
+  kitten: {
+    scale: 0.78,
+    headScale: 1.1,
+    headDy: 5,
+    earScale: 0.88,
+    eyeScale: 1.14,
+    stripeOpacity: 0.76,
+    showTattoo: false,
+    showFreckles: false,
+    babyTail: false,
+    irisStops: ['#fff0a8', '#e5c158', '#b88f28'],
+    irisEdge: '#9e7518',
+    coatColor: C.coat,
+    bodyScaleX: 0.95,
+    bodyScaleY: 0.93,
+  },
+  teen: {
+    scale: 0.9,
+    headScale: 0.96,
+    headDy: -2,
+    earScale: 1.05,
+    eyeScale: 1.02,
+    stripeOpacity: 1,
+    showTattoo: false,
+    showFreckles: true,
+    babyTail: false,
+    irisStops: ['#ffe27a', '#f5b325', '#d98c0c'],
+    irisEdge: C.irisEdge,
+    coatColor: C.coat,
+    bodyScaleX: 0.91,
+    bodyScaleY: 1.03,
+  },
+  adult: {
+    scale: 1,
+    headScale: 1,
+    headDy: 0,
+    earScale: 1,
+    eyeScale: 1,
+    stripeOpacity: 1,
+    showTattoo: true,
+    showFreckles: true,
+    babyTail: false,
+    irisStops: ['#ffe27a', '#f5b325', '#d98c0c'],
+    irisEdge: C.irisEdge,
+    coatColor: C.coat,
+    bodyScaleX: 1,
+    bodyScaleY: 1,
+  },
 };
 
 type EyeState = 'open' | 'wide' | 'halflid' | 'sad' | 'closed' | 'happy';
@@ -44,9 +128,11 @@ export interface CatAvatarProps {
   width?: number;
   height?: number;
   pose?: CatPose;
+  /** Current life stage (defaults to 'adult' so all existing callers stay unchanged). */
+  lifeStage?: LifeStage;
 }
 
-function expressionFor(mood: Mood, animation: CatAnimation, petting: boolean) {
+function expressionFor(mood: Mood, animation: CatAnimation, petting: boolean, lifeStage: LifeStage) {
   let eyes: EyeState = 'open';
   let mouth: MouthState = 'neutral';
   let earDroop = false;
@@ -91,6 +177,11 @@ function expressionFor(mood: Mood, animation: CatAnimation, petting: boolean) {
       break;
   }
 
+  // Newborn kittens have adorable half-closed sleepy baby eyes when calmly resting awake.
+  if (lifeStage === 'newborn' && eyes === 'open' && animation === 'idle') {
+    eyes = 'halflid';
+  }
+
   switch (animation) {
     case 'eating':
     case 'eating_egg':
@@ -106,6 +197,7 @@ function expressionFor(mood: Mood, animation: CatAnimation, petting: boolean) {
       earDroop = false;
       break;
     case 'churu':
+    case 'drinking_milk':
       eyes = 'happy';
       mouth = 'lap';
       blush = true;
@@ -170,6 +262,7 @@ function headMotion(animation: CatAnimation, sec: number, sleeping: boolean): { 
         transition: { duration: sec, ease: 'easeInOut' },
       };
     case 'churu':
+    case 'drinking_milk':
       return {
         animate: { y: [0, -3, 1, -3, 1, -3, 0], rotate: [0, 5, 2, 5, 2, 5, 0] },
         transition: { duration: sec, ease: 'easeInOut' },
@@ -249,6 +342,7 @@ function Eye({
   uid,
   lookX,
   playing,
+  vis,
 }: {
   cx: number;
   cy: number;
@@ -258,6 +352,7 @@ function Eye({
   uid: string;
   lookX: number;
   playing: boolean;
+  vis: StageVisuals;
 }) {
   if (state === 'closed') {
     return (
@@ -273,47 +368,51 @@ function Eye({
   const clipId = `${uid}-eye-${side}`;
   const wide = state === 'wide';
   const outer = side === 'l' ? -1 : 1;
+  const eyeTransform =
+    vis.eyeScale !== 1 ? `translate(${cx} ${cy}) scale(${vis.eyeScale}) translate(${-cx} ${-cy})` : undefined;
 
   return (
-    <motion.g animate={{ scaleY: blinking ? 0.08 : 1 }} transition={{ duration: 0.08 }}>
-      <defs>
-        <clipPath id={clipId}>
-          <ellipse cx={cx} cy={cy} rx={12} ry={13} />
-        </clipPath>
-      </defs>
-      <ellipse cx={cx} cy={cy} rx={12} ry={13} fill={`url(#${uid}-iris)`} stroke={C.irisEdge} strokeWidth={1.3} />
-      <g clipPath={`url(#${clipId})`}>
-        <motion.g
-          animate={playing ? { x: [0, -4, 4, -4, 4, -4, 4, 0] } : { x: lookX }}
-          transition={playing ? { duration: 3.2, ease: 'easeInOut' } : { type: 'spring', stiffness: 120, damping: 14 }}
-        >
-          <motion.ellipse
-            cx={cx}
-            cy={cy + 0.5}
-            animate={{ rx: wide ? 7.6 : 5.2, ry: wide ? 10.5 : 9.6 }}
-            transition={{ type: 'spring', stiffness: 200, damping: 18 }}
-            fill={C.pupil}
-          />
-          <circle cx={cx - 3.8} cy={cy - 5} r={3.1} fill="#fff" />
-          <circle cx={cx + 3.6} cy={cy + 4.2} r={1.3} fill="#fff" opacity={0.85} />
-        </motion.g>
+    <g transform={eyeTransform}>
+      <motion.g animate={{ scaleY: blinking ? 0.08 : 1 }} transition={{ duration: 0.08 }}>
+        <defs>
+          <clipPath id={clipId}>
+            <ellipse cx={cx} cy={cy} rx={12} ry={13} />
+          </clipPath>
+        </defs>
+        <ellipse cx={cx} cy={cy} rx={12} ry={13} fill={`url(#${uid}-iris)`} stroke={vis.irisEdge} strokeWidth={1.3} />
+        <g clipPath={`url(#${clipId})`}>
+          <motion.g
+            animate={playing ? { x: [0, -4, 4, -4, 4, -4, 4, 0] } : { x: lookX }}
+            transition={playing ? { duration: 3.2, ease: 'easeInOut' } : { type: 'spring', stiffness: 120, damping: 14 }}
+          >
+            <motion.ellipse
+              cx={cx}
+              cy={cy + 0.5}
+              animate={{ rx: wide ? 7.6 : 5.2, ry: wide ? 10.5 : 9.6 }}
+              transition={{ type: 'spring', stiffness: 200, damping: 18 }}
+              fill={C.pupil}
+            />
+            <circle cx={cx - 3.8} cy={cy - 5} r={3.1} fill="#fff" />
+            <circle cx={cx + 3.6} cy={cy + 4.2} r={1.3} fill="#fff" opacity={0.85} />
+          </motion.g>
+          {state === 'halflid' && (
+            <path
+              d={`M${cx - 14} ${cy - 15} H${cx + 14} V${cy - 1} Q${cx} ${cy + 3} ${cx - 14} ${cy - 1} Z`}
+              fill={vis.coatColor}
+            />
+          )}
+          {state === 'sad' && (
+            <path
+              d={`M${cx - 14} ${cy - 15} H${cx + 14} V${cy - 15 + (outer > 0 ? 13 : 4)} L${cx - 14} ${cy - 15 + (outer > 0 ? 4 : 13)} Z`}
+              fill={vis.coatColor}
+            />
+          )}
+        </g>
         {state === 'halflid' && (
-          <path
-            d={`M${cx - 14} ${cy - 15} H${cx + 14} V${cy - 1} Q${cx} ${cy + 3} ${cx - 14} ${cy - 1} Z`}
-            fill={C.coat}
-          />
+          <path d={`M${cx - 12} ${cy - 1} Q${cx} ${cy + 3} ${cx + 12} ${cy - 1}`} stroke={C.line} strokeWidth={1.6} fill="none" strokeLinecap="round" />
         )}
-        {state === 'sad' && (
-          <path
-            d={`M${cx - 14} ${cy - 15} H${cx + 14} V${cy - 15 + (outer > 0 ? 13 : 4)} L${cx - 14} ${cy - 15 + (outer > 0 ? 4 : 13)} Z`}
-            fill={C.coat}
-          />
-        )}
-      </g>
-      {state === 'halflid' && (
-        <path d={`M${cx - 12} ${cy - 1} Q${cx} ${cy + 3} ${cx + 12} ${cy - 1}`} stroke={C.line} strokeWidth={1.6} fill="none" strokeLinecap="round" />
-      )}
-    </motion.g>
+      </motion.g>
+    </g>
   );
 }
 
@@ -371,6 +470,7 @@ function Head({
   blinking,
   uid,
   playing,
+  vis,
 }: {
   eyes: EyeState;
   mouth: MouthState;
@@ -380,63 +480,77 @@ function Head({
   blinking: boolean;
   uid: string;
   playing: boolean;
+  vis: StageVisuals;
 }) {
   const earRot = earDroop ? 16 : 0;
+  const leftEarTransform =
+    vis.earScale !== 1 ? `translate(66 56) scale(${vis.earScale}) translate(-66 -56)` : undefined;
+  const rightEarTransform =
+    vis.earScale !== 1 ? `translate(134 56) scale(${vis.earScale}) translate(-134 -56)` : undefined;
+
   return (
     <g>
-      {/* Ears (with tiny ID tattoos inside) */}
-      <motion.g
-        style={{ originX: 0.7, originY: 1 }}
-        animate={{ rotate: -earRot + (earTwitch ? -9 : 0) }}
-        transition={{ type: 'spring', stiffness: 260, damping: 12 }}
-      >
-        <path d="M50 66 L45 19 Q45 12 52 15 L90 40 Z" fill={C.coat} />
-        <path d="M56 58 L53 25 L82 42 Z" fill={C.innerEar} />
-        <path d="M55 50 l6 -4 M56 42 l5 -1" stroke={C.cream} strokeWidth={1.4} strokeLinecap="round" opacity={0.9} />
-        <text
-          x={63}
-          y={46}
-          fontSize={4.6}
-          fontFamily="ui-monospace, monospace"
-          fontWeight={700}
-          fill={C.tattoo}
-          opacity={0.55}
-          transform="rotate(28 63 46)"
+      {/* Ears (with tiny ID tattoos inside once Adult Oli) */}
+      <g transform={leftEarTransform}>
+        <motion.g
+          style={{ originX: 0.7, originY: 1 }}
+          animate={{ rotate: -earRot + (earTwitch ? -9 : 0) }}
+          transition={{ type: 'spring', stiffness: 260, damping: 12 }}
         >
-          OL1
-        </text>
-      </motion.g>
-      <motion.g
-        style={{ originX: 0.3, originY: 1 }}
-        animate={{ rotate: earRot }}
-        transition={{ type: 'spring', stiffness: 260, damping: 12 }}
-      >
-        <path d="M150 66 L155 19 Q155 12 148 15 L110 40 Z" fill={C.coat} />
-        <path d="M144 58 L147 25 L118 42 Z" fill={C.innerEar} />
-        <path d="M145 50 l-6 -4 M144 42 l-5 -1" stroke={C.cream} strokeWidth={1.4} strokeLinecap="round" opacity={0.9} />
-        <text
-          x={128}
-          y={50}
-          fontSize={4.6}
-          fontFamily="ui-monospace, monospace"
-          fontWeight={700}
-          fill={C.tattoo}
-          opacity={0.55}
-          transform="rotate(-28 133 46)"
+          <path d="M50 66 L45 19 Q45 12 52 15 L90 40 Z" fill={vis.coatColor} />
+          <path d="M56 58 L53 25 L82 42 Z" fill={C.innerEar} />
+          <path d="M55 50 l6 -4 M56 42 l5 -1" stroke={C.cream} strokeWidth={1.4} strokeLinecap="round" opacity={0.9} />
+          {vis.showTattoo && (
+            <text
+              x={63}
+              y={46}
+              fontSize={4.6}
+              fontFamily="ui-monospace, monospace"
+              fontWeight={700}
+              fill={C.tattoo}
+              opacity={0.55}
+              transform="rotate(28 63 46)"
+            >
+              OL1
+            </text>
+          )}
+        </motion.g>
+      </g>
+      <g transform={rightEarTransform}>
+        <motion.g
+          style={{ originX: 0.3, originY: 1 }}
+          animate={{ rotate: earRot }}
+          transition={{ type: 'spring', stiffness: 260, damping: 12 }}
         >
-          2FX
-        </text>
-      </motion.g>
+          <path d="M150 66 L155 19 Q155 12 148 15 L110 40 Z" fill={vis.coatColor} />
+          <path d="M144 58 L147 25 L118 42 Z" fill={C.innerEar} />
+          <path d="M145 50 l-6 -4 M144 42 l-5 -1" stroke={C.cream} strokeWidth={1.4} strokeLinecap="round" opacity={0.9} />
+          {vis.showTattoo && (
+            <text
+              x={128}
+              y={50}
+              fontSize={4.6}
+              fontFamily="ui-monospace, monospace"
+              fontWeight={700}
+              fill={C.tattoo}
+              opacity={0.55}
+              transform="rotate(-28 133 46)"
+            >
+              2FX
+            </text>
+          )}
+        </motion.g>
+      </g>
 
       {/* Head shape with cheek fluff */}
       <path
         d="M100 30 C137 30 161 52 161 82 C161 92 158 100 153 106 L160 110 L149 112 C141 119 125 124 100 124 C75 124 59 119 51 112 L40 110 L47 106 C42 100 39 92 39 82 C39 52 63 30 100 30 Z"
-        fill={C.coat}
+        fill={vis.coatColor}
       />
       <ellipse cx={100} cy={58} rx={34} ry={18} fill={C.coatLight} opacity={0.45} />
 
       {/* Tabby "M" + cheek stripes */}
-      <g stroke={C.stripe} strokeWidth={3.4} strokeLinecap="round" fill="none">
+      <g stroke={C.stripe} strokeWidth={3.4} strokeLinecap="round" fill="none" opacity={vis.stripeOpacity}>
         <path d="M100 35 V50" />
         <path d="M89 37 Q91 45 94 50" />
         <path d="M111 37 Q109 45 106 50" />
@@ -458,21 +572,23 @@ function Head({
       </motion.g>
 
       {/* Eyes */}
-      <Eye cx={76} cy={80} state={eyes} blinking={blinking} side="l" uid={uid} lookX={0} playing={playing} />
-      <Eye cx={124} cy={80} state={eyes} blinking={blinking} side="r" uid={uid} lookX={0} playing={playing} />
+      <Eye cx={76} cy={80} state={eyes} blinking={blinking} side="l" uid={uid} lookX={0} playing={playing} vis={vis} />
+      <Eye cx={124} cy={80} state={eyes} blinking={blinking} side="r" uid={uid} lookX={0} playing={playing} vis={vis} />
 
       {/* Nose + mouth */}
       <path d="M93.5 92 H106.5 C106.5 96 102.5 99.5 100 99.5 C97.5 99.5 93.5 96 93.5 92 Z" fill={C.nose} />
       <ellipse cx={98} cy={93.5} rx={2} ry={1} fill="#fff" opacity={0.5} />
       <Mouth state={mouth} />
 
-      {/* Tiny dark chin freckles */}
-      <g fill={C.freckle}>
-        <circle cx={95.5} cy={114} r={1.25} />
-        <circle cx={100.5} cy={116.5} r={1.3} />
-        <circle cx={105} cy={113.5} r={1.1} />
-        <circle cx={98.5} cy={111.5} r={0.8} />
-      </g>
+      {/* Tiny dark chin freckles (appear as Teen & Adult) */}
+      {vis.showFreckles && (
+        <g fill={C.freckle}>
+          <circle cx={95.5} cy={114} r={1.25} />
+          <circle cx={100.5} cy={116.5} r={1.3} />
+          <circle cx={105} cy={113.5} r={1.1} />
+          <circle cx={98.5} cy={111.5} r={0.8} />
+        </g>
+      )}
 
       {/* Whiskers */}
       <motion.g
@@ -496,8 +612,13 @@ function Head({
 }
 
 /** Oli's head seen from behind: furry backs of the ears, no face, whiskers peeking past the cheeks. */
-function BackOfHead({ earDroop, earTwitch }: { earDroop: boolean; earTwitch: boolean }) {
+function BackOfHead({ earDroop, earTwitch, vis }: { earDroop: boolean; earTwitch: boolean; vis: StageVisuals }) {
   const earRot = earDroop ? 16 : 0;
+  const leftEarTransform =
+    vis.earScale !== 1 ? `translate(66 56) scale(${vis.earScale}) translate(-66 -56)` : undefined;
+  const rightEarTransform =
+    vis.earScale !== 1 ? `translate(134 56) scale(${vis.earScale}) translate(-134 -56)` : undefined;
+
   return (
     <g>
       {/* Whiskers poke out past the cheeks (roots hidden behind the head) */}
@@ -509,32 +630,36 @@ function BackOfHead({ earDroop, earTwitch }: { earDroop: boolean; earTwitch: boo
       </g>
 
       {/* Ears from behind: plain fur with soft shading, they swivel like little radars */}
-      <motion.g
-        style={{ originX: 0.7, originY: 1 }}
-        animate={{ rotate: -earRot + (earTwitch ? -9 : 0) }}
-        transition={{ type: 'spring', stiffness: 260, damping: 12 }}
-      >
-        <path d="M50 66 L45 19 Q45 12 52 15 L90 40 Z" fill={C.coat} />
-        <path d="M55 58 L51 25 Q51 21 55 23 L80 40 Z" fill={C.stripe} opacity={0.22} />
-      </motion.g>
-      <motion.g
-        style={{ originX: 0.3, originY: 1 }}
-        animate={{ rotate: earRot + (earTwitch ? 6 : 0) }}
-        transition={{ type: 'spring', stiffness: 260, damping: 12 }}
-      >
-        <path d="M150 66 L155 19 Q155 12 148 15 L110 40 Z" fill={C.coat} />
-        <path d="M145 58 L149 25 Q149 21 145 23 L120 40 Z" fill={C.stripe} opacity={0.22} />
-      </motion.g>
+      <g transform={leftEarTransform}>
+        <motion.g
+          style={{ originX: 0.7, originY: 1 }}
+          animate={{ rotate: -earRot + (earTwitch ? -9 : 0) }}
+          transition={{ type: 'spring', stiffness: 260, damping: 12 }}
+        >
+          <path d="M50 66 L45 19 Q45 12 52 15 L90 40 Z" fill={vis.coatColor} />
+          <path d="M55 58 L51 25 Q51 21 55 23 L80 40 Z" fill={C.stripe} opacity={0.22 * vis.stripeOpacity} />
+        </motion.g>
+      </g>
+      <g transform={rightEarTransform}>
+        <motion.g
+          style={{ originX: 0.3, originY: 1 }}
+          animate={{ rotate: earRot + (earTwitch ? 6 : 0) }}
+          transition={{ type: 'spring', stiffness: 260, damping: 12 }}
+        >
+          <path d="M150 66 L155 19 Q155 12 148 15 L110 40 Z" fill={vis.coatColor} />
+          <path d="M145 58 L149 25 Q149 21 145 23 L120 40 Z" fill={C.stripe} opacity={0.22 * vis.stripeOpacity} />
+        </motion.g>
+      </g>
 
       {/* Round back of the head with cheek fluff */}
       <path
         d="M100 30 C137 30 161 52 161 82 C161 92 158 100 153 106 L160 110 L149 112 C141 119 125 124 100 124 C75 124 59 119 51 112 L40 110 L47 106 C42 100 39 92 39 82 C39 52 63 30 100 30 Z"
-        fill={C.coat}
+        fill={vis.coatColor}
       />
       <ellipse cx={86} cy={58} rx={30} ry={19} fill={C.coatLight} opacity={0.5} />
 
       {/* Tabby stripes running down the back of the head */}
-      <g stroke={C.stripe} strokeWidth={3.4} strokeLinecap="round" fill="none">
+      <g stroke={C.stripe} strokeWidth={3.4} strokeLinecap="round" fill="none" opacity={vis.stripeOpacity}>
         <path d="M100 36 V62" />
         <path d="M88 38 Q89 52 93 64" />
         <path d="M112 38 Q111 52 107 64" />
@@ -778,6 +903,53 @@ function ChuruTube({ sec }: { sec: number }) {
   );
 }
 
+function KittenMilkBottle({ sec }: { sec: number }) {
+  return (
+    <motion.g
+      initial={{ opacity: 0, x: 24, y: 10 }}
+      animate={{
+        opacity: 1,
+        x: [14, 2, 5, 2, 5, 2, 14],
+        y: [6, 0, 2, 0, 2, 0, 6],
+      }}
+      exit={{ opacity: 0, x: 24 }}
+      transition={{ duration: sec, ease: 'easeInOut' }}
+    >
+      {/* Warm baby bottle angled right at Oli's mouth */}
+      <g transform="translate(105 107) rotate(24)">
+        {/* Soft silicone nipple */}
+        <path d="M-4 0 C-4 -3.2 2 -3.8 6 -3 L6 3 C2 3.8 -4 3.2 -4 0 Z" fill="#f7c89c" stroke="#d9a16c" strokeWidth={0.8} />
+        {/* Pastel collar ring */}
+        <rect x={6} y={-8.5} width={7} height={17} rx={2.5} fill="#f497b6" stroke="#db6f93" strokeWidth={0.9} />
+        {/* Translucent bottle body */}
+        <rect x={13} y={-10} width={38} height={20} rx={5.5} fill="#e8f4fc" stroke="#9ec5e0" strokeWidth={1.1} />
+        {/* Warm creamy kitten milk inside gently draining */}
+        <motion.rect
+          x={14.5}
+          y={-8.5}
+          height={17}
+          rx={4}
+          fill="#fffaf0"
+          initial={{ width: 33 }}
+          animate={{ width: [33, 28, 22, 16, 12] }}
+          transition={{ duration: sec, ease: 'easeInOut' }}
+        />
+        {/* Measurement tick marks */}
+        <g stroke="#89b4d4" strokeWidth={0.9} strokeLinecap="round" opacity={0.8}>
+          <path d="M21 -6 v3 M27 -6 v4 M33 -6 v3 M39 -6 v4" />
+        </g>
+        {/* Tiny pink heart emblem */}
+        <path
+          d="M32 3 C30 1 30 -1 31.3 -1 C32 -1 32 0 32 0.3 C32 0 32 -1 32.7 -1 C34 -1 34 1 32 3 Z"
+          fill="#f497b6"
+        />
+        {/* Glossy bottle highlight */}
+        <path d="M18 -6.5 H45" stroke="#ffffff" strokeWidth={1.4} strokeLinecap="round" opacity={0.75} />
+      </g>
+    </motion.g>
+  );
+}
+
 function SleepZzz() {
   return (
     <g>
@@ -830,21 +1002,33 @@ function PurrWaves() {
 // Poses
 // -----------------------------------------------------------------------------
 
-function TailStripes({ d, width }: { d: string; width: number }) {
+function TailStripes({ d, width, vis }: { d: string; width: number; vis: StageVisuals }) {
   return (
     <>
-      <path d={d} stroke={C.coat} strokeWidth={width} fill="none" strokeLinecap="round" />
-      <path d={d} stroke={C.stripe} strokeWidth={width} fill="none" pathLength={100} strokeDasharray="6 6" opacity={0.75} />
+      <path d={d} stroke={vis.coatColor} strokeWidth={width} fill="none" strokeLinecap="round" />
+      <path d={d} stroke={C.stripe} strokeWidth={width} fill="none" pathLength={100} strokeDasharray="6 6" opacity={0.75 * vis.stripeOpacity} />
       {/* Soft white tail tip, like the real Oli */}
       <path d={d} stroke={C.cream} strokeWidth={width} fill="none" strokeLinecap="round" pathLength={100} strokeDasharray="10 90" strokeDashoffset={10} />
-    
     </>
   );
 }
 
-export function CatAvatar({ mood, animation, animationKey, onPet, className, x, y, width, height, pose }: CatAvatarProps) {
+export function CatAvatar({
+  mood,
+  animation,
+  animationKey,
+  onPet,
+  className,
+  x,
+  y,
+  width,
+  height,
+  pose,
+  lifeStage = 'adult',
+}: CatAvatarProps) {
   const rawId = useId();
   const uid = useMemo(() => `oli${rawId.replace(/[^a-zA-Z0-9_-]/g, '')}`, [rawId]);
+  const vis = STAGE_VISUALS[lifeStage];
   const sleeping = mood === 'sleeping';
   const [blinking, setBlinking] = useState(false);
   const [earTwitch, setEarTwitch] = useState(false);
@@ -862,6 +1046,7 @@ export function CatAvatar({ mood, animation, animationKey, onPet, className, x, 
       treat: 2.2,
       churu: 3.0,
       drinking: 2.8,
+      drinking_milk: 2.8,
       purring: 3,
       playing: 3.2,
       laser: 3.2,
@@ -936,7 +1121,7 @@ export function CatAvatar({ mood, animation, animationKey, onPet, className, x, 
   };
 
   const anim = sleeping && activeAnim !== 'misting' ? 'idle' : activeAnim;
-  const expr = expressionFor(mood, anim, petting);
+  const expr = expressionFor(mood, anim, petting, lifeStage);
   const head = headMotion(anim, animSec, sleeping);
   const sad = expr.earDroop;
 
@@ -955,6 +1140,7 @@ export function CatAvatar({ mood, animation, animationKey, onPet, className, x, 
     blinking: blinking && !sleeping,
     uid,
     playing: isPlayAnim,
+    vis,
   };
 
   // Belly-up rolls are pure bliss: soften plain open eyes into happy crescents.
@@ -964,6 +1150,27 @@ export function CatAvatar({ mood, animation, animationKey, onPet, className, x, 
     mouth: expr.mouth === 'neutral' ? ('smile' as MouthState) : expr.mouth,
     blush: expr.blush || !sad,
   };
+
+  // Anchor overall stage scale at bottom-center (100, 208) so Oli's paws always stay planted on every spot.
+  const stageTransform =
+    vis.scale !== 1 ? `translate(100 208) scale(${vis.scale}) translate(-100 -208)` : undefined;
+  const headStageTransform =
+    vis.headScale !== 1 || vis.headDy !== 0
+      ? `translate(100 ${120 + vis.headDy}) scale(${vis.headScale}) translate(-100 -120)`
+      : undefined;
+  const bodyStageTransform =
+    vis.bodyScaleX !== 1 || vis.bodyScaleY !== 1
+      ? `translate(100 208) scale(${vis.bodyScaleX} ${vis.bodyScaleY}) translate(-100 -208)`
+      : undefined;
+
+  const stageLabel =
+    lifeStage === 'newborn'
+      ? 'Oli the newborn ginger kitten'
+      : lifeStage === 'kitten'
+        ? 'Oli the ginger kitten'
+        : lifeStage === 'teen'
+          ? 'Oli the teen ginger cat'
+          : 'Oli the ginger cat';
 
   return (
     <svg
@@ -975,407 +1182,458 @@ export function CatAvatar({ mood, animation, animationKey, onPet, className, x, 
       className={className}
       style={{ overflow: 'visible' }}
       role="img"
-      aria-label={`Oli the ginger cat, ${mood}`}
+      aria-label={`${stageLabel}, ${mood}`}
     >
       <defs>
         <radialGradient id={`${uid}-iris`} cx="50%" cy="45%" r="60%">
-          <stop offset="0%" stopColor="#ffe27a" />
-          <stop offset="60%" stopColor="#f5b325" />
-          <stop offset="100%" stopColor="#d98c0c" />
+          <stop offset="0%" stopColor={vis.irisStops[0]} />
+          <stop offset="60%" stopColor={vis.irisStops[1]} />
+          <stop offset="100%" stopColor={vis.irisStops[2]} />
         </radialGradient>
       </defs>
 
-      <motion.g
-        onPointerDown={handlePet}
-        style={{ cursor: 'pointer' }}
-        animate={
-          anim === 'laser' || anim === 'red_ball'
-            ? { x: [0, -18, 18, -14, 16, 0], y: [0, -10, 0, -14, 0, -8, 0] }
-            : anim === 'tail_chase'
-              ? { x: [0, 14, -14, 14, -14, 0], y: [0, -10, 0, -12, 0, -8, 0], rotate: [0, 8, -8, 8, -8, 0] }
-              : anim === 'playing'
-                ? { y: [0, -12, 0, -16, 0, -10, 0] }
-                : petting
-                  ? { y: [0, -6, 0] }
-                  : anim === 'purring'
-                    ? { x: [0, -0.7, 0.7, -0.7, 0.7, 0] }
-                    : { y: 0, x: 0, rotate: 0 }
-        }
-        transition={
-          anim === 'purring'
-            ? { duration: 0.18, repeat: Math.round(animSec / 0.18) }
-            : { duration: isPlayAnim ? animSec : 0.5, ease: 'easeInOut' }
-        }
-      >
-        {(() => {
-          const effectivePose: CatPose = sleeping
-            ? pose === 'belly_up'
-              ? 'belly_up'
-              : 'loaf'
-            : (pose ?? 'sit');
+      <g transform={stageTransform}>
+        <motion.g
+          onPointerDown={handlePet}
+          style={{ cursor: 'pointer' }}
+          animate={
+            anim === 'laser' || anim === 'red_ball'
+              ? { x: [0, -18, 18, -14, 16, 0], y: [0, -10, 0, -14, 0, -8, 0] }
+              : anim === 'tail_chase'
+                ? { x: [0, 14, -14, 14, -14, 0], y: [0, -10, 0, -12, 0, -8, 0], rotate: [0, 8, -8, 8, -8, 0] }
+                : anim === 'playing'
+                  ? { y: [0, -12, 0, -16, 0, -10, 0] }
+                  : petting
+                    ? { y: [0, -6, 0] }
+                    : anim === 'purring'
+                      ? { x: [0, -0.7, 0.7, -0.7, 0.7, 0] }
+                      : { y: 0, x: 0, rotate: 0 }
+          }
+          transition={
+            anim === 'purring'
+              ? { duration: 0.18, repeat: Math.round(animSec / 0.18) }
+              : { duration: isPlayAnim ? animSec : 0.5, ease: 'easeInOut' }
+          }
+        >
+          {(() => {
+            const effectivePose: CatPose = sleeping
+              ? pose === 'belly_up'
+                ? 'belly_up'
+                : 'loaf'
+              : (pose ?? 'sit');
 
-          return (
-            <AnimatePresence mode="wait" initial={false}>
-              {effectivePose === 'loaf' && (
-                <motion.g key="loaf" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.45 }}>
-                  <ellipse cx={100} cy={206} rx={80} ry={8} fill="rgba(40,20,10,0.22)" />
-                  <motion.g
-                    style={{ originY: 1 }}
-                    animate={{ scaleY: [1, 1.05, 1] }}
-                    transition={{ duration: 4.5, repeat: Infinity, ease: 'easeInOut' }}
-                  >
-                    <path d="M26 198 C22 160 60 136 102 136 C144 136 180 160 175 198 C174 206 28 206 26 198 Z" fill={C.coat} />
-                    <g stroke={C.stripe} strokeWidth={3.6} strokeLinecap="round" fill="none" opacity={0.85}>
-                      <path d="M70 142 Q74 152 70 160" />
-                      <path d="M100 138 Q104 148 100 156" />
-                      <path d="M130 142 Q134 152 130 160" />
-                      <path d="M156 156 Q156 166 150 172" />
-                    </g>
-                    {suit && (
-                      <g>
-                        <path d="M26 198 C22 160 60 136 102 136 C144 136 180 160 175 198 C174 206 28 206 26 198 Z" fill={SUIT.jacket} />
-                        <path d="M112 138 Q120 170 116 204" stroke={SUIT.line} strokeWidth={1.6} fill="none" strokeLinecap="round" />
-                        <path d="M138 158 l11 2 l-3 7 z" fill={SUIT.shirt} />
-                        <path d="M40 196 H164" stroke={SUIT.line} strokeWidth={1.4} strokeLinecap="round" opacity={0.7} />
+            return (
+              <AnimatePresence mode="wait" initial={false}>
+                {effectivePose === 'loaf' && (
+                  <motion.g key="loaf" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.45 }}>
+                    <ellipse cx={100} cy={206} rx={80} ry={8} fill="rgba(40,20,10,0.22)" />
+                    <motion.g
+                      style={{ originY: 1 }}
+                      animate={{ scaleY: [1, 1.05, 1] }}
+                      transition={{ duration: 4.5, repeat: Infinity, ease: 'easeInOut' }}
+                    >
+                      <path d="M26 198 C22 160 60 136 102 136 C144 136 180 160 175 198 C174 206 28 206 26 198 Z" fill={vis.coatColor} />
+                      <g stroke={C.stripe} strokeWidth={3.6} strokeLinecap="round" fill="none" opacity={0.85 * vis.stripeOpacity}>
+                        <path d="M70 142 Q74 152 70 160" />
+                        <path d="M100 138 Q104 148 100 156" />
+                        <path d="M130 142 Q134 152 130 160" />
+                        <path d="M156 156 Q156 166 150 172" />
                       </g>
-                    )}
-                  </motion.g>
-                  <TailStripes d="M168 194 C172 212 120 214 96 210 C80 208 64 206 56 200" width={13} />
-                  <ellipse cx={82} cy={200} rx={11} ry={5} fill={C.cream} />
-                  <ellipse cx={112} cy={201} rx={11} ry={5} fill={C.cream} />
-                  <g transform="translate(-4 62) rotate(-10 100 80)">
-                    <motion.g animate={head.animate} transition={head.transition}>
-                      <Head {...headProps} />
-                    </motion.g>
-                  </g>
-                  <SleepZzz />
-                </motion.g>
-              )}
-
-              {effectivePose === 'look_out' && (
-                <motion.g
-                  key="look_out"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.45 }}
-                >
-                  {/* Ground contact shadow */}
-                  <ellipse cx={100} cy={206} rx={62} ry={8} fill="rgba(40,20,10,0.2)" />
-
-                  {/* Body seen from behind (round back + chunky haunches), gently breathing */}
-                  <motion.g
-                    style={{ originY: 1 }}
-                    animate={{ scaleY: [1, 1.025, 1], scaleX: [1, 1.01, 1] }}
-                    transition={{ duration: 3.4, repeat: Infinity, ease: 'easeInOut' }}
-                  >
-                    {/* Little hind toes peeking out from under the haunches */}
-                    <ellipse cx={47} cy={203} rx={9} ry={4.5} fill={C.cream} />
-                    <ellipse cx={153} cy={203} rx={9} ry={4.5} fill={C.cream} />
-
-                    <path
-                      d="M100 100 C80 100 68 116 64 138 C60 158 52 174 52 190 C52 204 72 208 100 208 C128 208 148 204 148 190 C148 174 140 158 136 138 C132 116 120 100 100 100 Z"
-                      fill={C.coat}
-                    />
-                    <ellipse cx={66} cy={188} rx={21} ry={19} fill={C.coat} />
-                    <ellipse cx={134} cy={188} rx={21} ry={19} fill={C.coat} />
-                    {/* Warm sunlight on the upper back */}
-                    <ellipse cx={88} cy={138} rx={15} ry={24} fill={C.coatLight} opacity={0.55} />
-
-                    {/* Haunch creases */}
-                    <path
-                      d="M81 172 Q75 188 83 204 M119 172 Q125 188 117 204"
-                      stroke={C.stripe}
-                      strokeWidth={1.8}
-                      fill="none"
-                      strokeLinecap="round"
-                      opacity={0.45}
-                    />
-
-                    {/* Tabby stripes running down from the spine */}
-                    <g stroke={C.stripe} strokeWidth={3.2} strokeLinecap="round" fill="none" opacity={0.85}>
-                      <path d="M100 116 V168" strokeWidth={4} />
-                      <path d="M93 128 Q84 130 78 139" />
-                      <path d="M107 128 Q116 130 122 139" />
-                      <path d="M93 146 Q81 148 72 158" />
-                      <path d="M107 146 Q119 148 128 158" />
-                      <path d="M93 164 Q79 167 66 178" opacity={0.85} />
-                      <path d="M107 164 Q121 167 134 178" opacity={0.85} />
-                    </g>
-                    {suit && (
-                      <g>
-                        <path
-                          d="M100 100 C80 100 68 116 64 138 C60 158 52 174 52 190 C52 204 72 208 100 208 C128 208 148 204 148 190 C148 174 140 158 136 138 C132 116 120 100 100 100 Z"
-                          fill={SUIT.jacket}
-                        />
-                        <ellipse cx={66} cy={188} rx={21} ry={19} fill={SUIT.jacket} />
-                        <ellipse cx={134} cy={188} rx={21} ry={19} fill={SUIT.jacket} />
-                        <g stroke={SUIT.line} strokeWidth={1.6} fill="none" strokeLinecap="round">
-                          <path d="M100 118 V178" />
-                          <path d="M100 178 L95 206 M100 178 L105 206" />
-                          <path d="M72 132 Q100 122 128 132" />
-                          <path d="M81 172 Q75 188 83 204 M119 172 Q125 188 117 204" />
+                      {suit && (
+                        <g>
+                          <path d="M26 198 C22 160 60 136 102 136 C144 136 180 160 175 198 C174 206 28 206 26 198 Z" fill={SUIT.jacket} />
+                          <path d="M112 138 Q120 170 116 204" stroke={SUIT.line} strokeWidth={1.6} fill="none" strokeLinecap="round" />
+                          <path d="M138 158 l11 2 l-3 7 z" fill={SUIT.shirt} />
+                          <path d="M40 196 H164" stroke={SUIT.line} strokeWidth={1.4} strokeLinecap="round" opacity={0.7} />
                         </g>
-                      </g>
-                    )}
-                  </motion.g>
-
-                  {/* Fluffy striped tail curled on the tiles, tip flicking while he watches */}
-                  <motion.g
-                    style={{ originX: 0, originY: 0.3 }}
-                    animate={sad ? { rotate: [0, 1, 0] } : { rotate: [-3, 5, -3] }}
-                    transition={{ duration: tailSpeed, repeat: Infinity, ease: 'easeInOut' }}
-                  >
-                    <TailStripes d="M100 203 C118 214 148 214 163 205 C174 198 177 187 170 181" width={13} />
-                  </motion.g>
-
-                  {/* Head: back of the head while he watches the street; turns to peek at you when petted */}
-                  <motion.g
-                    style={{ originX: 0.5, originY: 1 }}
-                    animate={{ rotate: [-4, 5, 5, -2, -4], x: [0, 1.5, 1.5, -1, 0] }}
-                    transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
-                  >
-                    <AnimatePresence mode="wait" initial={false}>
-                      {petting ? (
-                        <motion.g
-                          key="peek"
-                          initial={{ opacity: 0, x: 6 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          exit={{ opacity: 0, x: 6 }}
-                          transition={{ duration: 0.16 }}
-                        >
+                      )}
+                    </motion.g>
+                    <TailStripes
+                      d={
+                        vis.babyTail
+                          ? 'M165 195 C166 208 136 211 118 208'
+                          : 'M168 194 C172 212 120 214 96 210 C80 208 64 206 56 200'
+                      }
+                      width={vis.babyTail ? 10 : 13}
+                      vis={vis}
+                    />
+                    <ellipse cx={82} cy={200} rx={11} ry={5} fill={C.cream} />
+                    <ellipse cx={112} cy={201} rx={11} ry={5} fill={C.cream} />
+                    <g transform="translate(-4 62) rotate(-10 100 80)">
+                      <g
+                        transform={
+                          vis.headScale !== 1
+                            ? `translate(100 110) scale(${vis.headScale}) translate(-100 -110)`
+                            : undefined
+                        }
+                      >
+                        <motion.g animate={head.animate} transition={head.transition}>
                           <Head {...headProps} />
                         </motion.g>
-                      ) : (
-                        <motion.g
-                          key="back"
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          exit={{ opacity: 0 }}
-                          transition={{ duration: 0.16 }}
-                        >
-                          <BackOfHead earDroop={expr.earDroop} earTwitch={earTwitch} />
-                        </motion.g>
-                      )}
-                    </AnimatePresence>
-                  </motion.g>
-
-                  {anim === 'purring' && <PurrWaves />}
-                </motion.g>
-              )}
-
-              {effectivePose === 'belly_up' && (
-                <motion.g
-                  key="belly_up"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.45 }}
-                >
-                  {/* Long soft shadow on the warm tiles */}
-                  <ellipse cx={108} cy={201} rx={90} ry={9} fill="rgba(40,20,10,0.18)" />
-
-                  {/* Tail lying lazily on the tiles */}
-                  <motion.g
-                    style={{ originX: 0, originY: 1 }}
-                    animate={{ rotate: [-5, 6, -5] }}
-                    transition={{ duration: tailSpeed, repeat: Infinity, ease: 'easeInOut' }}
-                  >
-                    <TailStripes d="M158 195 C172 206 190 207 195 197 C199 189 196 182 189 181" width={13} />
-                  </motion.g>
-
-                  {/* Whole body rocking side to side in a happy little roll */}
-                  <motion.g
-                    style={{ originX: 0.5, originY: 1 }}
-                    animate={petting ? { rotate: [0, -3, 3, -2, 0] } : { rotate: [-1.2, 1.2, -1.2] }}
-                    transition={petting ? { duration: 0.9, ease: 'easeInOut' } : { duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-                  >
-                    {/* Far-side legs (tucked behind the tummy) */}
-                    <motion.g
-                      animate={{ rotate: petting ? [0, 8, -4, 8, 0] : [0, 4, 0] }}
-                      style={{ originX: 0.5, originY: 1 }}
-                      transition={{ duration: petting ? 0.9 : 3, repeat: Infinity, ease: 'easeInOut' }}
-                    >
-                      <path d="M150 174 Q153 152 160 134" stroke={suit ? SUIT.jacket : C.coat} strokeWidth={14} fill="none" strokeLinecap="round" />
-                      <path d="M150 174 Q153 152 160 134" stroke={C.stripe} strokeWidth={14} fill="none" pathLength={100} strokeDasharray="0 30 7 14 7 100" opacity={suit ? 0 : 0.6} />
-                      <ToeBeans cx={161} cy={129} rotate={14} />
-                    </motion.g>
-                    <motion.g
-                      animate={{ y: [0, -3, 0] }}
-                      transition={{ duration: petting ? 0.45 : 2.4, repeat: Infinity, ease: 'easeInOut' }}
-                    >
-                      <path d="M100 166 Q95 146 103 133" stroke={suit ? SUIT.jacket : C.coat} strokeWidth={12} fill="none" strokeLinecap="round" />
-                      <ToeBeans cx={105} cy={129} rotate={-16} small />
-                    </motion.g>
-
-                    {/* Round bean-shaped body lying on its back */}
-                    <path
-                      d="M70 182 C66 164 84 152 112 152 C142 152 168 160 170 180 C172 196 152 203 114 203 C86 203 72 196 70 182 Z"
-                      fill={suit ? SUIT.jacket : C.coat}
-                    />
-                    {/* Flank stripes along the side resting on the tiles */}
-                    <g stroke={suit ? SUIT.line : C.stripe} strokeWidth={suit ? 1.6 : 3} strokeLinecap="round" fill="none">
-                      <path d="M94 192 Q98 198 104 200" />
-                      <path d="M118 193 Q122 199 128 200" />
-                      <path d="M142 190 Q147 196 153 196" />
-                    </g>
-                    {/* Big fluffy cream tummy facing the sky */}
-                    <path
-                      d="M84 175 C85 163 101 157 118 157 C138 157 155 163 157 173 C158 183 143 190 118 190 C98 190 83 186 84 175 Z"
-                      fill={suit ? SUIT.shirt : C.cream}
-                      stroke={suit ? SUIT.line : 'none'}
-                      strokeWidth={suit ? 2.4 : 0}
-                    />
-                    {suit ? (
-                      <g fill={SUIT.button}>
-                        <circle cx={104} cy={173} r={2} />
-                        <circle cx={120} cy={174} r={2} />
-                        <circle cx={136} cy={174} r={2} />
                       </g>
-                    ) : (
-                      <>
-                        <path d="M101 167 l4 3 l4 -3 l4 3 l4 -3 l4 3 l4 -3" stroke={C.creamShade} strokeWidth={1.3} fill="none" strokeLinecap="round" strokeLinejoin="round" />
-                        <path d="M108 179 l4 3 l4 -3 l4 3 l4 -3 l4 3" stroke={C.creamShade} strokeWidth={1.2} fill="none" strokeLinecap="round" strokeLinejoin="round" />
-                      </>
-                    )}
-
-                    {/* Near hind leg kicking up happily */}
-                    <motion.g
-                      animate={{ rotate: petting ? [0, -10, 4, -10, 0] : [0, -4, 0] }}
-                      style={{ originX: 0, originY: 1 }}
-                      transition={{ duration: petting ? 0.9 : 3.4, repeat: Infinity, ease: 'easeInOut' }}
-                    >
-                      <path d="M150 184 Q170 176 176 154" stroke={suit ? SUIT.jacket : C.coat} strokeWidth={15} fill="none" strokeLinecap="round" />
-                      <path d="M150 184 Q170 176 176 154" stroke={C.stripe} strokeWidth={15} fill="none" pathLength={100} strokeDasharray="0 34 7 14 7 100" opacity={suit ? 0 : 0.6} />
-                      <ToeBeans cx={177} cy={149} rotate={24} />
-                    </motion.g>
-
-                    {/* Near front paw curled over the chest (kneading the air) */}
-                    <motion.g
-                      animate={{ y: [0, -3.5, 0] }}
-                      transition={{ duration: petting ? 0.45 : 2.4, repeat: Infinity, ease: 'easeInOut', delay: 0.3 }}
-                    >
-                      <path d="M106 182 Q108 162 121 154" stroke={suit ? SUIT.jacket : C.coat} strokeWidth={13} fill="none" strokeLinecap="round" />
-                      <ToeBeans cx={124} cy={150} rotate={-34} small />
-                    </motion.g>
+                    </g>
+                    <SleepZzz />
                   </motion.g>
+                )}
 
-                  {/* Head tilted back on the tiles, face turned up to you */}
-                  <g transform="translate(54 155) rotate(-26) scale(0.62) translate(-100 -78)">
+                {effectivePose === 'look_out' && (
+                  <motion.g
+                    key="look_out"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.45 }}
+                  >
+                    {/* Ground contact shadow */}
+                    <ellipse cx={100} cy={206} rx={62} ry={8} fill="rgba(40,20,10,0.2)" />
+
+                    {/* Body seen from behind (round back + chunky haunches), gently breathing */}
+                    <g transform={bodyStageTransform}>
+                      <motion.g
+                        style={{ originY: 1 }}
+                        animate={{ scaleY: [1, 1.025, 1], scaleX: [1, 1.01, 1] }}
+                        transition={{ duration: 3.4, repeat: Infinity, ease: 'easeInOut' }}
+                      >
+                        {/* Little hind toes peeking out from under the haunches */}
+                        <ellipse cx={47} cy={203} rx={9} ry={4.5} fill={C.cream} />
+                        <ellipse cx={153} cy={203} rx={9} ry={4.5} fill={C.cream} />
+
+                        <path
+                          d="M100 100 C80 100 68 116 64 138 C60 158 52 174 52 190 C52 204 72 208 100 208 C128 208 148 204 148 190 C148 174 140 158 136 138 C132 116 120 100 100 100 Z"
+                          fill={vis.coatColor}
+                        />
+                        <ellipse cx={66} cy={188} rx={21} ry={19} fill={vis.coatColor} />
+                        <ellipse cx={134} cy={188} rx={21} ry={19} fill={vis.coatColor} />
+                        {/* Warm sunlight on the upper back */}
+                        <ellipse cx={88} cy={138} rx={15} ry={24} fill={C.coatLight} opacity={0.55} />
+
+                        {/* Haunch creases */}
+                        <path
+                          d="M81 172 Q75 188 83 204 M119 172 Q125 188 117 204"
+                          stroke={C.stripe}
+                          strokeWidth={1.8}
+                          fill="none"
+                          strokeLinecap="round"
+                          opacity={0.45 * vis.stripeOpacity}
+                        />
+
+                        {/* Tabby stripes running down from the spine */}
+                        <g stroke={C.stripe} strokeWidth={3.2} strokeLinecap="round" fill="none" opacity={0.85 * vis.stripeOpacity}>
+                          <path d="M100 116 V168" strokeWidth={4} />
+                          <path d="M93 128 Q84 130 78 139" />
+                          <path d="M107 128 Q116 130 122 139" />
+                          <path d="M93 146 Q81 148 72 158" />
+                          <path d="M107 146 Q119 148 128 158" />
+                          <path d="M93 164 Q79 167 66 178" opacity={0.85} />
+                          <path d="M107 164 Q121 167 134 178" opacity={0.85} />
+                        </g>
+                        {suit && (
+                          <g>
+                            <path
+                              d="M100 100 C80 100 68 116 64 138 C60 158 52 174 52 190 C52 204 72 208 100 208 C128 208 148 204 148 190 C148 174 140 158 136 138 C132 116 120 100 100 100 Z"
+                              fill={SUIT.jacket}
+                            />
+                            <ellipse cx={66} cy={188} rx={21} ry={19} fill={SUIT.jacket} />
+                            <ellipse cx={134} cy={188} rx={21} ry={19} fill={SUIT.jacket} />
+                            <g stroke={SUIT.line} strokeWidth={1.6} fill="none" strokeLinecap="round">
+                              <path d="M100 118 V178" />
+                              <path d="M100 178 L95 206 M100 178 L105 206" />
+                              <path d="M72 132 Q100 122 128 132" />
+                              <path d="M81 172 Q75 188 83 204 M119 172 Q125 188 117 204" />
+                            </g>
+                          </g>
+                        )}
+                      </motion.g>
+                    </g>
+
+                    {/* Fluffy striped tail curled on the tiles, tip flicking while he watches */}
                     <motion.g
-                      style={{ originX: 0.5, originY: 0.5 }}
-                      animate={petting ? { rotate: [0, 6, -4, 6, 0] } : { rotate: [-3, 3, -3] }}
+                      style={{ originX: 0, originY: 0.3 }}
+                      animate={sad ? { rotate: [0, 1, 0] } : { rotate: [-3, 5, -3] }}
+                      transition={{ duration: tailSpeed, repeat: Infinity, ease: 'easeInOut' }}
+                    >
+                      <TailStripes
+                        d={
+                          vis.babyTail
+                            ? 'M100 203 C116 212 134 210 144 202'
+                            : 'M100 203 C118 214 148 214 163 205 C174 198 177 187 170 181'
+                        }
+                        width={vis.babyTail ? 10 : 13}
+                        vis={vis}
+                      />
+                    </motion.g>
+
+                    {/* Head: back of the head while he watches the street; turns to peek at you when petted */}
+                    <g transform={headStageTransform}>
+                      <motion.g
+                        style={{ originX: 0.5, originY: 1 }}
+                        animate={{ rotate: [-4, 5, 5, -2, -4], x: [0, 1.5, 1.5, -1, 0] }}
+                        transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
+                      >
+                        <AnimatePresence mode="wait" initial={false}>
+                          {petting ? (
+                            <motion.g
+                              key="peek"
+                              initial={{ opacity: 0, x: 6 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              exit={{ opacity: 0, x: 6 }}
+                              transition={{ duration: 0.16 }}
+                            >
+                              <Head {...headProps} />
+                            </motion.g>
+                          ) : (
+                            <motion.g
+                              key="back"
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              exit={{ opacity: 0 }}
+                              transition={{ duration: 0.16 }}
+                            >
+                              <BackOfHead earDroop={expr.earDroop} earTwitch={earTwitch} vis={vis} />
+                            </motion.g>
+                          )}
+                        </AnimatePresence>
+                      </motion.g>
+                    </g>
+
+                    {anim === 'purring' && <PurrWaves />}
+                  </motion.g>
+                )}
+
+                {effectivePose === 'belly_up' && (
+                  <motion.g
+                    key="belly_up"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.45 }}
+                  >
+                    {/* Long soft shadow on the warm tiles */}
+                    <ellipse cx={108} cy={201} rx={90} ry={9} fill="rgba(40,20,10,0.18)" />
+
+                    {/* Tail lying lazily on the tiles */}
+                    <motion.g
+                      style={{ originX: 0, originY: 1 }}
+                      animate={{ rotate: [-5, 6, -5] }}
+                      transition={{ duration: tailSpeed, repeat: Infinity, ease: 'easeInOut' }}
+                    >
+                      <TailStripes
+                        d={
+                          vis.babyTail
+                            ? 'M158 195 C168 202 178 201 182 194'
+                            : 'M158 195 C172 206 190 207 195 197 C199 189 196 182 189 181'
+                        }
+                        width={vis.babyTail ? 10 : 13}
+                        vis={vis}
+                      />
+                    </motion.g>
+
+                    {/* Whole body rocking side to side in a happy little roll */}
+                    <motion.g
+                      style={{ originX: 0.5, originY: 1 }}
+                      animate={petting ? { rotate: [0, -3, 3, -2, 0] } : { rotate: [-1.2, 1.2, -1.2] }}
                       transition={petting ? { duration: 0.9, ease: 'easeInOut' } : { duration: 4, repeat: Infinity, ease: 'easeInOut' }}
                     >
-                      <Head {...bellyHeadProps} />
+                      {/* Far-side legs (tucked behind the tummy) */}
+                      <motion.g
+                        animate={{ rotate: petting ? [0, 8, -4, 8, 0] : [0, 4, 0] }}
+                        style={{ originX: 0.5, originY: 1 }}
+                        transition={{ duration: petting ? 0.9 : 3, repeat: Infinity, ease: 'easeInOut' }}
+                      >
+                        <path d="M150 174 Q153 152 160 134" stroke={suit ? SUIT.jacket : vis.coatColor} strokeWidth={14} fill="none" strokeLinecap="round" />
+                        <path d="M150 174 Q153 152 160 134" stroke={C.stripe} strokeWidth={14} fill="none" pathLength={100} strokeDasharray="0 30 7 14 7 100" opacity={suit ? 0 : 0.6 * vis.stripeOpacity} />
+                        <ToeBeans cx={161} cy={129} rotate={14} />
+                      </motion.g>
+                      <motion.g
+                        animate={{ y: [0, -3, 0] }}
+                        transition={{ duration: petting ? 0.45 : 2.4, repeat: Infinity, ease: 'easeInOut' }}
+                      >
+                        <path d="M100 166 Q95 146 103 133" stroke={suit ? SUIT.jacket : vis.coatColor} strokeWidth={12} fill="none" strokeLinecap="round" />
+                        <ToeBeans cx={105} cy={129} rotate={-16} small />
+                      </motion.g>
+
+                      {/* Round bean-shaped body lying on its back */}
+                      <path
+                        d="M70 182 C66 164 84 152 112 152 C142 152 168 160 170 180 C172 196 152 203 114 203 C86 203 72 196 70 182 Z"
+                        fill={suit ? SUIT.jacket : vis.coatColor}
+                      />
+                      {/* Flank stripes along the side resting on the tiles */}
+                      <g stroke={suit ? SUIT.line : C.stripe} strokeWidth={suit ? 1.6 : 3} strokeLinecap="round" fill="none" opacity={suit ? 1 : vis.stripeOpacity}>
+                        <path d="M94 192 Q98 198 104 200" />
+                        <path d="M118 193 Q122 199 128 200" />
+                        <path d="M142 190 Q147 196 153 196" />
+                      </g>
+                      {/* Big fluffy cream tummy facing the sky */}
+                      <path
+                        d="M84 175 C85 163 101 157 118 157 C138 157 155 163 157 173 C158 183 143 190 118 190 C98 190 83 186 84 175 Z"
+                        fill={suit ? SUIT.shirt : C.cream}
+                        stroke={suit ? SUIT.line : 'none'}
+                        strokeWidth={suit ? 2.4 : 0}
+                      />
+                      {suit ? (
+                        <g fill={SUIT.button}>
+                          <circle cx={104} cy={173} r={2} />
+                          <circle cx={120} cy={174} r={2} />
+                          <circle cx={136} cy={174} r={2} />
+                        </g>
+                      ) : (
+                        <>
+                          <path d="M101 167 l4 3 l4 -3 l4 3 l4 -3 l4 3 l4 -3" stroke={C.creamShade} strokeWidth={1.3} fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                          <path d="M108 179 l4 3 l4 -3 l4 3 l4 -3 l4 3" stroke={C.creamShade} strokeWidth={1.2} fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                        </>
+                      )}
+
+                      {/* Near hind leg kicking up happily */}
+                      <motion.g
+                        animate={{ rotate: petting ? [0, -10, 4, -10, 0] : [0, -4, 0] }}
+                        style={{ originX: 0, originY: 1 }}
+                        transition={{ duration: petting ? 0.9 : 3.4, repeat: Infinity, ease: 'easeInOut' }}
+                      >
+                        <path d="M150 184 Q170 176 176 154" stroke={suit ? SUIT.jacket : vis.coatColor} strokeWidth={15} fill="none" strokeLinecap="round" />
+                        <path d="M150 184 Q170 176 176 154" stroke={C.stripe} strokeWidth={15} fill="none" pathLength={100} strokeDasharray="0 34 7 14 7 100" opacity={suit ? 0 : 0.6 * vis.stripeOpacity} />
+                        <ToeBeans cx={177} cy={149} rotate={24} />
+                      </motion.g>
+
+                      {/* Near front paw curled over the chest (kneading the air) */}
+                      <motion.g
+                        animate={{ y: [0, -3.5, 0] }}
+                        transition={{ duration: petting ? 0.45 : 2.4, repeat: Infinity, ease: 'easeInOut', delay: 0.3 }}
+                      >
+                        <path d="M106 182 Q108 162 121 154" stroke={suit ? SUIT.jacket : vis.coatColor} strokeWidth={13} fill="none" strokeLinecap="round" />
+                        <ToeBeans cx={124} cy={150} rotate={-34} small />
+                      </motion.g>
                     </motion.g>
-                  </g>
 
-                  {sleeping && (
-                    <g transform="translate(-68 8)">
-                      <SleepZzz />
+                    {/* Head tilted back on the tiles, face turned up to you */}
+                    <g transform={`translate(54 155) rotate(-26) scale(${(0.62 * vis.headScale).toFixed(3)}) translate(-100 -78)`}>
+                      <motion.g
+                        style={{ originX: 0.5, originY: 0.5 }}
+                        animate={petting ? { rotate: [0, 6, -4, 6, 0] } : { rotate: [-3, 3, -3] }}
+                        transition={petting ? { duration: 0.9, ease: 'easeInOut' } : { duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+                      >
+                        <Head {...bellyHeadProps} />
+                      </motion.g>
                     </g>
-                  )}
-                  {anim === 'purring' && <PurrWaves />}
-                </motion.g>
-              )}
 
-              {effectivePose === 'sit' && (
-                <motion.g key="sit" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.45 }}>
-                  <ellipse cx={100} cy={209} rx={64} ry={8} fill="rgba(40,20,10,0.2)" />
-
-                  {/* Tail */}
-                  <motion.g
-                    style={{ originX: 0.05, originY: 0.95 }}
-                    animate={sad ? { rotate: [18, 22, 18] } : anim === 'tail_chase' ? { rotate: [-24, 24, -24] } : { rotate: [-7, 10, -7] }}
-                    transition={{ duration: tailSpeed, repeat: Infinity, ease: 'easeInOut' }}
-                  >
-                    <TailStripes d="M140 197 C172 197 188 172 182 142 C179 126 170 117 160 120" width={15} />
-                  </motion.g>
-
-                  {/* Body (breathing) */}
-                  <motion.g
-                    style={{ originY: 1 }}
-                    animate={{ scaleY: [1, 1.028, 1], scaleX: [1, 1.01, 1] }}
-                    transition={{ duration: 3.4, repeat: Infinity, ease: 'easeInOut' }}
-                  >
-                    <path d="M66 112 C46 136 37 176 47 198 C53 209 147 209 153 198 C163 176 154 136 134 112 Z" fill={C.coat} />
-                    <ellipse cx={58} cy={188} rx={19} ry={17} fill={C.coat} />
-                    <ellipse cx={142} cy={188} rx={19} ry={17} fill={C.coat} />
-                    <g stroke={C.stripe} strokeWidth={3.5} strokeLinecap="round" fill="none">
-                      <path d="M51 150 Q60 147 66 152" />
-                      <path d="M47 166 Q57 162 65 167" />
-                      <path d="M149 150 Q140 147 134 152" />
-                      <path d="M153 166 Q143 162 135 167" />
-                      <path d="M44 190 Q52 176 70 176" opacity={0.55} />
-                      <path d="M156 190 Q148 176 130 176" opacity={0.55} />
-                    </g>
-                    <path d="M82 116 C71 140 73 176 100 186 C127 176 129 140 118 116 Z" fill={C.cream} />
-                    <path d="M88 126 l4 4 l4 -4 l4 4 l4 -4 l4 4" stroke={C.creamShade} strokeWidth={1.4} fill="none" strokeLinecap="round" />
-                    {/* Front legs + paws */}
-                    <rect x={73} y={150} width={19} height={54} rx={9.5} fill={C.coat} />
-                    <rect x={108} y={150} width={19} height={54} rx={9.5} fill={C.coat} />
-                    <path d="M74 168 h17 M74 180 h17 M109 168 h17 M109 180 h17" stroke={C.stripe} strokeWidth={2.4} strokeLinecap="round" opacity={0.6} />
-                    {suit && (
-                      <g>
-                        <path d="M66 112 C46 136 37 176 47 198 C53 209 147 209 153 198 C163 176 154 136 134 112 Z" fill={SUIT.jacket} />
-                        <ellipse cx={58} cy={188} rx={19} ry={17} fill={SUIT.jacket} />
-                        <ellipse cx={142} cy={188} rx={19} ry={17} fill={SUIT.jacket} />
-                        {/* Shirt front, lapels, buttons and pocket square */}
-                        <path d="M86 113 L100 168 L114 113 Z" fill={SUIT.shirt} />
-                        <path d="M83 114 L100 170 L91 160 L77 134 Z" fill={SUIT.line} />
-                        <path d="M117 114 L100 170 L109 160 L123 134 Z" fill={SUIT.line} />
-                        <circle cx={100} cy={178} r={2.1} fill={SUIT.button} />
-                        <circle cx={100} cy={189} r={2.1} fill={SUIT.button} />
-                        <path d="M124 143 l9 -1 l-1.5 6.5 z" fill={SUIT.shirt} />
-                        {/* Sleeves with white cuffs */}
-                        <rect x={73} y={150} width={19} height={48} rx={9.5} fill={SUIT.jacket} stroke={SUIT.line} strokeWidth={1.2} />
-                        <rect x={108} y={150} width={19} height={48} rx={9.5} fill={SUIT.jacket} stroke={SUIT.line} strokeWidth={1.2} />
-                        <rect x={73.5} y={191} width={18} height={5} rx={2} fill={SUIT.shirt} />
-                        <rect x={108.5} y={191} width={18} height={5} rx={2} fill={SUIT.shirt} />
+                    {sleeping && (
+                      <g transform="translate(-68 8)">
+                        <SleepZzz />
                       </g>
                     )}
-                    <ellipse cx={83} cy={203} rx={13} ry={8} fill={C.cream} />
-                    <ellipse cx={117} cy={203} rx={13} ry={8} fill={C.cream} />
-                    <path d="M79 200 v5 M85 200 v5 M113 200 v5 M119 200 v5" stroke={C.creamShade} strokeWidth={1.4} strokeLinecap="round" />
+                    {anim === 'purring' && <PurrWaves />}
                   </motion.g>
+                )}
 
-                  {/* Head */}
-                  <motion.g key={`head-${animationKey}-${anim}`} style={{ originX: 0.5, originY: 1 }} animate={head.animate} transition={head.transition}>
-                    <Head {...headProps} />
-                    {mood === 'deceased' && (
+                {effectivePose === 'sit' && (
+                  <motion.g key="sit" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.45 }}>
+                    <ellipse cx={100} cy={209} rx={64} ry={8} fill="rgba(40,20,10,0.2)" />
+
+                    {/* Tail */}
+                    <motion.g
+                      style={{ originX: 0.05, originY: 0.95 }}
+                      animate={sad ? { rotate: [18, 22, 18] } : anim === 'tail_chase' ? { rotate: [-24, 24, -24] } : { rotate: [-7, 10, -7] }}
+                      transition={{ duration: tailSpeed, repeat: Infinity, ease: 'easeInOut' }}
+                    >
+                      <TailStripes
+                        d={
+                          vis.babyTail
+                            ? 'M138 197 C154 196 164 185 162 172'
+                            : 'M140 197 C172 197 188 172 182 142 C179 126 170 117 160 120'
+                        }
+                        width={vis.babyTail ? 11 : 15}
+                        vis={vis}
+                      />
+                    </motion.g>
+
+                    {/* Body (breathing) */}
+                    <g transform={bodyStageTransform}>
                       <motion.g
-                        initial={{ opacity: 0, y: -4 }}
-                        animate={{ opacity: [0.75, 1, 0.75], y: [-3, -7, -3] }}
-                        transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
+                        style={{ originY: 1 }}
+                        animate={{ scaleY: [1, 1.028, 1], scaleX: [1, 1.01, 1] }}
+                        transition={{ duration: 3.4, repeat: Infinity, ease: 'easeInOut' }}
                       >
-                        <ellipse cx={100} cy={16} rx={22} ry={6} fill="none" stroke="#fcd34d" strokeWidth={3} />
-                        <ellipse cx={100} cy={16} rx={24} ry={7.5} fill="none" stroke="#fef08a" strokeWidth={1} opacity={0.6} />
+                        <path d="M66 112 C46 136 37 176 47 198 C53 209 147 209 153 198 C163 176 154 136 134 112 Z" fill={vis.coatColor} />
+                        <ellipse cx={58} cy={188} rx={19} ry={17} fill={vis.coatColor} />
+                        <ellipse cx={142} cy={188} rx={19} ry={17} fill={vis.coatColor} />
+                        <g stroke={C.stripe} strokeWidth={3.5} strokeLinecap="round" fill="none" opacity={vis.stripeOpacity}>
+                          <path d="M51 150 Q60 147 66 152" />
+                          <path d="M47 166 Q57 162 65 167" />
+                          <path d="M149 150 Q140 147 134 152" />
+                          <path d="M153 166 Q143 162 135 167" />
+                          <path d="M44 190 Q52 176 70 176" opacity={0.55} />
+                          <path d="M156 190 Q148 176 130 176" opacity={0.55} />
+                        </g>
+                        <path d="M82 116 C71 140 73 176 100 186 C127 176 129 140 118 116 Z" fill={C.cream} />
+                        <path d="M88 126 l4 4 l4 -4 l4 4 l4 -4 l4 4" stroke={C.creamShade} strokeWidth={1.4} fill="none" strokeLinecap="round" />
+                        {/* Front legs + paws */}
+                        <rect x={73} y={150} width={19} height={54} rx={9.5} fill={vis.coatColor} />
+                        <rect x={108} y={150} width={19} height={54} rx={9.5} fill={vis.coatColor} />
+                        <path d="M74 168 h17 M74 180 h17 M109 168 h17 M109 180 h17" stroke={C.stripe} strokeWidth={2.4} strokeLinecap="round" opacity={0.6 * vis.stripeOpacity} />
+                        {suit && (
+                          <g>
+                            <path d="M66 112 C46 136 37 176 47 198 C53 209 147 209 153 198 C163 176 154 136 134 112 Z" fill={SUIT.jacket} />
+                            <ellipse cx={58} cy={188} rx={19} ry={17} fill={SUIT.jacket} />
+                            <ellipse cx={142} cy={188} rx={19} ry={17} fill={SUIT.jacket} />
+                            {/* Shirt front, lapels, buttons and pocket square */}
+                            <path d="M86 113 L100 168 L114 113 Z" fill={SUIT.shirt} />
+                            <path d="M83 114 L100 170 L91 160 L77 134 Z" fill={SUIT.line} />
+                            <path d="M117 114 L100 170 L109 160 L123 134 Z" fill={SUIT.line} />
+                            <circle cx={100} cy={178} r={2.1} fill={SUIT.button} />
+                            <circle cx={100} cy={189} r={2.1} fill={SUIT.button} />
+                            <path d="M124 143 l9 -1 l-1.5 6.5 z" fill={SUIT.shirt} />
+                            {/* Sleeves with white cuffs */}
+                            <rect x={73} y={150} width={19} height={48} rx={9.5} fill={SUIT.jacket} stroke={SUIT.line} strokeWidth={1.2} />
+                            <rect x={108} y={150} width={19} height={48} rx={9.5} fill={SUIT.jacket} stroke={SUIT.line} strokeWidth={1.2} />
+                            <rect x={73.5} y={191} width={18} height={5} rx={2} fill={SUIT.shirt} />
+                            <rect x={108.5} y={191} width={18} height={5} rx={2} fill={SUIT.shirt} />
+                          </g>
+                        )}
+                        <ellipse cx={83} cy={203} rx={13} ry={8} fill={C.cream} />
+                        <ellipse cx={117} cy={203} rx={13} ry={8} fill={C.cream} />
+                        <path d="M79 200 v5 M85 200 v5 M113 200 v5 M119 200 v5" stroke={C.creamShade} strokeWidth={1.4} strokeLinecap="round" />
                       </motion.g>
-                    )}
+                    </g>
+
+                    {/* Head */}
+                    <g transform={headStageTransform}>
+                      <motion.g key={`head-${animationKey}-${anim}`} style={{ originX: 0.5, originY: 1 }} animate={head.animate} transition={head.transition}>
+                        <Head {...headProps} />
+                        {mood === 'deceased' && (
+                          <motion.g
+                            initial={{ opacity: 0, y: -4 }}
+                            animate={{ opacity: [0.75, 1, 0.75], y: [-3, -7, -3] }}
+                            transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
+                          >
+                            <ellipse cx={100} cy={16} rx={22} ry={6} fill="none" stroke="#fcd34d" strokeWidth={3} />
+                            <ellipse cx={100} cy={16} rx={24} ry={7.5} fill="none" stroke="#fef08a" strokeWidth={1} opacity={0.6} />
+                          </motion.g>
+                        )}
+                      </motion.g>
+                    </g>
+
+                    {anim === 'purring' && <PurrWaves />}
                   </motion.g>
+                )}
+              </AnimatePresence>
+            );
+          })()}
 
-                  {anim === 'purring' && <PurrWaves />}
-                </motion.g>
-              )}
-            </AnimatePresence>
-          );
-        })()}
-
-        {/* Props (never in front of Oli while he faces away, watching the street) */}
-        <AnimatePresence>
-          {showProps && (anim === 'eating' || anim === 'eating_egg' || anim === 'treat') && (
-            <FoodBowl key="bowl" kind={anim === 'treat' ? 'heart' : anim === 'eating_egg' ? 'egg' : 'wet'} sec={animSec} />
-          )}
-          {showProps && anim === 'churu' && <ChuruTube key="churu" sec={animSec} />}
-          {showProps && anim === 'drinking' && <WaterDish key="dish" />}
-          {showProps && anim === 'playing' && <FeatherWand key="wand" sec={animSec} />}
-          {showProps && anim === 'laser' && <LaserDot key="laser" sec={animSec} />}
-          {showProps && anim === 'tail_chase' && <TailSpinSwirl key="tail-swirl" sec={animSec} />}
-          {showProps && anim === 'red_ball' && <RedBallToy key="red-ball" sec={animSec} />}
-          {showProps && anim === 'brushing' && <Brush key="brush" sec={animSec} />}
-        </AnimatePresence>
-      </motion.g>
+          {/* Props (never in front of Oli while he faces away, watching the street) */}
+          <AnimatePresence>
+            {showProps && (anim === 'eating' || anim === 'eating_egg' || anim === 'treat') && (
+              <FoodBowl key="bowl" kind={anim === 'treat' ? 'heart' : anim === 'eating_egg' ? 'egg' : 'wet'} sec={animSec} />
+            )}
+            {showProps && anim === 'churu' && <ChuruTube key="churu" sec={animSec} />}
+            {showProps && anim === 'drinking_milk' && <KittenMilkBottle key="milk" sec={animSec} />}
+            {showProps && anim === 'drinking' && <WaterDish key="dish" />}
+            {showProps && anim === 'playing' && <FeatherWand key="wand" sec={animSec} />}
+            {showProps && anim === 'laser' && <LaserDot key="laser" sec={animSec} />}
+            {showProps && anim === 'tail_chase' && <TailSpinSwirl key="tail-swirl" sec={animSec} />}
+            {showProps && anim === 'red_ball' && <RedBallToy key="red-ball" sec={animSec} />}
+            {showProps && anim === 'brushing' && <Brush key="brush" sec={animSec} />}
+          </AnimatePresence>
+        </motion.g>
+      </g>
     </svg>
   );
 }

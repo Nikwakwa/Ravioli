@@ -17,32 +17,7 @@ When an idea gets picked up, move it into [ROADMAP.md](ROADMAP.md) as a new phas
 
 ---
 
-## 🍼 2. Growing Up: From Baby Oli to Adult Oli (Tamagotchi-style life stages)
-
-**The idea:** Oli starts as a tiny baby kitten and grows up through a few life stages, like a Tamagotchi. Once he becomes an adult he **stays an adult forever**, just like the real Oli today. He never gets old and never dies of old age.
-
-### Life stages (first draft)
-| Stage | Roughly how long | What makes it special |
-|---|---|---|
-| 🍼 **Newborn kitten** | first 1–2 days | Tiny, wobbly, eyes half-closed, sleeps a lot. Needs kitten milk often and lots of warmth (naps in a little nest). |
-| 🐾 **Kitten** | next ~3–4 days | Big head and huge eyes, tiny ears, fluffy tail. Super playful, short naps, gets into mischief (knocks things over, climbs the box). |
-| ⚡ **Teen cat** | next ~4–5 days | Lanky and long-legged, stripes and white tail tip fully visible. Zoomies, very curious, wants lots of play. |
-| 🧡 **Adult Oli** | forever | Today's Oli, with all the current care, spots, cravings and minigames. The final stage: no aging after this. |
-
-### How growing up could work
-- **Grows with care, not just time:** each day where his needs stay out of the red earns "growth". A well-cared-for Oli grows on schedule; a neglected one grows more slowly (but is never harmed by it).
-- **Each stage has its own needs and look:**
-  - Newborn: kitten milk bottle instead of wet food, needs to be kept warm, can't play minigames yet.
-  - Kitten: smaller meals more often, short energy bursts, simpler minigames.
-  - Teen: more energy and hunger, all minigames unlocked.
-  - Adult: the current balance.
-- **Growing-up moments:** a little celebration when he reaches a new stage (confetti, "Oli grew up!" card), with the new look revealed.
-- **Baby photo album:** save a snapshot at each stage so you can look back at how small he was.
-- **Real-Oli details appear as he grows:** e.g. the ear tattoo shows up once he's an adult, matching real life.
-
----
-
-## 🕊️ 3. Balcony Bird Watching
+## 🕊️ 2. Balcony Bird Watching
 
 **The idea:** Bring the balcony to life with visiting wildlife that catches Oli's attention.
 
@@ -53,7 +28,7 @@ When an idea gets picked up, move it into [ROADMAP.md](ROADMAP.md) as a new phas
 
 ---
 
-## 🧶 4. Interactive Floor Toys (Physics Play)
+## 🧶 3. Interactive Floor Toys (Physics Play)
 
 **The idea:** Give players a tactile, physics-based mini activity on the living room rug, even when Oli's care bars are already full.
 
@@ -64,7 +39,7 @@ When an idea gets picked up, move it into [ROADMAP.md](ROADMAP.md) as a new phas
 
 ---
 
-## 🪴 5. Cozy Room Customization
+## 🪴 4. Cozy Room Customization
 
 **The idea:** Let players personalize Nico & Athina's apartment by spending earned Churu treats on cozy room decor.
 
@@ -79,6 +54,11 @@ When an idea gets picked up, move it into [ROADMAP.md](ROADMAP.md) as a new phas
 ---
 
 ## ✅ Completed Ideas
+
+- **Growing Up: From Baby Oli to Adult Oli (Shipped in v1.2.0):**
+  - 4 life stages: Newborn kitten (3d) → Kitten (6d) → Teen cat (9d) → Adult Oli forever (never dies of old age).
+  - Visual evolution in size, eyes, ears, stripes, tail, and ear tattoos, plus warm Kitten Milk bottle feedings and gradual unlocks.
+  - Visible growth progress bar, confetti celebration pop-ups at each stage, and automatic Adult preservation for existing saves.
 
 - **Live Notifications Even When Closed (Web Push):**
   - Background push alerts when Oli's needs drop below 25/5 or when he wakes up from a nap, even when the app is closed.

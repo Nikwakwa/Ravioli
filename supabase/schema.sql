@@ -28,12 +28,15 @@ create table if not exists public.cat_state (
   -- Neglect protection (48h consecutive zero hunger & hydration)
   deceased_at     timestamptz,
   -- 9 lives
-  lives_left      smallint    not null default 9 check (lives_left between 0 and 9)
+  lives_left      smallint    not null default 9 check (lives_left between 0 and 9),
+  -- Life-stage growth hours (0 = Newborn -> 432 = Adult forever; defaults to 432 for existing rows)
+  growth_hours    real        not null default 432 check (growth_hours between 0 and 432)
 );
 
 alter table public.cat_state add column if not exists paused_at timestamptz;
 alter table public.cat_state add column if not exists deceased_at timestamptz;
 alter table public.cat_state add column if not exists lives_left smallint not null default 9 check (lives_left between 0 and 9);
+alter table public.cat_state add column if not exists growth_hours real not null default 432 check (growth_hours between 0 and 432);
 
 insert into public.cat_state (id) values (1) on conflict (id) do nothing;
 
@@ -45,6 +48,7 @@ create table if not exists public.activity_log (
   player     text        not null check (char_length(player) between 1 and 24 and player !~ '[<>]'),
   action_id  text        not null check (
     action_id in (
+      'kitten_milk',
       'churu',
       'wet_food',
       'chicken_heart',
@@ -77,6 +81,7 @@ begin
   alter table public.activity_log drop constraint if exists activity_log_action_id_check;
   alter table public.activity_log add constraint activity_log_action_id_check check (
     action_id in (
+      'kitten_milk',
       'churu',
       'wet_food',
       'chicken_heart',

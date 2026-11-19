@@ -219,7 +219,7 @@ describe('security sanitizers (catStorage)', () => {
 describe('Core action, dock & mess rules', () => {
   it('organizes dock into 4 balanced categories (feed, play, care, rest)', () => {
     expect(CATEGORIES.map((c) => c.id)).toEqual(['feed', 'play', 'care', 'rest']);
-    expect(CARE_ACTIONS.filter((a) => a.category === 'feed')).toHaveLength(4);
+    expect(CARE_ACTIONS.filter((a) => a.category === 'feed')).toHaveLength(5);
     expect(CARE_ACTIONS.filter((a) => a.category === 'play')).toHaveLength(4);
     expect(CARE_ACTIONS.filter((a) => a.category === 'care')).toHaveLength(3);
     expect(CARE_ACTIONS.filter((a) => a.category === 'rest')).toHaveLength(1);

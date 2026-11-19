@@ -22,12 +22,17 @@ import {
   STAT_META,
 } from '../data/actions';
 import { APP_VERSION, CHANGELOG } from '../data/changelog';
-import { STAT_KEYS, type LiveCat, type StatKey } from '../types';
+import { LIFE_STAGES, STAT_KEYS, type LiveCat, type StatKey } from '../types';
 import {
-  DECAY_RATES,
   NEED_THRESHOLD,
   NEGLECT_DEATH_HOURS,
 } from '../utils/decayEngine';
+import {
+  formatRemainingGrowth,
+  getStageDecayRates,
+  STAGE_META,
+  stageIndex,
+} from '../utils/lifeStage';
 import { CRITICAL_THRESHOLD, type NotificationPrefs } from '../utils/notifications';
 import { isIosDevice, isPushConfigured, isStandalonePwa } from '../utils/pushSync';
 import {
@@ -82,6 +87,10 @@ export function MenuPage({
   const badgeState = useBadges();
   const medals = countEarnedMedals(badgeState);
   const maxMedals = BADGES.length * 3;
+  const stageMeta = STAGE_META[live.lifeStage];
+  const nextStageMeta = live.nextStage ? STAGE_META[live.nextStage] : null;
+  const stageRates = getStageDecayRates(live.lifeStage);
+  const currentStageIdx = stageIndex(live.lifeStage);
 
   useEffect(() => {
     if (activeTab === 'badges') {
@@ -100,7 +109,7 @@ export function MenuPage({
     const statsSummary = STAT_KEYS.map((k) => `${k}: ${Math.round(live[k])}`).join(', ');
     const text = `Ravioli v${APP_VERSION}
 Caretaker: ${playerName}
-Cat: Oli (Lives: ${live.livesLeft}/9, Paused: ${live.isPaused ? 'Yes' : 'No'})
+Cat: Oli (Stage: ${stageMeta.label}, Lives: ${live.livesLeft}/9, Paused: ${live.isPaused ? 'Yes' : 'No'})
 Stats: ${statsSummary}
 Medals: ${medals.total}/${maxMedals} (${medals.gold}🥇 ${medals.silver}🥈 ${medals.bronze}🥉)
 Time: ${new Date().toISOString()}`;
@@ -260,6 +269,73 @@ Time: ${new Date().toISOString()}`;
               )}
             </div>
 
+            {/* Growing Up / Life Stages Card */}
+            <div className="rounded-2xl border border-amber-300/60 bg-gradient-to-br from-amber-50/90 via-white to-orange-50/60 p-3 shadow-2xs">
+              <div className="mb-2 flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-amber-500/20 text-xs">
+                    {stageMeta.emoji}
+                  </span>
+                  <h3 className="font-display text-xs font-bold text-amber-950">Growing Up</h3>
+                </div>
+                <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-black text-amber-900">
+                  {stageMeta.fullName}
+                </span>
+              </div>
+
+              {/* 4-stage timeline */}
+              <div className="grid grid-cols-4 gap-1">
+                {LIFE_STAGES.map((s, idx) => {
+                  const m = STAGE_META[s];
+                  const isCurrent = s === live.lifeStage;
+                  const isDone = idx < currentStageIdx;
+                  return (
+                    <div
+                      key={s}
+                      className={`flex flex-col items-center rounded-xl border px-1 py-1.5 text-center ${
+                        isCurrent
+                          ? 'border-amber-400 bg-amber-100/80 shadow-2xs'
+                          : isDone
+                            ? 'border-emerald-300/60 bg-emerald-50/60'
+                            : 'border-amber-900/8 bg-white/70 opacity-65'
+                      }`}
+                    >
+                      <span className="text-sm leading-none">{m.emoji}</span>
+                      <span className="mt-1 text-[10px] font-extrabold leading-tight text-amber-950">{m.label}</span>
+                      <span className="text-[9px] font-bold text-amber-900/65">
+                        {m.durationDays ? `${m.durationDays}d` : 'Forever'}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Current stage progress bar or Forever Adult pill */}
+              {nextStageMeta ? (
+                <div className="mt-2.5">
+                  <div className="mb-1 flex items-center justify-between text-[10px] font-extrabold text-amber-900/80">
+                    <span>Next: {nextStageMeta.emoji} {nextStageMeta.fullName}</span>
+                    <span>{Math.round(live.stageProgress * 100)}% · {formatRemainingGrowth(live.hoursToNextStage)}</span>
+                  </div>
+                  <div className="h-2 w-full overflow-hidden rounded-full bg-amber-950/10">
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-amber-400 via-orange-400 to-pink-500 transition-all duration-500"
+                      style={{ width: `${Math.max(Math.round(live.stageProgress * 100), 3)}%` }}
+                    />
+                  </div>
+                </div>
+              ) : (
+                <p className="mt-2 rounded-xl bg-amber-100/70 px-2.5 py-1.5 text-center text-[11px] font-extrabold text-amber-950">
+                  🧡 Adult Oli forever — he’ll never grow old!
+                </p>
+              )}
+
+              <ul className="mt-2 flex list-disc flex-col gap-1 pl-4 text-[11px] font-medium text-amber-900/85">
+                <li><strong>Grows with care:</strong> Healthy time out of the red helps Oli grow up and unlock new meals and games.</li>
+                <li><strong>Never dies of old age:</strong> Once he becomes Adult Oli, he stays an adult forever.</li>
+              </ul>
+            </div>
+
             {/* Quick Rule Cards */}
             <div className="rounded-2xl border border-amber-900/8 bg-white p-3 shadow-2xs">
               <div className="mb-1.5 flex items-center gap-2">
@@ -315,7 +391,7 @@ Time: ${new Date().toISOString()}`;
                 <h3 className="font-display text-xs font-bold text-amber-950">Sleep & Safety</h3>
               </div>
               <ul className="flex list-disc flex-col gap-1 pl-4 text-xs font-medium text-amber-900/85">
-                <li><strong>Naps:</strong> Auto-naps below {AUTO_NAP_ENERGY} Energy (+{DECAY_RATES.sleeping.energy}/hr, wakes at 100 Energy). Wake early at {MIN_WAKE_ENERGY}+.</li>
+                <li><strong>Naps:</strong> Auto-naps below {AUTO_NAP_ENERGY} Energy (+{stageRates.sleeping.energy}/hr, wakes at 100 Energy). Wake early at {MIN_WAKE_ENERGY}+.</li>
                 <li><strong>Vacation Mode:</strong> Pause the clock in Vacation tab when you travel.</li>
                 <li><strong>9 Lives:</strong> Extreme neglect ({NEGLECT_DEATH_HOURS}h without food/water) costs 1 life.</li>
               </ul>
@@ -323,7 +399,12 @@ Time: ${new Date().toISOString()}`;
 
             {/* Hourly Drift Table */}
             <div className="rounded-2xl border border-amber-900/8 bg-white p-3 shadow-2xs">
-              <h3 className="mb-1.5 font-display text-xs font-bold text-amber-950">⏱️ Hourly Drift</h3>
+              <div className="mb-1.5 flex items-center justify-between">
+                <h3 className="font-display text-xs font-bold text-amber-950">⏱️ Hourly Drift</h3>
+                <span className="rounded-full bg-amber-950/6 px-2 py-0.5 text-[10px] font-extrabold text-amber-900/75">
+                  {stageMeta.emoji} {stageMeta.label}
+                </span>
+              </div>
               <div className="overflow-hidden rounded-xl border border-amber-900/10">
                 <div className="grid grid-cols-12 bg-amber-950/5 px-2.5 py-1.5 text-[10px] font-extrabold text-amber-900">
                   <span className="col-span-4">Need</span>
@@ -337,8 +418,8 @@ Time: ${new Date().toISOString()}`;
                 {STAT_KEYS.map((key) => {
                   const meta = STAT_META[key];
                   const Icon = STAT_ICONS[key];
-                  const awakeRate = DECAY_RATES.awake[key];
-                  const sleepRate = DECAY_RATES.sleeping[key];
+                  const awakeRate = stageRates.awake[key];
+                  const sleepRate = stageRates.sleeping[key];
                   return (
                     <div
                       key={key}

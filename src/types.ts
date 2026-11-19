@@ -11,6 +11,10 @@ export type StatKey = keyof CatStats;
 
 export const STAT_KEYS: readonly StatKey[] = ['hunger', 'hydration', 'happiness', 'energy', 'hygiene'] as const;
 
+export type LifeStage = 'newborn' | 'kitten' | 'teen' | 'adult';
+
+export const LIFE_STAGES: readonly LifeStage[] = ['newborn', 'kitten', 'teen', 'adult'] as const;
+
 /** Persisted (base) cat state — mirrors the `cat_state` table row. */
 export interface CatState extends CatStats {
   name: string;
@@ -27,6 +31,8 @@ export interface CatState extends CatStats {
   deceased_at?: string | null;
   /** Number of lives remaining (out of 9). Defaults to 9. */
   lives_left?: number;
+  /** Cumulative healthy care hours (0 -> ADULT_GROWTH_HOURS). Caps at Adult forever — Oli never ages past Adult. */
+  growth_hours?: number;
 }
 
 /** Live view computed on the fly by the decay engine. */
@@ -39,6 +45,16 @@ export interface LiveCat extends CatStats {
   isPaused: boolean;
   isDeceased: boolean;
   livesLeft: number;
+  lifeStage: LifeStage;
+  growthHours: number;
+  /** Progress within the current life stage (0–1). Always 1 once Adult. */
+  stageProgress: number;
+  /** Next life stage, or null once Adult Oli forever. */
+  nextStage: LifeStage | null;
+  /** Remaining healthy care hours until the next stage (0 once Adult). */
+  hoursToNextStage: number;
+  /** True when Oli's needs are healthy enough for growth to tick forward right now. */
+  isGrowingNow: boolean;
 }
 
 export type Mood =
@@ -117,6 +133,7 @@ export type CatAnimation =
   | 'treat'
   | 'churu'
   | 'drinking'
+  | 'drinking_milk'
   | 'purring'
   | 'playing'
   | 'laser'
