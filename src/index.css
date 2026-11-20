@@ -41,9 +41,16 @@ body > *:not(#root):not(script) {
   display: none !important;
 }
 
+/* Never draw browser focus boxes on interactive SVG room zones */
+svg:focus,
+svg:focus-visible,
+svg *:focus,
+svg *:focus-visible {
+  outline: none !important;
+}
 
-/* Clear focus ring for keyboard / switch-control users (mouse & touch taps stay ring-free) */
-:where(button, [role='button'], input, a):focus-visible {
+/* Clear focus ring for keyboard / switch-control users on UI controls */
+:where(button, input, a):focus-visible {
   outline: 2px solid #f59e0b;
   outline-offset: 2px;
 }

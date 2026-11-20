@@ -337,7 +337,7 @@ export function LivingRoom({
           }}
           tabIndex={0}
           className="pointer-events-auto cursor-pointer"
-          style={{ pointerEvents: 'auto', cursor: 'pointer' }}
+          style={{ pointerEvents: 'auto', cursor: 'pointer', outline: 'none' }}
           role="button"
           aria-current={activeSpot === 'window' ? 'true' : undefined}
           aria-label={activeSpot === 'window' ? 'Pet Oli on the sunny windowsill' : 'Sunny windowsill (cozy spot)'}
@@ -570,7 +570,7 @@ export function LivingRoom({
           }}
           tabIndex={0}
           className="pointer-events-auto cursor-pointer"
-          style={{ pointerEvents: 'auto', cursor: 'pointer' }}
+          style={{ pointerEvents: 'auto', cursor: 'pointer', outline: 'none' }}
           role="button"
           aria-current={activeSpot === 'sofa_bed' ? 'true' : undefined}
           aria-label={activeSpot === 'sofa_bed' ? 'Pet Oli curled up in his Bedsure bolster bed' : 'Oli’s tan bolster bed on the sofa (cozy spot)'}
@@ -648,7 +648,7 @@ export function LivingRoom({
         }}
         tabIndex={onTapLitterBox ? 0 : undefined}
         className={onTapLitterBox ? 'pointer-events-auto cursor-pointer' : undefined}
-        style={onTapLitterBox ? { pointerEvents: 'auto', cursor: 'pointer' } : undefined}
+        style={onTapLitterBox ? { pointerEvents: 'auto', cursor: 'pointer', outline: 'none' } : undefined}
         role={onTapLitterBox ? 'button' : undefined}
         aria-label={onTapLitterBox ? (litterBoxDirty ? 'Scoop Oli’s litter box' : 'Oli’s litter box') : undefined}
       >
@@ -845,7 +845,7 @@ export function LivingRoom({
         }}
         tabIndex={0}
         className="pointer-events-auto cursor-pointer"
-        style={{ pointerEvents: 'auto', cursor: 'pointer' }}
+        style={{ pointerEvents: 'auto', cursor: 'pointer', outline: 'none' }}
         role="button"
         aria-current={activeSpot === 'box' ? 'true' : undefined}
         aria-label={activeSpot === 'box' ? 'Pet Oli inside his delivery box' : 'Empty Amazon delivery box on the floor (cozy spot)'}
@@ -921,7 +921,7 @@ export function LivingRoom({
         }}
         tabIndex={0}
         className="pointer-events-auto cursor-pointer"
-        style={{ pointerEvents: 'auto', cursor: 'pointer' }}
+        style={{ pointerEvents: 'auto', cursor: 'pointer', outline: 'none' }}
         role="button"
         aria-current={activeSpot === 'rug' ? 'true' : undefined}
         aria-label={activeSpot === 'rug' ? 'Pet Oli on the rug' : 'Fluffy living room rug (cozy spot)'}
@@ -994,7 +994,7 @@ export function LivingRoom({
         }}
         tabIndex={onTapFountain ? 0 : undefined}
         className={onTapFountain ? 'pointer-events-auto cursor-pointer' : undefined}
-        style={onTapFountain ? { pointerEvents: 'auto', cursor: 'pointer' } : undefined}
+        style={onTapFountain ? { pointerEvents: 'auto', cursor: 'pointer', outline: 'none' } : undefined}
         role={onTapFountain ? 'button' : undefined}
         aria-label={onTapFountain ? 'Refresh Oli’s water fountain' : undefined}
       >

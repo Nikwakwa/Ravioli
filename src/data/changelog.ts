@@ -7,6 +7,14 @@ export interface ReleaseEntry {
 
 export const CHANGELOG: ReleaseEntry[] = [
   {
+    version: 'v1.2.2',
+    date: '2026-11-20',
+    title: 'Clean Room Taps ✨',
+    changes: [
+      'Removed the black focus bars that appeared when tapping Oli or spots in the living room.',
+    ],
+  },
+  {
     version: 'v1.2.1',
     date: '2026-11-19',
     title: 'Polish, Stability & Alerts Fix 🛠️',

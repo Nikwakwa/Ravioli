@@ -1062,7 +1062,7 @@ export function Balcony({
         }}
         tabIndex={0}
         className="pointer-events-auto cursor-pointer"
-        style={{ pointerEvents: 'auto', cursor: 'pointer' }}
+        style={{ pointerEvents: 'auto', cursor: 'pointer', outline: 'none' }}
         role="button"
         aria-current={activeSpot === 'planter' ? 'true' : undefined}
         aria-label={
@@ -1205,7 +1205,7 @@ export function Balcony({
         }}
         tabIndex={0}
         className="pointer-events-auto cursor-pointer"
-        style={{ pointerEvents: 'auto', cursor: 'pointer' }}
+        style={{ pointerEvents: 'auto', cursor: 'pointer', outline: 'none' }}
         role="button"
         aria-current={activeSpot === 'bistro_chair' ? 'true' : undefined}
         aria-label={
@@ -1367,7 +1367,7 @@ export function Balcony({
         }}
         tabIndex={0}
         className="pointer-events-auto cursor-pointer"
-        style={{ pointerEvents: 'auto', cursor: 'pointer' }}
+        style={{ pointerEvents: 'auto', cursor: 'pointer', outline: 'none' }}
         role="button"
         aria-current={activeSpot === 'balcony_floor' ? 'true' : undefined}
         aria-label={
