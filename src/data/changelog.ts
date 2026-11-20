@@ -7,6 +7,14 @@ export interface ReleaseEntry {
 
 export const CHANGELOG: ReleaseEntry[] = [
   {
+    version: 'v1.2.4',
+    date: '2026-11-20',
+    title: 'Warm Amber Baby Eyes 🧡',
+    changes: [
+      'Newborn and kitten Oli now have his warm amber eyes instead of pale blue.',
+    ],
+  },
+  {
     version: 'v1.2.3',
     date: '2026-11-20',
     title: 'Clearer Menu Dot ✨',

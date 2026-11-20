@@ -4,6 +4,12 @@ All updates to **Oli** are listed here.
 
 ---
 
+## `v1.2.4` — 2026-11-20
+### Warm Amber Baby Eyes 🧡
+- Newborn and kitten Oli now have his warm amber eyes instead of pale blue.
+
+---
+
 ## `v1.2.3` — 2026-11-20
 ### Clearer Menu Dot ✨
 - Closing a badge celebration pop-up now clears the Menu dot so it never lingers after you already saw it.
