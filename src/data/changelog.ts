@@ -7,6 +7,16 @@ export interface ReleaseEntry {
 
 export const CHANGELOG: ReleaseEntry[] = [
   {
+    version: 'v1.2.3',
+    date: '2026-11-20',
+    title: 'Clearer Menu Dot ✨',
+    changes: [
+      'Closing a badge celebration pop-up now clears the Menu dot so it never lingers after you already saw it.',
+      'Unseen badges are pinned to the top of the Badges tab with a bright ✨ NEW tag.',
+      'Tapping Menu when an update dot is showing now jumps straight to the Updates tab.',
+    ],
+  },
+  {
     version: 'v1.2.2',
     date: '2026-11-20',
     title: 'Clean Room Taps ✨',

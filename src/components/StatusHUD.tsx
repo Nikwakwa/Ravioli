@@ -199,8 +199,20 @@ export function StatusHUD({
           <button
             type="button"
             onClick={onOpenMenu}
-            title="Menu"
-            aria-label="Open Menu"
+            title={
+              hasUnseenBadges
+                ? 'Menu — New badge unlocked'
+                : hasUpdate
+                  ? 'Menu — Update ready'
+                  : 'Menu'
+            }
+            aria-label={
+              hasUnseenBadges
+                ? 'Open Menu (new badge unlocked)'
+                : hasUpdate
+                  ? 'Open Menu (update ready)'
+                  : 'Open Menu'
+            }
             className={`relative flex h-9 items-center gap-1.5 rounded-full border px-3.5 text-xs font-extrabold shadow-sm backdrop-blur-md transition-all hover:bg-amber-100/40 active:scale-95 ${surface}`}
           >
             <BookOpen className={`h-3.5 w-3.5 ${night ? 'text-amber-300' : 'text-amber-600'}`} />

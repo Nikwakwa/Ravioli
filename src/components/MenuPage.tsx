@@ -51,6 +51,8 @@ export type MenuTab = 'rules' | 'badges' | 'pause' | 'version' | 'notifications'
 export interface MenuPageProps {
   onClose: () => void;
   initialTab?: MenuTab;
+  /** Badge IDs to pin & highlight as "NEW" during this Menu visit. */
+  highlightBadgeIds?: string[];
   live: LiveCat;
   playerName?: string;
   onChangePlayerName?: (name: string) => void;
@@ -67,6 +69,7 @@ export interface MenuPageProps {
 export function MenuPage({
   onClose,
   initialTab = 'rules',
+  highlightBadgeIds = [],
   live,
   playerName = 'Friend',
   onChangePlayerName,
@@ -86,6 +89,10 @@ export function MenuPage({
   const [confirmingReset, setConfirmingReset] = useState(false);
   const [resetting, setResetting] = useState(false);
   const badgeState = useBadges();
+  // Snapshot which badges were unseen when entering Menu so they stay marked "NEW" while you read them.
+  const [highlightedBadges, setHighlightedBadges] = useState<string[]>(() =>
+    Array.from(new Set([...highlightBadgeIds, ...(badgeState.unseenIds ?? [])])),
+  );
   const medals = countEarnedMedals(badgeState);
   const maxMedals = BADGES.length * 3;
   const stageMeta = STAGE_META[live.lifeStage];
@@ -95,9 +102,13 @@ export function MenuPage({
 
   useEffect(() => {
     if (activeTab === 'badges') {
+      const incoming = badgeState.unseenIds ?? [];
+      if (incoming.length > 0) {
+        setHighlightedBadges((prev) => Array.from(new Set([...prev, ...incoming])));
+      }
       markBadgesSeen();
     }
-  }, [activeTab]);
+  }, [activeTab, badgeState.unseenIds]);
 
   const handleSaveName = (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -188,7 +199,6 @@ Time: ${new Date().toISOString()}`;
                 id={`menu-tab-${t.id}`}
                 type="button"
                 onClick={() => {
-                  if (t.id === 'badges') markBadgesSeen();
                   setActiveTab(t.id);
                 }}
                 className={`relative flex min-w-0 flex-col items-center justify-center gap-0.5 rounded-xl py-1.5 text-[10px] sm:text-[11px] transition-all active:scale-95 ${
@@ -606,27 +616,37 @@ Time: ${new Date().toISOString()}`;
               </p>
             </div>
 
-            {/* Badges List */}
+            {/* Badges List (newly unlocked badges pinned to the top so they're impossible to miss) */}
             <ul className="flex flex-col gap-2.5">
-              {BADGES.map((badge) => {
+              {[...BADGES]
+                .sort((a, b) => {
+                  const aNew = highlightedBadges.includes(a.id) ? 0 : 1;
+                  const bNew = highlightedBadges.includes(b.id) ? 0 : 1;
+                  return aNew - bNew;
+                })
+                .map((badge) => {
                 const currentLevel = getBadgeLevel(badgeState, badge.id);
                 const progress = getBadgeProgress(badge.id, badgeState.stats, currentLevel);
                 const isGold = currentLevel === 'gold';
                 const isSilver = currentLevel === 'silver';
                 const isBronze = currentLevel === 'bronze';
                 const isLocked = !currentLevel;
+                const isNew = !isLocked && highlightedBadges.includes(badge.id);
 
                 return (
                   <li
                     key={badge.id}
+                    data-new-badge={isNew ? 'true' : undefined}
                     className={`flex flex-col gap-2 rounded-2xl border p-3 transition-all ${
-                      isGold
-                        ? 'border-amber-400 bg-gradient-to-br from-amber-50 to-orange-50/60 shadow-xs'
-                        : isSilver
-                          ? 'border-slate-300 bg-slate-50/80 shadow-xs'
-                          : isBronze
-                            ? 'border-amber-700/30 bg-amber-900/4 shadow-xs'
-                            : 'border-amber-900/10 bg-amber-950/3 opacity-80'
+                      isNew
+                        ? 'border-amber-500 bg-gradient-to-br from-amber-50 via-amber-50/90 to-orange-50/80 ring-2 ring-amber-400/70 shadow-sm'
+                        : isGold
+                          ? 'border-amber-400 bg-gradient-to-br from-amber-50 to-orange-50/60 shadow-xs'
+                          : isSilver
+                            ? 'border-slate-300 bg-slate-50/80 shadow-xs'
+                            : isBronze
+                              ? 'border-amber-700/30 bg-amber-900/4 shadow-xs'
+                              : 'border-amber-900/10 bg-amber-950/3 opacity-80'
                     }`}
                   >
                     <div className="flex items-center gap-3">
@@ -656,6 +676,11 @@ Time: ${new Date().toISOString()}`;
                           <h4 className="font-display text-xs font-black text-amber-950 truncate">
                             {badge.name}
                           </h4>
+                          {isNew && (
+                            <span className="rounded-full bg-amber-500 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide text-white shadow-2xs">
+                              ✨ NEW
+                            </span>
+                          )}
                           {isGold && (
                             <span className="rounded-full border border-amber-400/80 bg-amber-400/25 px-1.5 py-0.5 text-[9px] font-black text-amber-950">
                               🥇 Gold (Max ✨)

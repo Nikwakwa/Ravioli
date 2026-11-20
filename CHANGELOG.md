@@ -4,6 +4,20 @@ All updates to **Oli** are listed here.
 
 ---
 
+## `v1.2.3` — 2026-11-20
+### Clearer Menu Dot ✨
+- Closing a badge celebration pop-up now clears the Menu dot so it never lingers after you already saw it.
+- Unseen badges are pinned to the top of the Badges tab with a bright ✨ NEW tag.
+- Tapping Menu when an update dot is showing now jumps straight to the Updates tab.
+
+---
+
+## `v1.2.2` — 2026-11-20
+### Clean Room Taps ✨
+- Removed the black focus bars that appeared when tapping Oli or spots in the living room.
+
+---
+
 ## `v1.2.1` — 2026-11-19
 ### Polish, Stability & Alerts Fix 🛠️
 - Fixed background push alerts so they send reliably and match Oli’s current life stage.

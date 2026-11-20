@@ -4,6 +4,7 @@ import { renderToString } from 'react-dom/server';
 import { MenuPage } from './MenuPage';
 import { StatusHUD } from './StatusHUD';
 import type { LiveCat } from '../types';
+import { getEmptyBadgeState, INITIAL_STATS, setBadgeState } from '../utils/badges';
 
 type AnyElement = ReactElement<Record<string, any>>;
 
@@ -119,6 +120,36 @@ describe('MenuPage Server Rendering & Content', () => {
     expect(html).toContain('Bronze');
     expect(html).toContain('Silver');
     expect(html).toContain('Gold');
+  });
+
+  it('pins newly unlocked badge to the top and marks it with a NEW pill', () => {
+    setBadgeState({
+      unlockedIds: ['golden_streak'],
+      levels: { golden_streak: 'bronze' },
+      unlockedAt: { 'golden_streak:bronze': 1000 },
+      stats: { ...INITIAL_STATS, daysVisited: ['2026-11-19', '2026-11-20'] },
+      hasUnseen: true,
+      unseenIds: ['golden_streak'],
+    });
+    const html = renderToString(
+      <MenuPage
+        onClose={vi.fn()}
+        initialTab="badges"
+        highlightBadgeIds={['golden_streak']}
+        live={mockLive}
+        onTogglePause={vi.fn()}
+        notifPrefs={defaultNotifPrefs}
+        onToggleMasterNotifications={vi.fn()}
+        onChangeNotifPrefs={vi.fn()}
+        onTestNotification={vi.fn()}
+      />
+    );
+
+    expect(html).toContain('✨ NEW');
+    expect(html).toContain('data-new-badge="true"');
+    // Golden Companion (normally last) is pinned ahead of If It Fits I Sits (normally first)
+    expect(html.indexOf('Golden Companion')).toBeLessThan(html.indexOf('If It Fits I Sits'));
+    setBadgeState(getEmptyBadgeState());
   });
 
   it('renders pause clock controls when initialTab is pause', () => {

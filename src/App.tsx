@@ -18,7 +18,7 @@ import { useCatGame, type Notice } from './hooks/useCatGame';
 import { useVersionCheck } from './hooks/useVersionCheck';
 import { hasAffordableItem } from './utils/closet';
 import { canAffordFortune, getTodayDateString, isFortuneReady, isFortuneUnlocked } from './utils/fortune';
-import { trackBalconyVisit, trackBoxNap, trackDayVisit, trackRainWatch, useBadges } from './utils/badges';
+import { markBadgeSeen, trackBalconyVisit, trackBoxNap, trackDayVisit, trackRainWatch, useBadges } from './utils/badges';
 import { OnboardingModal } from './components/OnboardingModal';
 import { BadgeCelebrationModal } from './components/BadgeCelebrationModal';
 import { GrowthCelebrationModal } from './components/GrowthCelebrationModal';
@@ -70,6 +70,7 @@ export function App() {
   const [fortuneOpen, setFortuneOpen] = useState(false);
   const fortune = useFortune();
   const [menuTab, setMenuTab] = useState<MenuTab>('rules');
+  const [menuHighlightBadges, setMenuHighlightBadges] = useState<string[]>([]);
   const [notifPrefs, setNotifPrefs] = useState<NotificationPrefs>(() => loadNotificationPrefs());
   const [notice, setNotice] = useState<Notice | null>(null);
   const [tapHeartKey, setTapHeartKey] = useState(0);
@@ -145,6 +146,13 @@ export function App() {
   const badgeState = useBadges();
   const { availableVersion, reloading, applyUpdate } = useVersionCheck();
 
+  const handleAcknowledgeBadge = useCallback(() => {
+    if (badgeCelebration) {
+      markBadgeSeen(badgeCelebration.badge.id);
+    }
+    dismissBadgeCelebration();
+  }, [badgeCelebration, dismissBadgeCelebration]);
+
   // Single top-down Escape handler so pressing Escape closes only the top-most modal/drawer.
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -152,7 +160,7 @@ export function App() {
       if (growthCelebration) {
         dismissGrowthCelebration();
       } else if (badgeCelebration) {
-        dismissBadgeCelebration();
+        handleAcknowledgeBadge();
       } else if (fortuneOpen) {
         setFortuneOpen(false);
       } else if (closetOpen) {
@@ -168,7 +176,7 @@ export function App() {
     growthCelebration,
     dismissGrowthCelebration,
     badgeCelebration,
-    dismissBadgeCelebration,
+    handleAcknowledgeBadge,
     fortuneOpen,
     closetOpen,
     menuOpen,
@@ -300,8 +308,17 @@ export function App() {
     };
   }, [spot, containerSize, sceneShift, stageTop]);
 
-  const handleOpenMenu = (tab?: MenuTab) => {
-    const defaultTab: MenuTab = tab ?? (badgeState.hasUnseen ? 'badges' : live?.isPaused ? 'pause' : 'rules');
+  const handleOpenMenu = (tab?: MenuTab, highlightIds?: string[]) => {
+    const defaultTab: MenuTab =
+      tab ??
+      (badgeState.hasUnseen
+        ? 'badges'
+        : availableVersion
+          ? 'version'
+          : live?.isPaused
+            ? 'pause'
+            : 'rules');
+    setMenuHighlightBadges(highlightIds ?? (badgeState.unseenIds ?? []));
     setMenuTab(defaultTab);
     setMenuOpen(true);
   };
@@ -791,6 +808,7 @@ export function App() {
               <MenuPage
                 onClose={() => setMenuOpen(false)}
                 initialTab={menuTab}
+                highlightBadgeIds={menuHighlightBadges}
                 live={live}
                 playerName={playerName}
                 onChangePlayerName={handleChangePlayerName}
@@ -836,10 +854,12 @@ export function App() {
             <BadgeCelebrationModal
               key={`${badgeCelebration.badge.id}-${badgeCelebration.tier}`}
               unlock={badgeCelebration}
-              onClose={dismissBadgeCelebration}
+              onClose={handleAcknowledgeBadge}
+              onAutoDismiss={dismissBadgeCelebration}
               onViewBadges={() => {
+                const badgeId = badgeCelebration.badge.id;
                 dismissBadgeCelebration();
-                handleOpenMenu('badges');
+                handleOpenMenu('badges', [badgeId]);
               }}
             />
           )}

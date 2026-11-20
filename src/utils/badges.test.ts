@@ -8,6 +8,7 @@ import {
   getBadgeLevel,
   getBadgeProgress,
   getBadgeState,
+  markBadgeSeen,
   sanitizeBadgeState,
   setBadgeState,
   trackBoxNap,
@@ -183,5 +184,33 @@ describe('badges utility (Bronze, Silver, Gold tiers)', () => {
     const prog = getBadgeProgress('gourmet_whiskers', stats, null);
     expect(prog.current).toBe(3);
     expect(prog.target).toBe(4);
+  });
+
+  it('tracks exact unseenIds, clears single acknowledged badges, and prevents ghost dots', () => {
+    // Unlock box_sitter
+    trackBoxNap();
+    trackBoxNap();
+    trackBoxNap();
+    expect(getBadgeState().hasUnseen).toBe(true);
+    expect(getBadgeState().unseenIds).toEqual(['box_sitter']);
+
+    // Unlock midnight_snack as well
+    trackFeed('wet_food', 23);
+    expect(getBadgeState().unseenIds).toEqual(['box_sitter', 'midnight_snack']);
+
+    // Acknowledging box_sitter leaves only midnight_snack unseen
+    markBadgeSeen('box_sitter');
+    expect(getBadgeState().unseenIds).toEqual(['midnight_snack']);
+    expect(getBadgeState().hasUnseen).toBe(true);
+
+    // Acknowledging midnight_snack clears the Menu dot completely
+    markBadgeSeen('midnight_snack');
+    expect(getBadgeState().unseenIds).toEqual([]);
+    expect(getBadgeState().hasUnseen).toBe(false);
+
+    // Ghost dot prevention: legacy hasUnseen=true with 0 unlocked badges must stay false
+    const ghost = sanitizeBadgeState({ unlockedIds: [], hasUnseen: true });
+    expect(ghost.hasUnseen).toBe(false);
+    expect(ghost.unseenIds).toEqual([]);
   });
 });

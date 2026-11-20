@@ -7,12 +7,15 @@ import { celebrate } from '../utils/feedback';
 export interface BadgeCelebrationModalProps {
   unlock: BadgeUnlock;
   onClose: () => void;
+  /** Called if the pop-up auto-closes after 6.5s without user input (defaults to onClose). */
+  onAutoDismiss?: () => void;
   onViewBadges: () => void;
 }
 
 export function BadgeCelebrationModal({
   unlock,
   onClose,
+  onAutoDismiss,
   onViewBadges,
 }: BadgeCelebrationModalProps) {
   const isGold = unlock.tier === 'gold';
@@ -28,13 +31,13 @@ export function BadgeCelebrationModal({
   // Auto-dismiss after 6.5s (Escape is handled top-down in App)
   useEffect(() => {
     const timer = window.setTimeout(() => {
-      onClose();
+      (onAutoDismiss ?? onClose)();
     }, 6500);
 
     return () => {
       window.clearTimeout(timer);
     };
-  }, [onClose]);
+  }, [onAutoDismiss, onClose]);
 
   return (
     <div

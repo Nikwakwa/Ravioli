@@ -211,6 +211,8 @@ export interface BadgeState {
   unlockedAt: Record<string, number>;
   stats: BadgeStats;
   hasUnseen: boolean;
+  /** Exact badge IDs unlocked or leveled up since the player last saw them. */
+  unseenIds?: string[];
 }
 
 const LS_BADGES = 'ravioli:v1:badges';
@@ -238,6 +240,7 @@ const EMPTY_STATE: BadgeState = {
   unlockedAt: {},
   stats: { ...INITIAL_STATS },
   hasUnseen: false,
+  unseenIds: [],
 };
 
 export function badgeById(id: string): BadgeDefinition | undefined {
@@ -445,12 +448,17 @@ export function evaluateBadges(
     return { nextState: state, newUnlocks: [] };
   }
 
+  const nextUnseen = Array.from(
+    new Set([...(state.unseenIds ?? []), ...newUnlocks.map((u) => u.badge.id)]),
+  );
+
   const nextState: BadgeState = {
     ...state,
     unlockedIds: nextUnlocked,
     levels: nextLevels,
     unlockedAt: nextUnlockedAt,
-    hasUnseen: true,
+    hasUnseen: nextUnseen.length > 0,
+    unseenIds: nextUnseen,
   };
 
   return { nextState, newUnlocks };
@@ -458,6 +466,19 @@ export function evaluateBadges(
 
 function safeCount(value: unknown): number {
   return typeof value === 'number' && Number.isFinite(value) && value >= 0 ? Math.floor(value) : 0;
+}
+
+function latestUnlockedId(unlockedIds: string[], unlockedAt: Record<string, number>): string | null {
+  let latestId: string | null = null;
+  let latestTs = -1;
+  for (const [key, ts] of Object.entries(unlockedAt)) {
+    const badgeId = key.split(':')[0];
+    if (unlockedIds.includes(badgeId) && ts > latestTs) {
+      latestTs = ts;
+      latestId = badgeId;
+    }
+  }
+  return latestId ?? unlockedIds[unlockedIds.length - 1] ?? null;
 }
 
 export function sanitizeBadgeState(raw: unknown): BadgeState {
@@ -522,12 +543,25 @@ export function sanitizeBadgeState(raw: unknown): BadgeState {
     daysVisited,
   };
 
+  let unseenIds: string[];
+  if (Array.isArray(r.unseenIds)) {
+    unseenIds = Array.from(
+      new Set(r.unseenIds.filter((id): id is string => typeof id === 'string' && unlockedIds.includes(id))),
+    );
+  } else if (Boolean(r.hasUnseen) && unlockedIds.length > 0) {
+    const latest = latestUnlockedId(unlockedIds, unlockedAt);
+    unseenIds = latest ? [latest] : [];
+  } else {
+    unseenIds = [];
+  }
+
   return {
     unlockedIds,
     levels,
     unlockedAt,
     stats,
-    hasUnseen: Boolean(r.hasUnseen),
+    hasUnseen: unseenIds.length > 0,
+    unseenIds,
   };
 }
 
@@ -575,9 +609,16 @@ export function setBadgeState(next: BadgeState): void {
   commit(next);
 }
 
+export function markBadgeSeen(id: string): void {
+  const prevUnseen = state.unseenIds ?? [];
+  if (!state.hasUnseen && !prevUnseen.includes(id)) return;
+  const nextUnseen = prevUnseen.filter((x) => x !== id);
+  commit({ ...state, unseenIds: nextUnseen, hasUnseen: nextUnseen.length > 0 });
+}
+
 export function markBadgesSeen(): void {
-  if (!state.hasUnseen) return;
-  commit({ ...state, hasUnseen: false });
+  if (!state.hasUnseen && (state.unseenIds?.length ?? 0) === 0) return;
+  commit({ ...state, hasUnseen: false, unseenIds: [] });
 }
 
 function mutateStats(
