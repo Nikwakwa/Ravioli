@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
+import { LIFE_STAGES } from '../types';
 import {
   applyCareStreak,
   areAllQuestsDone,
@@ -10,10 +11,12 @@ import {
   getNextStreakMilestone,
   getVisibleStreak,
   isDailyRewardReady,
+  isQuestAvailableForStage,
   isStreakMilestone,
   previousDayKey,
   protectStreakForVacation,
   recordQuestEvent,
+  sanitizeDailyQuestState,
   setDailyQuestState,
   type DailyQuestState,
 } from './dailyQuests';
@@ -44,19 +47,62 @@ describe('Daily Quests & Care Streak', () => {
     setDailyQuestState(makeCustomState());
   });
 
-  it('generates 3 distinct, deterministic quests per day and respects newborn stage', () => {
+  it('generates 3 distinct, deterministic quests that are always unlocked for every life stage', () => {
     const qA = generateDailyQuests('2026-11-22', 'adult');
     const qB = generateDailyQuests('2026-11-22', 'adult');
     expect(qA).toHaveLength(3);
     expect(qA).toEqual(qB);
     expect(new Set(qA.map((q) => q.kind)).size).toBe(3);
 
-    // Across many calendar days, a newborn should never receive a Brain game quest (locked until Kitten)
-    for (let d = 1; d <= 30; d++) {
-      const day = `2026-11-${String(d).padStart(2, '0')}`;
-      const newbornQuests = generateDailyQuests(day, 'newborn');
-      expect(newbornQuests.some((q) => q.kind === 'play_brain')).toBe(false);
+    expect(isQuestAvailableForStage('play_brain', 'newborn')).toBe(false);
+    expect(isQuestAvailableForStage('play_brain', 'kitten')).toBe(true);
+    expect(isQuestAvailableForStage('play_active', 'newborn')).toBe(true);
+
+    // Across every day of the month and every life stage, every generated quest must be available!
+    for (const stage of LIFE_STAGES) {
+      for (let d = 1; d <= 30; d++) {
+        const day = `2026-11-${String(d).padStart(2, '0')}`;
+        const quests = generateDailyQuests(day, stage);
+        expect(quests).toHaveLength(3);
+        expect(new Set(quests.map((q) => q.kind)).size).toBe(3);
+        for (const q of quests) {
+          expect(isQuestAvailableForStage(q.kind, stage), `${q.kind} for ${stage}`).toBe(true);
+        }
+      }
     }
+  });
+
+  it('seeds brand-new players with quests for their actual life stage and repairs any locked saved quests', () => {
+    // Fresh unseeded state rolls over into newborn-safe quests immediately
+    const unseeded = sanitizeDailyQuestState(null);
+    expect(unseeded.quests).toHaveLength(0);
+    const seededForNewborn = ensureTodayState(unseeded, 'newborn', DAY1_MS);
+    expect(seededForNewborn.quests).toHaveLength(3);
+    expect(seededForNewborn.quests.every((q) => isQuestAvailableForStage(q.kind, 'newborn'))).toBe(true);
+
+    // Existing saved state containing a locked Brain game quest gets repaired while keeping other quest progress
+    const brokenSaved: DailyQuestState = {
+      day: '2026-11-22',
+      quests: [
+        { id: '2026-11-22:feed_meal', kind: 'feed_meal', label: 'Feed Oli a meal', emoji: '🍽️', target: 1, progress: 1 },
+        { id: '2026-11-22:play_brain', kind: 'play_brain', label: 'Play a Brain game', emoji: '🧠', target: 1, progress: 0 },
+        { id: '2026-11-22:pet', kind: 'pet', label: 'Give Oli 3 chin scratches', emoji: '🐾', target: 3, progress: 2 },
+      ],
+      rewardClaimed: false,
+      streak: 1,
+      bestStreak: 1,
+      lastCaredDay: '2026-11-22',
+      pausedProtectionDay: null,
+    };
+
+    const repaired = ensureTodayState(brokenSaved, 'newborn', DAY1_MS);
+    expect(repaired.quests.every((q) => isQuestAvailableForStage(q.kind, 'newborn'))).toBe(true);
+    expect(repaired.quests.some((q) => q.kind === 'play_brain')).toBe(false);
+    // Preserves progress on the valid quests and refreshes newborn wording
+    expect(repaired.quests[0].progress).toBe(1);
+    expect(repaired.quests[0].label).toBe('Bottle-feed Oli warm milk');
+    expect(repaired.quests[2].progress).toBe(2);
+    expect(repaired.quests[2].label).toBe('Give Oli 3 warm cuddles');
   });
 
   it('tracks quest progress, detects completion, and claims the daily Churu bonus once', () => {

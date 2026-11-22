@@ -7,6 +7,14 @@ export interface ReleaseEntry {
 
 export const CHANGELOG: ReleaseEntry[] = [
   {
+    version: 'v1.4.2',
+    date: '2026-11-22',
+    title: 'Daily Quests Stage Fix 📋',
+    changes: [
+      'Fixed Daily Quests so Newborn Oli never gets locked challenges like Brain games, and automatically swaps any locked quest already on today’s list.',
+    ],
+  },
+  {
     version: 'v1.4.1',
     date: '2026-11-22',
     title: 'Calmer Balcony Visitors 🦋',

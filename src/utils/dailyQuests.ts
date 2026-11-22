@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react';
-import { localDayKey } from '../data/actions';
+import { actionById, CARE_ACTIONS, isActionUnlockedForStage, localDayKey } from '../data/actions';
 import type { LifeStage } from '../types';
 import { isStageAtLeast } from './lifeStage';
 
@@ -157,7 +157,67 @@ const BUCKET_COZY: readonly QuestTemplate[] = [
   },
 ];
 
+const ALL_TEMPLATES: readonly QuestTemplate[] = [
+  ...BUCKET_CARE_AND_FOOD,
+  ...BUCKET_PLAY,
+  ...BUCKET_COZY,
+];
+
+const TEMPLATE_BY_KIND = new Map<QuestKind, QuestTemplate>(
+  ALL_TEMPLATES.map((t) => [t.kind, t]),
+);
+
 const LS_DAILY_QUESTS = 'ravioli:v1:daily_quests';
+
+/**
+ * True only when the player can actually complete this quest at Oli's current life stage
+ * (checked directly against unlocked CARE_ACTIONS so locked games/meals are never assigned).
+ */
+export function isQuestAvailableForStage(kind: QuestKind, stage: LifeStage): boolean {
+  const tmpl = TEMPLATE_BY_KIND.get(kind);
+  if (!tmpl) return false;
+  if (tmpl.minStage && !isStageAtLeast(stage, tmpl.minStage)) return false;
+
+  switch (kind) {
+    case 'feed_meal':
+      return CARE_ACTIONS.some(
+        (a) =>
+          (a.id === 'kitten_milk' || a.id === 'wet_food' || a.id === 'quail_egg') &&
+          isActionUnlockedForStage(a, stage),
+      );
+    case 'feed_any':
+      return CARE_ACTIONS.some((a) => a.category === 'feed' && isActionUnlockedForStage(a, stage));
+    case 'play_any':
+    case 'perfect_game':
+      return CARE_ACTIONS.some((a) => a.category === 'play' && isActionUnlockedForStage(a, stage));
+    case 'play_active':
+      return CARE_ACTIONS.some(
+        (a) => a.category === 'play' && a.playGroup === 'active' && isActionUnlockedForStage(a, stage),
+      );
+    case 'play_brain':
+      return CARE_ACTIONS.some(
+        (a) => a.category === 'play' && a.playGroup === 'brain' && isActionUnlockedForStage(a, stage),
+      );
+    case 'brush': {
+      const a = actionById('brush');
+      return Boolean(a && isActionUnlockedForStage(a, stage));
+    }
+    case 'fountain': {
+      const a = actionById('fountain');
+      return Boolean(a && isActionUnlockedForStage(a, stage));
+    }
+    case 'tidy': {
+      const a = actionById('scoop_mess');
+      return Boolean(a && isActionUnlockedForStage(a, stage));
+    }
+    case 'pet':
+    case 'balcony_visit':
+    case 'balcony_visitor':
+    case 'box_spot':
+    case 'fulfill_whim':
+      return true;
+  }
+}
 
 /** Simple deterministic hash of a YYYY-MM-DD day key so everyone gets a fresh, stable daily mix. */
 function hashDay(dayStr: string, salt: number): number {
@@ -176,13 +236,16 @@ export function previousDayKey(dayStr: string): string {
   return localDayKey(dt.getTime());
 }
 
-/** Generates 3 distinct, stage-appropriate quests for the given local day. */
+/** Generates 3 distinct, stage-appropriate quests that are 100% playable at Oli's current life stage. */
 export function generateDailyQuests(dayStr: string, stage: LifeStage = 'adult'): DailyQuest[] {
   const pickFrom = (pool: readonly QuestTemplate[], salt: number, used: Set<QuestKind>): DailyQuest => {
     const eligible = pool.filter(
-      (q) => !used.has(q.kind) && (!q.minStage || isStageAtLeast(stage, q.minStage)),
+      (q) => !used.has(q.kind) && isQuestAvailableForStage(q.kind, stage),
     );
-    const list = eligible.length > 0 ? eligible : pool;
+    const fallback = ALL_TEMPLATES.filter(
+      (q) => !used.has(q.kind) && isQuestAvailableForStage(q.kind, stage),
+    );
+    const list = eligible.length > 0 ? eligible : fallback;
     const chosen = list[hashDay(dayStr, salt) % list.length];
     used.add(chosen.kind);
     return {
@@ -244,10 +307,10 @@ export function getVisibleStreak(state: DailyQuestState, nowMs: number = Date.no
   return 0;
 }
 
-function createFreshState(dayStr: string, stage: LifeStage = 'adult'): DailyQuestState {
+function createEmptyUnseededState(): DailyQuestState {
   return {
-    day: dayStr,
-    quests: generateDailyQuests(dayStr, stage),
+    day: '',
+    quests: [],
     rewardClaimed: false,
     streak: 0,
     bestStreak: 0,
@@ -273,11 +336,10 @@ const VALID_KINDS = new Set<QuestKind>([
   'fulfill_whim',
 ]);
 
-export function sanitizeDailyQuestState(raw: unknown, nowMs: number = Date.now()): DailyQuestState {
-  const today = localDayKey(nowMs);
-  if (!raw || typeof raw !== 'object') return createFreshState(today);
+export function sanitizeDailyQuestState(raw: unknown): DailyQuestState {
+  if (!raw || typeof raw !== 'object') return createEmptyUnseededState();
   const r = raw as Partial<DailyQuestState>;
-  const day = typeof r.day === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(r.day) ? r.day : today;
+  const day = typeof r.day === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(r.day) ? r.day : '';
 
   const validQuests = Array.isArray(r.quests)
     ? r.quests
@@ -310,8 +372,8 @@ export function sanitizeDailyQuestState(raw: unknown, nowMs: number = Date.now()
       : null;
 
   return {
-    day,
-    quests: validQuests.length === 3 ? validQuests : generateDailyQuests(day),
+    day: validQuests.length === 3 ? day : '',
+    quests: validQuests.length === 3 ? validQuests : [],
     rewardClaimed: Boolean(r.rewardClaimed),
     streak,
     bestStreak,
@@ -322,11 +384,11 @@ export function sanitizeDailyQuestState(raw: unknown, nowMs: number = Date.now()
 
 function load(): DailyQuestState {
   try {
-    if (typeof localStorage === 'undefined') return createFreshState(localDayKey(Date.now()));
+    if (typeof localStorage === 'undefined') return createEmptyUnseededState();
     const raw = localStorage.getItem(LS_DAILY_QUESTS);
-    return raw ? sanitizeDailyQuestState(JSON.parse(raw)) : createFreshState(localDayKey(Date.now()));
+    return raw ? sanitizeDailyQuestState(JSON.parse(raw)) : createEmptyUnseededState();
   } catch {
-    return createFreshState(localDayKey(Date.now()));
+    return createEmptyUnseededState();
   }
 }
 
@@ -362,21 +424,72 @@ export function useDailyQuests(): DailyQuestState {
   return useSyncExternalStore(subscribeDailyQuests, getDailyQuestState, getDailyQuestState);
 }
 
-/** Pure rollover check: if the calendar day changed, generate today's fresh 3 quests while preserving streak history. */
+/**
+ * Pure rollover & stage-safety check:
+ * - Generates today's 3 quests when the calendar day changed or quests aren't seeded yet.
+ * - Replaces any saved quest that isn't unlocked for Oli's current life stage (while keeping
+ *   existing progress on the other quests intact) and refreshes stage-specific wording.
+ */
 export function ensureTodayState(
   current: DailyQuestState,
   stage: LifeStage = 'adult',
   nowMs: number = Date.now(),
 ): DailyQuestState {
   const today = localDayKey(nowMs);
-  if (current.day === today && current.quests.length === 3) {
-    return current;
+  if (current.day !== today || current.quests.length !== 3) {
+    return {
+      ...current,
+      day: today,
+      quests: generateDailyQuests(today, stage),
+      rewardClaimed: false,
+    };
   }
+
+  const stageDefaults = generateDailyQuests(today, stage);
+  const keptKinds = new Set<QuestKind>(
+    current.quests.filter((q) => isQuestAvailableForStage(q.kind, stage)).map((q) => q.kind),
+  );
+
+  let changed = false;
+  const repaired = current.quests.map((q, idx) => {
+    if (isQuestAvailableForStage(q.kind, stage)) {
+      const tmpl = TEMPLATE_BY_KIND.get(q.kind);
+      const expectedLabel = tmpl ? tmpl.label(stage) : q.label;
+      if (expectedLabel !== q.label) {
+        changed = true;
+        return { ...q, label: expectedLabel };
+      }
+      return q;
+    }
+
+    changed = true;
+    const preferred = stageDefaults[idx];
+    if (preferred && !keptKinds.has(preferred.kind)) {
+      keptKinds.add(preferred.kind);
+      return preferred;
+    }
+    const alt =
+      stageDefaults.find((candidate) => !keptKinds.has(candidate.kind)) ??
+      ALL_TEMPLATES.filter((t) => !keptKinds.has(t.kind) && isQuestAvailableForStage(t.kind, stage)).map((t) => ({
+        id: `${today}:${t.kind}`,
+        kind: t.kind,
+        label: t.label(stage),
+        emoji: t.emoji,
+        target: t.target,
+        progress: 0,
+      }))[0];
+
+    if (alt) {
+      keptKinds.add(alt.kind);
+      return alt;
+    }
+    return stageDefaults[idx];
+  });
+
+  if (!changed) return current;
   return {
     ...current,
-    day: today,
-    quests: generateDailyQuests(today, stage),
-    rewardClaimed: false,
+    quests: repaired,
   };
 }
 

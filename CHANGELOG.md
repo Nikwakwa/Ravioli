@@ -4,6 +4,12 @@ All updates to **Oli** are listed here.
 
 ---
 
+## `v1.4.2` — 2026-11-22
+### Daily Quests Stage Fix 📋
+- Fixed Daily Quests so Newborn Oli never gets locked challenges like Brain games, and automatically swaps any locked quest already on today’s list.
+
+---
+
 ## `v1.4.1` — 2026-11-22
 ### Calmer Balcony Visitors 🦋
 - Fixed butterfly and moth wings so they hinge cleanly at the body with a smooth flap-and-glide rhythm.
