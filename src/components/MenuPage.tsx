@@ -399,6 +399,7 @@ Time: ${new Date().toISOString()}`;
               <ul className="flex list-disc flex-col gap-1 pl-4 text-xs font-medium text-amber-900/85">
                 <li><strong>Pet Oli:</strong> Tap him anytime (+{PET_JOY_BOOST} Joy).</li>
                 <li><strong>Living Room &amp; Balcony:</strong> Use the bottom switcher or tap any cozy spot (sofa bed, box, window, rug, flower boxes, bistro chair, or balcony tiles).</li>
+                <li><strong>Balcony Visitors:</strong> Tap birds, butterflies, or evening moths on the railing to make Oli wiggle and pounce (+4 Joy).</li>
                 <li><strong>Fountain:</strong> Tap to refresh his water (+40 Water).</li>
                 <li><strong>Sound:</strong> Tap the speaker next to Menu to mute or unmute.</li>
                 <li><strong>Closet:</strong> Tap the hanger to dress Oli up. Buy accessories with Churus.</li>
@@ -430,9 +431,10 @@ Time: ${new Date().toISOString()}`;
             <div className="rounded-2xl border border-amber-900/8 bg-white p-3 shadow-2xs">
               <div className="mb-1.5 flex items-center gap-2">
                 <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-500/15 text-xs">🍬</span>
-                <h3 className="font-display text-xs font-bold text-amber-950">Cravings & Minigames</h3>
+                <h3 className="font-display text-xs font-bold text-amber-950">Cravings, Quests & Minigames</h3>
               </div>
               <ul className="flex list-disc flex-col gap-1 pl-4 text-xs font-medium text-amber-900/85">
+                <li><strong>Daily Quests &amp; Streak:</strong> Tap 📋 to see 3 daily goals. Finish all 3 for +1 🍬 (+2 🍬 on Day 3 &amp; weekly streak milestones).</li>
                 <li><strong>Cravings:</strong> Every 12–20 min Oli wants something. Fulfill it for 2× Joy + 1 churu point 🍬 (chin scratches give Joy only).</li>
                 <li><strong>Minigames:</strong> Score 3/3 in any Active or Brain game for +1 churu point 🍬.</li>
                 <li><strong>Churus:</strong> {CHURU_POINTS_PER_TUBE} points = 1 Churu tube (the dots next to 🍬 at the top). Up to {MAX_CHURUS_EARNED_PER_DAY} tubes per day.</li>

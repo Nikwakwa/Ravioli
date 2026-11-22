@@ -1,0 +1,166 @@
+import { beforeEach, describe, expect, it } from 'vitest';
+import {
+  applyCareStreak,
+  areAllQuestsDone,
+  claimDailyQuestReward,
+  ensureTodayState,
+  generateDailyQuests,
+  getDailyRewardChurus,
+  getDailyQuestState,
+  getNextStreakMilestone,
+  getVisibleStreak,
+  isDailyRewardReady,
+  isStreakMilestone,
+  previousDayKey,
+  protectStreakForVacation,
+  recordQuestEvent,
+  setDailyQuestState,
+  type DailyQuestState,
+} from './dailyQuests';
+
+const DAY1_MS = new Date(2026, 10, 22, 10, 0, 0).getTime(); // 2026-11-22
+const DAY2_MS = new Date(2026, 10, 23, 10, 0, 0).getTime(); // 2026-11-23
+const DAY4_MS = new Date(2026, 10, 25, 10, 0, 0).getTime(); // 2026-11-25
+
+function makeCustomState(overrides: Partial<DailyQuestState> = {}): DailyQuestState {
+  return {
+    day: '2026-11-22',
+    quests: [
+      { id: '2026-11-22:brush', kind: 'brush', label: 'Brush Oli’s ginger coat', emoji: '🪮', target: 1, progress: 0 },
+      { id: '2026-11-22:play_any', kind: 'play_any', label: 'Play any minigame with Oli', emoji: '🎮', target: 1, progress: 0 },
+      { id: '2026-11-22:balcony_visitor', kind: 'balcony_visitor', label: 'Tap a visitor on the balcony', emoji: '🕊️', target: 1, progress: 0 },
+    ],
+    rewardClaimed: false,
+    streak: 0,
+    bestStreak: 0,
+    lastCaredDay: null,
+    pausedProtectionDay: null,
+    ...overrides,
+  };
+}
+
+describe('Daily Quests & Care Streak', () => {
+  beforeEach(() => {
+    setDailyQuestState(makeCustomState());
+  });
+
+  it('generates 3 distinct, deterministic quests per day and respects newborn stage', () => {
+    const qA = generateDailyQuests('2026-11-22', 'adult');
+    const qB = generateDailyQuests('2026-11-22', 'adult');
+    expect(qA).toHaveLength(3);
+    expect(qA).toEqual(qB);
+    expect(new Set(qA.map((q) => q.kind)).size).toBe(3);
+
+    // Across many calendar days, a newborn should never receive a Brain game quest (locked until Kitten)
+    for (let d = 1; d <= 30; d++) {
+      const day = `2026-11-${String(d).padStart(2, '0')}`;
+      const newbornQuests = generateDailyQuests(day, 'newborn');
+      expect(newbornQuests.some((q) => q.kind === 'play_brain')).toBe(false);
+    }
+  });
+
+  it('tracks quest progress, detects completion, and claims the daily Churu bonus once', () => {
+    const r1 = recordQuestEvent({ type: 'brush' }, 'adult', DAY1_MS);
+    expect(r1.newlyCompleted).toHaveLength(1);
+    expect(r1.allDoneJustNow).toBe(false);
+    expect(r1.streak).toBe(1);
+
+    const r2 = recordQuestEvent({ type: 'play', playGroup: 'active', perfect: false }, 'adult', DAY1_MS);
+    expect(r2.newlyCompleted).toHaveLength(1);
+    expect(r2.allDoneJustNow).toBe(false);
+
+    const r3 = recordQuestEvent({ type: 'balcony_visitor' }, 'adult', DAY1_MS);
+    expect(r3.newlyCompleted).toHaveLength(1);
+    expect(r3.allDoneJustNow).toBe(true);
+
+    const state = getDailyQuestState();
+    expect(areAllQuestsDone(state)).toBe(true);
+    expect(isDailyRewardReady(state, DAY1_MS)).toBe(true);
+
+    const claim = claimDailyQuestReward(DAY1_MS);
+    expect(claim.claimed).toBe(true);
+    expect(claim.churus).toBe(1);
+    expect(claim.isMilestone).toBe(false);
+
+    // Second claim on the same day is blocked
+    const secondClaim = claimDailyQuestReward(DAY1_MS);
+    expect(secondClaim.claimed).toBe(false);
+    expect(isDailyRewardReady(getDailyQuestState(), DAY1_MS)).toBe(false);
+  });
+
+  it('awards +2 Churus on Day 3 and weekly streak milestones', () => {
+    expect(isStreakMilestone(1)).toBe(false);
+    expect(isStreakMilestone(3)).toBe(true);
+    expect(isStreakMilestone(7)).toBe(true);
+    expect(isStreakMilestone(14)).toBe(true);
+    expect(getDailyRewardChurus(3)).toBe(2);
+    expect(getDailyRewardChurus(7)).toBe(2);
+    expect(getDailyRewardChurus(4)).toBe(1);
+    expect(getNextStreakMilestone(0)).toBe(3);
+    expect(getNextStreakMilestone(3)).toBe(7);
+    expect(getNextStreakMilestone(7)).toBe(14);
+
+    setDailyQuestState(
+      makeCustomState({
+        streak: 3,
+        bestStreak: 3,
+        lastCaredDay: '2026-11-22',
+        quests: makeCustomState().quests.map((q) => ({ ...q, progress: q.target })),
+      }),
+    );
+
+    const claim = claimDailyQuestReward(DAY1_MS);
+    expect(claim.claimed).toBe(true);
+    expect(claim.churus).toBe(2);
+    expect(claim.isMilestone).toBe(true);
+  });
+
+  it('increments streak across consecutive days and resets if a day is missed without Vacation Mode', () => {
+    expect(previousDayKey('2026-11-22')).toBe('2026-11-21');
+
+    const day1 = applyCareStreak(makeCustomState(), '2026-11-22');
+    expect(day1.streak).toBe(1);
+
+    const day2 = applyCareStreak(day1, '2026-11-23');
+    expect(day2.streak).toBe(2);
+    expect(day2.bestStreak).toBe(2);
+
+    // Skipping a day resets streak back to 1
+    const day5 = applyCareStreak(day2, '2026-11-26');
+    expect(day5.streak).toBe(1);
+    expect(day5.bestStreak).toBe(2);
+    expect(getVisibleStreak(day2, DAY4_MS)).toBe(0);
+  });
+
+  it('preserves care streak across missed days when Vacation Mode was enabled', () => {
+    setDailyQuestState(
+      makeCustomState({
+        streak: 5,
+        bestStreak: 5,
+        lastCaredDay: '2026-11-22',
+      }),
+    );
+    protectStreakForVacation(DAY1_MS);
+
+    // Even 3 days later, visible streak stays safe and next care action increments to 6
+    expect(getVisibleStreak(getDailyQuestState(), DAY4_MS)).toBe(5);
+    const res = recordQuestEvent({ type: 'pet' }, 'adult', DAY4_MS);
+    expect(res.streak).toBe(6);
+    expect(getDailyQuestState().pausedProtectionDay).toBeNull();
+  });
+
+  it('rolls over quests on a new calendar day while preserving streak history', () => {
+    const prev = makeCustomState({
+      rewardClaimed: true,
+      streak: 4,
+      bestStreak: 6,
+      lastCaredDay: '2026-11-22',
+    });
+    const next = ensureTodayState(prev, 'adult', DAY2_MS);
+    expect(next.day).toBe('2026-11-23');
+    expect(next.rewardClaimed).toBe(false);
+    expect(next.streak).toBe(4);
+    expect(next.bestStreak).toBe(6);
+    expect(next.quests.every((q) => q.progress === 0)).toBe(true);
+  });
+});

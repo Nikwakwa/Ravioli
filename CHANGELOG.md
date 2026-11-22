@@ -4,6 +4,13 @@ All updates to **Oli** are listed here.
 
 ---
 
+## `v1.4.0` — 2026-11-22
+### Balcony Visitors & Daily Quests 🕊️📋
+- Pigeons, robins, doves, butterflies, and evening moths now visit the balcony — tap one to watch Oli wiggle and pounce.
+- Added Daily Quests (📋): finish 3 quick daily goals to claim bonus Churus and grow your Care Streak.
+
+---
+
 ## `v1.3.5` — 2026-11-22
 ### Peek-a-Boo Tweak 🙈
 - Peek-a-Boo now requires 3 boops in every round.

@@ -21,7 +21,8 @@ export type SoundName =
   | 'yawn'
   | 'pop'
   | 'miss'
-  | 'chime';
+  | 'chime'
+  | 'ekekek';
 
 const LS_MUTED = 'ravioli:v1:sound_muted';
 const MASTER_VOLUME = 1;
@@ -370,6 +371,22 @@ const SOUNDS: Record<SoundName, Player> = {
       voice(c, out, t + i * 0.09, { dur: 0.5, peak: 0.12, freqs: [f, f], wave: 'sine', attack: 0.01 }),
     );
   },
+
+  // Cute cat "ek-ek-ek!" chatter + soft fluttering wings when pouncing at balcony visitors
+  ekekek: (c, out, t) => {
+    [0, 0.14, 0.28, 0.42].forEach((at, i) =>
+      voice(c, out, t + at, {
+        dur: 0.085,
+        peak: 0.2,
+        freqs: [740 + (i % 2) * 110, 980 + i * 40, 620],
+        wave: 'sawtooth',
+        attack: 0.008,
+        lowpass: 2400,
+      }),
+    );
+    burst(c, out, t + 0.52, { dur: 0.22, peak: 0.2, attack: 0.03, from: 1200, to: 2600, q: 0.8 });
+    burst(c, out, t + 0.72, { dur: 0.2, peak: 0.14, attack: 0.03, from: 1500, to: 3000, q: 0.8 });
+  },
 };
 
 /** How long a sound must wait before it can be triggered again (ms). */
@@ -407,6 +424,8 @@ export function soundForAction(actionId: string): SoundName | null {
       return 'brush';
     case 'scoop_mess':
       return 'scoop';
+    case 'balcony_watch':
+      return 'ekekek';
     case 'feather_wand':
     case 'laser_pointer':
     case 'tail_chase':

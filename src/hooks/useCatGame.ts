@@ -96,6 +96,20 @@ import {
   sendSystemNotification,
   type AlertedMap,
 } from '../utils/notifications';
+import {
+  BALCONY_ACTION_ID,
+  BALCONY_VISITOR_COOLDOWN_MS,
+  BALCONY_VISITOR_JOY,
+  VISITOR_META,
+  type BalconyVisitor,
+} from '../utils/balconyVisitors';
+import {
+  claimDailyQuestReward,
+  protectStreakForVacation,
+  recordQuestEvent,
+  syncDailyQuestsForToday,
+  type QuestEvent,
+} from '../utils/dailyQuests';
 import { DEVICE_ID } from '../utils/player';
 
 const TICK_MS = 30_000;
@@ -505,6 +519,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
   const busyTimer = useRef<number | undefined>(undefined);
   const delayedTimersRef = useRef<number[]>([]);
   const lastPetRef = useRef<number>(0);
+  const lastVisitorRewardRef = useRef<number>(0);
 
   const scheduleDelayed = useCallback((fn: () => void, ms: number) => {
     const id = window.setTimeout(() => {
@@ -788,6 +803,44 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
 
   const live: LiveCat | null = useMemo(() => (base ? computeLiveStats(base, now) : null), [base, now]);
 
+  // Keep today's 3 Daily Quests in sync with the current calendar day & life stage
+  useEffect(() => {
+    if (!ready || !live) return;
+    syncDailyQuestsForToday(live.lifeStage, now);
+  }, [ready, live?.lifeStage, now]);
+
+  const trackQuest = useCallback(
+    (ev: QuestEvent) => {
+      const stage = live?.lifeStage ?? 'adult';
+      const res = recordQuestEvent(ev, stage);
+      if (res.allDoneJustNow) {
+        scheduleDelayed(() => {
+          playSound('chime');
+          noticeRef.current({
+            text: '📋 All 3 Daily Quests done! Tap 📋 to claim your 🍬!',
+            tone: 'info',
+          });
+        }, 1400);
+      }
+    },
+    [live?.lifeStage, scheduleDelayed],
+  );
+
+  const claimDailyQuests = useCallback((): boolean => {
+    const res = claimDailyQuestReward();
+    if (!res.claimed) return false;
+    updateChuruStash((c) => c + res.churus);
+    celebrate();
+    vibrate([30, 45, 30, 50]);
+    noticeRef.current({
+      text: res.isMilestone
+        ? `🔥 ${res.streak}-day streak bonus! Claimed +${res.churus} 🍬 Churus!`
+        : `🎁 Claimed +${res.churus} 🍬 Churu from Daily Quests!`,
+      tone: 'info',
+    });
+    return true;
+  }, [updateChuruStash]);
+
   const scene: SceneId = useMemo(() => sceneForSpot(spot), [spot]);
 
   const setSpot = useCallback(
@@ -815,9 +868,11 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
           balcony_floor: '☀️ Rolling on the warm balcony tiles (belly up!)',
         };
         noticeRef.current({ text: lines[target], tone: 'info' });
+        if (target === 'box') trackQuest({ type: 'box_spot' });
+        if (isBalconySpot(target)) trackQuest({ type: 'balcony_visit' });
       }
     },
-    [live],
+    [live, trackQuest],
   );
 
   const setScene = useCallback(
@@ -1236,11 +1291,12 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
     }
 
     handleBadgeUnlocks(trackClean());
+    trackQuest({ type: 'tidy' });
 
     const mutator = (b: CatState): CatState =>
       addGrowthBonus(applyEffect(materialize(b, Date.now()), scoopAction.effect), CARE_ACTION_GROWTH_BONUS);
     void commit(mutator, scoopAction.id, formatLog(scoopAction.log, live.name));
-  }, [base, live, busy, litterBoxDirty, messes.length, player, playEvent, commit, handleBadgeUnlocks, triggerRefusal, scheduleDelayed]);
+  }, [base, live, busy, litterBoxDirty, messes.length, player, playEvent, commit, handleBadgeUnlocks, trackQuest, triggerRefusal, scheduleDelayed]);
 
   /** Cleans a specific mess on the rug (by id) or the oldest mess when called from the Care dock. */
   const cleanMess = useCallback(
@@ -1302,6 +1358,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
       }
 
       handleBadgeUnlocks(trackClean());
+      trackQuest({ type: 'tidy' });
 
       const logMsg =
         target.kind === 'fur_clump'
@@ -1311,7 +1368,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
         addGrowthBonus(applyEffect(materialize(b, Date.now()), scoopAction.effect), CARE_ACTION_GROWTH_BONUS);
       void commit(mutator, scoopAction.id, logMsg);
     },
-    [base, live, busy, messes, litterBoxDirty, scoopLitterBox, player, playEvent, commit, handleBadgeUnlocks, triggerRefusal, scheduleDelayed],
+    [base, live, busy, messes, litterBoxDirty, scoopLitterBox, player, playEvent, commit, handleBadgeUnlocks, trackQuest, triggerRefusal, scheduleDelayed],
   );
 
   const perform = useCallback(
@@ -1534,6 +1591,20 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
       }
       if (action.category === 'feed') {
         handleBadgeUnlocks(trackFeed(action.id, new Date().getHours()));
+        trackQuest({ type: 'feed', actionId: action.id });
+      } else if (action.category === 'play') {
+        trackQuest({
+          type: 'play',
+          playGroup: action.playGroup ?? 'active',
+          perfect: (minigameHits ?? 0) >= MINIGAME_ROUNDS,
+        });
+      } else if (action.id === 'brush') {
+        trackQuest({ type: 'brush' });
+      } else if (action.id === 'fountain') {
+        trackQuest({ type: 'fountain' });
+      }
+      if (matchedWhim) {
+        trackQuest({ type: 'fulfill_whim' });
       }
 
       const growthBonus = matchedWhim ? WHIM_GROWTH_BONUS : CARE_ACTION_GROWTH_BONUS;
@@ -1569,6 +1640,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
       spot,
       setSpot,
       handleBadgeUnlocks,
+      trackQuest,
       scheduleDelayed,
     ],
   );
@@ -1607,6 +1679,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
         animation: 'purring',
         durationMs: 2200,
       });
+      trackQuest({ type: 'pet' });
       const mutator = (b: CatState): CatState =>
         withPetCalm(addGrowthBonus(applyEffect(materialize(b, nowMs), boost), CARE_ACTION_GROWTH_BONUS), nowMs);
       void commit(mutator, PET_ACTION_ID, `Gave ${live.name} chin scratches — purr session!`);
@@ -1627,6 +1700,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
           text: `🎉 Craving fulfilled! +${joyDelta} Joy`,
           tone: 'info',
         });
+        trackQuest({ type: 'fulfill_whim' });
       }
 
       playEvent({
@@ -1647,6 +1721,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
       }
 
       handleBadgeUnlocks(trackPet(nowMs));
+      trackQuest({ type: 'pet' });
 
       const growthBonus = matchedWhim ? WHIM_GROWTH_BONUS : CARE_ACTION_GROWTH_BONUS;
       const mutator = (b: CatState): CatState =>
@@ -1656,9 +1731,66 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
       // Petted again too soon for more Joy: he still answers with a little "mrp?"
       playSound('chirp');
       handleBadgeUnlocks(trackPet(nowMs));
+      trackQuest({ type: 'pet' });
     }
     return true;
-  }, [base, live, busy, tummyAche, whim, messes.length, litterBoxDirty, player, playEvent, commit, clearTummyAche, clearWhim, triggerRefusal, handleBadgeUnlocks, scheduleDelayed]);
+  }, [base, live, busy, tummyAche, whim, messes.length, litterBoxDirty, player, playEvent, commit, clearTummyAche, clearWhim, triggerRefusal, handleBadgeUnlocks, trackQuest, scheduleDelayed]);
+
+  /** Tapping a visiting bird, butterfly, or moth on the balcony makes Oli wiggle & pounce! */
+  const interactBalconyVisitor = useCallback(
+    (visitor: BalconyVisitor): boolean => {
+      if (!base || !live || live.isDeceased) return false;
+      if (live.isPaused) {
+        triggerRefusal('✈️ Care clock is paused. Resume in Menu or header.');
+        return false;
+      }
+      if (live.isSleeping) {
+        noticeRef.current({ text: `😴 Shh… ${live.name} is asleep inside.`, tone: 'info' });
+        return false;
+      }
+
+      const nowMs = Date.now();
+      const meta = VISITOR_META[visitor.kind];
+      const offCooldown = nowMs - lastVisitorRewardRef.current >= BALCONY_VISITOR_COOLDOWN_MS;
+      const boost: Partial<CatStats> = offCooldown ? { happiness: BALCONY_VISITOR_JOY } : {};
+
+      vibrate([20, 35, 20, 45]);
+      playEvent({
+        actionId: BALCONY_ACTION_ID,
+        player: player ?? 'You',
+        remote: false,
+        effect: boost,
+        particles: ['stars', 'sparkles'],
+        animation: 'pounce',
+        durationMs: 1800,
+      });
+
+      noticeRef.current({
+        text: offCooldown
+          ? `${meta.pounceLine(live.name)} (+${BALCONY_VISITOR_JOY} Joy)`
+          : meta.pounceLine(live.name),
+        tone: 'info',
+      });
+
+      trackQuest({ type: 'balcony_visitor' });
+
+      if (offCooldown) {
+        lastVisitorRewardRef.current = nowMs;
+        const wasThriving = messes.length === 0 && !litterBoxDirty && isThriving(live);
+        const willThrive = messes.length === 0 && !litterBoxDirty && isThriving(applyEffect(live, boost));
+        if (!wasThriving && willThrive) {
+          scheduleDelayed(celebrate, 450);
+          handleBadgeUnlocks(trackThriving(nowMs));
+        }
+        const mutator = (b: CatState): CatState =>
+          addGrowthBonus(applyEffect(materialize(b, nowMs), boost), CARE_ACTION_GROWTH_BONUS);
+        void commit(mutator, BALCONY_ACTION_ID, `${live.name} pounced at a balcony ${meta.name}!`);
+      }
+
+      return true;
+    },
+    [base, live, messes.length, litterBoxDirty, player, playEvent, commit, triggerRefusal, handleBadgeUnlocks, trackQuest, scheduleDelayed],
+  );
 
   /** Tapping the Whim thought bubble directly above Oli's head performs the requested action! */
   const fulfillWhim = useCallback(() => {
@@ -1761,6 +1893,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
       vibrate([20, 60, 20]);
       void commit(mutator, PAUSE_ACTION_ID, 'Resumed the care clock');
     } else {
+      protectStreakForVacation(nowMs);
       const mutator = (b: CatState): CatState => {
         const mat = materialize(b, nowMs);
         return {
@@ -1831,6 +1964,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
     churuProgress,
     buyAccessory,
     buyFortuneCookie,
+    claimDailyQuests,
     handleBadgeUnlocks,
     badgeCelebration: badgeUnlockQueue[0] ?? null,
     dismissBadgeCelebration,
@@ -1851,6 +1985,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
     completeMinigame,
     cancelMinigame,
     petOli,
+    interactBalconyVisitor,
     cleanMess,
     scoopLitterBox,
     fulfillWhim,

@@ -142,4 +142,5 @@ export type CatAnimation =
   | 'misting'
   | 'brushing'
   | 'yawning'
-  | 'refuse';
+  | 'refuse'
+  | 'pounce';

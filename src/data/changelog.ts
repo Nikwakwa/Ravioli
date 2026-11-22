@@ -7,6 +7,15 @@ export interface ReleaseEntry {
 
 export const CHANGELOG: ReleaseEntry[] = [
   {
+    version: 'v1.4.0',
+    date: '2026-11-22',
+    title: 'Balcony Visitors & Daily Quests 🕊️📋',
+    changes: [
+      'Pigeons, robins, doves, butterflies, and evening moths now visit the balcony — tap one to watch Oli wiggle and pounce.',
+      'Added Daily Quests (📋): finish 3 quick daily goals to claim bonus Churus and grow your Care Streak.',
+    ],
+  },
+  {
     version: 'v1.3.5',
     date: '2026-11-22',
     title: 'Peek-a-Boo Tweak 🙈',

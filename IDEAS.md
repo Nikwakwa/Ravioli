@@ -17,18 +17,7 @@ When an idea gets picked up, move it into [ROADMAP.md](ROADMAP.md) as a new phas
 
 ---
 
-## 🕊️ 2. Balcony Bird Watching
-
-**The idea:** Bring the balcony to life with visiting wildlife that catches Oli's attention.
-
-### What it adds
-- **Visiting Birds & Butterflies:** Pigeons, robins, or colorful butterflies randomly land along the balcony railing.
-- **Interactive Reactions:** Tapping a visitor makes Oli perk his ears, focus intently, wiggle his rear, and make a playful pounce attempt toward the railing.
-- **Time-of-Day Visitors:** Morning doves during daylight, butterflies in the afternoon, and moths fluttering near the balcony light in the evening.
-
----
-
-## 🧶 3. Interactive Floor Toys (Physics Play)
+## 🧶 2. Interactive Floor Toys (Physics Play)
 
 **The idea:** Give players a tactile, physics-based mini activity on the living room rug, even when Oli's care bars are already full.
 
@@ -39,7 +28,7 @@ When an idea gets picked up, move it into [ROADMAP.md](ROADMAP.md) as a new phas
 
 ---
 
-## 🪴 4. Cozy Room Customization
+## 🪴 3. Cozy Room Customization
 
 **The idea:** Let players personalize Nico & Athina's apartment by spending earned Churu treats on cozy room decor.
 
@@ -53,7 +42,37 @@ When an idea gets picked up, move it into [ROADMAP.md](ROADMAP.md) as a new phas
 
 ---
 
+## 😼 4. Surprise Cat Moments
+
+**The idea:** Add playful, unscripted cat surprises that occasionally greet you when opening the app so every check-in feels alive.
+
+### What it adds
+- **Box Peek:** Oli hides down inside his cardboard delivery box with only his wide glowing amber eyes peeking over the rim until you tap him.
+- **Spontaneous Zoomies:** A quick burst of sudden zoomies across the rug with floating motion lines and chirps.
+- **Table Knock-Off:** Oli casually nudges a small item off the table for a quick, funny reaction tap.
+
+---
+
+## ❄️ 5. Seasonal Touches & Weather
+
+**The idea:** Build on live outside rain with gentle seasonal atmosphere, festive room touches, and cozy seasonal outfits.
+
+### What it adds
+- **Seasonal Weather:** Soft snowfall outside the window and balcony on cold winter days, plus warm floating spring blossoms.
+- **Festive Room Decor:** Subtle seasonal props around the apartment (little pumpkins in October, a cozy mini tree with warm lights in December).
+- **Seasonal Closet Items:** Limited cozy accessories like a yellow raincoat or knit winter beanie.
+
+---
+
 ## ✅ Completed Ideas
+
+- **Balcony Bird Watching (Shipped in v1.4.0):**
+  - Pigeons, robins, morning doves, butterflies, and glowing evening moths visit the balcony railing and pansy planters based on the time of day and weather.
+  - Tapping a visitor makes Oli chatter (*ek-ek-ek!*), wiggle his rear, and pounce (+4 Joy) as the visitor flutters away.
+
+- **Daily Quests & Care Streak (Shipped in v1.4.0):**
+  - 3 bite-sized daily goals tailored to Oli’s life stage that track automatically as you feed, play, tidy, and visit the balcony.
+  - Completing all 3 unlocks a daily Churu bonus (+1 🍬, or +2 🍬 on Day 3 and weekly streak milestones), with Vacation Mode streak protection.
 
 - **Growing Up: From Baby Oli to Adult Oli (Shipped in v1.2.0):**
   - 4 life stages: Newborn kitten (3d) → Kitten (6d) → Teen cat (9d) → Adult Oli forever (never dies of old age).

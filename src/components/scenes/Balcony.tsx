@@ -1,7 +1,8 @@
-import { motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { CatAvatar } from '../CatAvatar';
 import type { CatAnimation, CatSpot, LifeStage, Mood } from '../../types';
 import type { TimeOfDay } from '../../utils/atmosphere';
+import { VISITOR_META, type BalconyVisitor } from '../../utils/balconyVisitors';
 
 /**
  * Unified 3D pinhole camera projection so every architectural line, tile seam,
@@ -559,6 +560,238 @@ function FoldingBistroChair({
 }
 
 /**
+ * Hand-drawn SVG visiting wildlife for Balcony Bird Watching:
+ * pigeons, robins, morning doves perched on the handrail, plus fluttering butterflies & evening moths.
+ */
+function BalconyVisitorSprite({
+  visitor,
+  startled,
+  night,
+  onTap,
+}: {
+  visitor: BalconyVisitor;
+  startled: boolean;
+  night: boolean;
+  onTap?: (visitor: BalconyVisitor) => void;
+}) {
+  const meta = VISITOR_META[visitor.kind];
+  const flyDx = visitor.facing * 68;
+
+  const handleTrigger = (e: React.SyntheticEvent) => {
+    e.stopPropagation();
+    if (!startled) onTap?.(visitor);
+  };
+
+  return (
+    <motion.g
+      key={visitor.id}
+      data-testid="balcony-visitor"
+      data-visitor-kind={visitor.kind}
+      initial={
+        visitor.hovering
+          ? { opacity: 0, x: -visitor.facing * 26, y: -24, scale: 0.7 }
+          : { opacity: 0, x: -visitor.facing * 36, y: -38, scale: 0.85 }
+      }
+      animate={
+        startled
+          ? { opacity: 0, x: flyDx, y: -96, scale: 0.82 }
+          : { opacity: 1, x: 0, y: 0, scale: 1 }
+      }
+      exit={{ opacity: 0, x: flyDx * 0.7, y: -64, scale: 0.8 }}
+      transition={
+        startled
+          ? { duration: 0.65, ease: 'easeOut' }
+          : { type: 'spring', stiffness: 210, damping: 18 }
+      }
+      role="button"
+      tabIndex={0}
+      aria-label={`Tap the ${meta.name} on the balcony`}
+      onClick={handleTrigger}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          handleTrigger(e);
+        }
+      }}
+      className="pointer-events-auto cursor-pointer"
+      style={{ pointerEvents: 'auto', cursor: 'pointer', outline: 'none' }}
+    >
+      <g transform={`translate(${visitor.x} ${visitor.y})`}>
+        {/* Generous 48x48 invisible hit target centered on the visitor */}
+        <rect
+          x="-24"
+          y={visitor.hovering ? -24 : -34}
+          width="48"
+          height="48"
+          fill="transparent"
+          style={{ pointerEvents: 'all' }}
+        />
+
+        {/* Subtle welcoming halo so players spot the visitor at a glance */}
+        {!startled && (
+          <motion.circle
+            cx="0"
+            cy={visitor.hovering ? 0 : -11}
+            r={visitor.kind === 'moth' ? 16 : 14}
+            fill={visitor.kind === 'moth' ? '#fef08a' : '#ffffff'}
+            animate={{ opacity: visitor.kind === 'moth' ? [0.16, 0.34, 0.16] : [0.08, 0.22, 0.08], scale: [0.92, 1.08, 0.92] }}
+            transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
+            pointerEvents="none"
+          />
+        )}
+
+        <g transform={`scale(${visitor.facing} 1)`}>
+          {visitor.kind === 'pigeon' && (
+            <motion.g
+              animate={startled ? { y: [-2, -8, -2] } : { y: [0, -0.8, 0] }}
+              transition={{ duration: startled ? 0.2 : 2.1, repeat: Infinity, ease: 'easeInOut' }}
+            >
+              {/* Tiny pink feet gripping handrail */}
+              <path d="M -2 0 L -3 2.5 M 3 0 L 2 2.5" stroke="#e17c7c" strokeWidth="1.4" strokeLinecap="round" />
+              {/* Tail feathers */}
+              <path d="M -10 -7 L -21 -3 L -19 1 L -8 -3 Z" fill={night ? '#475569' : '#64748b'} />
+              {/* Plump grey body */}
+              <ellipse cx="-1" cy="-9" rx="11.5" ry="7.5" fill={night ? '#64748b' : '#94a3b8'} />
+              {/* Wing with classic dark pigeon bars */}
+              <path
+                d="M -9 -10 Q -2 -15 7 -9 Q 1 -3 -10 -6 Z"
+                fill={night ? '#4e5d72' : '#7b8aa0'}
+              />
+              <path d="M -5 -10 L 3 -8 M -6 -7.5 L 1 -6" stroke={night ? '#2c3543' : '#334155'} strokeWidth="1.3" strokeLinecap="round" />
+              {/* Iridescent green/purple neck sheen */}
+              <ellipse cx="6.5" cy="-14.5" rx="4.4" ry="3.2" fill="#34d399" opacity="0.55" />
+              <ellipse cx="5.5" cy="-13" rx="4.2" ry="2.6" fill="#a855f7" opacity="0.4" />
+              {/* Head (gentle pigeon bob) */}
+              <motion.g
+                animate={startled ? { x: 0 } : { x: [0, 1.4, 0, 0] }}
+                transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
+              >
+                <circle cx="8.5" cy="-18.5" r="4.8" fill={night ? '#64748b' : '#94a3b8'} />
+                {/* Beak + white cere */}
+                <polygon points="12.5,-18.8 17,-17.5 12.5,-16.4" fill="#475569" />
+                <circle cx="12.4" cy="-18.3" r="1.2" fill="#f8fafc" />
+                {/* Bright amber eye */}
+                <circle cx="10" cy="-19.3" r="1.3" fill="#f59e0b" />
+                <circle cx="10.2" cy="-19.3" r="0.65" fill="#0f172a" />
+              </motion.g>
+            </motion.g>
+          )}
+
+          {visitor.kind === 'robin' && (
+            <motion.g
+              animate={startled ? { y: [-2, -9, -2] } : { y: [0, -1.6, 0, 0] }}
+              transition={{ duration: startled ? 0.18 : 2.6, repeat: Infinity, ease: 'easeInOut' }}
+            >
+              {/* Slender legs */}
+              <path d="M -1 0 L -1 2.2 M 3 0 L 3 2.2" stroke="#5c4033" strokeWidth="1.2" strokeLinecap="round" />
+              {/* Perky raised tail */}
+              <path d="M -7 -7 L -16 -12 L -14 -8 L -6 -4 Z" fill={night ? '#57463b' : '#785a46'} />
+              {/* Round robin body */}
+              <circle cx="1" cy="-8.5" r="7.4" fill={night ? '#6b5547' : '#8d6b52'} />
+              {/* Signature warm orange-red robin breast */}
+              <path d="M 1.5 -13.5 Q 9 -12 8 -5 Q 4 -1.5 -1 -4 Q 2 -9 1.5 -13.5 Z" fill="#ea580c" />
+              {/* Wing */}
+              <path d="M -5 -9.5 Q 1 -12 4 -6.5 Q -1 -3.5 -6 -6.5 Z" fill={night ? '#4b3b31' : '#6c4f3d'} />
+              {/* Cute round head & eye */}
+              <circle cx="6.2" cy="-14.2" r="4.6" fill={night ? '#6b5547' : '#8d6b52'} />
+              <path d="M 5.5 -12.8 Q 9.5 -13 10 -10.5 Q 7 -9 5 -11 Z" fill="#ea580c" />
+              <polygon points="10.2,-14.6 14.2,-13.5 10.2,-12.5" fill="#292524" />
+              <circle cx="7.6" cy="-15" r="1.25" fill="#0f172a" />
+              <circle cx="8" cy="-15.4" r="0.45" fill="#ffffff" />
+            </motion.g>
+          )}
+
+          {visitor.kind === 'dove' && (
+            <motion.g
+              animate={startled ? { y: [-2, -8, -2] } : { y: [0, -0.7, 0] }}
+              transition={{ duration: startled ? 0.2 : 2.8, repeat: Infinity, ease: 'easeInOut' }}
+            >
+              <path d="M -2 0 L -2.5 2.4 M 3 0 L 2.5 2.4" stroke="#d97777" strokeWidth="1.3" strokeLinecap="round" />
+              {/* Long graceful dove tail */}
+              <path d="M -9 -6 L -22 -2 L -20 1.5 L -8 -2.5 Z" fill={night ? '#78716c' : '#a8a29e'} />
+              {/* Soft warm cream-taupe body */}
+              <ellipse cx="0" cy="-8.5" rx="10.8" ry="6.8" fill={night ? '#9a8c82' : '#d6c5b3'} />
+              {/* Wing with gentle dove spots */}
+              <path d="M -8 -9.5 Q -1 -14 6.5 -8.5 Q 1 -3.5 -9 -6 Z" fill={night ? '#7e7167' : '#bfa994'} />
+              <circle cx="-3" cy="-8" r="0.9" fill="#574c43" opacity="0.65" />
+              <circle cx="0" cy="-7" r="0.9" fill="#574c43" opacity="0.65" />
+              {/* Graceful head */}
+              <circle cx="8" cy="-16.8" r="4.3" fill={night ? '#a89a8f' : '#e3d4c4'} />
+              <polygon points="11.8,-17.1 15.8,-16 11.8,-15.1" fill="#57534e" />
+              <circle cx="9.2" cy="-17.5" r="1.15" fill="#1c1917" />
+              <circle cx="9.6" cy="-17.8" r="0.4" fill="#ffffff" />
+            </motion.g>
+          )}
+
+          {visitor.kind === 'butterfly' && (
+            <motion.g
+              animate={
+                startled
+                  ? { y: [0, -10, -4], rotate: [-12, 12, -12] }
+                  : { y: [-3, 4, -3], x: [-2.5, 2.5, -2.5] }
+              }
+              transition={{ duration: startled ? 0.22 : 2.6, repeat: Infinity, ease: 'easeInOut' }}
+            >
+              {/* Left wings flapping */}
+              <motion.g
+                style={{ originX: '0px', originY: '0px' }}
+                animate={{ scaleX: [1, 0.25, 1] }}
+                transition={{ duration: startled ? 0.14 : 0.42, repeat: Infinity, ease: 'easeInOut' }}
+              >
+                <path d="M 0 0 C -6 -13, -17 -11, -14 -2 C -12 3, -5 3, 0 1 Z" fill="#f97316" stroke="#431407" strokeWidth="1" />
+                <path d="M 0 1 C -7 2, -13 8, -8 11 C -4 13, -1 7, 0 2 Z" fill="#fb923c" stroke="#431407" strokeWidth="1" />
+                <circle cx="-10.5" cy="-5.5" r="1.3" fill="#fef3c7" />
+              </motion.g>
+              {/* Right wings flapping */}
+              <motion.g
+                style={{ originX: '0px', originY: '0px' }}
+                animate={{ scaleX: [1, 0.25, 1] }}
+                transition={{ duration: startled ? 0.14 : 0.42, repeat: Infinity, ease: 'easeInOut' }}
+              >
+                <path d="M 0 0 C 6 -13, 17 -11, 14 -2 C 12 3, 5 3, 0 1 Z" fill="#fb923c" stroke="#431407" strokeWidth="1" />
+                <path d="M 0 1 C 7 2, 13 8, 8 11 C 4 13, 1 7, 0 2 Z" fill="#fdba74" stroke="#431407" strokeWidth="1" />
+                <circle cx="10.5" cy="-5.5" r="1.3" fill="#fef3c7" />
+              </motion.g>
+              {/* Body & curled antennae */}
+              <ellipse cx="0" cy="1" rx="1.4" ry="5.2" fill="#292524" />
+              <path d="M -0.5 -4 Q -3 -8 -5 -7.5 M 0.5 -4 Q 3 -8 5 -7.5" stroke="#292524" strokeWidth="0.9" fill="none" strokeLinecap="round" />
+            </motion.g>
+          )}
+
+          {visitor.kind === 'moth' && (
+            <motion.g
+              animate={
+                startled
+                  ? { y: [0, -10, -4], rotate: [-10, 10, -10] }
+                  : { y: [-3, 3.5, -3], x: [-3, 3, -3] }
+              }
+              transition={{ duration: startled ? 0.2 : 2.9, repeat: Infinity, ease: 'easeInOut' }}
+            >
+              {/* Soft moonlit pale-lime/cream luna moth wings */}
+              <motion.g
+                style={{ originX: '0px', originY: '0px' }}
+                animate={{ scaleX: [1, 0.32, 1] }}
+                transition={{ duration: startled ? 0.14 : 0.36, repeat: Infinity, ease: 'easeInOut' }}
+              >
+                <path d="M 0 -1 C -7 -11, -17 -9, -15 -1 C -13 3, -5 3, 0 1 Z" fill="#d9f99d" stroke="#84cc16" strokeWidth="0.8" />
+                <path d="M 0 1 C -7 2, -12 8, -9 13 C -7 16, -4 9, 0 2 Z" fill="#ecfccb" stroke="#84cc16" strokeWidth="0.8" />
+                <circle cx="-8" cy="-4" r="1.4" fill="#fef08a" stroke="#65a30d" strokeWidth="0.5" />
+                <path d="M 0 -1 C 7 -11, 17 -9, 15 -1 C 13 3, 5 3, 0 1 Z" fill="#d9f99d" stroke="#84cc16" strokeWidth="0.8" />
+                <path d="M 0 1 C 7 2, 12 8, 9 13 C 7 16, 4 9, 0 2 Z" fill="#ecfccb" stroke="#84cc16" strokeWidth="0.8" />
+                <circle cx="8" cy="-4" r="1.4" fill="#fef08a" stroke="#65a30d" strokeWidth="0.5" />
+              </motion.g>
+              {/* Fluffy moth body & feathery antennae */}
+              <ellipse cx="0" cy="0.5" rx="1.8" ry="4.6" fill="#fef9c3" />
+              <path d="M -0.8 -4 Q -3 -7.5 -4.5 -7 M 0.8 -4 Q 3 -7.5 4.5 -7" stroke="#fde047" strokeWidth="1" fill="none" strokeLinecap="round" />
+            </motion.g>
+          )}
+        </g>
+      </g>
+    </motion.g>
+  );
+}
+
+/**
  * Nico & Athina's Sunny Balcony — crafted in clean, unified 1-point perspective
  * matching the Living Room scenery and inspired by their real balcony:
  * - Warm square sandstone terrace tiles (clean & leaf-free!) with white concrete parapet curb
@@ -581,6 +814,9 @@ export function Balcony({
   catAnimationKey = 0,
   catLifeStage = 'adult',
   onPetCat,
+  visitor = null,
+  visitorStartled = false,
+  onTapVisitor,
 }: {
   timeOfDay?: TimeOfDay;
   isRaining?: boolean;
@@ -591,6 +827,9 @@ export function Balcony({
   catAnimationKey?: number;
   catLifeStage?: LifeStage;
   onPetCat?: () => void;
+  visitor?: BalconyVisitor | null;
+  visitorStartled?: boolean;
+  onTapVisitor?: (visitor: BalconyVisitor) => void;
 }) {
   // Lighting follows the real time of day, even when Oli naps during the day.
   const night = timeOfDay === 'night';
@@ -1401,6 +1640,19 @@ export function Balcony({
           </motion.g>
         )}
       </g>
+
+      {/* 12. Visiting Balcony Wildlife (pigeons, robins, doves, butterflies & evening moths) */}
+      <AnimatePresence>
+        {visitor && (
+          <BalconyVisitorSprite
+            key={visitor.id}
+            visitor={visitor}
+            startled={visitorStartled}
+            night={night}
+            onTap={onTapVisitor}
+          />
+        )}
+      </AnimatePresence>
     </svg>
   );
 }

@@ -211,6 +211,7 @@ function expressionFor(mood: Mood, animation: CatAnimation, petting: boolean, li
     case 'laser':
     case 'tail_chase':
     case 'red_ball':
+    case 'pounce':
       eyes = 'wide';
       mouth = 'smile';
       earDroop = false;
@@ -298,6 +299,14 @@ function headMotion(animation: CatAnimation, sec: number, sleeping: boolean): { 
           x: [0, -10, 12, -12, 10, -6, 0],
           y: [0, 8, -4, 10, -4, 6, 0],
           rotate: [0, -12, 12, -14, 12, -8, 0],
+        },
+        transition: { duration: sec, ease: 'easeInOut' },
+      };
+    case 'pounce':
+      return {
+        animate: {
+          y: [0, 6, 6, 8, -10, 0],
+          rotate: [0, -4, 4, -3, 0, 0],
         },
         transition: { duration: sec, ease: 'easeInOut' },
       };
@@ -1056,6 +1065,7 @@ export function CatAvatar({
       brushing: 2.8,
       yawning: 1.6,
       refuse: 1.4,
+      pounce: 1.8,
     };
     const sec = durations[animation];
     setActiveAnim(animation);
@@ -1127,9 +1137,20 @@ export function CatAvatar({
 
   const showProps = !(pose === 'look_out' && !sleeping);
   const suit = useOutfit().body === 'suit';
-  const isPlayAnim = anim === 'playing' || anim === 'laser' || anim === 'tail_chase' || anim === 'red_ball';
+  const isPlayAnim =
+    anim === 'playing' || anim === 'laser' || anim === 'tail_chase' || anim === 'red_ball' || anim === 'pounce';
   const tailSpeed =
-    anim === 'tail_chase' ? 0.32 : isPlayAnim ? 0.6 : mood === 'ecstatic' || mood === 'happy' ? 2.2 : sad ? 5 : 3.4;
+    anim === 'tail_chase'
+      ? 0.32
+      : anim === 'pounce'
+        ? 0.42
+        : isPlayAnim
+          ? 0.6
+          : mood === 'ecstatic' || mood === 'happy'
+            ? 2.2
+            : sad
+              ? 5
+              : 3.4;
 
   const headProps = {
     eyes: expr.eyes,
@@ -1197,22 +1218,30 @@ export function CatAvatar({
           onPointerDown={handlePet}
           style={{ cursor: 'pointer' }}
           animate={
-            anim === 'laser' || anim === 'red_ball'
-              ? { x: [0, -18, 18, -14, 16, 0], y: [0, -10, 0, -14, 0, -8, 0] }
-              : anim === 'tail_chase'
-                ? { x: [0, 14, -14, 14, -14, 0], y: [0, -10, 0, -12, 0, -8, 0], rotate: [0, 8, -8, 8, -8, 0] }
-                : anim === 'playing'
-                  ? { y: [0, -12, 0, -16, 0, -10, 0] }
-                  : petting
-                    ? { y: [0, -6, 0] }
-                    : anim === 'purring'
-                      ? { x: [0, -0.7, 0.7, -0.7, 0.7, 0] }
-                      : { y: 0, x: 0, rotate: 0 }
+            anim === 'pounce'
+              ? {
+                  x: [0, -5, 5, -6, 6, 0, 0],
+                  y: [0, 5, 5, 6, 6, -22, 0],
+                  rotate: [0, -4, 4, -5, 5, 0, 0],
+                }
+              : anim === 'laser' || anim === 'red_ball'
+                ? { x: [0, -18, 18, -14, 16, 0], y: [0, -10, 0, -14, 0, -8, 0] }
+                : anim === 'tail_chase'
+                  ? { x: [0, 14, -14, 14, -14, 0], y: [0, -10, 0, -12, 0, -8, 0], rotate: [0, 8, -8, 8, -8, 0] }
+                  : anim === 'playing'
+                    ? { y: [0, -12, 0, -16, 0, -10, 0] }
+                    : petting
+                      ? { y: [0, -6, 0] }
+                      : anim === 'purring'
+                        ? { x: [0, -0.7, 0.7, -0.7, 0.7, 0] }
+                        : { y: 0, x: 0, rotate: 0 }
           }
           transition={
             anim === 'purring'
               ? { duration: 0.18, repeat: Math.round(animSec / 0.18) }
-              : { duration: isPlayAnim ? animSec : 0.5, ease: 'easeInOut' }
+              : anim === 'pounce'
+                ? { duration: animSec, times: [0, 0.16, 0.3, 0.44, 0.58, 0.8, 1], ease: 'easeInOut' }
+                : { duration: isPlayAnim ? animSec : 0.5, ease: 'easeInOut' }
           }
         >
           {(() => {

@@ -3,6 +3,7 @@ import { RefreshCw } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActionDock } from './components/ActionDock';
 import { ClosetDrawer, HangerIcon, useCloset } from './components/ClosetDrawer';
+import { DailyQuestsModal } from './components/DailyQuestsModal';
 import { EmergencyRevivalModal } from './components/EmergencyRevivalModal';
 import { FloatingEffects } from './components/FloatingEffects';
 import { FortuneModal, useFortune } from './components/FortuneModal';
@@ -16,7 +17,14 @@ import { WhimBubble } from './components/WhimBubble';
 import { actionById } from './data/actions';
 import { useCatGame, type Notice } from './hooks/useCatGame';
 import { useVersionCheck } from './hooks/useVersionCheck';
+import { pickBalconyVisitor, type BalconyVisitor } from './utils/balconyVisitors';
 import { hasAffordableItem } from './utils/closet';
+import {
+  countCompletedQuests,
+  getVisibleStreak,
+  isDailyRewardReady,
+  useDailyQuests,
+} from './utils/dailyQuests';
 import { canAffordFortune, getTodayDateString, isFortuneReady, isFortuneUnlocked } from './utils/fortune';
 import { markBadgeSeen, trackBalconyVisit, trackBoxNap, trackDayVisit, trackRainWatch, useBadges } from './utils/badges';
 import { OnboardingModal } from './components/OnboardingModal';
@@ -69,6 +77,10 @@ export function App() {
   const closet = useCloset();
   const [fortuneOpen, setFortuneOpen] = useState(false);
   const fortune = useFortune();
+  const [questsOpen, setQuestsOpen] = useState(false);
+  const dailyQuests = useDailyQuests();
+  const [balconyVisitor, setBalconyVisitor] = useState<BalconyVisitor | null>(null);
+  const [visitorStartled, setVisitorStartled] = useState(false);
   const [menuTab, setMenuTab] = useState<MenuTab>('rules');
   const [menuHighlightBadges, setMenuHighlightBadges] = useState<string[]>([]);
   const [notifPrefs, setNotifPrefs] = useState<NotificationPrefs>(() => loadNotificationPrefs());
@@ -76,9 +88,15 @@ export function App() {
   const [tapHeartKey, setTapHeartKey] = useState(0);
   const noticeTimer = useRef<number | undefined>(undefined);
   const noticeSeqRef = useRef(0);
+  const visitorTimersRef = useRef<{ spawn?: number; leave?: number; clear?: number }>({});
 
   useEffect(() => {
-    return () => window.clearTimeout(noticeTimer.current);
+    return () => {
+      window.clearTimeout(noticeTimer.current);
+      window.clearTimeout(visitorTimersRef.current.spawn);
+      window.clearTimeout(visitorTimersRef.current.leave);
+      window.clearTimeout(visitorTimersRef.current.clear);
+    };
   }, []);
 
   const mainRef = useRef<HTMLElement>(null);
@@ -116,6 +134,7 @@ export function App() {
     churuProgress,
     buyAccessory,
     buyFortuneCookie,
+    claimDailyQuests,
     handleBadgeUnlocks,
     badgeCelebration,
     dismissBadgeCelebration,
@@ -131,6 +150,7 @@ export function App() {
     completeMinigame,
     cancelMinigame,
     petOli,
+    interactBalconyVisitor,
     cleanMess,
     scoopLitterBox,
     fulfillWhim,
@@ -161,6 +181,8 @@ export function App() {
         dismissGrowthCelebration();
       } else if (badgeCelebration) {
         handleAcknowledgeBadge();
+      } else if (questsOpen) {
+        setQuestsOpen(false);
       } else if (fortuneOpen) {
         setFortuneOpen(false);
       } else if (closetOpen) {
@@ -177,6 +199,7 @@ export function App() {
     dismissGrowthCelebration,
     badgeCelebration,
     handleAcknowledgeBadge,
+    questsOpen,
     fortuneOpen,
     closetOpen,
     menuOpen,
@@ -189,6 +212,60 @@ export function App() {
   // Light follows the real clock in Luxembourg only. A daytime nap stays in daylight.
   const isNight = effectiveTime === 'night';
   const isSunset = effectiveTime === 'sunset';
+
+  // Balcony Bird Watching: spawn time-of-day pigeons, robins, doves, butterflies & evening moths
+  const canSpawnVisitor =
+    ready &&
+    Boolean(live) &&
+    scene === 'balcony' &&
+    !live?.isSleeping &&
+    !live?.isPaused &&
+    !live?.isDeceased;
+
+  useEffect(() => {
+    window.clearTimeout(visitorTimersRef.current.spawn);
+    window.clearTimeout(visitorTimersRef.current.leave);
+
+    if (!canSpawnVisitor) {
+      window.clearTimeout(visitorTimersRef.current.clear);
+      setBalconyVisitor(null);
+      setVisitorStartled(false);
+      return;
+    }
+
+    if (balconyVisitor) {
+      if (visitorStartled) return;
+      const stayMs = 18_000 + Math.floor(Math.random() * 8_000);
+      visitorTimersRef.current.leave = window.setTimeout(() => {
+        setBalconyVisitor(null);
+      }, stayMs);
+      return () => window.clearTimeout(visitorTimersRef.current.leave);
+    }
+
+    const waitMs = 2_200 + Math.floor(Math.random() * 4_500);
+    visitorTimersRef.current.spawn = window.setTimeout(() => {
+      if (document.visibilityState === 'hidden') return;
+      setVisitorStartled(false);
+      setBalconyVisitor(pickBalconyVisitor(effectiveTime, isRaining));
+    }, waitMs);
+
+    return () => window.clearTimeout(visitorTimersRef.current.spawn);
+  }, [canSpawnVisitor, balconyVisitor, visitorStartled, effectiveTime, isRaining]);
+
+  const handleTapBalconyVisitor = useCallback(
+    (visitor: BalconyVisitor) => {
+      if (visitorStartled) return;
+      if (!interactBalconyVisitor(visitor)) return;
+      setVisitorStartled(true);
+      window.clearTimeout(visitorTimersRef.current.leave);
+      window.clearTimeout(visitorTimersRef.current.clear);
+      visitorTimersRef.current.clear = window.setTimeout(() => {
+        setBalconyVisitor(null);
+        setVisitorStartled(false);
+      }, 700);
+    },
+    [visitorStartled, interactBalconyVisitor],
+  );
 
   // Automatically refresh Luxembourg atmosphere (weather, real sunrise/sunset) on launch and resume
   useEffect(() => {
@@ -509,6 +586,9 @@ export function App() {
                   catAnimationKey={event?.key ?? 0}
                   catLifeStage={live.lifeStage}
                   onPetCat={handlePetOli}
+                  visitor={balconyVisitor}
+                  visitorStartled={visitorStartled}
+                  onTapVisitor={handleTapBalconyVisitor}
                 />
               </motion.div>
             ) : (
@@ -638,6 +718,50 @@ export function App() {
             containerWidth={containerSize.width}
           />
           {scene === 'living_room' && <RoomMesses messes={messes} onClean={cleanMess} />}
+
+          {/* Daily Quests & Care Streak button */}
+          {(() => {
+            const doneCount = countCompletedQuests(dailyQuests);
+            const totalCount = dailyQuests.quests.length;
+            const rewardReady = isDailyRewardReady(dailyQuests, now);
+            const streak = getVisibleStreak(dailyQuests, now);
+            return (
+              <button
+                type="button"
+                onClick={() => setQuestsOpen(true)}
+                title={
+                  streak > 0
+                    ? `Daily Quests (${doneCount}/${totalCount}) · ${streak}-day streak`
+                    : `Daily Quests (${doneCount}/${totalCount})`
+                }
+                aria-label={
+                  rewardReady
+                    ? 'Open Daily Quests (bonus ready to claim)'
+                    : `Open Daily Quests (${doneCount} of ${totalCount} done)`
+                }
+                className={`pointer-events-auto absolute left-3 bottom-12 z-20 flex h-9 w-9 items-center justify-center rounded-full border shadow-md backdrop-blur-md transition-all active:scale-95 ${
+                  isNight
+                    ? 'border-white/10 bg-slate-900/80 text-amber-300'
+                    : 'border-amber-900/12 bg-white/90 text-amber-700'
+                }`}
+              >
+                <span className="text-base leading-none select-none">📋</span>
+                {rewardReady ? (
+                  <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-amber-400 text-[9px] font-black text-amber-950 ring-2 ring-white animate-pulse">
+                    🎁
+                  </span>
+                ) : dailyQuests.rewardClaimed ? (
+                  <span className="absolute -top-0.5 -right-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-emerald-500 text-[8px] font-black text-white ring-2 ring-white">
+                    ✓
+                  </span>
+                ) : doneCount > 0 ? (
+                  <span className="absolute -top-1 -right-1.5 rounded-full bg-amber-500 px-1 text-[8px] font-black text-white ring-2 ring-white tabular-nums">
+                    {doneCount}/{totalCount}
+                  </span>
+                ) : null}
+              </button>
+            );
+          })()}
 
           {/* Oli's Daily Fortune Cookie button */}
           <button
@@ -790,6 +914,20 @@ export function App() {
               onUnlock={buyFortuneCookie}
               onUnlockBadges={handleBadgeUnlocks}
               onClose={() => setFortuneOpen(false)}
+            />
+          )}
+        </AnimatePresence>
+
+        {/* Daily Quests & Care Streak Modal */}
+        <AnimatePresence>
+          {questsOpen && (
+            <DailyQuestsModal
+              key="daily-quests-modal"
+              questState={dailyQuests}
+              nowMs={now}
+              isPaused={live.isPaused}
+              onClaimReward={claimDailyQuests}
+              onClose={() => setQuestsOpen(false)}
             />
           )}
         </AnimatePresence>

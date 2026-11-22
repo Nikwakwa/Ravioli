@@ -165,4 +165,16 @@ describe('Balcony — Scenery & Mobile Safe Bounds', () => {
       expect(coord.y).toBeLessThanOrEqual(SAFE_MOBILE.maxY);
     }
   });
+
+  it('renders a clickable balcony visitor with a generous touch target when present', () => {
+    const tree = Balcony({
+      activeSpot: 'planter',
+      visitor: { id: 'v-1', kind: 'pigeon', x: 108, y: 207, facing: 1, hovering: false },
+      onTapVisitor: () => {},
+    }) as AnyElement;
+
+    const visitors = findElements(tree, (el) => typeof el.type === 'function' && el.type.name === 'BalconyVisitorSprite');
+    expect(visitors.length).toBe(1);
+    expect(visitors[0].props.visitor.kind).toBe('pigeon');
+  });
 });
