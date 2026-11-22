@@ -4,6 +4,13 @@ All updates to **Oli** are listed here.
 
 ---
 
+## `v1.3.4` — 2026-11-22
+### How to Play Intros ❓
+- Each minigame now opens with a quick, skippable How to Play card on your first try before the timer starts.
+- Tap the ? button anytime during a game if you want to double-check the rules.
+
+---
+
 ## `v1.3.3` — 2026-11-22
 ### Snappier Peek-a-Boo & Paw Pattern 🐾
 - Moved Peek-a-Boo into Active (replacing Red Ball) and cranked up the challenge with 6 hiding spots, faster multi-boop rounds, and decoy toy mice.

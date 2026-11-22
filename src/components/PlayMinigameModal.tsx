@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion';
-import { FastForward, Sparkles, Trophy, X } from 'lucide-react';
+import { FastForward, HelpCircle, Sparkles, Trophy, X } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   computeMinigameReward,
@@ -23,6 +23,11 @@ import {
   saveSeenTriviaIds,
   type PreparedTriviaQuestion,
 } from '../data/catTrivia';
+import {
+  hasSeenMinigameGuide,
+  markMinigameGuideSeen,
+  MINIGAME_GUIDES,
+} from '../data/minigameGuides';
 import { vibrate } from '../utils/feedback';
 import { playSound } from '../utils/sound';
 import {
@@ -91,12 +96,15 @@ export function PlayMinigameModal({
   whimActive,
   onComplete,
   onCancel,
+  skipIntro = false,
 }: {
   action: CareAction | null;
   catName: string;
   whimActive: boolean;
   onComplete: (hits: number) => void;
   onCancel: () => void;
+  /** Optional override (primarily for tests) to start directly in Round 1. */
+  skipIntro?: boolean;
 }) {
   const isFeather = action?.id === 'feather_wand';
   const isTail = action?.id === 'tail_chase';
@@ -108,6 +116,11 @@ export function PlayMinigameModal({
   const isComponentGame = isPeek || isBoxShuffle || isPawPattern || isSnackMatch || isCatTrivia;
 
   const roundDuration = getRoundDurationSec(action?.id, 0);
+
+  const [showIntro, setShowIntro] = useState<boolean>(() =>
+    Boolean(action && !skipIntro && !hasSeenMinigameGuide(action.id)),
+  );
+  const [introOpenedMidGame, setIntroOpenedMidGame] = useState(false);
 
   const [round, setRound] = useState(0);
   const [results, setResults] = useState<('hit' | 'miss')[]>([]);
@@ -164,25 +177,48 @@ export function PlayMinigameModal({
     return id;
   };
 
+  const resetRoundPhysics = (actionId: string, roundIdx: number) => {
+    const dur = getRoundDurationSec(actionId, roundIdx);
+    setTimeLeft(dur);
+    timeLeftRef.current = dur;
+    const startPaused =
+      actionId === 'box_shuffle' || actionId === 'snack_match' || actionId === 'paw_pattern';
+    timerPausedRef.current = startPaused;
+    setTimerPaused(startPaused);
+    pouncesLeftRef.current = MAX_LASER_POUNCES;
+    setPouncesLeft(MAX_LASER_POUNCES);
+    pounceCooldownRef.current = false;
+    roundLockedRef.current = false;
+
+    posRef.current = 12;
+    dirRef.current = 1;
+    setFeatherPos(12);
+
+    tailAngleRef.current = 180;
+    tailDirRef.current = roundIdx % 2 === 1 ? -1 : 1;
+    setTailAngle(180);
+
+    setCaughtPos(null);
+    setMissPaws([]);
+    laserPosRef.current = { x: 50, y: 50 };
+    setLaserPos({ x: 50, y: 50 });
+    const angle = Math.random() * 2 * Math.PI;
+    const speed = 65 + roundIdx * 40;
+    laserVelRef.current = { vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed };
+    laserNextTurnRef.current = performance.now() + 380 + Math.random() * 400;
+  };
+
   // Reset state whenever a new minigame action opens
   useEffect(() => {
     clearTimers();
     if (!action) return;
-    const dur = getRoundDurationSec(action.id, 0);
+    setShowIntro(!skipIntro && !hasSeenMinigameGuide(action.id));
+    setIntroOpenedMidGame(false);
     setRound(0);
     setResults([]);
     setRoundFeedback(null);
     setMissReason(null);
     setFinished(false);
-    setTimeLeft(dur);
-    timeLeftRef.current = dur;
-    timerPausedRef.current =
-      action.id === 'box_shuffle' || action.id === 'snack_match' || action.id === 'paw_pattern';
-    setTimerPaused(timerPausedRef.current);
-    pouncesLeftRef.current = MAX_LASER_POUNCES;
-    setPouncesLeft(MAX_LASER_POUNCES);
-    pounceCooldownRef.current = false;
-    roundLockedRef.current = false;
     completedHitsRef.current = null;
 
     if (action.id === 'cat_trivia') {
@@ -191,28 +227,27 @@ export function PlayMinigameModal({
       saveSeenTriviaIds(picked.nextSeenIds);
     }
 
-    // Reset Feather state
-    posRef.current = 12;
-    dirRef.current = 1;
-    setFeatherPos(12);
-
-    // Reset Tail state
-    tailAngleRef.current = 180;
-    tailDirRef.current = 1;
-    setTailAngle(180);
-
-    // Reset Laser state
-    setCaughtPos(null);
-    setMissPaws([]);
-    laserPosRef.current = { x: 50, y: 50 };
-    setLaserPos({ x: 50, y: 50 });
-    const angle = Math.random() * 2 * Math.PI;
-    const initialSpeed = 65;
-    laserVelRef.current = { vx: Math.cos(angle) * initialSpeed, vy: Math.sin(angle) * initialSpeed };
-    laserNextTurnRef.current = performance.now() + 380 + Math.random() * 400;
+    resetRoundPhysics(action.id, 0);
 
     return () => clearTimers();
-  }, [action]);
+  }, [action, skipIntro]);
+
+  const handleStartFromIntro = () => {
+    if (!action) return;
+    markMinigameGuideSeen(action.id);
+    resetRoundPhysics(action.id, round);
+    setShowIntro(false);
+    setIntroOpenedMidGame(false);
+    vibrate(15);
+    playSound('pop');
+  };
+
+  const handleOpenHelp = () => {
+    if (roundFeedback !== null || finished) return;
+    setIntroOpenedMidGame(true);
+    setShowIntro(true);
+    vibrate(10);
+  };
 
   const handleCloseButton = () => {
     if (completedHitsRef.current !== null) {
@@ -230,7 +265,14 @@ export function PlayMinigameModal({
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         e.preventDefault();
-        handleCloseButton();
+        if (showIntro && introOpenedMidGame) {
+          handleStartFromIntro();
+        } else {
+          handleCloseButton();
+        }
+      } else if ((e.key === ' ' || e.key === 'Enter') && showIntro) {
+        e.preventDefault();
+        handleStartFromIntro();
       } else if ((e.key === ' ' || e.key === 'Enter') && roundFeedback === null && !finished) {
         if (isFeather) {
           e.preventDefault();
@@ -245,11 +287,11 @@ export function PlayMinigameModal({
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [action, isFeather, isTail, round, roundFeedback, finished, onCancel, onComplete]);
+  }, [action, showIntro, introOpenedMidGame, isFeather, isTail, round, roundFeedback, finished, onCancel, onComplete]);
 
   // Main 60fps animation frame loop for movement & timer countdown
   useEffect(() => {
-    if (!action || roundFeedback !== null || finished) return;
+    if (!action || showIntro || roundFeedback !== null || finished) return;
 
     let frameId = 0;
     let lastTs = performance.now();
@@ -343,7 +385,7 @@ export function PlayMinigameModal({
 
     frameId = window.requestAnimationFrame(step);
     return () => window.cancelAnimationFrame(frameId);
-  }, [action, isFeather, isTail, isComponentGame, round, roundFeedback, finished]);
+  }, [action, showIntro, isFeather, isTail, isComponentGame, round, roundFeedback, finished]);
 
   if (!action) return null;
 
@@ -566,42 +608,54 @@ export function PlayMinigameModal({
           transition={{ type: 'spring', stiffness: 360, damping: 28 }}
           className="relative max-h-[calc(100dvh-2rem)] w-full max-w-[360px] touch-pan-y overflow-y-auto rounded-3xl border-2 border-amber-400/70 bg-[#fff8ef] p-4 text-amber-950 shadow-2xl"
         >
-          {/* Header: Game title + Skip / Close */}
+          {/* Header: Game title + Help / Skip / Close */}
           <div className="mb-3 flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-amber-500/18 text-lg shadow-2xs">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-amber-500/18 text-lg shadow-2xs">
                 {headerEmoji}
               </span>
-              <div>
+              <div className="min-w-0">
                 <div className="flex items-center gap-1.5">
-                  <h2 id="minigame-title" className="font-display text-sm font-extrabold leading-tight text-amber-950">
+                  <h2 id="minigame-title" className="truncate font-display text-sm font-extrabold leading-tight text-amber-950">
                     {headerTitle}
                   </h2>
                   {whimActive && (
-                    <span className="rounded-full bg-amber-400 px-1.5 py-0.5 text-[9px] font-black text-amber-950">
+                    <span className="shrink-0 rounded-full bg-amber-400 px-1.5 py-0.5 text-[9px] font-black text-amber-950">
                       💭 2× Joy
                     </span>
                   )}
                 </div>
-                <p className="text-[10px] font-bold text-amber-800/80">
-                  {headerInstruction}{' '}
-                  <span className="whitespace-nowrap text-emerald-700">3/3 = +1 🍬 point</span>
-                </p>
+                {!showIntro && (
+                  <p className="text-[10px] font-bold text-amber-800/80">
+                    {headerInstruction}
+                  </p>
+                )}
               </div>
             </div>
 
-            <div className="flex items-center gap-1">
-              {/* Skip only while a round is live: once scored, it would throw away the earned result */}
+            <div className="flex shrink-0 items-center gap-1">
+              {!showIntro && roundFeedback === null && !finished && (
+                <button
+                  type="button"
+                  onClick={handleOpenHelp}
+                  aria-label="How to play"
+                  title="How to play"
+                  className="flex h-8 w-8 items-center justify-center rounded-full bg-amber-900/10 text-amber-900 hover:bg-amber-900/15 active:scale-95"
+                >
+                  <HelpCircle className="h-4 w-4" />
+                </button>
+              )}
+              {/* Skip only while a round is live (or on intro): once scored, it would throw away the earned result */}
               {roundFeedback === null && !finished && (
-              <button
-                type="button"
-                onClick={() => onComplete(1)}
-                className="flex h-8 items-center gap-0.5 rounded-full bg-amber-900/10 px-2.5 text-[11px] font-extrabold text-amber-900 hover:bg-amber-900/15 active:scale-95"
-                title="Skip minigame and play immediately"
-              >
-                <FastForward className="h-3 w-3" />
-                <span>Skip</span>
-              </button>
+                <button
+                  type="button"
+                  onClick={() => onComplete(1)}
+                  className="flex h-8 items-center gap-0.5 rounded-full bg-amber-900/10 px-2.5 text-[11px] font-extrabold text-amber-900 hover:bg-amber-900/15 active:scale-95"
+                  title="Skip minigame and play immediately"
+                >
+                  <FastForward className="h-3 w-3" />
+                  <span>Skip</span>
+                </button>
               )}
               <button
                 type="button"
@@ -614,62 +668,115 @@ export function PlayMinigameModal({
             </div>
           </div>
 
-          {/* 3-Round Score Tracker with Countdown Badge */}
-          <div className="mb-3 flex items-center justify-between rounded-2xl bg-amber-950/6 px-3 py-1.5">
-            <div className="flex items-center gap-2">
-              <span className="text-[11px] font-extrabold whitespace-nowrap text-amber-900">
-                {`Round ${Math.min(MINIGAME_ROUNDS, round + 1)} of ${MINIGAME_ROUNDS}`}
-              </span>
-              {roundFeedback === null && !finished && (
-                <span
-                  className={`rounded-full px-2 py-0.5 text-[10px] font-black whitespace-nowrap tabular-nums transition-colors ${
-                    timerPaused
-                      ? 'bg-amber-900/8 text-amber-900/60'
-                      : timeLeft <= lowTimeThreshold
-                        ? 'bg-rose-500/20 text-rose-700 animate-pulse'
-                        : 'bg-amber-900/10 text-amber-900'
-                  }`}
-                >
-                  {`⏱️ ${Math.max(0, timeLeft).toFixed(1)}s`}
-                </span>
-              )}
-            </div>
-            <div className="flex items-center gap-1.5">
-              {Array.from({ length: MINIGAME_ROUNDS }).map((_, i) => {
-                const res = results[i];
-                return (
-                  <span
-                    key={i}
-                    className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-black transition-transform ${
-                      res === 'hit'
-                        ? 'scale-110 bg-emerald-500 text-white shadow-xs'
-                        : res === 'miss'
-                          ? 'bg-rose-500/20 text-rose-700'
-                          : i === round
-                            ? 'border-2 border-amber-500 bg-white text-amber-900'
-                            : 'bg-amber-950/10 text-amber-900/40'
-                    }`}
-                  >
-                    {res === 'hit' ? '🐾' : res === 'miss' ? '×' : i + 1}
+          {showIntro ? (
+            /* ---------------- HOW TO PLAY INTRO (Timer paused until player starts) ---------------- */
+            <motion.div
+              key="minigame-intro"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex flex-col gap-3"
+            >
+              <div className="rounded-2xl border border-amber-900/12 bg-gradient-to-b from-[#fdf6ec] to-[#f4e6d0] p-3.5 shadow-inner">
+                <div className="mb-2.5 flex items-center justify-between">
+                  <span className="rounded-full bg-amber-500/20 px-2.5 py-0.5 text-[10px] font-black tracking-wider uppercase text-amber-900">
+                    How to Play
                   </span>
-                );
-              })}
-            </div>
-          </div>
+                  <span className="text-[10px] font-extrabold text-emerald-800">
+                    3/3 = +1 🍬 point
+                  </span>
+                </div>
 
-          {/* Game Arena */}
-          {!finished ? (
-            isPeek ? (
-              <PeekABooGame
-                round={round}
-                roundFeedback={roundFeedback}
-                missReason={missReason}
-                timeLeft={timeLeft}
-                finished={finished}
-                onRoundResult={advanceRound}
-                onPauseTimer={handlePauseTimer}
-              />
-            ) : isBoxShuffle ? (
+                <ul className="flex flex-col gap-2">
+                  {(MINIGAME_GUIDES[action.id]?.steps ?? []).map((step, i) => (
+                    <li key={i} className="flex items-start gap-2.5 text-xs font-bold leading-snug text-amber-950">
+                      <span
+                        aria-hidden="true"
+                        className="flex h-6 w-6 shrink-0 items-center justify-center rounded-xl bg-white/90 text-sm shadow-2xs ring-1 ring-amber-900/10"
+                      >
+                        {step.emoji}
+                      </span>
+                      <span className="pt-0.5">{step.text}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleStartFromIntro}
+                className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 py-3.5 font-display text-base font-black text-white shadow-lg transition-transform active:scale-95"
+              >
+                <span>
+                  {introOpenedMidGame
+                    ? `🐾 Resume Round ${Math.min(MINIGAME_ROUNDS, round + 1)}`
+                    : '🐾 Start Playing!'}
+                </span>
+              </button>
+
+              {!introOpenedMidGame && (
+                <p className="text-center text-[10px] font-bold text-amber-800/70">
+                  Shown on your first try — tap ? anytime to see this again.
+                </p>
+              )}
+            </motion.div>
+          ) : (
+            <>
+              {/* 3-Round Score Tracker with Countdown Badge */}
+              <div className="mb-3 flex items-center justify-between rounded-2xl bg-amber-950/6 px-3 py-1.5">
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] font-extrabold whitespace-nowrap text-amber-900">
+                    {`Round ${Math.min(MINIGAME_ROUNDS, round + 1)} of ${MINIGAME_ROUNDS}`}
+                  </span>
+                  {roundFeedback === null && !finished && (
+                    <span
+                      className={`rounded-full px-2 py-0.5 text-[10px] font-black whitespace-nowrap tabular-nums transition-colors ${
+                        timerPaused
+                          ? 'bg-amber-900/8 text-amber-900/60'
+                          : timeLeft <= lowTimeThreshold
+                            ? 'bg-rose-500/20 text-rose-700 animate-pulse'
+                            : 'bg-amber-900/10 text-amber-900'
+                      }`}
+                    >
+                      {`⏱️ ${Math.max(0, timeLeft).toFixed(1)}s`}
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-1.5">
+                  {Array.from({ length: MINIGAME_ROUNDS }).map((_, i) => {
+                    const res = results[i];
+                    return (
+                      <span
+                        key={i}
+                        className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-black transition-transform ${
+                          res === 'hit'
+                            ? 'scale-110 bg-emerald-500 text-white shadow-xs'
+                            : res === 'miss'
+                              ? 'bg-rose-500/20 text-rose-700'
+                              : i === round
+                                ? 'border-2 border-amber-500 bg-white text-amber-900'
+                                : 'bg-amber-950/10 text-amber-900/40'
+                        }`}
+                      >
+                        {res === 'hit' ? '🐾' : res === 'miss' ? '×' : i + 1}
+                      </span>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Game Arena */}
+              {!finished ? (
+                isPeek ? (
+                  <PeekABooGame
+                    round={round}
+                    roundFeedback={roundFeedback}
+                    missReason={missReason}
+                    timeLeft={timeLeft}
+                    finished={finished}
+                    onRoundResult={advanceRound}
+                    onPauseTimer={handlePauseTimer}
+                  />
+                ) : isBoxShuffle ? (
               <BoxShuffleGame
                 round={round}
                 roundFeedback={roundFeedback}
@@ -1027,6 +1134,8 @@ export function PlayMinigameModal({
                     : 'Nice try!'}
               </p>
             </motion.div>
+          )}
+            </>
           )}
         </motion.div>
       </motion.div>

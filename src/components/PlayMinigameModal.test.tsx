@@ -11,6 +11,7 @@ import {
 } from './PlayMinigameModal';
 import {
   actionById,
+  CARE_ACTIONS,
   getFeatherSweetSpot,
   getTailCatchZone,
   isFeatherInSweetSpot,
@@ -31,9 +32,32 @@ import {
   PEEK_SPOTS,
 } from '../data/brainGames';
 import { CAT_TRIVIA_QUESTIONS, pickTriviaQuestions, prepareTriviaQuestion } from '../data/catTrivia';
+import { MINIGAME_GUIDES } from '../data/minigameGuides';
 
 describe('PlayMinigameModal', () => {
-  it('renders Feather Pounce with round timer badge and POUNCE button', () => {
+  it('shows a calm How to Play intro screen on first run (before starting timer) for every game', () => {
+    const playActions = CARE_ACTIONS.filter((a) => a.category === 'play');
+    expect(playActions).toHaveLength(8);
+
+    for (const act of playActions) {
+      expect(MINIGAME_GUIDES[act.id]?.steps.length).toBeGreaterThanOrEqual(2);
+      const html = renderToString(
+        <PlayMinigameModal
+          action={act}
+          catName="Oli"
+          whimActive={false}
+          onComplete={vi.fn()}
+          onCancel={vi.fn()}
+        />
+      );
+      expect(html).toContain('How to Play');
+      expect(html).toContain('Start Playing!');
+      expect(html).toContain('Skip');
+      expect(html).not.toContain('Round 1 of 3');
+    }
+  });
+
+  it('renders Feather Pounce with round timer badge, help button, and POUNCE button', () => {
     const featherAction = actionById('feather_wand')!;
     const html = renderToString(
       <PlayMinigameModal
@@ -42,6 +66,7 @@ describe('PlayMinigameModal', () => {
         whimActive={false}
         onComplete={vi.fn()}
         onCancel={vi.fn()}
+        skipIntro
       />
     );
 
@@ -50,6 +75,7 @@ describe('PlayMinigameModal', () => {
     expect(html).toContain('Round 1 of 3');
     expect(html).toContain('Pounce Zone');
     expect(html).toContain('10.0s');
+    expect(html).toContain('How to play');
     expect(html).toContain('Skip');
   });
 
@@ -62,6 +88,7 @@ describe('PlayMinigameModal', () => {
         whimActive={false}
         onComplete={vi.fn()}
         onCancel={vi.fn()}
+        skipIntro
       />
     );
 
@@ -84,6 +111,7 @@ describe('PlayMinigameModal', () => {
         whimActive={false}
         onComplete={vi.fn()}
         onCancel={vi.fn()}
+        skipIntro
       />
     );
 
@@ -103,6 +131,7 @@ describe('PlayMinigameModal', () => {
         whimActive={false}
         onComplete={vi.fn()}
         onCancel={vi.fn()}
+        skipIntro
       />
     );
 
@@ -126,6 +155,7 @@ describe('PlayMinigameModal', () => {
         whimActive={false}
         onComplete={vi.fn()}
         onCancel={vi.fn()}
+        skipIntro
       />
     );
 
@@ -144,6 +174,7 @@ describe('PlayMinigameModal', () => {
         whimActive={false}
         onComplete={vi.fn()}
         onCancel={vi.fn()}
+        skipIntro
       />
     );
 
@@ -165,6 +196,7 @@ describe('PlayMinigameModal', () => {
         whimActive={false}
         onComplete={vi.fn()}
         onCancel={vi.fn()}
+        skipIntro
       />
     );
 
@@ -182,6 +214,7 @@ describe('PlayMinigameModal', () => {
         whimActive={false}
         onComplete={vi.fn()}
         onCancel={vi.fn()}
+        skipIntro
       />
     );
 

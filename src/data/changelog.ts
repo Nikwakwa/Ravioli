@@ -7,6 +7,15 @@ export interface ReleaseEntry {
 
 export const CHANGELOG: ReleaseEntry[] = [
   {
+    version: 'v1.3.4',
+    date: '2026-11-22',
+    title: 'How to Play Intros ❓',
+    changes: [
+      'Each minigame now opens with a quick, skippable How to Play card on your first try before the timer starts.',
+      'Tap the ? button anytime during a game if you want to double-check the rules.',
+    ],
+  },
+  {
     version: 'v1.3.3',
     date: '2026-11-22',
     title: 'Snappier Peek-a-Boo & Paw Pattern 🐾',
