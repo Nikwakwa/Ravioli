@@ -413,7 +413,13 @@ export function soundForAction(actionId: string): SoundName | null {
     case 'laser_pointer':
     case 'tail_chase':
     case 'red_ball':
+    case 'box_shuffle':
+    case 'snack_match':
       return 'chirp';
+    case 'peek_a_boo':
+      return 'purr_soft';
+    case 'cat_trivia':
+      return 'chime';
     case 'toggle_sleep':
       return 'yawn';
     case 'refuse':

@@ -161,7 +161,14 @@ describe('Stage-specific unlocks, dock feed grid, and cravings', () => {
     expect(getVisibleActionsForCategory('feed', 'adult').map((a) => a.id)).toContain('quail_egg');
   });
 
-  it('unlocks food and play gradually: Newborn milk only → Kitten simple play → Teen/Adult all unlocked', () => {
+  it('shows 4 Active and 4 Brain games in the Play mini-tabs at every life stage', () => {
+    for (const stage of LIFE_STAGES) {
+      expect(getVisibleActionsForCategory('play', stage, 'active')).toHaveLength(4);
+      expect(getVisibleActionsForCategory('play', stage, 'brain')).toHaveLength(4);
+    }
+  });
+
+  it('unlocks food and play gradually across Newborn → Kitten → Teen → Adult', () => {
     const milk = actionById('kitten_milk')!;
     const wet = actionById('wet_food')!;
     const egg = actionById('quail_egg')!;
@@ -169,35 +176,55 @@ describe('Stage-specific unlocks, dock feed grid, and cravings', () => {
     const tail = actionById('tail_chase')!;
     const laser = actionById('laser_pointer')!;
     const ball = actionById('red_ball')!;
+    const peek = actionById('peek_a_boo')!;
+    const shuffle = actionById('box_shuffle')!;
+    const match = actionById('snack_match')!;
+    const trivia = actionById('cat_trivia')!;
 
-    // Newborn: only kitten milk (no solid food, no minigames)
+    // Newborn: kitten milk + gentle Peek-a-Boo (other games & solid food locked)
     expect(isActionUnlockedForStage(milk, 'newborn')).toBe(true);
     expect(isActionUnlockedForStage(wet, 'newborn')).toBe(false);
     expect(isActionUnlockedForStage(egg, 'newborn')).toBe(false);
+    expect(isActionUnlockedForStage(peek, 'newborn')).toBe(true);
     expect(isActionUnlockedForStage(feather, 'newborn')).toBe(false);
     expect(isActionUnlockedForStage(tail, 'newborn')).toBe(false);
+    expect(isActionUnlockedForStage(shuffle, 'newborn')).toBe(false);
     expect(isActionUnlockedForStage(laser, 'newborn')).toBe(false);
     expect(isActionUnlockedForStage(ball, 'newborn')).toBe(false);
+    expect(isActionUnlockedForStage(match, 'newborn')).toBe(false);
+    expect(isActionUnlockedForStage(trivia, 'newborn')).toBe(false);
 
-    // Kitten: milk + wet food + simple play (feather & tail), laser/ball/egg locked until Teen
+    // Kitten: unlocks Feather, Tail, Box Shuffle (plus milk & wet food)
     expect(isActionUnlockedForStage(milk, 'kitten')).toBe(true);
     expect(isActionUnlockedForStage(wet, 'kitten')).toBe(true);
     expect(isActionUnlockedForStage(egg, 'kitten')).toBe(false);
+    expect(isActionUnlockedForStage(peek, 'kitten')).toBe(true);
     expect(isActionUnlockedForStage(feather, 'kitten')).toBe(true);
     expect(isActionUnlockedForStage(tail, 'kitten')).toBe(true);
+    expect(isActionUnlockedForStage(shuffle, 'kitten')).toBe(true);
     expect(isActionUnlockedForStage(laser, 'kitten')).toBe(false);
     expect(isActionUnlockedForStage(ball, 'kitten')).toBe(false);
+    expect(isActionUnlockedForStage(match, 'kitten')).toBe(false);
+    expect(isActionUnlockedForStage(trivia, 'kitten')).toBe(false);
 
-    // Teen & Adult: weaned off milk, all meals & minigames unlocked
-    for (const stage of ['teen', 'adult'] as const) {
-      expect(isActionUnlockedForStage(milk, stage)).toBe(false);
-      expect(isActionUnlockedForStage(wet, stage)).toBe(true);
-      expect(isActionUnlockedForStage(egg, stage)).toBe(true);
-      expect(isActionUnlockedForStage(feather, stage)).toBe(true);
-      expect(isActionUnlockedForStage(tail, stage)).toBe(true);
-      expect(isActionUnlockedForStage(laser, stage)).toBe(true);
-      expect(isActionUnlockedForStage(ball, stage)).toBe(true);
-    }
+    // Teen: weaned off milk; unlocks Quail Egg, Laser, Red Ball, Snack Match; Cat Trivia waits for Adult
+    expect(isActionUnlockedForStage(milk, 'teen')).toBe(false);
+    expect(isActionUnlockedForStage(wet, 'teen')).toBe(true);
+    expect(isActionUnlockedForStage(egg, 'teen')).toBe(true);
+    expect(isActionUnlockedForStage(peek, 'teen')).toBe(true);
+    expect(isActionUnlockedForStage(feather, 'teen')).toBe(true);
+    expect(isActionUnlockedForStage(tail, 'teen')).toBe(true);
+    expect(isActionUnlockedForStage(shuffle, 'teen')).toBe(true);
+    expect(isActionUnlockedForStage(laser, 'teen')).toBe(true);
+    expect(isActionUnlockedForStage(ball, 'teen')).toBe(true);
+    expect(isActionUnlockedForStage(match, 'teen')).toBe(true);
+    expect(isActionUnlockedForStage(trivia, 'teen')).toBe(false);
+
+    // Adult: all 8 games unlocked (including Cat Trivia)
+    expect(isActionUnlockedForStage(milk, 'adult')).toBe(false);
+    expect(isActionUnlockedForStage(trivia, 'adult')).toBe(true);
+    expect(isActionUnlockedForStage(match, 'adult')).toBe(true);
+    expect(isActionUnlockedForStage(laser, 'adult')).toBe(true);
   });
 
   it('never generates locked cravings for Newborn or Kitten, and never asks Adult for Kitten Milk', () => {
@@ -205,7 +232,7 @@ describe('Stage-specific unlocks, dock feed grid, and cravings', () => {
     for (let i = 0; i < 20; i++) {
       const whim = pickCandidateWhim(newbornLive, i / 20);
       expect(whim).not.toBeNull();
-      expect(['chin_scratch', 'kitten_milk', 'fountain', 'brush']).toContain(whim!.actionId);
+      expect(['chin_scratch', 'kitten_milk', 'fountain', 'brush', 'peek_a_boo']).toContain(whim!.actionId);
     }
 
     const adultLive = computeLiveStats(stateAt(ADULT_GROWTH_HOURS, { hunger: 50, hydration: 50, hygiene: 50 }), T0);

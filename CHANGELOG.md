@@ -4,6 +4,14 @@ All updates to **Oli** are listed here.
 
 ---
 
+## `v1.3.0` — 2026-11-22
+### Brain Games & Newborn Play 🧠
+- Split Play into two tidy tabs: Active (4 reflex games) and Brain (4 new cozy, puzzle, and trivia games).
+- Newborn Oli can now play Peek-a-Boo from day one, with Box Shuffle, Snack Match, and Cat Trivia unlocking as he grows.
+- Cat Trivia includes 54 cat and Oli questions that cycle without repeating back-to-back.
+
+---
+
 ## `v1.2.4` — 2026-11-20
 ### Warm Amber Baby Eyes 🧡
 - Newborn and kitten Oli now have his warm amber eyes instead of pale blue.

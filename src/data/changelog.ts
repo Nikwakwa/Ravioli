@@ -7,6 +7,16 @@ export interface ReleaseEntry {
 
 export const CHANGELOG: ReleaseEntry[] = [
   {
+    version: 'v1.3.0',
+    date: '2026-11-22',
+    title: 'Brain Games & Newborn Play 🧠',
+    changes: [
+      'Split Play into two tidy tabs: Active (4 reflex games) and Brain (4 new cozy, puzzle, and trivia games).',
+      'Newborn Oli can now play Peek-a-Boo from day one, with Box Shuffle, Snack Match, and Cat Trivia unlocking as he grows.',
+      'Cat Trivia includes 54 cat and Oli questions that cycle without repeating back-to-back.',
+    ],
+  },
+  {
     version: 'v1.2.4',
     date: '2026-11-20',
     title: 'Warm Amber Baby Eyes 🧡',

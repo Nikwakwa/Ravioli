@@ -3,11 +3,15 @@ import { isStageAtLeast, isStageAtMost } from '../utils/lifeStage';
 
 export type ActionCategory = 'feed' | 'play' | 'care' | 'rest';
 
+export type PlayGroup = 'active' | 'brain';
+
 export type ParticleKind = 'hearts' | 'ripples' | 'purr' | 'sparkles' | 'mist' | 'crumbs' | 'stars';
 
 export interface CareAction {
   id: string;
   category: ActionCategory;
+  /** Sub-tab inside the Play category ('active' reflex games vs 'brain' puzzle & trivia games). */
+  playGroup?: PlayGroup;
   /** Full product-style name. */
   name: string;
   /** Short label for the dock card. */
@@ -119,6 +123,11 @@ export const CATEGORIES: { id: ActionCategory; label: string }[] = [
   { id: 'rest', label: 'Rest' },
 ];
 
+export const PLAY_GROUPS: { id: PlayGroup; label: string; emoji: string }[] = [
+  { id: 'active', label: 'Active', emoji: '⚡' },
+  { id: 'brain', label: 'Brain', emoji: '🧠' },
+];
+
 export const CARE_ACTIONS: CareAction[] = [
   // ---------------------------------------------------------------------------
   // FEED — Kitten milk bottle (Newborn & Kitten) + adult meals & treats
@@ -200,11 +209,12 @@ export const CARE_ACTIONS: CareAction[] = [
   },
 
   // ---------------------------------------------------------------------------
-  // PLAY — Active workouts that unlock as Oli grows (Kitten: simple, Teen+: all)
+  // PLAY — Active reflex games (4) + Brain puzzle & knowledge games (4)
   // ---------------------------------------------------------------------------
   {
     id: 'feather_wand',
     category: 'play',
+    playGroup: 'active',
     name: 'Feather Wand',
     short: 'Feather Wand',
     effect: { happiness: 22, energy: -10, hunger: -4 },
@@ -220,6 +230,7 @@ export const CARE_ACTIONS: CareAction[] = [
   {
     id: 'laser_pointer',
     category: 'play',
+    playGroup: 'active',
     name: 'Laser Zoomies',
     short: 'Laser Zoomies',
     effect: { happiness: 32, energy: -18, hunger: -8, hydration: -5 },
@@ -235,6 +246,7 @@ export const CARE_ACTIONS: CareAction[] = [
   {
     id: 'tail_chase',
     category: 'play',
+    playGroup: 'active',
     name: 'Tail Spin Chase',
     short: 'Chase Tail',
     effect: { happiness: 18, energy: -8, hunger: -3 },
@@ -250,6 +262,7 @@ export const CARE_ACTIONS: CareAction[] = [
   {
     id: 'red_ball',
     category: 'play',
+    playGroup: 'active',
     name: 'Small Red Ball',
     short: 'Red Ball',
     effect: { happiness: 26, energy: -14, hunger: -6, hydration: -3 },
@@ -261,6 +274,69 @@ export const CARE_ACTIONS: CareAction[] = [
     durationMs: 3200,
     minEnergy: 20,
     minStage: 'teen',
+  },
+  {
+    id: 'peek_a_boo',
+    category: 'play',
+    playGroup: 'brain',
+    name: 'Peek-a-Boo',
+    short: 'Peek-a-Boo',
+    effect: { happiness: 16, energy: -4 },
+    animation: 'purring',
+    particles: ['hearts', 'sparkles'],
+    log: 'Played cozy Peek-a-Boo with {cat}!',
+    requiresAwake: true,
+    haptic: [15, 35, 15],
+    durationMs: 2600,
+    minEnergy: 8,
+  },
+  {
+    id: 'box_shuffle',
+    category: 'play',
+    playGroup: 'brain',
+    name: 'Box Shuffle',
+    short: 'Box Shuffle',
+    effect: { happiness: 20, energy: -6, hunger: -2 },
+    animation: 'purring',
+    particles: ['stars', 'sparkles'],
+    log: 'Played cardboard Box Shuffle with {cat}!',
+    requiresAwake: true,
+    haptic: [20, 40, 20],
+    durationMs: 2800,
+    minEnergy: 10,
+    minStage: 'kitten',
+  },
+  {
+    id: 'snack_match',
+    category: 'play',
+    playGroup: 'brain',
+    name: 'Snack Match',
+    short: 'Snack Match',
+    effect: { happiness: 24, energy: -6, hunger: -2 },
+    animation: 'purring',
+    particles: ['stars', 'sparkles'],
+    log: 'Matched snack pairs with {cat}!',
+    requiresAwake: true,
+    haptic: [20, 40, 20],
+    durationMs: 2800,
+    minEnergy: 10,
+    minStage: 'teen',
+  },
+  {
+    id: 'cat_trivia',
+    category: 'play',
+    playGroup: 'brain',
+    name: 'Cat Trivia',
+    short: 'Cat Trivia',
+    effect: { happiness: 26, energy: -5 },
+    animation: 'purring',
+    particles: ['hearts', 'stars'],
+    log: 'Aced a Cat Trivia quiz with {cat}!',
+    requiresAwake: true,
+    haptic: [20, 35, 20],
+    durationMs: 2800,
+    minEnergy: 8,
+    minStage: 'adult',
   },
 
   // ---------------------------------------------------------------------------
@@ -357,12 +433,19 @@ export function isActionUnlockedForStage(action: CareAction, stage: LifeStage): 
 }
 
 /**
- * Returns the 4 Feed cards displayed in the 2×2 ActionDock for the given life stage:
- * - Newborn & Kitten: Kitten Milk, Wet Food, Chicken Heart, Churu Tube (Newborn shows solid food locked until Kitten)
- * - Teen & Adult: Wet Food, Quail Egg, Chicken Heart, Churu Tube (weaned off milk!)
+ * Returns the cards displayed in the 2×2 ActionDock for the given category and life stage:
+ * - Feed: 4 cards (Newborn & Kitten show Kitten Milk; Teen & Adult swap it for Quail Egg)
+ * - Play: 4 cards for the selected playGroup ('active' or 'brain')
  */
-export function getVisibleActionsForCategory(category: ActionCategory, stage: LifeStage): CareAction[] {
+export function getVisibleActionsForCategory(
+  category: ActionCategory,
+  stage: LifeStage,
+  playGroup: PlayGroup = 'active',
+): CareAction[] {
   const all = CARE_ACTIONS.filter((a) => a.category === category);
+  if (category === 'play') {
+    return all.filter((a) => a.playGroup === playGroup);
+  }
   if (category !== 'feed') return all;
   if (stage === 'newborn' || stage === 'kitten') {
     return all.filter((a) => a.id !== 'quail_egg');
@@ -404,6 +487,18 @@ export function pickCandidateWhim(
   }
   if (live.hydration < 85) {
     candidates.push({ actionId: 'fountain', label: 'Fresh Water', emoji: '💧' });
+  }
+  if (canUse('peek_a_boo') && live.energy >= 12) {
+    candidates.push({ actionId: 'peek_a_boo', label: 'Peek-a-Boo', emoji: '🙈' });
+  }
+  if (canUse('box_shuffle') && live.energy >= 15) {
+    candidates.push({ actionId: 'box_shuffle', label: 'Box Shuffle', emoji: '📦' });
+  }
+  if (canUse('snack_match') && live.energy >= 15) {
+    candidates.push({ actionId: 'snack_match', label: 'Snack Match', emoji: '🃏' });
+  }
+  if (canUse('cat_trivia') && live.energy >= 12) {
+    candidates.push({ actionId: 'cat_trivia', label: 'Cat Trivia', emoji: '🧠' });
   }
   if (canUse('tail_chase') && live.energy >= 18) {
     candidates.push({ actionId: 'tail_chase', label: 'Chase Tail', emoji: '🌀' });

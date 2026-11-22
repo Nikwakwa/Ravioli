@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { FastForward, Sparkles, Trophy, X } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   computeMinigameReward,
   getFeatherSweetSpot,
@@ -10,8 +10,27 @@ import {
   MINIGAME_ROUNDS,
   type CareAction,
 } from '../data/actions';
+import {
+  BOX_SHUFFLE_ROUND_TIME_SEC,
+  CAT_TRIVIA_ROUND_TIME_SEC,
+  getSnackRoundConfig,
+  PEEK_A_BOO_ROUND_TIME_SEC,
+} from '../data/brainGames';
+import {
+  loadSeenTriviaIds,
+  pickTriviaQuestions,
+  saveSeenTriviaIds,
+  type PreparedTriviaQuestion,
+} from '../data/catTrivia';
 import { vibrate } from '../utils/feedback';
 import { playSound } from '../utils/sound';
+import {
+  BoxShuffleGame,
+  CatTriviaGame,
+  PeekABooGame,
+  SnackMatchGame,
+  type BrainOutcomeReason,
+} from './BrainMinigames';
 
 export const MINIGAME_ROUND_TIME_SEC = 10.0;
 export const FEATHER_ROUND_TIME_SEC = 10.0;
@@ -23,7 +42,7 @@ export const RED_BALL_BATS_REQUIRED = 2;
 export const RED_BALL_PADDLE_HALF_WIDTH_PCT = 17;
 export const LASER_HIT_RADIUS_PX = 26;
 
-function getRoundDurationSec(actionId?: string): number {
+function getRoundDurationSec(actionId?: string, roundIdx: number = 0): number {
   switch (actionId) {
     case 'feather_wand':
       return FEATHER_ROUND_TIME_SEC;
@@ -31,6 +50,14 @@ function getRoundDurationSec(actionId?: string): number {
       return TAIL_ROUND_TIME_SEC;
     case 'red_ball':
       return RED_BALL_ROUND_TIME_SEC;
+    case 'peek_a_boo':
+      return PEEK_A_BOO_ROUND_TIME_SEC;
+    case 'box_shuffle':
+      return BOX_SHUFFLE_ROUND_TIME_SEC;
+    case 'snack_match':
+      return getSnackRoundConfig(roundIdx).timeSec;
+    case 'cat_trivia':
+      return CAT_TRIVIA_ROUND_TIME_SEC;
     case 'laser_pointer':
     default:
       return LASER_ROUND_TIME_SEC;
@@ -52,6 +79,14 @@ function describeTopArc(cx: number, cy: number, r: number, halfSpanDeg: number):
   return `M ${start.x.toFixed(2)} ${start.y.toFixed(2)} A ${r} ${r} 0 0 1 ${end.x.toFixed(2)} ${end.y.toFixed(2)}`;
 }
 
+type RoundMissReason =
+  | 'caught'
+  | 'miss_tap'
+  | 'timeout'
+  | 'out_of_pounces'
+  | 'under_sofa'
+  | BrainOutcomeReason;
+
 export function PlayMinigameModal({
   action,
   catName: _catName,
@@ -68,18 +103,25 @@ export function PlayMinigameModal({
   const isFeather = action?.id === 'feather_wand';
   const isTail = action?.id === 'tail_chase';
   const isRedBall = action?.id === 'red_ball';
+  const isPeek = action?.id === 'peek_a_boo';
+  const isBoxShuffle = action?.id === 'box_shuffle';
+  const isSnackMatch = action?.id === 'snack_match';
+  const isCatTrivia = action?.id === 'cat_trivia';
+  const isBrain = isPeek || isBoxShuffle || isSnackMatch || isCatTrivia;
 
-  const roundDuration = getRoundDurationSec(action?.id);
+  const roundDuration = getRoundDurationSec(action?.id, 0);
 
   const [round, setRound] = useState(0);
   const [results, setResults] = useState<('hit' | 'miss')[]>([]);
   const [roundFeedback, setRoundFeedback] = useState<'hit' | 'miss' | null>(null);
-  const [missReason, setMissReason] = useState<
-    'caught' | 'miss_tap' | 'timeout' | 'out_of_pounces' | 'under_sofa' | null
-  >(null);
+  const [missReason, setMissReason] = useState<RoundMissReason | null>(null);
   const [finished, setFinished] = useState(false);
   const [timeLeft, setTimeLeft] = useState(roundDuration);
+  const [timerPaused, setTimerPaused] = useState(false);
   const [pouncesLeft, setPouncesLeft] = useState(MAX_LASER_POUNCES);
+  const [triviaBatch, setTriviaBatch] = useState<PreparedTriviaQuestion[]>(
+    () => pickTriviaQuestions(MINIGAME_ROUNDS, loadSeenTriviaIds()).questions,
+  );
 
   // Feather Pounce position state (0..100%)
   const [featherPos, setFeatherPos] = useState(12);
@@ -109,11 +151,17 @@ export function PlayMinigameModal({
   const laserVelRef = useRef({ vx: 50, vy: 40 });
   const laserNextTurnRef = useRef(0);
   const timeLeftRef = useRef(roundDuration);
+  const timerPausedRef = useRef(false);
   const pouncesLeftRef = useRef(MAX_LASER_POUNCES);
   const pounceCooldownRef = useRef(false);
   const roundLockedRef = useRef(false);
   const completedHitsRef = useRef<number | null>(null);
   const arenaRef = useRef<HTMLDivElement | null>(null);
+
+  const handlePauseTimer = useCallback((paused: boolean) => {
+    timerPausedRef.current = paused;
+    setTimerPaused(paused);
+  }, []);
 
   const timersRef = useRef<number[]>([]);
   const clearTimers = () => {
@@ -142,7 +190,7 @@ export function PlayMinigameModal({
   useEffect(() => {
     clearTimers();
     if (!action) return;
-    const dur = getRoundDurationSec(action.id);
+    const dur = getRoundDurationSec(action.id, 0);
     setRound(0);
     setResults([]);
     setRoundFeedback(null);
@@ -150,11 +198,19 @@ export function PlayMinigameModal({
     setFinished(false);
     setTimeLeft(dur);
     timeLeftRef.current = dur;
+    timerPausedRef.current = action.id === 'box_shuffle' || action.id === 'snack_match';
+    setTimerPaused(timerPausedRef.current);
     pouncesLeftRef.current = MAX_LASER_POUNCES;
     setPouncesLeft(MAX_LASER_POUNCES);
     pounceCooldownRef.current = false;
     roundLockedRef.current = false;
     completedHitsRef.current = null;
+
+    if (action.id === 'cat_trivia') {
+      const picked = pickTriviaQuestions(MINIGAME_ROUNDS, loadSeenTriviaIds());
+      setTriviaBatch(picked.questions);
+      saveSeenTriviaIds(picked.nextSeenIds);
+    }
 
     // Reset Feather state
     posRef.current = 12;
@@ -252,13 +308,21 @@ export function PlayMinigameModal({
       const dt = Math.min(0.05, (ts - lastTs) / 1000);
       lastTs = ts;
 
-      // 1. Tick round timer
-      const nextTime = Math.max(0, timeLeftRef.current - dt);
-      timeLeftRef.current = nextTime;
-      setTimeLeft(nextTime);
+      // 1. Tick round timer (paused during shuffle/preview animations in Brain games)
+      if (!timerPausedRef.current) {
+        const nextTime = Math.max(0, timeLeftRef.current - dt);
+        timeLeftRef.current = nextTime;
+        setTimeLeft(nextTime);
 
-      if (nextTime <= 0) {
-        advanceRound('miss', 'timeout');
+        if (nextTime <= 0) {
+          advanceRound('miss', 'timeout');
+          return;
+        }
+      }
+
+      // Brain games manage their own interactive UI without active physics
+      if (isBrain) {
+        frameId = window.requestAnimationFrame(step);
         return;
       }
 
@@ -399,14 +463,11 @@ export function PlayMinigameModal({
 
     frameId = window.requestAnimationFrame(step);
     return () => window.cancelAnimationFrame(frameId);
-  }, [action, isFeather, isTail, isRedBall, round, roundFeedback, finished]);
+  }, [action, isFeather, isTail, isRedBall, isBrain, round, roundFeedback, finished]);
 
   if (!action) return null;
 
-  const advanceRound = (
-    outcome: 'hit' | 'miss',
-    reason?: 'caught' | 'miss_tap' | 'timeout' | 'out_of_pounces' | 'under_sofa',
-  ) => {
+  const advanceRound = (outcome: 'hit' | 'miss', reason?: RoundMissReason) => {
     if (roundLockedRef.current) return;
     roundLockedRef.current = true;
     const nextResults = [...results, outcome];
@@ -422,19 +483,22 @@ export function PlayMinigameModal({
       playSound('miss');
     }
 
+    const roundPauseMs = isCatTrivia ? 1650 : isBoxShuffle ? 1050 : 650;
+    const finishBannerDelayMs = isCatTrivia ? 1500 : isBoxShuffle ? 950 : 550;
+
     if (nextResults.length >= MINIGAME_ROUNDS) {
       const totalHits = nextResults.filter((r) => r === 'hit').length;
       completedHitsRef.current = totalHits;
       safeTimeout(() => {
         setFinished(true);
-      }, 550);
+      }, finishBannerDelayMs);
       safeTimeout(() => {
         if (completedHitsRef.current !== null) {
           const hits = completedHitsRef.current;
           completedHitsRef.current = null;
           onComplete(hits);
         }
-      }, 1550);
+      }, finishBannerDelayMs + 1000);
     } else {
       safeTimeout(() => {
         const nextRound = round + 1;
@@ -449,9 +513,12 @@ export function PlayMinigameModal({
         pounceCooldownRef.current = false;
         roundLockedRef.current = false;
 
-        const dur = getRoundDurationSec(action.id);
+        const dur = getRoundDurationSec(action.id, nextRound);
         timeLeftRef.current = dur;
         setTimeLeft(dur);
+        const startPaused = action.id === 'box_shuffle' || action.id === 'snack_match';
+        timerPausedRef.current = startPaused;
+        setTimerPaused(startPaused);
         pouncesLeftRef.current = MAX_LASER_POUNCES;
         setPouncesLeft(MAX_LASER_POUNCES);
 
@@ -475,7 +542,7 @@ export function PlayMinigameModal({
           laserVelRef.current = { vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed };
           laserNextTurnRef.current = performance.now() + 350 + Math.random() * 400;
         }
-      }, 650);
+      }, roundPauseMs);
     }
   };
 
@@ -551,23 +618,51 @@ export function PlayMinigameModal({
   const sweetSpot = getFeatherSweetSpot(round);
   const tailCatchZone = getTailCatchZone(round);
 
-  const headerEmoji = isFeather ? '🪶' : isTail ? '🌀' : '🔴';
+  const headerEmoji = isFeather
+    ? '🪶'
+    : isTail
+      ? '🌀'
+      : isPeek
+        ? '🙈'
+        : isBoxShuffle
+          ? '📦'
+          : isSnackMatch
+            ? '🃏'
+            : isCatTrivia
+              ? '🧠'
+              : '🔴';
   const headerTitle = isFeather
     ? 'Feather Pounce!'
     : isTail
       ? 'Tail Spin!'
       : isRedBall
         ? 'Red Ball Rally!'
-        : 'Laser Zoomies!';
+        : isPeek
+          ? 'Peek-a-Boo!'
+          : isBoxShuffle
+            ? 'Box Shuffle!'
+            : isSnackMatch
+              ? 'Snack Match!'
+              : isCatTrivia
+                ? 'Cat Trivia!'
+                : 'Laser Zoomies!';
   const headerInstruction = isFeather
     ? 'Tap POUNCE in the green zone!'
     : isTail
       ? 'Nab his tail in the green zone!'
       : isRedBall
         ? 'Slide Oli’s paw to keep the ball from rolling under the sofa!'
-        : `Catch the red dot in ${MAX_LASER_POUNCES} pounces or less!`;
+        : isPeek
+          ? 'Tap Oli gently whenever he peeks out!'
+          : isBoxShuffle
+            ? 'Follow the treat under the cardboard boxes!'
+            : isSnackMatch
+              ? 'Flip cards to match all of Oli’s treats!'
+              : isCatTrivia
+                ? 'Answer 3 quick cat & Oli questions!'
+                : `Catch the red dot in ${MAX_LASER_POUNCES} pounces or less!`;
 
-  const lowTimeThreshold = isFeather || isTail || isRedBall ? 2.5 : 2.0;
+  const lowTimeThreshold = isCatTrivia ? 3.5 : isSnackMatch ? 3.0 : isFeather || isTail || isRedBall || isPeek || isBoxShuffle ? 2.5 : 2.0;
 
   // Tail Spin orbit coordinates (radius = 38% around center 50%, 50%)
   const tailRad = (tailAngle * Math.PI) / 180;
@@ -656,9 +751,11 @@ export function PlayMinigameModal({
               {roundFeedback === null && !finished && (
                 <span
                   className={`rounded-full px-2 py-0.5 text-[10px] font-black whitespace-nowrap tabular-nums transition-colors ${
-                    timeLeft <= lowTimeThreshold
-                      ? 'bg-rose-500/20 text-rose-700 animate-pulse'
-                      : 'bg-amber-900/10 text-amber-900'
+                    timerPaused
+                      ? 'bg-amber-900/8 text-amber-900/60'
+                      : timeLeft <= lowTimeThreshold
+                        ? 'bg-rose-500/20 text-rose-700 animate-pulse'
+                        : 'bg-amber-900/10 text-amber-900'
                   }`}
                 >
                   {`⏱️ ${Math.max(0, timeLeft).toFixed(1)}s`}
@@ -690,7 +787,48 @@ export function PlayMinigameModal({
 
           {/* Game Arena */}
           {!finished ? (
-            isFeather ? (
+            isPeek ? (
+              <PeekABooGame
+                round={round}
+                roundFeedback={roundFeedback}
+                missReason={missReason}
+                timeLeft={timeLeft}
+                finished={finished}
+                onRoundResult={advanceRound}
+                onPauseTimer={handlePauseTimer}
+              />
+            ) : isBoxShuffle ? (
+              <BoxShuffleGame
+                round={round}
+                roundFeedback={roundFeedback}
+                missReason={missReason}
+                timeLeft={timeLeft}
+                finished={finished}
+                onRoundResult={advanceRound}
+                onPauseTimer={handlePauseTimer}
+              />
+            ) : isSnackMatch ? (
+              <SnackMatchGame
+                round={round}
+                roundFeedback={roundFeedback}
+                missReason={missReason}
+                timeLeft={timeLeft}
+                finished={finished}
+                onRoundResult={advanceRound}
+                onPauseTimer={handlePauseTimer}
+              />
+            ) : isCatTrivia ? (
+              <CatTriviaGame
+                round={round}
+                roundFeedback={roundFeedback}
+                missReason={missReason}
+                timeLeft={timeLeft}
+                finished={finished}
+                question={triviaBatch[round] ?? triviaBatch[0]}
+                onRoundResult={advanceRound}
+                onPauseTimer={handlePauseTimer}
+              />
+            ) : isFeather ? (
               /* ---------------- GAME 1: FEATHER POUNCE REFLEX ---------------- */
               <div className="flex flex-col items-center gap-3">
                 <div className="relative flex h-28 w-full flex-col justify-between overflow-hidden rounded-2xl border border-amber-900/12 bg-gradient-to-b from-amber-100/70 to-amber-50 p-3 shadow-inner">

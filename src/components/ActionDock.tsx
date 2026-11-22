@@ -1,14 +1,18 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   BedDouble,
+  Brain,
   Brush,
   Droplets,
   Drumstick,
   Egg,
+  Eye,
   Feather,
   Heart,
   IceCreamCone,
+  LayoutGrid,
   Moon,
+  Package,
   RefreshCw,
   Sparkles,
   SprayCan,
@@ -25,9 +29,11 @@ import {
   getVisibleActionsForCategory,
   isActionUnlockedForStage,
   MIN_WAKE_ENERGY,
+  PLAY_GROUPS,
   STAT_META,
   type ActionCategory,
   type CareAction,
+  type PlayGroup,
 } from '../data/actions';
 import { STAT_KEYS, type CatStats, type LiveCat } from '../types';
 import { getMaxSleepEnergy, getStageDecayRates, STAGE_META } from '../utils/lifeStage';
@@ -71,6 +77,10 @@ const ACTION_ICONS: Record<string, ComponentType<{ className?: string }>> = {
   laser_pointer: Zap,
   tail_chase: RefreshCw,
   red_ball: RedBallIcon,
+  peek_a_boo: Eye,
+  box_shuffle: Package,
+  snack_match: LayoutGrid,
+  cat_trivia: Brain,
   pheromone_mist: SprayCan,
   brush: Brush,
   scoop_mess: Trash2,
@@ -129,12 +139,28 @@ export function ActionDock({
   night = false,
 }: ActionDockProps) {
   const [category, setCategory] = useState<ActionCategory>('feed');
-  const actions = getVisibleActionsForCategory(category, live.lifeStage);
+  const [playGroup, setPlayGroup] = useState<PlayGroup>(() =>
+    live.lifeStage === 'newborn' ? 'brain' : 'active',
+  );
+  const actions = getVisibleActionsForCategory(category, live.lifeStage, playGroup);
   const isSleeping = live.isSleeping;
-  const whimCategory = whimActionId ? actionById(whimActionId)?.category ?? null : null;
+  const whimAction = whimActionId ? actionById(whimActionId) : undefined;
+  const whimCategory = whimAction?.category ?? null;
+  const whimPlayGroup = whimAction?.category === 'play' ? (whimAction.playGroup ?? null) : null;
   const cleanNeededCount = (litterBoxDirty ? 1 : 0) + messCount;
   const maxSleepEnergy = getMaxSleepEnergy(live.lifeStage);
   const sleepEnergyRate = getStageDecayRates(live.lifeStage).sleeping.energy;
+
+  const handleSelectCategory = (next: ActionCategory) => {
+    setCategory(next);
+    if (next === 'play') {
+      if (whimPlayGroup) {
+        setPlayGroup(whimPlayGroup);
+      } else if (live.lifeStage === 'newborn') {
+        setPlayGroup('brain');
+      }
+    }
+  };
 
   const shellClass = night
     ? 'bg-slate-900/85 border-white/10 text-amber-50'
@@ -174,7 +200,7 @@ export function ActionDock({
             <button
               key={c.id}
               type="button"
-              onClick={() => setCategory(c.id)}
+              onClick={() => handleSelectCategory(c.id)}
               aria-pressed={active}
               className={`relative flex items-center justify-center gap-1.5 rounded-xl py-1.5 text-xs font-extrabold transition-colors ${
                 active
@@ -206,9 +232,53 @@ export function ActionDock({
         })}
       </div>
 
+      {/* Tidy Play mini-tabs: Active (4 reflex games) vs Brain (4 cozy/puzzle/trivia games) */}
+      {category === 'play' && (
+        <div
+          role="group"
+          aria-label="Play game categories"
+          className={`mb-1.5 grid grid-cols-2 gap-1 rounded-xl p-0.5 ${night ? 'bg-white/5' : 'bg-amber-950/5'}`}
+        >
+          {PLAY_GROUPS.map((g) => {
+            const active = playGroup === g.id;
+            const showGroupWhim = whimPlayGroup === g.id;
+            return (
+              <button
+                key={g.id}
+                type="button"
+                onClick={() => setPlayGroup(g.id)}
+                aria-pressed={active}
+                className={`relative flex items-center justify-center gap-1 rounded-lg py-1 text-[11px] font-extrabold transition-colors ${
+                  active
+                    ? 'text-amber-950'
+                    : night
+                      ? 'text-indigo-200/70 hover:text-white'
+                      : 'text-amber-900/60 hover:text-amber-900'
+                }`}
+              >
+                {active && (
+                  <motion.span
+                    layoutId="play-subtab"
+                    className={`absolute inset-0 rounded-lg shadow-2xs ${night ? 'bg-amber-300' : 'bg-white'}`}
+                    transition={{ type: 'spring', stiffness: 400, damping: 32 }}
+                  />
+                )}
+                <span className="relative z-10 text-xs leading-none" aria-hidden="true">
+                  {g.emoji}
+                </span>
+                <span className="relative z-10">{g.label}</span>
+                {showGroupWhim && (
+                  <span className="relative z-10 text-[10px] leading-none">💭</span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       <AnimatePresence mode="wait" initial={false}>
         <motion.div
-          key={category}
+          key={category === 'play' ? `play-${playGroup}` : category}
           initial={{ opacity: 0, y: 4 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -4 }}

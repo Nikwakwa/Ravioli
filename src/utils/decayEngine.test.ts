@@ -220,7 +220,10 @@ describe('Core action, dock & mess rules', () => {
   it('organizes dock into 4 balanced categories (feed, play, care, rest)', () => {
     expect(CATEGORIES.map((c) => c.id)).toEqual(['feed', 'play', 'care', 'rest']);
     expect(CARE_ACTIONS.filter((a) => a.category === 'feed')).toHaveLength(5);
-    expect(CARE_ACTIONS.filter((a) => a.category === 'play')).toHaveLength(4);
+    const playActions = CARE_ACTIONS.filter((a) => a.category === 'play');
+    expect(playActions).toHaveLength(8);
+    expect(playActions.filter((a) => a.playGroup === 'active')).toHaveLength(4);
+    expect(playActions.filter((a) => a.playGroup === 'brain')).toHaveLength(4);
     expect(CARE_ACTIONS.filter((a) => a.category === 'care')).toHaveLength(3);
     expect(CARE_ACTIONS.filter((a) => a.category === 'rest')).toHaveLength(1);
   });
@@ -264,6 +267,10 @@ describe('Core action, dock & mess rules', () => {
     expect(redBall?.minEnergy).toBe(20);
     expect(redBall?.effect.happiness).toBe(26);
 
+    const peek = actionById('peek_a_boo');
+    expect(peek?.minEnergy).toBe(8);
+    expect(peek?.effect.energy).toBe(-4);
+
     expect(MAX_SLEEP_ENERGY).toBeGreaterThan(MIN_WAKE_ENERGY);
   });
 
@@ -272,14 +279,23 @@ describe('Core action, dock & mess rules', () => {
     const sleepingLive = computeLiveStats(base({ is_sleeping: true }), T0);
     expect(pickCandidateWhim(sleepingLive, 0)).toBeNull();
 
-    // Stuffed & exhausted Oli should never be asked to eat a heavy meal or play high-energy games
+    // Stuffed & exhausted Oli should never be asked to eat a heavy meal or play games
     const stuffedExhausted = computeLiveStats(base({ hunger: 92, energy: 10 }), T0);
     for (let seed = 0; seed < 10; seed++) {
       const w = pickCandidateWhim(stuffedExhausted, seed);
       expect(w).not.toBeNull();
-      expect(['wet_food', 'quail_egg', 'feather_wand', 'laser_pointer', 'tail_chase', 'red_ball']).not.toContain(
-        w?.actionId,
-      );
+      expect([
+        'wet_food',
+        'quail_egg',
+        'feather_wand',
+        'laser_pointer',
+        'tail_chase',
+        'red_ball',
+        'peek_a_boo',
+        'box_shuffle',
+        'snack_match',
+        'cat_trivia',
+      ]).not.toContain(w?.actionId);
     }
   });
 

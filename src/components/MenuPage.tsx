@@ -434,7 +434,7 @@ Time: ${new Date().toISOString()}`;
               </div>
               <ul className="flex list-disc flex-col gap-1 pl-4 text-xs font-medium text-amber-900/85">
                 <li><strong>Cravings:</strong> Every 12–20 min Oli wants something. Fulfill it for 2× Joy + 1 churu point 🍬 (chin scratches give Joy only).</li>
-                <li><strong>Minigames:</strong> Score 3/3 in Feather, Laser, Tail Spin, or Red Ball for +1 churu point 🍬.</li>
+                <li><strong>Minigames:</strong> Score 3/3 in any Active or Brain game for +1 churu point 🍬.</li>
                 <li><strong>Churus:</strong> {CHURU_POINTS_PER_TUBE} points = 1 Churu tube (the dots next to 🍬 at the top). Up to {MAX_CHURUS_EARNED_PER_DAY} tubes per day.</li>
               </ul>
             </div>

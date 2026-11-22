@@ -45,7 +45,7 @@ export const STAGE_META: Record<LifeStage, StageMeta> = {
     tagline: 'Tiny, sleepy, and happiest with warm milk and lots of naps.',
     unlockHighlights: [
       'Warm Kitten Milk bottle feedings',
-      'Cozy cuddles, gentle brushing, and extra naps',
+      'Cozy cuddles, naps & Peek-a-Boo minigame',
     ],
   },
   kitten: {
@@ -57,7 +57,7 @@ export const STAGE_META: Record<LifeStage, StageMeta> = {
     tagline: 'Big bright eyes, curious paws, and ready for his first games!',
     unlockHighlights: [
       'Wet Food, Chicken Hearts & Churu treats unlocked',
-      'Feather Wand & Chase Tail minigames unlocked',
+      'Feather Wand, Chase Tail & Box Shuffle minigames unlocked',
     ],
   },
   teen: {
@@ -69,7 +69,7 @@ export const STAGE_META: Record<LifeStage, StageMeta> = {
     tagline: 'Long-legged, full of zoomies, and ready for every game and meal.',
     unlockHighlights: [
       'Quail Egg Topper unlocked (weaned off milk!)',
-      'Laser Zoomies & Red Ball minigames unlocked',
+      'Laser Zoomies, Red Ball & Snack Match minigames unlocked',
     ],
   },
   adult: {
@@ -81,6 +81,7 @@ export const STAGE_META: Record<LifeStage, StageMeta> = {
     tagline: 'All grown up — and stays Adult Oli forever. He’ll never grow old!',
     unlockHighlights: [
       'Full grown ginger coat & real-Oli ear tattoos',
+      'Cat Trivia minigame unlocked',
       'Final stage forever — Oli never ages past Adult!',
     ],
   },

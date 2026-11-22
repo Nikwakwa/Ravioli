@@ -1324,7 +1324,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
       if (!isActionUnlockedForStage(action, live.lifeStage)) {
         const req = action.minStage;
         if (live.lifeStage === 'newborn' && action.category === 'play') {
-          triggerRefusal(`🍼 Little ${live.name} is too tiny for games — give him cuddles and naps!`);
+          triggerRefusal(`🍼 Too tiny for that one — try Peek-a-Boo in Brain games!`);
         } else if (live.lifeStage === 'newborn' && action.category === 'feed') {
           triggerRefusal('🍼 Too tiny for solid food — give him warm Kitten Milk!');
         } else if (req) {
@@ -1693,7 +1693,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
     if (target && live.energy >= maxSleepEnergy) {
       triggerRefusal(
         live.lifeStage === 'newborn'
-          ? `🍼 ${live.name} is wide awake right now — give him cuddles or warm milk!`
+          ? `🍼 ${live.name} is wide awake right now — play Peek-a-Boo or give him cuddles!`
           : `⚡ ${live.name} has too much energy to nap! Play with him first.`,
       );
       return;
