@@ -8,23 +8,29 @@
   <path d="M367 200 L356 125 L304 172 Z" fill="#f7b3a8"/>
   <!-- head -->
   <ellipse cx="256" cy="280" rx="160" ry="140" fill="#f08a3c"/>
-  <path d="M236 150 Q256 200 276 150" stroke="#d26a22" stroke-width="12" fill="none" stroke-linecap="round"/>
-  <path d="M218 158 Q230 190 236 200" stroke="#d26a22" stroke-width="10" fill="none" stroke-linecap="round"/>
-  <path d="M294 158 Q282 190 276 200" stroke="#d26a22" stroke-width="10" fill="none" stroke-linecap="round"/>
+  <!-- forehead stripes (softened so they don't read as a frown) -->
+  <path d="M244 150 Q256 180 268 150" stroke="#d26a22" stroke-width="11" fill="none" stroke-linecap="round"/>
+  <path d="M220 158 Q228 176 232 186" stroke="#d26a22" stroke-width="9" fill="none" stroke-linecap="round"/>
+  <path d="M292 158 Q284 176 280 186" stroke="#d26a22" stroke-width="9" fill="none" stroke-linecap="round"/>
   <!-- muzzle -->
   <ellipse cx="256" cy="335" rx="78" ry="58" fill="#fff1dc"/>
+  <!-- blush -->
+  <ellipse cx="160" cy="322" rx="26" ry="15" fill="#ff8f8f" opacity="0.55"/>
+  <ellipse cx="352" cy="322" rx="26" ry="15" fill="#ff8f8f" opacity="0.55"/>
+  <!-- nose -->
+  <path d="M240 312 L272 312 L256 330 Z" fill="#e8838a" stroke="#e8838a" stroke-width="4" stroke-linejoin="round"/>
+
   <!-- eyes -->
   <ellipse cx="196" cy="270" rx="30" ry="34" fill="#f6b800"/>
   <ellipse cx="316" cy="270" rx="30" ry="34" fill="#f6b800"/>
-  <ellipse cx="196" cy="274" rx="11" ry="24" fill="#2b1a10"/>
-  <ellipse cx="316" cy="274" rx="11" ry="24" fill="#2b1a10"/>
-  <circle cx="186" cy="258" r="8" fill="#fff"/>
-  <circle cx="306" cy="258" r="8" fill="#fff"/>
-  <!-- nose + mouth -->
-  <path d="M240 312 L272 312 L256 330 Z" fill="#e8838a"/>
-  <path d="M256 330 Q256 348 238 350 M256 330 Q256 348 274 350" stroke="#7a4630" stroke-width="6" fill="none" stroke-linecap="round"/>
-  <!-- freckles -->
-  <circle cx="244" cy="372" r="4" fill="#6b3d26"/>
-  <circle cx="258" cy="378" r="4" fill="#6b3d26"/>
-  <circle cx="270" cy="370" r="3.5" fill="#6b3d26"/>
+  <ellipse cx="196" cy="273" rx="15" ry="23" fill="#2b1a10"/>
+  <ellipse cx="316" cy="273" rx="15" ry="23" fill="#2b1a10"/>
+  <circle cx="188" cy="260" r="8" fill="#fff"/>
+  <circle cx="308" cy="260" r="8" fill="#fff"/>
+  <!-- smiling mouth -->
+  <path d="M256 330 Q254 354 232 348 Q222 345 220 336 M256 330 Q258 354 280 348 Q290 345 292 336" stroke="#7a4630" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  
+  <circle cx="244" cy="376" r="4" fill="#6b3d26"/>
+  <circle cx="258" cy="382" r="4" fill="#6b3d26"/>
+  <circle cx="270" cy="374" r="3.5" fill="#6b3d26"/>
 </svg>

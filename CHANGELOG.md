@@ -4,6 +4,12 @@ All updates to **Oli** are listed here.
 
 ---
 
+## `v1.3.1` — 2026-11-22
+### Happier Oli Icon 😊
+- The app icon now shows Oli smiling with rosy cheeks instead of looking sad.
+
+---
+
 ## `v1.3.0` — 2026-11-22
 ### Brain Games & Newborn Play 🧠
 - Split Play into two tidy tabs: Active (4 reflex games) and Brain (4 new cozy, puzzle, and trivia games).

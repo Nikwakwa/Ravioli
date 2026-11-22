@@ -7,6 +7,14 @@ export interface ReleaseEntry {
 
 export const CHANGELOG: ReleaseEntry[] = [
   {
+    version: 'v1.3.1',
+    date: '2026-11-22',
+    title: 'Happier Oli Icon 😊',
+    changes: [
+      'The app icon now shows Oli smiling with rosy cheeks instead of looking sad.',
+    ],
+  },
+  {
     version: 'v1.3.0',
     date: '2026-11-22',
     title: 'Brain Games & Newborn Play 🧠',
