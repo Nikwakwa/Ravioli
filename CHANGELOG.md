@@ -4,6 +4,12 @@ All updates to **Oli** are listed here.
 
 ---
 
+## `v1.3.5` — 2026-11-22
+### Peek-a-Boo Tweak 🙈
+- Peek-a-Boo now requires 3 boops in every round.
+
+---
+
 ## `v1.3.4` — 2026-11-22
 ### How to Play Intros ❓
 - Each minigame now opens with a quick, skippable How to Play card on your first try before the timer starts.

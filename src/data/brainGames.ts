@@ -29,7 +29,7 @@ export interface PeekRoundConfig {
 /** Peek-a-Boo is a snappy Active reflex game: 6 spots, faster peeks, multi-boop, and decoy toys in R2–R3. */
 export function getPeekTiming(roundIndex: number): PeekRoundConfig {
   const idx = Math.min(2, Math.max(0, roundIndex));
-  if (idx === 0) return { peekMs: 1050, hideMs: 280, boopsRequired: 2, hasDecoy: false };
+  if (idx === 0) return { peekMs: 1050, hideMs: 280, boopsRequired: 3, hasDecoy: false };
   if (idx === 1) return { peekMs: 820, hideMs: 240, boopsRequired: 3, hasDecoy: true };
   return { peekMs: 650, hideMs: 200, boopsRequired: 3, hasDecoy: true };
 }

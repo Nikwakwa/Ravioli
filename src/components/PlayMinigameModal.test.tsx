@@ -142,7 +142,7 @@ describe('PlayMinigameModal', () => {
     expect(html).toContain('Basket');
     expect(html).toContain('Curtain');
     expect(html).toContain('Cushion');
-    expect(html).toContain('Boops: 0/2');
+    expect(html).toContain('Boops: 0/3');
     expect(html).toContain('8.0s');
   });
 
@@ -264,10 +264,10 @@ describe('PlayMinigameModal', () => {
   });
 
   it('builds valid Peek-a-Boo, Paw Pattern, Box Shuffle, Snack Match, and Cat Trivia rounds', () => {
-    // Harder Peek-a-Boo: 6 spots, faster peeks, more boops, and decoys in R2–R3
+    // Harder Peek-a-Boo: 6 spots, faster peeks, 3 boops every round, and decoys in R2–R3
     expect(PEEK_SPOTS).toHaveLength(6);
     expect(getPeekTiming(0).peekMs).toBeGreaterThan(getPeekTiming(2).peekMs);
-    expect(getPeekTiming(0).boopsRequired).toBe(2);
+    expect(getPeekTiming(0).boopsRequired).toBe(3);
     expect(getPeekTiming(1).hasDecoy).toBe(true);
     expect(getPeekTiming(2).boopsRequired).toBe(3);
 

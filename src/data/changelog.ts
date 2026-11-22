@@ -7,6 +7,14 @@ export interface ReleaseEntry {
 
 export const CHANGELOG: ReleaseEntry[] = [
   {
+    version: 'v1.3.5',
+    date: '2026-11-22',
+    title: 'Peek-a-Boo Tweak 🙈',
+    changes: [
+      'Peek-a-Boo now requires 3 boops in every round.',
+    ],
+  },
+  {
     version: 'v1.3.4',
     date: '2026-11-22',
     title: 'How to Play Intros ❓',

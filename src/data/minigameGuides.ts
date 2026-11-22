@@ -7,7 +7,7 @@ export const MINIGAME_GUIDES: Record<string, MinigameGuide> = {
   peek_a_boo: {
     steps: [
       { emoji: '🐱', text: 'Tap Oli whenever he peeks out from a hiding spot.' },
-      { emoji: '🎯', text: 'Score 2–3 boops before time runs out (3 tries per round).' },
+      { emoji: '🎯', text: 'Score 3 boops before time runs out (3 tries per round).' },
       { emoji: '🐭', text: 'In Rounds 2 & 3, ignore the decoy toy mouse!' },
     ],
   },
