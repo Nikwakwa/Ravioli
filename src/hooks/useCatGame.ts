@@ -1333,7 +1333,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
       if (!isActionUnlockedForStage(action, live.lifeStage)) {
         const req = action.minStage;
         if (live.lifeStage === 'newborn' && action.category === 'play') {
-          triggerRefusal(`🍼 Too tiny for that one — try Peek-a-Boo in Brain games!`);
+          triggerRefusal(`🍼 Too tiny for that one — try Peek-a-Boo in Active games!`);
         } else if (live.lifeStage === 'newborn' && action.category === 'feed') {
           triggerRefusal('🍼 Too tiny for solid food — give him warm Kitten Milk!');
         } else if (req) {

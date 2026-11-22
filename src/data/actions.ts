@@ -213,6 +213,21 @@ export const CARE_ACTIONS: CareAction[] = [
   // PLAY — Active reflex games (4) + Brain puzzle & knowledge games (4)
   // ---------------------------------------------------------------------------
   {
+    id: 'peek_a_boo',
+    category: 'play',
+    playGroup: 'active',
+    name: 'Peek-a-Boo',
+    short: 'Peek-a-Boo',
+    effect: { happiness: 18, energy: -6 },
+    animation: 'purring',
+    particles: ['hearts', 'sparkles'],
+    log: 'Played Peek-a-Boo with {cat}!',
+    requiresAwake: true,
+    haptic: [15, 35, 15],
+    durationMs: 2600,
+    minEnergy: 10,
+  },
+  {
     id: 'feather_wand',
     category: 'play',
     playGroup: 'active',
@@ -226,6 +241,22 @@ export const CARE_ACTIONS: CareAction[] = [
     haptic: [30, 60, 30, 60, 30],
     durationMs: 3200,
     minEnergy: 15,
+    minStage: 'kitten',
+  },
+  {
+    id: 'tail_chase',
+    category: 'play',
+    playGroup: 'active',
+    name: 'Tail Spin Chase',
+    short: 'Chase Tail',
+    effect: { happiness: 18, energy: -8, hunger: -3 },
+    animation: 'tail_chase',
+    particles: ['stars'],
+    log: 'Watched {cat} spin in circles chasing his own tail!',
+    requiresAwake: true,
+    haptic: [20, 40, 20, 40, 25],
+    durationMs: 3000,
+    minEnergy: 12,
     minStage: 'kitten',
   },
   {
@@ -245,53 +276,6 @@ export const CARE_ACTIONS: CareAction[] = [
     minStage: 'teen',
   },
   {
-    id: 'tail_chase',
-    category: 'play',
-    playGroup: 'active',
-    name: 'Tail Spin Chase',
-    short: 'Chase Tail',
-    effect: { happiness: 18, energy: -8, hunger: -3 },
-    animation: 'tail_chase',
-    particles: ['stars'],
-    log: 'Watched {cat} spin in circles chasing his own tail!',
-    requiresAwake: true,
-    haptic: [20, 40, 20, 40, 25],
-    durationMs: 3000,
-    minEnergy: 12,
-    minStage: 'kitten',
-  },
-  {
-    id: 'red_ball',
-    category: 'play',
-    playGroup: 'active',
-    name: 'Small Red Ball',
-    short: 'Red Ball',
-    effect: { happiness: 26, energy: -14, hunger: -6, hydration: -3 },
-    animation: 'red_ball',
-    particles: ['stars', 'sparkles'],
-    log: 'Chased the small red ball across the floor with {cat}!',
-    requiresAwake: true,
-    haptic: [25, 45, 25, 45, 30],
-    durationMs: 3200,
-    minEnergy: 20,
-    minStage: 'teen',
-  },
-  {
-    id: 'peek_a_boo',
-    category: 'play',
-    playGroup: 'brain',
-    name: 'Peek-a-Boo',
-    short: 'Peek-a-Boo',
-    effect: { happiness: 16, energy: -4 },
-    animation: 'purring',
-    particles: ['hearts', 'sparkles'],
-    log: 'Played cozy Peek-a-Boo with {cat}!',
-    requiresAwake: true,
-    haptic: [15, 35, 15],
-    durationMs: 2600,
-    minEnergy: 8,
-  },
-  {
     id: 'box_shuffle',
     category: 'play',
     playGroup: 'brain',
@@ -306,6 +290,22 @@ export const CARE_ACTIONS: CareAction[] = [
     durationMs: 2800,
     minEnergy: 10,
     minStage: 'kitten',
+  },
+  {
+    id: 'paw_pattern',
+    category: 'play',
+    playGroup: 'brain',
+    name: 'Paw Pattern',
+    short: 'Paw Pattern',
+    effect: { happiness: 22, energy: -5, hunger: -2 },
+    animation: 'purring',
+    particles: ['stars', 'sparkles'],
+    log: 'Repeated {cat}’s cozy paw pattern!',
+    requiresAwake: true,
+    haptic: [20, 35, 20],
+    durationMs: 2800,
+    minEnergy: 10,
+    minStage: 'teen',
   },
   {
     id: 'snack_match',
@@ -476,6 +476,9 @@ export function pickCandidateWhim(
   if (canUse('box_shuffle') && live.energy >= 15) {
     candidates.push({ actionId: 'box_shuffle', label: 'Box Shuffle', emoji: '📦' });
   }
+  if (canUse('paw_pattern') && live.energy >= 14) {
+    candidates.push({ actionId: 'paw_pattern', label: 'Paw Pattern', emoji: '🐾' });
+  }
   if (canUse('snack_match') && live.energy >= 15) {
     candidates.push({ actionId: 'snack_match', label: 'Snack Match', emoji: '🃏' });
   }
@@ -487,9 +490,6 @@ export function pickCandidateWhim(
   }
   if (canUse('feather_wand') && live.energy >= 20) {
     candidates.push({ actionId: 'feather_wand', label: 'Feather Wand', emoji: '🪶' });
-  }
-  if (canUse('red_ball') && live.energy >= 25) {
-    candidates.push({ actionId: 'red_ball', label: 'Red Ball', emoji: '🔴' });
   }
   if (canUse('laser_pointer') && live.energy >= 30) {
     candidates.push({ actionId: 'laser_pointer', label: 'Laser Pointer', emoji: '⚡' });

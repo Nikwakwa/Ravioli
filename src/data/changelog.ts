@@ -7,6 +7,15 @@ export interface ReleaseEntry {
 
 export const CHANGELOG: ReleaseEntry[] = [
   {
+    version: 'v1.3.3',
+    date: '2026-11-22',
+    title: 'Snappier Peek-a-Boo & Paw Pattern 🐾',
+    changes: [
+      'Moved Peek-a-Boo into Active (replacing Red Ball) and cranked up the challenge with 6 hiding spots, faster multi-boop rounds, and decoy toy mice.',
+      'Added Paw Pattern as the 4th Brain game — watch Oli tap the pillows and repeat the sequence back.',
+    ],
+  },
+  {
     version: 'v1.3.2',
     date: '2026-11-22',
     title: 'Tidier Care Tab 🛏️',

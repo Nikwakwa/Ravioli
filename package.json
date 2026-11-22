@@ -1,7 +1,7 @@
 {
   "name": "ravioli",
   "private": true,
-  "version": "1.3.2",
+  "version": "1.3.3",
   "type": "module",
   "description": "Cozy co-op virtual cat care PWA starring Oli the ginger cat.",
   "scripts": {

@@ -69,7 +69,7 @@ export const STAGE_META: Record<LifeStage, StageMeta> = {
     tagline: 'Long-legged, full of zoomies, and ready for every game and meal.',
     unlockHighlights: [
       'Quail Egg Topper unlocked (weaned off milk!)',
-      'Laser Zoomies, Red Ball & Snack Match minigames unlocked',
+      'Laser Zoomies, Paw Pattern & Snack Match minigames unlocked',
     ],
   },
   adult: {

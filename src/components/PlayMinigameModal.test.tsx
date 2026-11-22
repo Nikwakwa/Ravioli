@@ -6,10 +6,7 @@ import {
   FEATHER_ROUND_TIME_SEC,
   LASER_ROUND_TIME_SEC,
   TAIL_ROUND_TIME_SEC,
-  RED_BALL_ROUND_TIME_SEC,
   MAX_LASER_POUNCES,
-  RED_BALL_BATS_REQUIRED,
-  RED_BALL_PADDLE_HALF_WIDTH_PCT,
   LASER_HIT_RADIUS_PX,
 } from './PlayMinigameModal';
 import {
@@ -23,12 +20,15 @@ import {
   BOX_SHUFFLE_ROUND_TIME_SEC,
   buildSnackDeck,
   CAT_TRIVIA_ROUND_TIME_SEC,
+  generatePawPattern,
   generateShuffleSwaps,
   getBoxShuffleConfig,
+  getPawPatternConfig,
   getPeekTiming,
   getSnackRoundConfig,
-  MAX_PEEK_BOOPS,
+  MAX_PEEK_MISTAKES,
   PEEK_A_BOO_ROUND_TIME_SEC,
+  PEEK_SPOTS,
 } from '../data/brainGames';
 import { CAT_TRIVIA_QUESTIONS, pickTriviaQuestions, prepareTriviaQuestion } from '../data/catTrivia';
 
@@ -94,27 +94,7 @@ describe('PlayMinigameModal', () => {
     expect(html).toContain('8.0s');
   });
 
-  it('renders Red Ball Rally with sliding Oli’s Paw goalie paddle and Under the Sofa hazard zone', () => {
-    const ballAction = actionById('red_ball')!;
-    const html = renderToString(
-      <PlayMinigameModal
-        action={ballAction}
-        catName="Oli"
-        whimActive={false}
-        onComplete={vi.fn()}
-        onCancel={vi.fn()}
-      />
-    );
-
-    expect(html).toContain('Red Ball Rally!');
-    expect(html).toContain('Slide Oli’s paw to keep the ball from rolling under the sofa!');
-    expect(html).toContain('Saves: 0/2');
-    expect(html).toContain('Oli’s Paw');
-    expect(html).toContain('Under the Sofa');
-    expect(html).toContain('8.0s');
-  });
-
-  it('renders Peek-a-Boo with 3 cozy hiding spots and gentle boops HUD for Newborns', () => {
+  it('renders Peek-a-Boo Active reflex game with 6 hiding spots, multi-boop goal, and 8.0s timer', () => {
     const peekAction = actionById('peek_a_boo')!;
     const html = renderToString(
       <PlayMinigameModal
@@ -130,8 +110,11 @@ describe('PlayMinigameModal', () => {
     expect(html).toContain('Blanket');
     expect(html).toContain('Box');
     expect(html).toContain('Pillow');
-    expect(html).toContain('Gentle Boops');
-    expect(html).toContain('10.0s');
+    expect(html).toContain('Basket');
+    expect(html).toContain('Curtain');
+    expect(html).toContain('Cushion');
+    expect(html).toContain('Boops: 0/2');
+    expect(html).toContain('8.0s');
   });
 
   it('renders Box Shuffle with 3 cardboard boxes and swap counter', () => {
@@ -149,6 +132,27 @@ describe('PlayMinigameModal', () => {
     expect(html).toContain('Box Shuffle!');
     expect(html).toContain('Follow the treat under the cardboard boxes!');
     expect(html).toContain('3 swaps');
+    expect(html).toContain('8.0s');
+  });
+
+  it('renders Paw Pattern Simon-Says Brain game with 4 cozy paw pillows', () => {
+    const patternAction = actionById('paw_pattern')!;
+    const html = renderToString(
+      <PlayMinigameModal
+        action={patternAction}
+        catName="Oli"
+        whimActive={false}
+        onComplete={vi.fn()}
+        onCancel={vi.fn()}
+      />
+    );
+
+    expect(html).toContain('Paw Pattern!');
+    expect(html).toContain('Watch Oli’s paws and repeat the pattern!');
+    expect(html).toContain('Sun');
+    expect(html).toContain('Fish');
+    expect(html).toContain('Heart');
+    expect(html).toContain('Leaf');
     expect(html).toContain('8.0s');
   });
 
@@ -213,25 +217,36 @@ describe('PlayMinigameModal', () => {
     expect(isTailInCatchZone(326, 2)).toBe(false);
   });
 
-  it('configures round timers and paddle / tap limits appropriately for each game', () => {
+  it('configures round timers and tap limits appropriately for each game', () => {
     expect(MINIGAME_ROUND_TIME_SEC).toBe(10.0);
     expect(FEATHER_ROUND_TIME_SEC).toBe(10.0);
     expect(TAIL_ROUND_TIME_SEC).toBe(8.0);
-    expect(RED_BALL_ROUND_TIME_SEC).toBe(8.0);
     expect(LASER_ROUND_TIME_SEC).toBe(5.0);
-    expect(PEEK_A_BOO_ROUND_TIME_SEC).toBe(10.0);
+    expect(PEEK_A_BOO_ROUND_TIME_SEC).toBe(8.0);
     expect(BOX_SHUFFLE_ROUND_TIME_SEC).toBe(8.0);
     expect(CAT_TRIVIA_ROUND_TIME_SEC).toBe(15.0);
     expect(MAX_LASER_POUNCES).toBe(3);
-    expect(MAX_PEEK_BOOPS).toBe(3);
-    expect(RED_BALL_BATS_REQUIRED).toBe(2);
-    expect(RED_BALL_PADDLE_HALF_WIDTH_PCT).toBe(17);
+    expect(MAX_PEEK_MISTAKES).toBe(3);
     expect(LASER_HIT_RADIUS_PX).toBe(26);
   });
 
-  it('builds valid Brain game rounds and cycles Cat Trivia questions without immediate repeats', () => {
-    // Peek-a-Boo gets slightly brisker across rounds
+  it('builds valid Peek-a-Boo, Paw Pattern, Box Shuffle, Snack Match, and Cat Trivia rounds', () => {
+    // Harder Peek-a-Boo: 6 spots, faster peeks, more boops, and decoys in R2–R3
+    expect(PEEK_SPOTS).toHaveLength(6);
     expect(getPeekTiming(0).peekMs).toBeGreaterThan(getPeekTiming(2).peekMs);
+    expect(getPeekTiming(0).boopsRequired).toBe(2);
+    expect(getPeekTiming(1).hasDecoy).toBe(true);
+    expect(getPeekTiming(2).boopsRequired).toBe(3);
+
+    // Paw Pattern: 3 → 4 → 5 steps, avoids 3 identical pads in a row
+    expect(getPawPatternConfig(0).steps).toBe(3);
+    expect(getPawPatternConfig(1).steps).toBe(4);
+    expect(getPawPatternConfig(2).steps).toBe(5);
+    const seq = generatePawPattern(12);
+    expect(seq).toHaveLength(12);
+    for (let i = 2; i < seq.length; i++) {
+      expect(seq[i] === seq[i - 1] && seq[i - 1] === seq[i - 2]).toBe(false);
+    }
 
     // Box Shuffle generates distinct non-repeating adjacent swap pairs
     const swaps = generateShuffleSwaps(5);

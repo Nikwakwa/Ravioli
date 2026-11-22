@@ -163,8 +163,12 @@ describe('Stage-specific unlocks, dock feed grid, and cravings', () => {
 
   it('shows 4 Active and 4 Brain games in the Play mini-tabs at every life stage', () => {
     for (const stage of LIFE_STAGES) {
-      expect(getVisibleActionsForCategory('play', stage, 'active')).toHaveLength(4);
-      expect(getVisibleActionsForCategory('play', stage, 'brain')).toHaveLength(4);
+      const active = getVisibleActionsForCategory('play', stage, 'active');
+      const brain = getVisibleActionsForCategory('play', stage, 'brain');
+      expect(active).toHaveLength(4);
+      expect(brain).toHaveLength(4);
+      expect(active.map((a) => a.id)).toContain('peek_a_boo');
+      expect(brain.map((a) => a.id)).toContain('paw_pattern');
     }
   });
 
@@ -172,16 +176,16 @@ describe('Stage-specific unlocks, dock feed grid, and cravings', () => {
     const milk = actionById('kitten_milk')!;
     const wet = actionById('wet_food')!;
     const egg = actionById('quail_egg')!;
+    const peek = actionById('peek_a_boo')!;
     const feather = actionById('feather_wand')!;
     const tail = actionById('tail_chase')!;
     const laser = actionById('laser_pointer')!;
-    const ball = actionById('red_ball')!;
-    const peek = actionById('peek_a_boo')!;
     const shuffle = actionById('box_shuffle')!;
+    const pattern = actionById('paw_pattern')!;
     const match = actionById('snack_match')!;
     const trivia = actionById('cat_trivia')!;
 
-    // Newborn: kitten milk + gentle Peek-a-Boo (other games & solid food locked)
+    // Newborn: kitten milk + Peek-a-Boo (other games & solid food locked)
     expect(isActionUnlockedForStage(milk, 'newborn')).toBe(true);
     expect(isActionUnlockedForStage(wet, 'newborn')).toBe(false);
     expect(isActionUnlockedForStage(egg, 'newborn')).toBe(false);
@@ -190,7 +194,7 @@ describe('Stage-specific unlocks, dock feed grid, and cravings', () => {
     expect(isActionUnlockedForStage(tail, 'newborn')).toBe(false);
     expect(isActionUnlockedForStage(shuffle, 'newborn')).toBe(false);
     expect(isActionUnlockedForStage(laser, 'newborn')).toBe(false);
-    expect(isActionUnlockedForStage(ball, 'newborn')).toBe(false);
+    expect(isActionUnlockedForStage(pattern, 'newborn')).toBe(false);
     expect(isActionUnlockedForStage(match, 'newborn')).toBe(false);
     expect(isActionUnlockedForStage(trivia, 'newborn')).toBe(false);
 
@@ -203,11 +207,11 @@ describe('Stage-specific unlocks, dock feed grid, and cravings', () => {
     expect(isActionUnlockedForStage(tail, 'kitten')).toBe(true);
     expect(isActionUnlockedForStage(shuffle, 'kitten')).toBe(true);
     expect(isActionUnlockedForStage(laser, 'kitten')).toBe(false);
-    expect(isActionUnlockedForStage(ball, 'kitten')).toBe(false);
+    expect(isActionUnlockedForStage(pattern, 'kitten')).toBe(false);
     expect(isActionUnlockedForStage(match, 'kitten')).toBe(false);
     expect(isActionUnlockedForStage(trivia, 'kitten')).toBe(false);
 
-    // Teen: weaned off milk; unlocks Quail Egg, Laser, Red Ball, Snack Match; Cat Trivia waits for Adult
+    // Teen: weaned off milk; unlocks Quail Egg, Laser, Paw Pattern, Snack Match; Cat Trivia waits for Adult
     expect(isActionUnlockedForStage(milk, 'teen')).toBe(false);
     expect(isActionUnlockedForStage(wet, 'teen')).toBe(true);
     expect(isActionUnlockedForStage(egg, 'teen')).toBe(true);
@@ -216,13 +220,14 @@ describe('Stage-specific unlocks, dock feed grid, and cravings', () => {
     expect(isActionUnlockedForStage(tail, 'teen')).toBe(true);
     expect(isActionUnlockedForStage(shuffle, 'teen')).toBe(true);
     expect(isActionUnlockedForStage(laser, 'teen')).toBe(true);
-    expect(isActionUnlockedForStage(ball, 'teen')).toBe(true);
+    expect(isActionUnlockedForStage(pattern, 'teen')).toBe(true);
     expect(isActionUnlockedForStage(match, 'teen')).toBe(true);
     expect(isActionUnlockedForStage(trivia, 'teen')).toBe(false);
 
     // Adult: all 8 games unlocked (including Cat Trivia)
     expect(isActionUnlockedForStage(milk, 'adult')).toBe(false);
     expect(isActionUnlockedForStage(trivia, 'adult')).toBe(true);
+    expect(isActionUnlockedForStage(pattern, 'adult')).toBe(true);
     expect(isActionUnlockedForStage(match, 'adult')).toBe(true);
     expect(isActionUnlockedForStage(laser, 'adult')).toBe(true);
   });

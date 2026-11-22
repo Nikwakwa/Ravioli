@@ -4,6 +4,13 @@ All updates to **Oli** are listed here.
 
 ---
 
+## `v1.3.3` — 2026-11-22
+### Snappier Peek-a-Boo & Paw Pattern 🐾
+- Moved Peek-a-Boo into Active (replacing Red Ball) and cranked up the challenge with 6 hiding spots, faster multi-boop rounds, and decoy toy mice.
+- Added Paw Pattern as the 4th Brain game — watch Oli tap the pillows and repeat the sequence back.
+
+---
+
 ## `v1.3.2` — 2026-11-22
 ### Tidier Care Tab 🛏️
 - Removed Calming Mist.

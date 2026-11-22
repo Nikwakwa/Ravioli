@@ -270,13 +270,15 @@ describe('Core action, dock & mess rules', () => {
     expect(tail?.minEnergy).toBe(12);
     expect(tail?.effect.happiness).toBe(18);
 
-    const redBall = actionById('red_ball');
-    expect(redBall?.minEnergy).toBe(20);
-    expect(redBall?.effect.happiness).toBe(26);
-
     const peek = actionById('peek_a_boo');
-    expect(peek?.minEnergy).toBe(8);
-    expect(peek?.effect.energy).toBe(-4);
+    expect(peek?.playGroup).toBe('active');
+    expect(peek?.minEnergy).toBe(10);
+    expect(peek?.effect.energy).toBe(-6);
+
+    const pawPattern = actionById('paw_pattern');
+    expect(pawPattern?.playGroup).toBe('brain');
+    expect(pawPattern?.minEnergy).toBe(10);
+    expect(pawPattern?.effect.happiness).toBe(22);
 
     expect(MAX_SLEEP_ENERGY).toBeGreaterThan(MIN_WAKE_ENERGY);
   });
@@ -297,9 +299,9 @@ describe('Core action, dock & mess rules', () => {
         'feather_wand',
         'laser_pointer',
         'tail_chase',
-        'red_ball',
         'peek_a_boo',
         'box_shuffle',
+        'paw_pattern',
         'snack_match',
         'cat_trivia',
       ]).not.toContain(w?.actionId);

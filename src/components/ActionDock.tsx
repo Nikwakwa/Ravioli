@@ -12,6 +12,7 @@ import {
   LayoutGrid,
   Moon,
   Package,
+  PawPrint,
   RefreshCw,
   Sparkles,
   Sun,
@@ -37,16 +38,6 @@ import { STAT_KEYS, type CatStats, type LiveCat } from '../types';
 import { getMaxSleepEnergy, getStageDecayRates, STAGE_META } from '../utils/lifeStage';
 import { STAT_ICONS } from './statIcons';
 
-function RedBallIcon({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" className={className}>
-      <circle cx="12" cy="12" r="9" />
-      <path d="M6.5 6.5c3.5 2.5 7.5 2.5 11 0" />
-      <circle cx="9" cy="9" r="1" fill="currentColor" stroke="none" />
-    </svg>
-  );
-}
-
 function BabyBottleIcon({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.1} strokeLinecap="round" strokeLinejoin="round" className={className}>
@@ -70,12 +61,12 @@ const ACTION_ICONS: Record<string, ComponentType<{ className?: string }>> = {
   chicken_heart: Heart,
   quail_egg: Egg,
   fountain: Droplets,
+  peek_a_boo: Eye,
   feather_wand: Feather,
   laser_pointer: Zap,
   tail_chase: RefreshCw,
-  red_ball: RedBallIcon,
-  peek_a_boo: Eye,
   box_shuffle: Package,
+  paw_pattern: PawPrint,
   snack_match: LayoutGrid,
   cat_trivia: Brain,
   brush: Brush,
@@ -135,9 +126,7 @@ export function ActionDock({
   night = false,
 }: ActionDockProps) {
   const [category, setCategory] = useState<ActionCategory>('feed');
-  const [playGroup, setPlayGroup] = useState<PlayGroup>(() =>
-    live.lifeStage === 'newborn' ? 'brain' : 'active',
-  );
+  const [playGroup, setPlayGroup] = useState<PlayGroup>('active');
   const actions = getVisibleActionsForCategory(category, live.lifeStage, playGroup);
   const isSleeping = live.isSleeping;
   const whimAction = whimActionId ? actionById(whimActionId) : undefined;
@@ -153,7 +142,7 @@ export function ActionDock({
       if (whimPlayGroup) {
         setPlayGroup(whimPlayGroup);
       } else if (live.lifeStage === 'newborn') {
-        setPlayGroup('brain');
+        setPlayGroup('active');
       }
     }
   };

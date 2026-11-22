@@ -4,11 +4,14 @@ import {
   BOX_SHUFFLE_ROUND_TIME_SEC,
   buildSnackDeck,
   CAT_TRIVIA_ROUND_TIME_SEC,
+  generatePawPattern,
   generateShuffleSwaps,
   getBoxShuffleConfig,
+  getPawPatternConfig,
   getPeekTiming,
   getSnackRoundConfig,
-  MAX_PEEK_BOOPS,
+  MAX_PEEK_MISTAKES,
+  PAW_PADS,
   PEEK_A_BOO_ROUND_TIME_SEC,
   PEEK_SPOTS,
   type SnackCard,
@@ -21,7 +24,9 @@ export type BrainOutcomeReason =
   | 'caught'
   | 'timeout'
   | 'out_of_boops'
+  | 'decoy_tap'
   | 'wrong_box'
+  | 'wrong_step'
   | 'wrong_answer';
 
 export interface BrainGameCommonProps {
@@ -35,7 +40,7 @@ export interface BrainGameCommonProps {
 }
 
 /* ============================================================================
- * BRAIN GAME 1: PEEK-A-BOO (Unlocked at Newborn!)
+ * ACTIVE GAME: PEEK-A-BOO (6 spots, multi-boop reflex + decoy mouse in R2–R3)
  * ==========================================================================*/
 export function PeekABooGame({
   round,
@@ -46,14 +51,21 @@ export function PeekABooGame({
   onRoundResult,
   onPauseTimer,
 }: BrainGameCommonProps) {
+  const cfg = getPeekTiming(round);
   const [activeSpot, setActiveSpot] = useState<number | null>(null);
-  const [boopsLeft, setBoopsLeft] = useState(MAX_PEEK_BOOPS);
+  const [decoySpot, setDecoySpot] = useState<number | null>(null);
+  const [boopsHit, setBoopsHit] = useState(0);
+  const [chancesLeft, setChancesLeft] = useState(MAX_PEEK_MISTAKES);
   const [boopedSpot, setBoopedSpot] = useState<number | null>(null);
   const [wrongSpot, setWrongSpot] = useState<number | null>(null);
+  const [lastMistakeWasDecoy, setLastMistakeWasDecoy] = useState(false);
 
-  const boopsLeftRef = useRef(MAX_PEEK_BOOPS);
+  const boopsHitRef = useRef(0);
+  const chancesLeftRef = useRef(MAX_PEEK_MISTAKES);
   const lastSpotRef = useRef<number>(-1);
+  const cycleTriggerRef = useRef<(() => void) | null>(null);
   const wrongTimerRef = useRef<number | undefined>(undefined);
+  const boopFlashTimerRef = useRef<number | undefined>(undefined);
 
   useEffect(() => {
     onPauseTimer(false);
@@ -61,78 +73,127 @@ export function PeekABooGame({
 
   useEffect(() => {
     window.clearTimeout(wrongTimerRef.current);
-    setBoopsLeft(MAX_PEEK_BOOPS);
-    boopsLeftRef.current = MAX_PEEK_BOOPS;
+    window.clearTimeout(boopFlashTimerRef.current);
+    boopsHitRef.current = 0;
+    chancesLeftRef.current = MAX_PEEK_MISTAKES;
+    setBoopsHit(0);
+    setChancesLeft(MAX_PEEK_MISTAKES);
     setBoopedSpot(null);
     setWrongSpot(null);
+    setLastMistakeWasDecoy(false);
     setActiveSpot(null);
-    return () => window.clearTimeout(wrongTimerRef.current);
+    setDecoySpot(null);
+    return () => {
+      window.clearTimeout(wrongTimerRef.current);
+      window.clearTimeout(boopFlashTimerRef.current);
+    };
   }, [round]);
 
   useEffect(() => {
     if (roundFeedback !== null || finished) return;
-    const { peekMs, hideMs } = getPeekTiming(round);
+    const { peekMs, hideMs, hasDecoy } = getPeekTiming(round);
     let cancelled = false;
-    const timers: number[] = [];
+    let timerId: number | undefined;
+
+    const clearCycle = () => {
+      if (timerId !== undefined) {
+        window.clearTimeout(timerId);
+        timerId = undefined;
+      }
+    };
 
     const schedule = (fn: () => void, ms: number) => {
-      const id = window.setTimeout(() => {
+      clearCycle();
+      timerId = window.setTimeout(() => {
         if (!cancelled) fn();
       }, ms);
-      timers.push(id);
     };
 
     const showNext = () => {
-      const candidates = [0, 1, 2].filter((s) => s !== lastSpotRef.current);
+      const allIds = PEEK_SPOTS.map((s) => s.id);
+      const candidates = allIds.filter((s) => s !== lastSpotRef.current);
       const next = candidates[Math.floor(Math.random() * candidates.length)] ?? 0;
       lastSpotRef.current = next;
       setActiveSpot(next);
 
+      if (hasDecoy && Math.random() < 0.7) {
+        const decoyPool = allIds.filter((s) => s !== next);
+        setDecoySpot(decoyPool[Math.floor(Math.random() * decoyPool.length)] ?? null);
+      } else {
+        setDecoySpot(null);
+      }
+
       schedule(() => {
         setActiveSpot(null);
-        schedule(() => {
-          showNext();
-        }, hideMs);
+        setDecoySpot(null);
+        schedule(showNext, hideMs);
       }, peekMs);
     };
 
-    schedule(showNext, 320);
+    // Expose quick-advance when the player nails a boop so the next peek pops up briskly
+    cycleTriggerRef.current = () => {
+      setActiveSpot(null);
+      setDecoySpot(null);
+      schedule(showNext, Math.min(200, hideMs));
+    };
+
+    schedule(showNext, 260);
 
     return () => {
       cancelled = true;
-      timers.forEach((t) => window.clearTimeout(t));
+      cycleTriggerRef.current = null;
+      clearCycle();
     };
   }, [round, roundFeedback, finished]);
 
   const handleTapSpot = (spotId: number) => {
     if (roundFeedback !== null || finished) return;
+
     if (activeSpot === spotId) {
+      const nextHits = boopsHitRef.current + 1;
+      boopsHitRef.current = nextHits;
+      setBoopsHit(nextHits);
       setBoopedSpot(spotId);
-      onRoundResult('hit', 'caught');
+      setLastMistakeWasDecoy(false);
+
+      if (nextHits >= cfg.boopsRequired) {
+        onRoundResult('hit', 'caught');
+        return;
+      }
+
+      playSound('pop');
+      vibrate([20, 30]);
+      window.clearTimeout(boopFlashTimerRef.current);
+      boopFlashTimerRef.current = window.setTimeout(() => {
+        setBoopedSpot((cur) => (cur === spotId ? null : cur));
+      }, 240);
+      cycleTriggerRef.current?.();
       return;
     }
 
-    const remaining = Math.max(0, boopsLeftRef.current - 1);
-    boopsLeftRef.current = remaining;
-    setBoopsLeft(remaining);
+    const hitDecoy = decoySpot === spotId;
+    const remaining = Math.max(0, chancesLeftRef.current - 1);
+    chancesLeftRef.current = remaining;
+    setChancesLeft(remaining);
     setWrongSpot(spotId);
-    vibrate(20);
+    setLastMistakeWasDecoy(hitDecoy);
+    vibrate(25);
     window.clearTimeout(wrongTimerRef.current);
     wrongTimerRef.current = window.setTimeout(() => {
       setWrongSpot((cur) => (cur === spotId ? null : cur));
-    }, 360);
+    }, 340);
 
     if (remaining <= 0) {
-      onRoundResult('miss', 'out_of_boops');
+      onRoundResult('miss', hitDecoy ? 'decoy_tap' : 'out_of_boops');
     } else {
       playSound('miss');
     }
   };
 
   return (
-    <div className="flex flex-col items-center gap-2.5">
-      <div className="relative flex h-48 w-full flex-col justify-between overflow-hidden rounded-2xl border-2 border-amber-900/12 bg-gradient-to-b from-[#fdf6ec] to-[#f4e6d0] p-3 shadow-inner">
-        {/* Top bar: countdown + gentle boops left */}
+    <div className="flex flex-col items-center gap-2">
+      <div className="relative flex w-full flex-col gap-2 overflow-hidden rounded-2xl border-2 border-amber-900/12 bg-gradient-to-b from-[#fdf6ec] to-[#f4e6d0] p-3 shadow-inner">
+        {/* Top bar: countdown + boop goal + mistakes left */}
         <div className="flex flex-col gap-1.5">
           <div className="h-1.5 w-full overflow-hidden rounded-full bg-amber-950/10">
             <div
@@ -141,15 +202,21 @@ export function PeekABooGame({
             />
           </div>
           <div className="flex items-center justify-between px-0.5">
-            <span className="text-[10px] font-black tracking-wide uppercase text-amber-900/65">
-              Gentle Boops
+            <span
+              className={`rounded-full px-2 py-0.5 text-[10px] font-black tracking-wide uppercase ${
+                boopsHit > 0
+                  ? 'bg-emerald-500/20 text-emerald-800 ring-1 ring-emerald-500/40'
+                  : 'bg-amber-900/10 text-amber-900'
+              }`}
+            >
+              {`Boops: ${boopsHit}/${cfg.boopsRequired}`}
             </span>
-            <div className="flex items-center gap-1" aria-label={`${boopsLeft} boops left`}>
-              {Array.from({ length: MAX_PEEK_BOOPS }).map((_, i) => (
+            <div className="flex items-center gap-1" aria-label={`${chancesLeft} tries left`}>
+              {Array.from({ length: MAX_PEEK_MISTAKES }).map((_, i) => (
                 <span
                   key={i}
                   className={`flex h-5 w-5 items-center justify-center rounded-full text-xs transition-all ${
-                    i < boopsLeft
+                    i < chancesLeft
                       ? 'bg-amber-500/20 text-amber-900 ring-1 ring-amber-500/40'
                       : 'bg-amber-950/5 text-amber-950/25 grayscale'
                   }`}
@@ -161,10 +228,11 @@ export function PeekABooGame({
           </div>
         </div>
 
-        {/* 3 Cozy Hiding Spots */}
-        <div className="grid grid-cols-3 gap-2 my-auto">
+        {/* 6 Cozy Hiding Spots (3×2 grid) */}
+        <div className="grid grid-cols-3 gap-1.5">
           {PEEK_SPOTS.map((spot) => {
-            const isPeeking = activeSpot === spot.id && boopedSpot === null;
+            const isPeeking = activeSpot === spot.id && boopedSpot !== spot.id;
+            const isDecoy = decoySpot === spot.id && activeSpot !== spot.id;
             const isBooped = boopedSpot === spot.id;
             const isWrong = wrongSpot === spot.id;
 
@@ -174,45 +242,42 @@ export function PeekABooGame({
                 type="button"
                 whileTap={{ scale: 0.94 }}
                 animate={isWrong ? { x: [-4, 4, -3, 3, 0] } : { x: 0 }}
-                transition={{ duration: 0.25 }}
+                transition={{ duration: 0.22 }}
                 disabled={roundFeedback !== null || finished}
                 onClick={() => handleTapSpot(spot.id)}
-                aria-label={`Peek under ${spot.label}`}
-                className={`relative flex h-24 flex-col items-center justify-end rounded-2xl border-2 p-2 transition-colors ${
+                aria-label={`Peek at ${spot.label}`}
+                className={`relative flex h-[74px] flex-col items-center justify-end rounded-xl border-2 px-1.5 pb-1.5 pt-1 transition-colors ${
                   isBooped
-                    ? 'border-emerald-500 bg-emerald-50 shadow-md'
+                    ? 'border-emerald-500 bg-emerald-50 shadow-sm'
                     : isPeeking
-                      ? 'border-amber-500 bg-amber-50 shadow-md ring-2 ring-amber-400/50'
+                      ? 'border-amber-500 bg-amber-50 shadow-sm ring-2 ring-amber-400/50'
                       : isWrong
-                        ? 'border-rose-400 bg-rose-50/80'
+                        ? 'border-rose-400 bg-rose-50/85'
                         : 'border-amber-900/12 bg-white/80 hover:bg-white'
                 }`}
               >
-                {/* Peeking kitten face */}
+                {/* Peeking Oli or sneaky decoy mouse */}
                 <motion.div
                   initial={false}
                   animate={
-                    isPeeking || isBooped
+                    isPeeking || isBooped || isDecoy
                       ? { y: 0, opacity: 1, scale: 1 }
-                      : { y: 18, opacity: 0, scale: 0.7 }
+                      : { y: 14, opacity: 0, scale: 0.7 }
                   }
-                  transition={{ type: 'spring', stiffness: 420, damping: 24 }}
-                  className="pointer-events-none absolute top-1.5 flex flex-col items-center"
+                  transition={{ type: 'spring', stiffness: 480, damping: 24 }}
+                  className="pointer-events-none absolute top-1 flex flex-col items-center"
                 >
-                  <span className="text-3xl leading-none select-none">
-                    {isBooped ? '😻' : '🐱'}
+                  <span className="text-2xl leading-none select-none">
+                    {isBooped ? '😻' : isPeeking ? '🐱' : isDecoy ? '🐭' : ''}
                   </span>
-                  {isBooped && (
-                    <span className="text-[10px] font-black text-emerald-700">Boop! ✨</span>
-                  )}
                 </motion.div>
 
-                {/* Cozy cover at bottom of card */}
-                <div className="relative z-10 flex flex-col items-center gap-0.5 rounded-xl bg-amber-100/90 px-2.5 py-1 shadow-2xs ring-1 ring-amber-900/10">
-                  <span className="text-lg leading-none" aria-hidden="true">
+                {/* Cozy hiding spot label */}
+                <div className="relative z-10 flex items-center gap-1 rounded-lg bg-amber-100/95 px-2 py-0.5 shadow-2xs ring-1 ring-amber-900/10">
+                  <span className="text-xs leading-none" aria-hidden="true">
                     {spot.emoji}
                   </span>
-                  <span className="text-[10px] font-extrabold text-amber-950">{spot.label}</span>
+                  <span className="text-[9px] font-extrabold text-amber-950">{spot.label}</span>
                 </div>
               </motion.button>
             );
@@ -224,14 +289,235 @@ export function PeekABooGame({
           <span>🙈</span>
           <span>
             {roundFeedback === 'hit'
-              ? 'Peek-a-boo! Booped his nose! ✨'
+              ? 'Fast paws! Caught every peek! ✨'
               : roundFeedback === 'miss'
                 ? missReason === 'timeout'
                   ? 'Time’s up!'
-                  : 'He stayed hidden!'
-                : activeSpot !== null
-                  ? 'There he is! Tap to boop!'
-                  : 'Watch closely — where will he peek?'}
+                  : missReason === 'decoy_tap'
+                    ? 'That was a toy mouse! 🐭'
+                    : 'Out of tries!'
+                : lastMistakeWasDecoy
+                  ? 'Watch out — skip the toy mouse 🐭!'
+                  : cfg.hasDecoy
+                    ? 'Boop Oli 🐱 — ignore the decoy mouse 🐭!'
+                    : 'Boop Oli fast before he ducks away!'}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ============================================================================
+ * BRAIN GAME: PAW PATTERN (Simon-Says Sequence Memory — Unlocks at Teen)
+ * ==========================================================================*/
+export function PawPatternGame({
+  round,
+  roundFeedback,
+  missReason,
+  timeLeft,
+  finished,
+  onRoundResult,
+  onPauseTimer,
+}: BrainGameCommonProps) {
+  const cfg = getPawPatternConfig(round);
+  const [sequence, setSequence] = useState<number[]>(() => generatePawPattern(cfg.steps));
+  const [phase, setPhase] = useState<'watch' | 'repeat' | 'done'>('watch');
+  const [litPad, setLitPad] = useState<number | null>(null);
+  const [watchIdx, setWatchIdx] = useState<number>(-1);
+  const [inputStep, setInputStep] = useState<number>(0);
+  const [wrongPad, setWrongPad] = useState<number | null>(null);
+  const [expectedPad, setExpectedPad] = useState<number | null>(null);
+
+  const flashTimerRef = useRef<number | undefined>(undefined);
+
+  useEffect(() => {
+    if (finished) return;
+    window.clearTimeout(flashTimerRef.current);
+    const roundCfg = getPawPatternConfig(round);
+    const seq = generatePawPattern(roundCfg.steps);
+
+    setSequence(seq);
+    setPhase('watch');
+    setLitPad(null);
+    setWatchIdx(-1);
+    setInputStep(0);
+    setWrongPad(null);
+    setExpectedPad(null);
+    onPauseTimer(true);
+
+    let cancelled = false;
+    const timers: number[] = [];
+    const schedule = (fn: () => void, ms: number) => {
+      const id = window.setTimeout(() => {
+        if (!cancelled) fn();
+      }, ms);
+      timers.push(id);
+    };
+
+    const stride = roundCfg.stepMs + roundCfg.gapMs;
+    seq.forEach((padId, idx) => {
+      schedule(() => {
+        setWatchIdx(idx);
+        setLitPad(padId);
+        playSound('pop');
+      }, 360 + idx * stride);
+
+      schedule(() => {
+        setLitPad(null);
+      }, 360 + idx * stride + roundCfg.stepMs);
+    });
+
+    schedule(() => {
+      setLitPad(null);
+      setWatchIdx(-1);
+      setPhase('repeat');
+      onPauseTimer(false);
+    }, 360 + seq.length * stride + 80);
+
+    return () => {
+      cancelled = true;
+      timers.forEach((t) => window.clearTimeout(t));
+      window.clearTimeout(flashTimerRef.current);
+    };
+  }, [round, finished, onPauseTimer]);
+
+  const handleTapPad = (padId: number) => {
+    if (phase !== 'repeat' || roundFeedback !== null || finished) return;
+
+    const target = sequence[inputStep];
+    if (padId === target) {
+      setLitPad(padId);
+      vibrate(15);
+      playSound('pop');
+      window.clearTimeout(flashTimerRef.current);
+      flashTimerRef.current = window.setTimeout(() => {
+        setLitPad(null);
+      }, 220);
+
+      const nextStep = inputStep + 1;
+      setInputStep(nextStep);
+      if (nextStep >= sequence.length) {
+        setPhase('done');
+        onRoundResult('hit', 'caught');
+      }
+    } else {
+      setWrongPad(padId);
+      setExpectedPad(target);
+      setPhase('done');
+      onRoundResult('miss', 'wrong_step');
+    }
+  };
+
+  useEffect(() => {
+    if (phase !== 'repeat' || roundFeedback !== null || finished) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === '1') handleTapPad(0);
+      else if (e.key === '2') handleTapPad(1);
+      else if (e.key === '3') handleTapPad(2);
+      else if (e.key === '4') handleTapPad(3);
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [phase, roundFeedback, finished, inputStep, sequence]);
+
+  return (
+    <div className="flex flex-col items-center gap-2.5">
+      <div className="relative flex w-full flex-col gap-2.5 overflow-hidden rounded-2xl border-2 border-amber-900/12 bg-gradient-to-b from-[#fdf6ec] to-[#f4e6d0] p-3 shadow-inner">
+        {/* Top bar: countdown + step progress dots */}
+        <div className="flex flex-col gap-1.5">
+          <div className="h-1.5 w-full overflow-hidden rounded-full bg-amber-950/10">
+            <div
+              style={{ width: `${(Math.max(0, timeLeft) / cfg.timeSec) * 100}%` }}
+              className={`h-full transition-[width] duration-75 ${
+                phase === 'watch'
+                  ? 'bg-amber-400/50'
+                  : timeLeft <= 2.5
+                    ? 'bg-rose-500'
+                    : 'bg-amber-500'
+              }`}
+            />
+          </div>
+          <div className="flex items-center justify-between px-0.5">
+            <span className="rounded-full bg-amber-900/10 px-2 py-0.5 text-[10px] font-black text-amber-900">
+              {phase === 'watch'
+                ? `👀 Watch (${Math.max(0, watchIdx + 1)}/${cfg.steps})`
+                : phase === 'repeat'
+                  ? `🐾 Your turn (${inputStep}/${cfg.steps})`
+                  : roundFeedback === 'hit'
+                    ? '✨ Nailed it!'
+                    : '🐾 Oops!'}
+            </span>
+            <div className="flex items-center gap-1">
+              {Array.from({ length: cfg.steps }).map((_, i) => (
+                <span
+                  key={i}
+                  className={`h-2.5 w-2.5 rounded-full transition-colors ${
+                    phase === 'watch'
+                      ? i <= watchIdx
+                        ? 'bg-amber-500'
+                        : 'bg-amber-950/15'
+                      : i < inputStep
+                        ? 'bg-emerald-500'
+                        : 'bg-amber-950/15'
+                  }`}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* 2×2 Paw Pillow Pads */}
+        <div className="mx-auto grid w-full max-w-[260px] grid-cols-2 gap-2.5">
+          {PAW_PADS.map((pad) => {
+            const isLit = litPad === pad.id;
+            const isWrong = wrongPad === pad.id;
+            const isExpected = expectedPad === pad.id;
+
+            return (
+              <motion.button
+                key={pad.id}
+                type="button"
+                whileTap={phase === 'repeat' ? { scale: 0.94 } : undefined}
+                animate={isWrong ? { x: [-4, 4, -3, 3, 0] } : { x: 0 }}
+                transition={{ duration: 0.22 }}
+                disabled={phase !== 'repeat' || roundFeedback !== null || finished}
+                onClick={() => handleTapPad(pad.id)}
+                aria-label={`${pad.label} pillow`}
+                className={`relative flex h-16 flex-col items-center justify-center gap-0.5 rounded-2xl border-2 shadow-xs transition-all duration-150 ${
+                  isWrong
+                    ? 'border-rose-500 bg-rose-200 text-rose-950'
+                    : isExpected
+                      ? 'border-emerald-500 bg-emerald-200 text-emerald-950 ring-2 ring-emerald-400'
+                      : isLit
+                        ? pad.litClass
+                        : `${pad.idleClass} ${phase === 'repeat' ? 'hover:brightness-105 cursor-pointer' : 'opacity-90'}`
+                }`}
+              >
+                <span className="text-2xl leading-none select-none" aria-hidden="true">
+                  {isLit && phase === 'watch' ? '🐾' : pad.emoji}
+                </span>
+                <span className="text-[10px] font-black tracking-wide uppercase">
+                  {pad.label}
+                </span>
+              </motion.button>
+            );
+          })}
+        </div>
+
+        {/* Status text */}
+        <div aria-live="polite" className="flex items-center justify-center gap-1.5 text-[11px] font-extrabold text-amber-900">
+          <span>🐱</span>
+          <span>
+            {roundFeedback === 'hit'
+              ? 'Perfect paw memory! ✨'
+              : roundFeedback === 'miss'
+                ? missReason === 'timeout'
+                  ? 'Time’s up!'
+                  : 'Wrong pillow — almost had it!'
+                : phase === 'watch'
+                  ? 'Watch which pillows Oli taps…'
+                  : 'Repeat Oli’s paw pattern in order!'}
           </span>
         </div>
       </div>
