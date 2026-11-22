@@ -17,7 +17,13 @@ import { WhimBubble } from './components/WhimBubble';
 import { actionById } from './data/actions';
 import { useCatGame, type Notice } from './hooks/useCatGame';
 import { useVersionCheck } from './hooks/useVersionCheck';
-import { pickBalconyVisitor, type BalconyVisitor } from './utils/balconyVisitors';
+import {
+  nextVisitorDelayMs,
+  pickBalconyVisitor,
+  VISITOR_STAY_MAX_MS,
+  VISITOR_STAY_MIN_MS,
+  type BalconyVisitor,
+} from './utils/balconyVisitors';
 import { hasAffordableItem } from './utils/closet';
 import {
   countCompletedQuests,
@@ -89,6 +95,7 @@ export function App() {
   const noticeTimer = useRef<number | undefined>(undefined);
   const noticeSeqRef = useRef(0);
   const visitorTimersRef = useRef<{ spawn?: number; leave?: number; clear?: number }>({});
+  const lastVisitorEndedAtRef = useRef(0);
 
   useEffect(() => {
     return () => {
@@ -235,14 +242,16 @@ export function App() {
 
     if (balconyVisitor) {
       if (visitorStartled) return;
-      const stayMs = 18_000 + Math.floor(Math.random() * 8_000);
+      const stayMs =
+        VISITOR_STAY_MIN_MS + Math.floor(Math.random() * (VISITOR_STAY_MAX_MS - VISITOR_STAY_MIN_MS));
       visitorTimersRef.current.leave = window.setTimeout(() => {
+        lastVisitorEndedAtRef.current = Date.now();
         setBalconyVisitor(null);
       }, stayMs);
       return () => window.clearTimeout(visitorTimersRef.current.leave);
     }
 
-    const waitMs = 2_200 + Math.floor(Math.random() * 4_500);
+    const waitMs = nextVisitorDelayMs(lastVisitorEndedAtRef.current);
     visitorTimersRef.current.spawn = window.setTimeout(() => {
       if (document.visibilityState === 'hidden') return;
       setVisitorStartled(false);
@@ -256,6 +265,7 @@ export function App() {
     (visitor: BalconyVisitor) => {
       if (visitorStartled) return;
       if (!interactBalconyVisitor(visitor)) return;
+      lastVisitorEndedAtRef.current = Date.now();
       setVisitorStartled(true);
       window.clearTimeout(visitorTimersRef.current.leave);
       window.clearTimeout(visitorTimersRef.current.clear);

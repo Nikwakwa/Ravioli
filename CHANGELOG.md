@@ -4,6 +4,13 @@ All updates to **Oli** are listed here.
 
 ---
 
+## `v1.4.1` — 2026-11-22
+### Calmer Balcony Visitors 🦋
+- Fixed butterfly and moth wings so they hinge cleanly at the body with a smooth flap-and-glide rhythm.
+- Slowed down balcony visits so birds and butterflies drop by occasionally instead of back-to-back.
+
+---
+
 ## `v1.4.0` — 2026-11-22
 ### Balcony Visitors & Daily Quests 🕊️📋
 - Pigeons, robins, doves, butterflies, and evening moths now visit the balcony — tap one to watch Oli wiggle and pounce.

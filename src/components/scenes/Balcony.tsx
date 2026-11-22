@@ -728,25 +728,43 @@ function BalconyVisitorSprite({
               animate={
                 startled
                   ? { y: [0, -10, -4], rotate: [-12, 12, -12] }
-                  : { y: [-3, 4, -3], x: [-2.5, 2.5, -2.5] }
+                  : { y: [0, -4, 1, -3, 2, 0], x: [0, 5, 2, -5, -2, 0], rotate: [-7, 5, -2, 7, -4, -7] }
               }
-              transition={{ duration: startled ? 0.22 : 2.6, repeat: Infinity, ease: 'easeInOut' }}
+              transition={{ duration: startled ? 0.22 : 4.4, repeat: Infinity, ease: 'easeInOut' }}
             >
-              {/* Left wings flapping */}
+              {/* Left wings hinged at the thorax (right edge of left wing bounding box) */}
               <motion.g
-                style={{ originX: '0px', originY: '0px' }}
-                animate={{ scaleX: [1, 0.25, 1] }}
-                transition={{ duration: startled ? 0.14 : 0.42, repeat: Infinity, ease: 'easeInOut' }}
+                style={{ transformBox: 'fill-box', originX: 1, originY: 0.5 }}
+                animate={{
+                  scaleX: [1, 0.2, 0.34, 1],
+                  scaleY: [1, 1.05, 1.02, 1],
+                  rotate: [0, 14, 9, 0],
+                }}
+                transition={{
+                  duration: startled ? 0.22 : 0.92,
+                  times: [0, 0.3, 0.52, 1],
+                  repeat: Infinity,
+                  ease: 'easeInOut',
+                }}
               >
                 <path d="M 0 0 C -6 -13, -17 -11, -14 -2 C -12 3, -5 3, 0 1 Z" fill="#f97316" stroke="#431407" strokeWidth="1" />
                 <path d="M 0 1 C -7 2, -13 8, -8 11 C -4 13, -1 7, 0 2 Z" fill="#fb923c" stroke="#431407" strokeWidth="1" />
                 <circle cx="-10.5" cy="-5.5" r="1.3" fill="#fef3c7" />
               </motion.g>
-              {/* Right wings flapping */}
+              {/* Right wings hinged at the thorax (left edge of right wing bounding box) */}
               <motion.g
-                style={{ originX: '0px', originY: '0px' }}
-                animate={{ scaleX: [1, 0.25, 1] }}
-                transition={{ duration: startled ? 0.14 : 0.42, repeat: Infinity, ease: 'easeInOut' }}
+                style={{ transformBox: 'fill-box', originX: 0, originY: 0.5 }}
+                animate={{
+                  scaleX: [1, 0.2, 0.34, 1],
+                  scaleY: [1, 1.05, 1.02, 1],
+                  rotate: [0, -14, -9, 0],
+                }}
+                transition={{
+                  duration: startled ? 0.22 : 0.92,
+                  times: [0, 0.3, 0.52, 1],
+                  repeat: Infinity,
+                  ease: 'easeInOut',
+                }}
               >
                 <path d="M 0 0 C 6 -13, 17 -11, 14 -2 C 12 3, 5 3, 0 1 Z" fill="#fb923c" stroke="#431407" strokeWidth="1" />
                 <path d="M 0 1 C 7 2, 13 8, 8 11 C 4 13, 1 7, 0 2 Z" fill="#fdba74" stroke="#431407" strokeWidth="1" />
@@ -763,19 +781,42 @@ function BalconyVisitorSprite({
               animate={
                 startled
                   ? { y: [0, -10, -4], rotate: [-10, 10, -10] }
-                  : { y: [-3, 3.5, -3], x: [-3, 3, -3] }
+                  : { y: [0, -3.5, 1, -2.5, 2, 0], x: [0, -4, 2, 5, -1, 0], rotate: [-5, 4, -3, 5, -5] }
               }
-              transition={{ duration: startled ? 0.2 : 2.9, repeat: Infinity, ease: 'easeInOut' }}
+              transition={{ duration: startled ? 0.2 : 3.8, repeat: Infinity, ease: 'easeInOut' }}
             >
-              {/* Soft moonlit pale-lime/cream luna moth wings */}
+              {/* Left moonlit luna moth wings hinged cleanly at the thorax */}
               <motion.g
-                style={{ originX: '0px', originY: '0px' }}
-                animate={{ scaleX: [1, 0.32, 1] }}
-                transition={{ duration: startled ? 0.14 : 0.36, repeat: Infinity, ease: 'easeInOut' }}
+                style={{ transformBox: 'fill-box', originX: 1, originY: 0.5 }}
+                animate={{
+                  scaleX: [1, 0.28, 0.42, 1],
+                  rotate: [0, 10, 6, 0],
+                }}
+                transition={{
+                  duration: startled ? 0.18 : 0.62,
+                  times: [0, 0.3, 0.55, 1],
+                  repeat: Infinity,
+                  ease: 'easeInOut',
+                }}
               >
                 <path d="M 0 -1 C -7 -11, -17 -9, -15 -1 C -13 3, -5 3, 0 1 Z" fill="#d9f99d" stroke="#84cc16" strokeWidth="0.8" />
                 <path d="M 0 1 C -7 2, -12 8, -9 13 C -7 16, -4 9, 0 2 Z" fill="#ecfccb" stroke="#84cc16" strokeWidth="0.8" />
                 <circle cx="-8" cy="-4" r="1.4" fill="#fef08a" stroke="#65a30d" strokeWidth="0.5" />
+              </motion.g>
+              {/* Right moonlit luna moth wings hinged cleanly at the thorax */}
+              <motion.g
+                style={{ transformBox: 'fill-box', originX: 0, originY: 0.5 }}
+                animate={{
+                  scaleX: [1, 0.28, 0.42, 1],
+                  rotate: [0, -10, -6, 0],
+                }}
+                transition={{
+                  duration: startled ? 0.18 : 0.62,
+                  times: [0, 0.3, 0.55, 1],
+                  repeat: Infinity,
+                  ease: 'easeInOut',
+                }}
+              >
                 <path d="M 0 -1 C 7 -11, 17 -9, 15 -1 C 13 3, 5 3, 0 1 Z" fill="#d9f99d" stroke="#84cc16" strokeWidth="0.8" />
                 <path d="M 0 1 C 7 2, 12 8, 9 13 C 7 16, 4 9, 0 2 Z" fill="#ecfccb" stroke="#84cc16" strokeWidth="0.8" />
                 <circle cx="8" cy="-4" r="1.4" fill="#fef08a" stroke="#65a30d" strokeWidth="0.5" />

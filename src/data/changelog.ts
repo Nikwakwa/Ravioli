@@ -7,6 +7,15 @@ export interface ReleaseEntry {
 
 export const CHANGELOG: ReleaseEntry[] = [
   {
+    version: 'v1.4.1',
+    date: '2026-11-22',
+    title: 'Calmer Balcony Visitors 🦋',
+    changes: [
+      'Fixed butterfly and moth wings so they hinge cleanly at the body with a smooth flap-and-glide rhythm.',
+      'Slowed down balcony visits so birds and butterflies drop by occasionally instead of back-to-back.',
+    ],
+  },
+  {
     version: 'v1.4.0',
     date: '2026-11-22',
     title: 'Balcony Visitors & Daily Quests 🕊️📋',

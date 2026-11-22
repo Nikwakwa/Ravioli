@@ -27,6 +27,31 @@ export const BALCONY_ACTION_ID = 'balcony_watch';
 export const BALCONY_VISITOR_JOY = 4;
 export const BALCONY_VISITOR_COOLDOWN_MS = 20_000;
 
+/** Calm balcony wildlife pacing (ms): peaceful terrace first, occasional visits instead of constant traffic. */
+export const VISITOR_FIRST_MIN_MS = 12_000;
+export const VISITOR_FIRST_MAX_MS = 25_000;
+export const VISITOR_GAP_MIN_MS = 45_000;
+export const VISITOR_GAP_MAX_MS = 90_000;
+export const VISITOR_STAY_MIN_MS = 14_000;
+export const VISITOR_STAY_MAX_MS = 22_000;
+
+/** Computes how long to wait before the next balcony visitor arrives. */
+export function nextVisitorDelayMs(
+  lastEndedAt: number,
+  nowMs: number = Date.now(),
+  rand: number = Math.random(),
+): number {
+  const r = Math.min(0.999999, Math.max(0, rand));
+  if (lastEndedAt <= 0) {
+    return Math.round(VISITOR_FIRST_MIN_MS + r * (VISITOR_FIRST_MAX_MS - VISITOR_FIRST_MIN_MS));
+  }
+  const targetGap = VISITOR_GAP_MIN_MS + r * (VISITOR_GAP_MAX_MS - VISITOR_GAP_MIN_MS);
+  const elapsed = Math.max(0, nowMs - lastEndedAt);
+  // Even if returning to the balcony later, wait at least a calm 10–18s beat before a visitor lands.
+  const minCalmWait = 10_000 + Math.round(r * 8_000);
+  return Math.max(minCalmWait, Math.round(targetGap - elapsed));
+}
+
 export const VISITOR_META: Record<VisitorKind, VisitorMeta> = {
   pigeon: {
     name: 'pigeon',

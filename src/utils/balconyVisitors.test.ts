@@ -1,8 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import {
   HOVER_SPOTS,
+  nextVisitorDelayMs,
   pickBalconyVisitor,
   RAIL_PERCHES,
+  VISITOR_FIRST_MAX_MS,
+  VISITOR_FIRST_MIN_MS,
+  VISITOR_GAP_MAX_MS,
+  VISITOR_GAP_MIN_MS,
   VISITOR_META,
   visitorPoolFor,
 } from './balconyVisitors';
@@ -52,6 +57,23 @@ describe('Balcony Bird Watching — Visitors', () => {
     expect(pigeon.kind).toBe('pigeon');
     expect(pigeon.hovering).toBe(false);
     expect(RAIL_PERCHES.some((s) => s.x === pigeon.x && s.y === pigeon.y)).toBe(true);
+  });
+
+  it('keeps visitor timing calm with a generous gap between visits', () => {
+    const firstMin = nextVisitorDelayMs(0, 100_000, 0);
+    const firstMax = nextVisitorDelayMs(0, 100_000, 1);
+    expect(firstMin).toBeGreaterThanOrEqual(VISITOR_FIRST_MIN_MS);
+    expect(firstMax).toBeLessThanOrEqual(VISITOR_FIRST_MAX_MS);
+
+    // Right after a visitor leaves, wait 45-90 seconds before the next one
+    const gapMin = nextVisitorDelayMs(100_000, 100_000, 0);
+    const gapMax = nextVisitorDelayMs(100_000, 100_000, 1);
+    expect(gapMin).toBeGreaterThanOrEqual(VISITOR_GAP_MIN_MS);
+    expect(gapMax).toBeLessThanOrEqual(VISITOR_GAP_MAX_MS);
+
+    // Returning much later still waits a calm 10-18s beat
+    const returning = nextVisitorDelayMs(100_000, 500_000, 0);
+    expect(returning).toBeGreaterThanOrEqual(10_000);
   });
 
   it('produces fun reaction lines for every visitor species', () => {
