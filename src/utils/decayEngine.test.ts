@@ -17,7 +17,7 @@ import {
   pickCandidateWhim,
   REVIVE_ACTION_ID,
 } from '../data/actions';
-import { pickFreeMessSlot } from '../hooks/useCatGame';
+import { pickFreeMessSlot, withPetCalm } from '../hooks/useCatGame';
 import { normalizeVersion, VERSION_RE } from '../hooks/useVersionCheck';
 import { cleanText, sanitizeActivity, sanitizeCatState } from '../services/catStorage';
 import { evaluateStatThresholds, getNotificationAssetUrls, toAbsoluteNotificationUrl, type AlertedMap } from './notifications';
@@ -158,7 +158,7 @@ describe('mood & hints', () => {
     expect(deriveMood(computeLiveStats(base({ hydration: 10 }), T0))).toBe('thirsty');
   });
 
-  it('is relaxed during the pheromone calm window', () => {
+  it('is relaxed during the chin-scratch calm window', () => {
     const live = computeLiveStats(base({ calm_until: new Date(T0 + H).toISOString() }), T0);
     expect(deriveMood(live)).toBe('relaxed');
   });
@@ -217,15 +217,22 @@ describe('security sanitizers (catStorage)', () => {
 });
 
 describe('Core action, dock & mess rules', () => {
-  it('organizes dock into 4 balanced categories (feed, play, care, rest)', () => {
-    expect(CATEGORIES.map((c) => c.id)).toEqual(['feed', 'play', 'care', 'rest']);
+  it('organizes dock into 3 balanced categories (feed, play, care)', () => {
+    expect(CATEGORIES.map((c) => c.id)).toEqual(['feed', 'play', 'care']);
     expect(CARE_ACTIONS.filter((a) => a.category === 'feed')).toHaveLength(5);
     const playActions = CARE_ACTIONS.filter((a) => a.category === 'play');
     expect(playActions).toHaveLength(8);
     expect(playActions.filter((a) => a.playGroup === 'active')).toHaveLength(4);
     expect(playActions.filter((a) => a.playGroup === 'brain')).toHaveLength(4);
     expect(CARE_ACTIONS.filter((a) => a.category === 'care')).toHaveLength(3);
-    expect(CARE_ACTIONS.filter((a) => a.category === 'rest')).toHaveLength(1);
+  });
+
+  it('chin scratches leave Oli relaxed for 5 minutes without shortening a longer calm', () => {
+    const now = Date.parse('2026-11-22T10:00:00Z');
+    const calm = withPetCalm({ calm_until: null } as CatState, now);
+    expect(calm.calm_until).toBe('2026-11-22T10:05:00.000Z');
+    const longer = { calm_until: '2026-11-22T10:30:00.000Z' } as CatState;
+    expect(withPetCalm(longer, now).calm_until).toBe('2026-11-22T10:30:00.000Z');
   });
 
   it('allocates up to 3 room mess slots and returns null when full', () => {

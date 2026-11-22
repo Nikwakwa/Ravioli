@@ -1,7 +1,7 @@
 import type { CatAnimation, CatStats, CatWhim, LifeStage, LiveCat, StatKey } from '../types';
 import { isStageAtLeast, isStageAtMost } from '../utils/lifeStage';
 
-export type ActionCategory = 'feed' | 'play' | 'care' | 'rest';
+export type ActionCategory = 'feed' | 'play' | 'care';
 
 export type PlayGroup = 'active' | 'brain';
 
@@ -54,6 +54,8 @@ export const MAX_TREATS_IN_WINDOW = 3;
 export const TUMMY_ACHE_MS = 10 * 60_000;
 export const PET_COOLDOWN_MS = 20_000;
 export const PET_JOY_BOOST = 6;
+/** Chin scratches leave Oli zen & relaxed for a few minutes. */
+export const PET_CALM_MINUTES = 5;
 export const MAX_ROOM_MESSES = 3;
 export const MESS_SPAWN_HOURS = 2.5;
 export const DEFAULT_CHURU_STASH = 1;
@@ -120,7 +122,6 @@ export const CATEGORIES: { id: ActionCategory; label: string }[] = [
   { id: 'feed', label: 'Feed' },
   { id: 'play', label: 'Play' },
   { id: 'care', label: 'Care' },
-  { id: 'rest', label: 'Rest' },
 ];
 
 export const PLAY_GROUPS: { id: PlayGroup; label: string; emoji: string }[] = [
@@ -382,25 +383,6 @@ export const CARE_ACTIONS: CareAction[] = [
     requiresAwake: false,
     haptic: [20, 35, 20],
     durationMs: 1800,
-  },
-
-  // ---------------------------------------------------------------------------
-  // REST — Calming Pheromone Mist (+ Nap Mode button in ActionDock)
-  // ---------------------------------------------------------------------------
-  {
-    id: 'pheromone_mist',
-    category: 'rest',
-    name: 'Calming Mist',
-    short: 'Calming Mist',
-    effect: { happiness: 15 },
-    animation: 'misting',
-    particles: ['mist'],
-    log: 'Spritzed calming pheromone mist for {cat}',
-    requiresAwake: false,
-    haptic: 15,
-    calmMinutes: 45,
-    durationMs: 2600,
-    soothesTummy: true,
   },
 ];
 

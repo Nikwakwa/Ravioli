@@ -4,6 +4,14 @@ All updates to **Oli** are listed here.
 
 ---
 
+## `v1.3.2` — 2026-11-22
+### Tidier Care Tab 🛏️
+- Removed Calming Mist.
+- Nap Mode moved into Care, so the Rest tab is gone.
+- Chin scratches now leave Oli zen and relaxed for a few minutes.
+
+---
+
 ## `v1.3.1` — 2026-11-22
 ### Happier Oli Icon 😊
 - The app icon now shows Oli smiling with rosy cheeks instead of looking sad.

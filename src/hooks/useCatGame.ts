@@ -53,6 +53,7 @@ import {
   MIN_WAKE_ENERGY,
   PAUSE_ACTION_ID,
   PET_ACTION_ID,
+  PET_CALM_MINUTES,
   PET_COOLDOWN_MS,
   PET_JOY_BOOST,
   pickCandidateWhim,
@@ -219,6 +220,14 @@ let eventSeq = 0;
 
 function sortLog(entries: ActivityEntry[]): ActivityEntry[] {
   return [...entries].sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at)).slice(0, ACTIVITY_LIMIT);
+}
+
+/** Chin scratches leave Oli zen & relaxed for a few minutes. */
+export function withPetCalm(state: CatState, nowMs: number): CatState {
+  const until = nowMs + PET_CALM_MINUTES * 60_000;
+  const current = state.calm_until ? Date.parse(state.calm_until) : NaN;
+  if (Number.isFinite(current) && current >= until) return state;
+  return { ...state, calm_until: new Date(until).toISOString() };
 }
 
 export function pickFreeMessSlot(existing: RoomMess[]): 0 | 1 | 2 | null {
@@ -1356,14 +1365,14 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
 
       // 1. Sleeping check
       if (action.requiresAwake && live.isSleeping) {
-        noticeRef.current({ text: `Shh… ${live.name} is napping. Wake him in Rest.`, tone: 'info' });
+        noticeRef.current({ text: `Shh… ${live.name} is napping. Wake him in Care.`, tone: 'info' });
         vibrate(10);
         return;
       }
 
       // 2. Tummy ache check on food/treats
       if (tummyAche && action.category === 'feed') {
-        triggerRefusal(`🤢 ${live.name} has a tummy ache! Pet, brush, or mist him first.`);
+        triggerRefusal(`🤢 ${live.name} has a tummy ache! Pet or brush him first.`);
         return;
       }
 
@@ -1481,7 +1490,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
         }
       }
 
-      // 10. Soothe tummy ache if using Brush or Calming Mist
+      // 10. Soothe tummy ache if using Brush
       if (tummyAche && action.soothesTummy) {
         clearTummyAche();
         noticeRef.current({
@@ -1599,7 +1608,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
         durationMs: 2200,
       });
       const mutator = (b: CatState): CatState =>
-        addGrowthBonus(applyEffect(materialize(b, nowMs), boost), CARE_ACTION_GROWTH_BONUS);
+        withPetCalm(addGrowthBonus(applyEffect(materialize(b, nowMs), boost), CARE_ACTION_GROWTH_BONUS), nowMs);
       void commit(mutator, PET_ACTION_ID, `Gave ${live.name} chin scratches — purr session!`);
       return true;
     }
@@ -1641,7 +1650,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
 
       const growthBonus = matchedWhim ? WHIM_GROWTH_BONUS : CARE_ACTION_GROWTH_BONUS;
       const mutator = (b: CatState): CatState =>
-        addGrowthBonus(applyEffect(materialize(b, nowMs), boost), growthBonus);
+        withPetCalm(addGrowthBonus(applyEffect(materialize(b, nowMs), boost), growthBonus), nowMs);
       void commit(mutator, PET_ACTION_ID, `Gave ${live.name} chin scratches — purr session!`);
     } else {
       // Petted again too soon for more Joy: he still answers with a little "mrp?"

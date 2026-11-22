@@ -412,7 +412,7 @@ Time: ${new Date().toISOString()}`;
               </div>
               <ul className="flex list-disc flex-col gap-1 pl-4 text-xs font-medium text-amber-900/85">
                 <li><strong>Fullness:</strong> Oli refuses food when full. Play with him first!</li>
-                <li><strong>Tummy aches:</strong> Max {MAX_TREATS_IN_WINDOW} treats per 15 min. Soothe with belly rubs, brushing, or mist.</li>
+                <li><strong>Tummy aches:</strong> Max {MAX_TREATS_IN_WINDOW} treats per 15 min. Soothe with belly rubs or brushing.</li>
               </ul>
             </div>
 

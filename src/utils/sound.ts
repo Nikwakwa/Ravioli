@@ -405,8 +405,6 @@ export function soundForAction(actionId: string): SoundName | null {
       return 'water';
     case 'brush':
       return 'brush';
-    case 'pheromone_mist':
-      return 'mist';
     case 'scoop_mess':
       return 'scoop';
     case 'feather_wand':

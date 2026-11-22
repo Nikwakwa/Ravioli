@@ -7,6 +7,16 @@ export interface ReleaseEntry {
 
 export const CHANGELOG: ReleaseEntry[] = [
   {
+    version: 'v1.3.2',
+    date: '2026-11-22',
+    title: 'Tidier Care Tab 🛏️',
+    changes: [
+      'Removed Calming Mist.',
+      'Nap Mode moved into Care, so the Rest tab is gone.',
+      'Chin scratches now leave Oli zen and relaxed for a few minutes.',
+    ],
+  },
+  {
     version: 'v1.3.1',
     date: '2026-11-22',
     title: 'Happier Oli Icon 😊',

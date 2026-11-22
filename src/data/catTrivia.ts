@@ -402,7 +402,7 @@ export const CAT_TRIVIA_QUESTIONS: readonly TriviaQuestion[] = [
     prompt: 'What happens if Oli eats too many treats in a row?',
     choices: ['He gets a tummy ache', 'He learns to fly', 'He grows extra ears'],
     answerIndex: 0,
-    fact: 'Moderation keeps whiskers happy — brushing or calming mist helps soothe a sore tummy!',
+    fact: 'Moderation keeps whiskers happy — brushing or belly rubs help soothe a sore tummy!',
   },
   {
     id: 'oli_forever',

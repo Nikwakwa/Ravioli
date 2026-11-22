@@ -19,7 +19,7 @@ export const LIFE_STAGES: readonly LifeStage[] = ['newborn', 'kitten', 'teen', '
 export interface CatState extends CatStats {
   name: string;
   is_sleeping: boolean;
-  /** ISO timestamp until which Oli is relaxed by the pheromone mist (nullable). */
+  /** ISO timestamp until which Oli is relaxed after chin scratches (nullable). */
   calm_until: string | null;
   /** ISO timestamp of the last time stats were materialized. */
   last_updated_at: string;

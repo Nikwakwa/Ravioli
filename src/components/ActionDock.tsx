@@ -1,6 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import {
-  BedDouble,
   Brain,
   Brush,
   Droplets,
@@ -15,7 +14,6 @@ import {
   Package,
   RefreshCw,
   Sparkles,
-  SprayCan,
   Sun,
   Trash2,
   Utensils,
@@ -63,7 +61,6 @@ const CATEGORY_ICONS: Record<ActionCategory, LucideIcon> = {
   feed: Utensils,
   play: Feather,
   care: Sparkles,
-  rest: BedDouble,
 };
 
 const ACTION_ICONS: Record<string, ComponentType<{ className?: string }>> = {
@@ -81,7 +78,6 @@ const ACTION_ICONS: Record<string, ComponentType<{ className?: string }>> = {
   box_shuffle: Package,
   snack_match: LayoutGrid,
   cat_trivia: Brain,
-  pheromone_mist: SprayCan,
   brush: Brush,
   scoop_mess: Trash2,
 };
@@ -183,14 +179,14 @@ export function ActionDock({
   // Tabs with fewer cards let them stretch across the full row.
   const spanFull = (index: number, count: number) =>
     count === 2 || (count === 3 && index === 2) ? 'col-span-2' : '';
-  const cardCount = actions.length + (category === 'rest' ? 1 : 0);
+  const cardCount = actions.length + (category === 'care' ? 1 : 0);
 
   return (
     <section
       className={`relative z-20 mx-3 mb-2.5 rounded-3xl border p-2.5 shadow-lg backdrop-blur-md transition-colors duration-500 ${shellClass}`}
     >
       {/* Category tabs */}
-      <div className={`mb-2 grid grid-cols-4 gap-1 rounded-2xl p-1 ${night ? 'bg-white/5' : 'bg-amber-950/6'}`}>
+      <div className={`mb-2 grid grid-cols-3 gap-1 rounded-2xl p-1 ${night ? 'bg-white/5' : 'bg-amber-950/6'}`}>
         {CATEGORIES.map((c) => {
           const Icon = CATEGORY_ICONS[c.id];
           const active = category === c.id;
@@ -363,14 +359,14 @@ export function ActionDock({
             );
           })}
 
-          {/* Sleep / Nap mode toggle lives in Rest */}
-          {category === 'rest' && (
+          {/* Sleep / Nap mode toggle lives in Care (fills the 4th slot) */}
+          {category === 'care' && (
             <motion.button
               type="button"
               whileTap={{ scale: 0.96 }}
               disabled={busy}
               onClick={onToggleSleep}
-              className={`col-span-2 flex h-full min-w-0 items-center gap-2 rounded-2xl border px-2.5 py-1.5 text-left transition-all ${
+              className={`flex h-full min-w-0 items-center gap-2 rounded-2xl border px-2.5 py-1.5 text-left transition-all ${spanFull(actions.length, cardCount)} ${
                 napRefusal
                   ? night
                     ? 'border-white/5 bg-white/5 opacity-55'
