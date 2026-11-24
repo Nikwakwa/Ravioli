@@ -7,6 +7,16 @@ export interface ReleaseEntry {
 
 export const CHANGELOG: ReleaseEntry[] = [
   {
+    version: 'v1.4.3',
+    date: '2026-11-24',
+    title: 'Polish & Bug Fixes ✨',
+    changes: [
+      'Smoother Oli animations with hearts and sparkles appearing right where he sits, plus dark styling for Nap Mode at night.',
+      'Fixed Daily Quest streak previews, minigame skip rewards, overlapping floor messes, and balcony visitor recovery after switching tabs.',
+      'Hardened save validation and background push notification security.',
+    ],
+  },
+  {
     version: 'v1.4.2',
     date: '2026-11-22',
     title: 'Daily Quests Stage Fix 📋',

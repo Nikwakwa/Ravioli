@@ -955,8 +955,10 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
     if (live.isDeceased) return 'deceased';
     if (live.isSleeping) return 'sleeping';
     if (tummyAche) return 'sad';
-    if (messes.length >= 2 || (litterBoxDirty && messes.length >= 1)) return 'grubby';
     const raw = deriveMood(live);
+    // Urgent physiological needs always take priority over room messes.
+    if (raw === 'hungry' || raw === 'thirsty' || raw === 'tired') return raw;
+    if (messes.length >= 2 || (litterBoxDirty && messes.length >= 1)) return 'grubby';
     if ((messes.length > 0 || litterBoxDirty) && raw === 'ecstatic') return 'happy';
     return raw;
   }, [live, tummyAche, messes.length, litterBoxDirty]);
@@ -978,7 +980,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
     const isInitialBoot = alertedRef.current === null;
     alertedRef.current ??= loadAlertedMap();
     const prefs = loadNotificationPrefs();
-    const { nextAlerted, alerts } = evaluateStatThresholds(live, alertedRef.current, prefs);
+    const { nextAlerted, alerts } = evaluateStatThresholds(live, alertedRef.current, prefs, live.lifeStage);
     alertedRef.current = nextAlerted;
     saveAlertedMap(nextAlerted);
 
@@ -1489,7 +1491,9 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
           lockFor(1600);
           vibrate([40, 60, 40, 60, 40]);
           noticeRef.current({
-            text: '🤢 Too many treats! Clean up the mess and soothe his tummy.',
+            text: isBalconySpot(spot)
+              ? '🤢 Too many treats! Tidy the mess inside and soothe his tummy.'
+              : '🤢 Too many treats! Clean up the mess and soothe his tummy.',
             tone: 'warn',
           });
           playEvent({
@@ -1586,7 +1590,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
       if ((!wasThriving && willThrive) || mgReward?.tier === 'perfect') {
         scheduleDelayed(celebrate, 350);
       }
-      if (willThrive) {
+      if (!wasThriving && willThrive) {
         handleBadgeUnlocks(trackThriving());
       }
       if (action.category === 'feed') {
@@ -1680,6 +1684,8 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
         durationMs: 2200,
       });
       trackQuest({ type: 'pet' });
+      if (spot === 'box') trackQuest({ type: 'box_spot' });
+      if (isBalconySpot(spot)) trackQuest({ type: 'balcony_visit' });
       const mutator = (b: CatState): CatState =>
         withPetCalm(addGrowthBonus(applyEffect(materialize(b, nowMs), boost), CARE_ACTION_GROWTH_BONUS), nowMs);
       void commit(mutator, PET_ACTION_ID, `Gave ${live.name} chin scratches — purr session!`);
@@ -1722,6 +1728,8 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
 
       handleBadgeUnlocks(trackPet(nowMs));
       trackQuest({ type: 'pet' });
+      if (spot === 'box') trackQuest({ type: 'box_spot' });
+      if (isBalconySpot(spot)) trackQuest({ type: 'balcony_visit' });
 
       const growthBonus = matchedWhim ? WHIM_GROWTH_BONUS : CARE_ACTION_GROWTH_BONUS;
       const mutator = (b: CatState): CatState =>
@@ -1732,9 +1740,11 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
       playSound('chirp');
       handleBadgeUnlocks(trackPet(nowMs));
       trackQuest({ type: 'pet' });
+      if (spot === 'box') trackQuest({ type: 'box_spot' });
+      if (isBalconySpot(spot)) trackQuest({ type: 'balcony_visit' });
     }
     return true;
-  }, [base, live, busy, tummyAche, whim, messes.length, litterBoxDirty, player, playEvent, commit, clearTummyAche, clearWhim, triggerRefusal, handleBadgeUnlocks, trackQuest, scheduleDelayed]);
+  }, [base, live, busy, tummyAche, whim, messes.length, litterBoxDirty, spot, player, playEvent, commit, clearTummyAche, clearWhim, triggerRefusal, handleBadgeUnlocks, trackQuest, scheduleDelayed]);
 
   /** Tapping a visiting bird, butterfly, or moth on the balcony makes Oli wiggle & pounce! */
   const interactBalconyVisitor = useCallback(
@@ -1808,7 +1818,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
       if (!activeMinigame) return;
       const action = activeMinigame;
       setActiveMinigame(null);
-      if (hits >= 3) {
+      if (hits >= MINIGAME_ROUNDS) {
         handleBadgeUnlocks(trackMinigameWin());
       }
       perform(action, hits);

@@ -83,6 +83,7 @@ export function ClosetDrawer({
           <button
             type="button"
             onClick={onClose}
+            autoFocus
             aria-label="Close closet"
             className="flex h-9 w-9 shrink-0 items-center justify-center self-start rounded-full bg-amber-950/8 active:scale-95"
           >
@@ -98,12 +99,14 @@ export function ClosetDrawer({
             const isConfirming = confirming === item.id;
             const handleTap = () => {
               if (owned) {
+                setConfirming(null);
                 vibrate(15);
                 playSound('pop');
                 toggleAccessory(item.id);
                 return;
               }
               if (!affordable) {
+                setConfirming(null);
                 vibrate([20, 40, 20]);
                 playSound('miss');
                 return;

@@ -1357,7 +1357,7 @@ export function Balcony({
             Drawn before the planter boxes and pot because they are closer to the camera. */}
         {activeSpot === 'planter' && (
           <motion.g
-            key={`cat-planter-${catAnimationKey}`}
+            key="cat-planter"
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ type: 'spring', stiffness: 320, damping: 22 }}
@@ -1614,7 +1614,7 @@ export function Balcony({
         {/* D. Oli perched squarely in the center of the flat horizontal wooden bistro tabletop */}
         {activeSpot === 'bistro_chair' && (
           <motion.g
-            key={`cat-bistro-${catAnimationKey}`}
+            key="cat-bistro"
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ type: 'spring', stiffness: 320, damping: 22 }}
@@ -1660,7 +1660,7 @@ export function Balcony({
 
         {activeSpot === 'balcony_floor' && (
           <motion.g
-            key={`cat-balcony-floor-${catAnimationKey}`}
+            key="cat-balcony-floor"
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ type: 'spring', stiffness: 300, damping: 22 }}

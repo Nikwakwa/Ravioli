@@ -1,5 +1,5 @@
 import { STAT_META } from '../data/actions';
-import { STAT_KEYS, type CatStats, type StatKey } from '../types';
+import { STAT_KEYS, type CatStats, type LifeStage, type StatKey } from '../types';
 import { NEED_THRESHOLD } from './decayEngine';
 
 export const CRITICAL_THRESHOLD = 5;
@@ -59,10 +59,13 @@ const DEFAULT_ALERTED: AlertedMap = {
   hygiene: 'none',
 };
 
-const LOW_MESSAGES: Record<StatKey, { title: string; body: (val: number) => string }> = {
+const LOW_MESSAGES: Record<StatKey, { title: string; body: (val: number, stage?: LifeStage) => string }> = {
   hunger: {
     title: '😿 Oli is getting hungry!',
-    body: (v) => `Food dropped below ${NEED_THRESHOLD} (now ${v}). Time for wet food or a treat!`,
+    body: (v, stage) =>
+      stage === 'newborn'
+        ? `Food dropped below ${NEED_THRESHOLD} (now ${v}). Time for warm Kitten Milk!`
+        : `Food dropped below ${NEED_THRESHOLD} (now ${v}). Time for wet food or a treat!`,
   },
   hydration: {
     title: '💧 Oli needs fresh water!',
@@ -70,7 +73,10 @@ const LOW_MESSAGES: Record<StatKey, { title: string; body: (val: number) => stri
   },
   happiness: {
     title: '🥺 Oli wants attention!',
-    body: (v) => `Joy dropped below ${NEED_THRESHOLD} (now ${v}). Give him chin scratches or play!`,
+    body: (v, stage) =>
+      stage === 'newborn'
+        ? `Joy dropped below ${NEED_THRESHOLD} (now ${v}). Give baby Oli warm cuddles!`
+        : `Joy dropped below ${NEED_THRESHOLD} (now ${v}). Give him chin scratches or play!`,
   },
   energy: {
     title: '🥱 Oli is getting sleepy!',
@@ -167,6 +173,7 @@ export function evaluateStatThresholds(
   stats: CatStats,
   prevAlerted: AlertedMap,
   prefs?: Pick<NotificationPrefs, 'lowNeed' | 'critical' | 'stats'>,
+  stage?: LifeStage,
 ): { nextAlerted: AlertedMap; alerts: ImportantAlert[] } {
   const nextAlerted: AlertedMap = { ...prevAlerted };
   const alerts: ImportantAlert[] = [];
@@ -195,7 +202,7 @@ export function evaluateStatThresholds(
             stat: key,
             level: 'critical',
             title: `🚨 Oli’s ${label} is critical (${val})!`,
-            body: `${LOW_MESSAGES[key].body(val)}`,
+            body: LOW_MESSAGES[key].body(val, stage),
             tag: `oli-need-${key}`,
             tone: 'warn',
           });
@@ -213,7 +220,7 @@ export function evaluateStatThresholds(
           stat: key,
           level: 'low',
           title: LOW_MESSAGES[key].title,
-          body: LOW_MESSAGES[key].body(val),
+          body: LOW_MESSAGES[key].body(val, stage),
           tag: `oli-need-${key}`,
           tone: 'warn',
         });

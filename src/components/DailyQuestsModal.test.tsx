@@ -79,4 +79,42 @@ describe('DailyQuestsModal', () => {
     expect(html).toContain('Today’s bonus claimed!');
     expect(html).toContain('Vacation Mode keeps your streak safe');
   });
+
+  it('previews accurate Day 3 milestone (+2) and Day 4 standard (+1) rewards before caring today', () => {
+    // Yesterday was Day 2 -> today is Day 3 milestone (+2)
+    const day3Morning: DailyQuestState = {
+      ...baseState,
+      streak: 2,
+      lastCaredDay: '2026-11-21',
+      quests: baseState.quests.map((q) => ({ ...q, progress: 0 })),
+    };
+    const htmlDay3 = renderToString(
+      <DailyQuestsModal
+        questState={day3Morning}
+        nowMs={NOW_MS}
+        onClaimReward={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    expect(htmlDay3).toContain('Day 3 milestone');
+    expect(htmlDay3).toContain('claim +2 🍬');
+
+    // Yesterday was Day 3 -> today is Day 4 (+1, NOT falsely showing +2)
+    const day4Morning: DailyQuestState = {
+      ...baseState,
+      streak: 3,
+      lastCaredDay: '2026-11-21',
+      quests: baseState.quests.map((q) => ({ ...q, progress: 0 })),
+    };
+    const htmlDay4 = renderToString(
+      <DailyQuestsModal
+        questState={day4Morning}
+        nowMs={NOW_MS}
+        onClaimReward={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    expect(htmlDay4).not.toContain('Today’s bonus pays +2');
+    expect(htmlDay4).toContain('claim +1 🍬');
+  });
 });

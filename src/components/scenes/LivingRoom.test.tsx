@@ -385,4 +385,15 @@ describe('App — SPOT_HEAD_SVG Thought Bubble Anchors', () => {
       expect(coord.y, `${spot} thought bubble y must be within mobile safe bounds`).toBeLessThanOrEqual(SAFE_MOBILE.maxY);
     }
   });
+
+  it('keeps CatAvatar wrapper keys stable across catAnimationKey changes so Oli animates smoothly without remounting', () => {
+    for (const spot of ['rug', 'sofa_bed', 'box', 'window'] as CatSpot[]) {
+      const t1 = LivingRoom({ fountainBoost: false, activeSpot: spot, catAnimationKey: 1 }) as AnyElement;
+      const t2 = LivingRoom({ fountainBoost: false, activeSpot: spot, catAnimationKey: 2 }) as AnyElement;
+      const w1 = findElements(t1, (el) => typeof el.key === 'string' && el.key.startsWith('cat-'))[0];
+      const w2 = findElements(t2, (el) => typeof el.key === 'string' && el.key.startsWith('cat-'))[0];
+      expect(w1?.key).toBeDefined();
+      expect(w1?.key).toBe(w2?.key);
+    }
+  });
 });

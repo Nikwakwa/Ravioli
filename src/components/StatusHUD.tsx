@@ -141,6 +141,7 @@ export function StatusHUD({
                   type="button"
                   onClick={onOpenPause ?? onOpenMenu}
                   title="Clock paused"
+                  aria-label="Care clock paused — manage Vacation Mode"
                   className={`rounded-full bg-sky-500/20 border border-sky-400/40 px-2 py-0.5 text-[10px] font-black transition-transform active:scale-95 animate-pulse ${night ? 'text-sky-200' : 'text-sky-800'}`}
                 >
                   ✈️ Paused
@@ -272,6 +273,7 @@ export function StatusHUD({
                 {/* Icon + small numerical value */}
                 <div className="flex items-center gap-0.5 leading-none">
                   <Icon
+                    aria-hidden="true"
                     className={`h-3 w-3 ${
                       low
                         ? night ? 'text-rose-300' : 'text-rose-600'
@@ -295,6 +297,11 @@ export function StatusHUD({
 
                 {/* Progress bar */}
                 <div
+                  role="progressbar"
+                  aria-label={meta.label}
+                  aria-valuenow={pct}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
                   className={`h-1.5 w-full overflow-hidden rounded-full ${
                     night ? 'bg-white/10' : 'bg-amber-950/10'
                   }`}

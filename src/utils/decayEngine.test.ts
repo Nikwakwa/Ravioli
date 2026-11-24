@@ -490,17 +490,45 @@ describe('Supabase & Actions allowlist consistency', () => {
   });
 
   it('covers special non-dock actions in sanitizeActivity', () => {
-    const specialActions = [PET_ACTION_ID, 'toggle_sleep', PAUSE_ACTION_ID, REVIVE_ACTION_ID];
+    const specialActions = [PET_ACTION_ID, 'balcony_watch', 'toggle_sleep', PAUSE_ACTION_ID, REVIVE_ACTION_ID];
     for (const act of specialActions) {
       const sanitized = sanitizeActivity({
         id: '456',
         player: 'Nico',
         action_id: act,
+        message: '<script>alert(1)</script> https://evil.test',
         created_at: new Date().toISOString(),
       });
       expect(sanitized).not.toBeNull();
       expect(sanitized?.action_id).toBe(act);
+      expect(sanitized?.message).not.toContain('<script>');
+      expect(sanitized?.message).not.toContain('https://');
     }
+  });
+
+  it('parses numeric string lives_left in sanitizeCatState', () => {
+    const sanitized = sanitizeCatState({ lives_left: '7' });
+    expect(sanitized.lives_left).toBe(7);
+  });
+
+  it('tailors low hunger and joy notification copy for newborn Oli', () => {
+    const noneMap: AlertedMap = {
+      hunger: 'none',
+      hydration: 'none',
+      happiness: 'none',
+      energy: 'none',
+      hygiene: 'none',
+    };
+    const res = evaluateStatThresholds(
+      { hunger: 20, hydration: 80, happiness: 18, energy: 80, hygiene: 80 },
+      noneMap,
+      undefined,
+      'newborn',
+    );
+    const hungerAlert = res.alerts.find((a) => a.stat === 'hunger');
+    const joyAlert = res.alerts.find((a) => a.stat === 'happiness');
+    expect(hungerAlert?.body).toContain('Kitten Milk');
+    expect(joyAlert?.body).toContain('warm cuddles');
   });
 });
 

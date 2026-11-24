@@ -348,7 +348,7 @@ export function LivingRoom({
           {/* Oli perched on the windowsill */}
           {activeSpot === 'window' && (
             <motion.g
-              key={`cat-window-${catAnimationKey}`}
+              key="cat-window"
               initial={{ opacity: 0, scale: 0.85, y: 6 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               transition={{ type: 'spring', stiffness: 320, damping: 22 }}
@@ -588,7 +588,7 @@ export function LivingRoom({
           {/* Oli nestled on the sherpa cushion (inside the bolster bed) */}
           {activeSpot === 'sofa_bed' && (
             <motion.g
-              key={`cat-sofa-bed-${catAnimationKey}`}
+              key="cat-sofa-bed"
               initial={{ opacity: 0, scale: 0.85, y: 6 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               transition={{ type: 'spring', stiffness: 320, damping: 22 }}
@@ -865,7 +865,7 @@ export function LivingRoom({
         {/* Oli nestled inside the box (behind front cardboard panel) */}
         {activeSpot === 'box' && (
           <motion.g
-            key={`cat-box-${catAnimationKey}`}
+            key="cat-box"
             initial={{ opacity: 0, scale: 0.85, y: 6 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             transition={{ type: 'spring', stiffness: 320, damping: 22 }}
@@ -961,7 +961,7 @@ export function LivingRoom({
         {/* Oli sitting in all his glory in the center of the plush rug */}
         {activeSpot === 'rug' && (
           <motion.g
-            key={`cat-rug-${catAnimationKey}`}
+            key="cat-rug"
             initial={{ opacity: 0, scale: 0.88, y: 8 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             transition={{ type: 'spring', stiffness: 300, damping: 22 }}

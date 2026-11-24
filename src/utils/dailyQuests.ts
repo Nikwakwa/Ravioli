@@ -347,16 +347,27 @@ export function sanitizeDailyQuestState(raw: unknown): DailyQuestState {
           (q): q is DailyQuest =>
             Boolean(q) &&
             typeof q.id === 'string' &&
+            q.id.length > 0 &&
+            q.id.length <= 64 &&
             typeof q.kind === 'string' &&
             VALID_KINDS.has(q.kind as QuestKind) &&
             typeof q.label === 'string' &&
+            q.label.length > 0 &&
+            q.label.length <= 120 &&
             typeof q.emoji === 'string' &&
+            q.emoji.length > 0 &&
+            q.emoji.length <= 16 &&
             typeof q.target === 'number' &&
+            Number.isFinite(q.target) &&
             q.target >= 1 &&
             typeof q.progress === 'number' &&
+            Number.isFinite(q.progress) &&
             q.progress >= 0,
         )
-        .map((q) => ({ ...q, progress: Math.min(q.target, Math.floor(q.progress)) }))
+        .map((q) => {
+          const target = Math.max(1, Math.min(100, Math.floor(q.target)));
+          return { ...q, target, progress: Math.min(target, Math.floor(q.progress)) };
+        })
     : [];
 
   const streak = typeof r.streak === 'number' && Number.isFinite(r.streak) && r.streak >= 0 ? Math.floor(r.streak) : 0;
@@ -517,8 +528,9 @@ export function applyCareStreak(current: DailyQuestState, today: string): DailyQ
   };
 }
 
-/** Protects the player's care streak while Vacation Mode is active. */
+/** Protects the player's care streak while Vacation Mode is active (never resurrects an expired streak). */
 export function protectStreakForVacation(nowMs: number = Date.now()): void {
+  if (getVisibleStreak(state, nowMs) <= 0) return;
   const today = localDayKey(nowMs);
   if (state.pausedProtectionDay === today) return;
   commit({ ...state, pausedProtectionDay: today });

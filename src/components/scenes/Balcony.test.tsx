@@ -177,4 +177,15 @@ describe('Balcony — Scenery & Mobile Safe Bounds', () => {
     expect(visitors.length).toBe(1);
     expect(visitors[0].props.visitor.kind).toBe('pigeon');
   });
+
+  it('keeps CatAvatar wrapper keys stable across catAnimationKey changes so Oli animates smoothly without remounting', () => {
+    for (const spot of ['planter', 'bistro_chair', 'balcony_floor'] as CatSpot[]) {
+      const t1 = Balcony({ activeSpot: spot, catAnimationKey: 1 }) as AnyElement;
+      const t2 = Balcony({ activeSpot: spot, catAnimationKey: 2 }) as AnyElement;
+      const w1 = findElements(t1, (el) => typeof el.key === 'string' && el.key.startsWith('cat-'))[0];
+      const w2 = findElements(t2, (el) => typeof el.key === 'string' && el.key.startsWith('cat-'))[0];
+      expect(w1?.key).toBeDefined();
+      expect(w1?.key).toBe(w2?.key);
+    }
+  });
 });

@@ -184,7 +184,7 @@ export function FloatingEffects({
         {event && (
           <div key={`particles-${event.key}`} className="absolute inset-0">
             {event.particles.map((kind) => (
-              <ParticleBurst key={kind} kind={kind} />
+              <ParticleBurst key={kind} kind={kind} targetPos={targetPos} />
             ))}
           </div>
         )}
@@ -193,9 +193,15 @@ export function FloatingEffects({
   );
 }
 
-function ParticleBurst({ kind }: { kind: ParticleKind }) {
+function ParticleBurst({ kind, targetPos }: { kind: ParticleKind; targetPos?: { x: number; y: number } }) {
+  const anchorStyle = (yOffset: number, fallbackBottom: string) =>
+    targetPos
+      ? { left: `${targetPos.x}px`, top: `${targetPos.y + yOffset}px` }
+      : { left: '50%', bottom: fallbackBottom };
+
   if (kind === 'hearts') {
     const offsets = [-64, -36, -12, 16, 42, 68];
+    const baseStyle = anchorStyle(10, '140px');
     return (
       <>
         {offsets.map((dx, i) => (
@@ -210,7 +216,8 @@ function ParticleBurst({ kind }: { kind: ParticleKind }) {
               rotate: dx * 0.3,
             }}
             transition={{ duration: 1.8, delay: i * 0.08, ease: 'easeOut' }}
-            className="absolute left-1/2 bottom-[140px] -translate-x-1/2 text-xl"
+            style={baseStyle}
+            className="absolute -translate-x-1/2 text-xl"
           >
             {i % 2 === 0 ? '💖' : '🧡'}
           </motion.span>
@@ -221,6 +228,7 @@ function ParticleBurst({ kind }: { kind: ParticleKind }) {
 
   if (kind === 'purr') {
     const notes = ['♪', '♡', '♫', '🧡', '♪'];
+    const baseStyle = anchorStyle(8, '140px');
     return (
       <>
         {notes.map((sym, i) => {
@@ -231,7 +239,8 @@ function ParticleBurst({ kind }: { kind: ParticleKind }) {
               initial={{ opacity: 0, x: side * 24, y: 0, scale: 0.6 }}
               animate={{ opacity: [0, 1, 0], x: side * (56 + i * 10), y: -60 - i * 14, scale: [0.6, 1.1, 0.9] }}
               transition={{ duration: 1.6, delay: i * 0.16, ease: 'easeOut' }}
-              className="absolute left-1/2 bottom-[140px] -translate-x-1/2 text-lg font-bold text-amber-600"
+              style={baseStyle}
+              className="absolute -translate-x-1/2 text-lg font-bold text-amber-600"
             >
               {sym}
             </motion.span>
@@ -242,6 +251,8 @@ function ParticleBurst({ kind }: { kind: ParticleKind }) {
   }
 
   if (kind === 'ripples') {
+    const ringStyle = anchorStyle(52, '60px');
+    const dropStyle = anchorStyle(32, '90px');
     return (
       <>
         {[0, 1, 2].map((i) => (
@@ -250,7 +261,8 @@ function ParticleBurst({ kind }: { kind: ParticleKind }) {
             initial={{ opacity: 0.85, scale: 0.3 }}
             animate={{ opacity: 0, scale: 2.2 }}
             transition={{ duration: 1.5, delay: i * 0.25, ease: 'easeOut' }}
-            className="absolute left-1/2 bottom-[60px] h-14 w-28 -translate-x-1/2 rounded-full border-2 border-sky-400"
+            style={ringStyle}
+            className="absolute h-14 w-28 -translate-x-1/2 rounded-full border-2 border-sky-400"
           />
         ))}
         {[-38, -14, 14, 38].map((dx, i) => (
@@ -259,7 +271,8 @@ function ParticleBurst({ kind }: { kind: ParticleKind }) {
             initial={{ opacity: 0, x: 0, y: 0 }}
             animate={{ opacity: [0, 1, 0], x: dx, y: [-10, -54, -20] }}
             transition={{ duration: 1.2, delay: i * 0.1 }}
-            className="absolute left-1/2 bottom-[90px] -translate-x-1/2 text-base"
+            style={dropStyle}
+            className="absolute -translate-x-1/2 text-base"
           >
             💧
           </motion.span>
@@ -270,6 +283,8 @@ function ParticleBurst({ kind }: { kind: ParticleKind }) {
 
   if (kind === 'mist') {
     const clouds = [-60, -24, 16, 56];
+    const cloudStyle = anchorStyle(18, '120px');
+    const sparkStyle = anchorStyle(6, '140px');
     return (
       <>
         {clouds.map((dx, i) => (
@@ -278,7 +293,8 @@ function ParticleBurst({ kind }: { kind: ParticleKind }) {
             initial={{ opacity: 0, x: dx * 0.4, y: 10, scale: 0.5 }}
             animate={{ opacity: [0, 0.65, 0], x: dx, y: -70 - i * 10, scale: 1.6 }}
             transition={{ duration: 2.3, delay: i * 0.12, ease: 'easeOut' }}
-            className="absolute left-1/2 bottom-[120px] h-16 w-16 -translate-x-1/2 rounded-full bg-purple-300/60 blur-md"
+            style={cloudStyle}
+            className="absolute h-16 w-16 -translate-x-1/2 rounded-full bg-purple-300/60 blur-md"
           />
         ))}
         {[-44, 0, 44].map((dx, i) => (
@@ -287,7 +303,8 @@ function ParticleBurst({ kind }: { kind: ParticleKind }) {
             initial={{ opacity: 0, x: dx, y: 0 }}
             animate={{ opacity: [0, 1, 0], x: dx * 1.2, y: -80 }}
             transition={{ duration: 2, delay: 0.2 + i * 0.15 }}
-            className="absolute left-1/2 bottom-[140px] -translate-x-1/2 text-base"
+            style={sparkStyle}
+            className="absolute -translate-x-1/2 text-base"
           >
             ✨
           </motion.span>
@@ -299,6 +316,7 @@ function ParticleBurst({ kind }: { kind: ParticleKind }) {
   if (kind === 'sparkles' || kind === 'stars') {
     const glyphs = kind === 'stars' ? ['⭐', '✨', '🌟', '✨', '⭐'] : ['✨', '🫧', '✨', '💛', '✨'];
     const xs = [-62, -30, 0, 32, 62];
+    const baseStyle = anchorStyle(8, '140px');
     return (
       <>
         {xs.map((dx, i) => (
@@ -307,7 +325,8 @@ function ParticleBurst({ kind }: { kind: ParticleKind }) {
             initial={{ opacity: 0, x: dx * 0.5, y: 0, scale: 0.4 }}
             animate={{ opacity: [0, 1, 0], x: dx, y: -85 - (i % 2) * 20, scale: [0.4, 1.2, 0.7] }}
             transition={{ duration: 1.5, delay: i * 0.09, ease: 'easeOut' }}
-            className="absolute left-1/2 bottom-[140px] -translate-x-1/2 text-lg"
+            style={baseStyle}
+            className="absolute -translate-x-1/2 text-lg"
           >
             {glyphs[i]}
           </motion.span>
@@ -317,6 +336,7 @@ function ParticleBurst({ kind }: { kind: ParticleKind }) {
   }
 
   // crumbs
+  const crumbStyle = anchorStyle(28, '110px');
   return (
     <>
       {[-28, -10, 12, 30].map((dx, i) => (
@@ -325,7 +345,8 @@ function ParticleBurst({ kind }: { kind: ParticleKind }) {
           initial={{ opacity: 0, x: dx * 0.4, y: 0 }}
           animate={{ opacity: [0, 1, 0], x: dx, y: -48 - i * 8 }}
           transition={{ duration: 1.2, delay: i * 0.1 }}
-          className="absolute left-1/2 bottom-[110px] -translate-x-1/2 text-sm"
+          style={crumbStyle}
+          className="absolute -translate-x-1/2 text-sm"
         >
           😋
         </motion.span>

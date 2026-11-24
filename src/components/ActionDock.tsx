@@ -364,7 +364,9 @@ export function ActionDock({
                     ? night
                       ? 'border-amber-300/40 bg-gradient-to-b from-amber-400/25 to-indigo-900/60 text-amber-100 shadow-xs'
                       : 'border-amber-400/60 bg-gradient-to-b from-amber-100 to-amber-50 text-amber-950 shadow-xs'
-                    : 'border-indigo-900/15 bg-gradient-to-b from-indigo-50/90 to-amber-50/60 text-amber-950 shadow-xs'
+                    : night
+                      ? 'border-indigo-400/25 bg-gradient-to-b from-indigo-900/75 to-slate-800/90 text-amber-50 shadow-xs'
+                      : 'border-indigo-900/15 bg-gradient-to-b from-indigo-50/90 to-amber-50/60 text-amber-950 shadow-xs'
               }`}
             >
               <span
@@ -373,7 +375,9 @@ export function ActionDock({
                     ? night
                       ? 'bg-amber-300/25 text-amber-200'
                       : 'bg-amber-400/25 text-amber-700'
-                    : 'bg-indigo-500/15 text-indigo-700'
+                    : night
+                      ? 'bg-indigo-400/20 text-indigo-200'
+                      : 'bg-indigo-500/15 text-indigo-700'
                 }`}
               >
                 {isSleeping ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}
@@ -388,7 +392,9 @@ export function ActionDock({
                       ? hintChip
                       : isSleeping
                         ? 'bg-amber-300 text-amber-950'
-                        : 'bg-indigo-100 text-indigo-900'
+                        : night
+                          ? 'bg-indigo-400/25 text-indigo-100'
+                          : 'bg-indigo-100 text-indigo-900'
                   }`}
                 >
                   {napRefusal ?? (isSleeping ? '☀️ Wake' : `+${sleepEnergyRate} Energy/h`)}

@@ -209,4 +209,41 @@ describe('Daily Quests & Care Streak', () => {
     expect(next.bestStreak).toBe(6);
     expect(next.quests.every((q) => q.progress === 0)).toBe(true);
   });
+
+  it('does not resurrect an already-expired streak when turning on Vacation Mode', () => {
+    setDailyQuestState(
+      makeCustomState({
+        streak: 5,
+        bestStreak: 5,
+        lastCaredDay: '2026-11-22',
+      }),
+    );
+    // 3 days later without caring, streak is already expired
+    expect(getVisibleStreak(getDailyQuestState(), DAY4_MS)).toBe(0);
+    protectStreakForVacation(DAY4_MS);
+    expect(getDailyQuestState().pausedProtectionDay).toBeNull();
+    expect(getVisibleStreak(getDailyQuestState(), DAY4_MS)).toBe(0);
+  });
+
+  it('rejects non-finite targets and progress in sanitizeDailyQuestState', () => {
+    const sanitized = sanitizeDailyQuestState({
+      day: '2026-11-22',
+      quests: [
+        { id: '1', kind: 'brush', label: 'Brush', emoji: '🪮', target: Number.POSITIVE_INFINITY, progress: 0 },
+        { id: '2', kind: 'pet', label: 'Pet', emoji: '🐾', target: 3, progress: Number.NaN },
+        { id: '3', kind: 'fountain', label: 'Water', emoji: '💧', target: 1, progress: 0 },
+      ],
+      rewardClaimed: false,
+      streak: Number.NaN,
+      bestStreak: -4,
+      lastCaredDay: 'not-a-date',
+      pausedProtectionDay: 'bad',
+    });
+    expect(sanitized.quests).toHaveLength(0);
+    expect(sanitized.day).toBe('');
+    expect(sanitized.streak).toBe(0);
+    expect(sanitized.bestStreak).toBe(0);
+    expect(sanitized.lastCaredDay).toBeNull();
+    expect(sanitized.pausedProtectionDay).toBeNull();
+  });
 });

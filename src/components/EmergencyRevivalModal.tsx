@@ -106,6 +106,7 @@ export function EmergencyRevivalModal({
           <button
             type="button"
             onClick={onRevive}
+            autoFocus
             className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 py-3.5 font-display text-sm font-black text-white shadow-lg transition-transform active:scale-95 hover:brightness-105"
           >
             <Sparkles className="h-4 w-4" />

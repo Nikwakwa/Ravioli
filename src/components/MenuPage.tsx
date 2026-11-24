@@ -11,7 +11,7 @@ import {
   RefreshCw,
   Sun,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   AUTO_NAP_ENERGY,
   CHURU_POINTS_PER_TUBE,
@@ -86,8 +86,11 @@ export function MenuPage({
   const [editingName, setEditingName] = useState(false);
   const [tempName, setTempName] = useState(playerName);
   const [copiedDiagnostics, setCopiedDiagnostics] = useState(false);
+  const copyTimerRef = useRef<number | undefined>(undefined);
   const [confirmingReset, setConfirmingReset] = useState(false);
   const [resetting, setResetting] = useState(false);
+
+  useEffect(() => () => window.clearTimeout(copyTimerRef.current), []);
   const badgeState = useBadges();
   // Snapshot which badges were unseen when entering Menu so they stay marked "NEW" while you read them.
   const [highlightedBadges, setHighlightedBadges] = useState<string[]>(() =>
@@ -130,7 +133,8 @@ Time: ${new Date().toISOString()}`;
       if (navigator.clipboard?.writeText) {
         await navigator.clipboard.writeText(text);
         setCopiedDiagnostics(true);
-        window.setTimeout(() => setCopiedDiagnostics(false), 2500);
+        window.clearTimeout(copyTimerRef.current);
+        copyTimerRef.current = window.setTimeout(() => setCopiedDiagnostics(false), 2500);
       }
     } catch {
       /* clipboard unavailable or denied */
@@ -398,8 +402,8 @@ Time: ${new Date().toISOString()}`;
               </div>
               <ul className="flex list-disc flex-col gap-1 pl-4 text-xs font-medium text-amber-900/85">
                 <li><strong>Pet Oli:</strong> Tap him anytime (+{PET_JOY_BOOST} Joy).</li>
-                <li><strong>Living Room &amp; Balcony:</strong> Use the bottom switcher or tap any cozy spot (sofa bed, box, window, rug, flower boxes, bistro chair, or balcony tiles).</li>
-                <li><strong>Balcony Visitors:</strong> Tap birds, butterflies, or evening moths on the railing to make Oli wiggle and pounce (+4 Joy).</li>
+                <li><strong>Living Room &amp; Balcony:</strong> Use the bottom switcher or tap any cozy spot (sofa bed, box, window, rug, flower boxes, bistro table, or balcony tiles).</li>
+                <li><strong>Balcony Visitors:</strong> Tap birds, butterflies, or evening moths on the balcony to make Oli wiggle and pounce (+4 Joy).</li>
                 <li><strong>Fountain:</strong> Tap to refresh his water (+40 Water).</li>
                 <li><strong>Sound:</strong> Tap the speaker next to Menu to mute or unmute.</li>
                 <li><strong>Closet:</strong> Tap the hanger to dress Oli up. Buy accessories with Churus.</li>

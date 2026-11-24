@@ -16,6 +16,7 @@
 import { createClient, type RealtimeChannel, type SupabaseClient } from '@supabase/supabase-js';
 import { actionById, formatLog, PAUSE_ACTION_ID, PET_ACTION_ID, REVIVE_ACTION_ID, SLEEP_ACTION_ID } from '../data/actions';
 import type { ActivityEntry, CatState, NewActivity, SyncMode, SyncStatus } from '../types';
+import { BALCONY_ACTION_ID } from '../utils/balconyVisitors';
 import { clampStat, createDefaultCatState, createNewGameCatState } from '../utils/decayEngine';
 import { ADULT_GROWTH_HOURS, roundGrowthHours, sanitizeGrowthHours } from '../utils/lifeStage';
 import { hasSeenOnboarding } from '../utils/player';
@@ -90,10 +91,7 @@ export function sanitizeCatState(raw: unknown): CatState {
     version: Math.max(0, Math.floor(num(r.version, 0))),
     paused_at: isoOr(r.paused_at, null),
     deceased_at: isoOr(r.deceased_at, null),
-    lives_left:
-      typeof r.lives_left === 'number' && Number.isFinite(r.lives_left)
-        ? Math.max(0, Math.min(9, Math.floor(r.lives_left)))
-        : 9,
+    lives_left: Math.max(0, Math.min(9, Math.floor(num(r.lives_left, 9)))),
     // Existing saves without `growth_hours` migrate directly to Adult Oli forever.
     growth_hours: roundGrowthHours(sanitizeGrowthHours(r.growth_hours, ADULT_GROWTH_HOURS)),
   };
@@ -116,6 +114,8 @@ export function sanitizeActivity(raw: unknown): ActivityEntry | null {
     message = formatLog(knownAction.log, 'Oli');
   } else if (actionId === PET_ACTION_ID) {
     message = 'Gave Oli chin scratches — purr session!';
+  } else if (actionId === BALCONY_ACTION_ID) {
+    message = 'Oli pounced at a balcony visitor!';
   } else if (actionId === SLEEP_ACTION_ID) {
     const rawMsg = typeof r.message === 'string' ? r.message : '';
     message = rawMsg.toLowerCase().includes('woke')
@@ -184,14 +184,15 @@ const memoryStore = new Map<string, string>();
 const safeStorage = {
   get(key: string): string | null {
     try {
-      return window.localStorage.getItem(key);
+      return typeof window !== 'undefined' ? window.localStorage.getItem(key) : (memoryStore.get(key) ?? null);
     } catch {
       return memoryStore.get(key) ?? null;
     }
   },
   set(key: string, value: string) {
     try {
-      window.localStorage.setItem(key, value);
+      if (typeof window !== 'undefined') window.localStorage.setItem(key, value);
+      else memoryStore.set(key, value);
     } catch {
       memoryStore.set(key, value);
     }
@@ -405,12 +406,16 @@ export class SupabaseCatStorage implements CatStorage {
 
     const onOffline = () => listeners.onStatus?.('offline');
     const onOnline = () => listeners.onStatus?.('connecting');
-    window.addEventListener('offline', onOffline);
-    window.addEventListener('online', onOnline);
+    if (typeof window !== 'undefined') {
+      window.addEventListener('offline', onOffline);
+      window.addEventListener('online', onOnline);
+    }
 
     return () => {
-      window.removeEventListener('offline', onOffline);
-      window.removeEventListener('online', onOnline);
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('offline', onOffline);
+        window.removeEventListener('online', onOnline);
+      }
       void this.client.removeChannel(channel);
     };
   }

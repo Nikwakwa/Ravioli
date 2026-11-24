@@ -7,9 +7,9 @@ import type { RoomMess } from '../types';
  * ActionDock, or clipped by SVG aspect-ratio slicing).
  */
 const SLOT_STYLES: Record<0 | 1 | 2, { left?: string; right?: string; bottom: string }> = {
-  0: { right: '8%', bottom: '28px' },
-  1: { left: '8%', bottom: '28px' },
-  2: { left: '16%', bottom: '60px' },
+  0: { right: '15%', bottom: '54px' },
+  1: { left: '16%', bottom: '54px' },
+  2: { right: '26%', bottom: '92px' },
 };
 
 export function RoomMesses({

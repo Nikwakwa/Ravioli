@@ -328,10 +328,20 @@ export function getTodayFortune(state: FortuneState, date: Date = new Date()): F
 export function sanitizeFortune(raw: unknown): FortuneState {
   if (!raw || typeof raw !== 'object') return EMPTY;
   const r = raw as Partial<FortuneState>;
+  const lastOpenedDate =
+    typeof r.lastOpenedDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(r.lastOpenedDate)
+      ? r.lastOpenedDate
+      : null;
+  const todayFortuneId =
+    typeof r.todayFortuneId === 'number' &&
+    Number.isFinite(r.todayFortuneId) &&
+    FORTUNES.some((f) => f.id === r.todayFortuneId)
+      ? r.todayFortuneId
+      : null;
   return {
     unlocked: Boolean(r.unlocked),
-    lastOpenedDate: typeof r.lastOpenedDate === 'string' ? r.lastOpenedDate : null,
-    todayFortuneId: typeof r.todayFortuneId === 'number' && Number.isFinite(r.todayFortuneId) ? r.todayFortuneId : null,
+    lastOpenedDate,
+    todayFortuneId,
   };
 }
 

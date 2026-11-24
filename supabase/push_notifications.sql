@@ -56,15 +56,23 @@ begin
   if p_endpoint is null
      or char_length(p_endpoint) < 20
      or char_length(p_endpoint) > 2048
-     or p_endpoint !~ '^https://' then
+     or p_endpoint !~ '^https://[A-Za-z0-9.-]+\.[A-Za-z]{2,}(/[^[:space:]]*)?$'
+     or p_endpoint ~* '^https://(localhost|127\.|10\.|192\.168\.|169\.254\.|172\.(1[6-9]|2[0-9]|3[0-1])\.)'
+     or p_endpoint ~ '[@[:space:]]' then
     raise exception 'Invalid push endpoint';
   end if;
 
-  if p_p256dh is null or char_length(p_p256dh) < 20 or char_length(p_p256dh) > 256 then
+  if p_p256dh is null
+     or char_length(p_p256dh) < 20
+     or char_length(p_p256dh) > 256
+     or p_p256dh !~ '^[A-Za-z0-9_-]+=*$' then
     raise exception 'Invalid push p256dh key';
   end if;
 
-  if p_auth is null or char_length(p_auth) < 10 or char_length(p_auth) > 128 then
+  if p_auth is null
+     or char_length(p_auth) < 10
+     or char_length(p_auth) > 128
+     or p_auth !~ '^[A-Za-z0-9_-]+=*$' then
     raise exception 'Invalid push auth key';
   end if;
 
@@ -82,6 +90,15 @@ begin
   end if;
   if char_length(v_badge_url) > 512 or v_badge_url !~ '^(\./|https://)' then
     v_badge_url := './badge-96x96.png';
+  end if;
+
+  -- Prune stale subscriptions (90+ days inactive) and guard against unbounded table flooding.
+  delete from public.push_subscriptions
+  where updated_at < now() - interval '90 days';
+
+  if not exists (select 1 from public.push_subscriptions where endpoint = p_endpoint)
+     and (select count(*) from public.push_subscriptions) >= 500 then
+    raise exception 'Push subscription capacity reached';
   end if;
 
   insert into public.push_subscriptions (

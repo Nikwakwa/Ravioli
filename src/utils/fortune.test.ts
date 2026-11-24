@@ -86,5 +86,10 @@ describe('daily fortune cookie utility', () => {
       lastOpenedDate: null,
       todayFortuneId: null,
     });
+    expect(sanitizeFortune({ unlocked: true, lastOpenedDate: 'not-a-date', todayFortuneId: 9999 })).toEqual({
+      unlocked: true,
+      lastOpenedDate: null,
+      todayFortuneId: null,
+    });
   });
 });

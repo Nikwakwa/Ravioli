@@ -158,6 +158,7 @@ export function PlayMinigameModal({
   const pounceCooldownRef = useRef(false);
   const roundLockedRef = useRef(false);
   const completedHitsRef = useRef<number | null>(null);
+  const missPawSeqRef = useRef(0);
   const arenaRef = useRef<HTMLDivElement | null>(null);
 
   const handlePauseTimer = useCallback((paused: boolean) => {
@@ -270,7 +271,13 @@ export function PlayMinigameModal({
         } else {
           handleCloseButton();
         }
-      } else if ((e.key === ' ' || e.key === 'Enter') && showIntro) {
+        return;
+      }
+      // Let focused buttons (Help, Skip, Close, etc.) handle Enter/Space natively.
+      const target = e.target as HTMLElement | null;
+      if (target && target.closest('button')) return;
+
+      if ((e.key === ' ' || e.key === 'Enter') && showIntro) {
         e.preventDefault();
         handleStartFromIntro();
       } else if ((e.key === ' ' || e.key === 'Enter') && roundFeedback === null && !finished) {
@@ -505,7 +512,7 @@ export function PlayMinigameModal({
 
       const pctX = Math.round((tapX / rect.width) * 100);
       const pctY = Math.round((tapY / rect.height) * 100);
-      const pawId = Date.now();
+      const pawId = ++missPawSeqRef.current;
       setMissPaws((prev) => [...prev, { id: pawId, x: pctX, y: pctY }]);
       safeTimeout(() => {
         setMissPaws((prev) => prev.filter((p) => p.id !== pawId));
@@ -645,11 +652,11 @@ export function PlayMinigameModal({
                   <HelpCircle className="h-4 w-4" />
                 </button>
               )}
-              {/* Skip only while a round is live (or on intro): once scored, it would throw away the earned result */}
+              {/* Skip only while a round is live (or on intro): keep any hits already earned */}
               {roundFeedback === null && !finished && (
                 <button
                   type="button"
-                  onClick={() => onComplete(1)}
+                  onClick={() => onComplete(Math.max(1, hitsSoFar))}
                   className="flex h-8 items-center gap-0.5 rounded-full bg-amber-900/10 px-2.5 text-[11px] font-extrabold text-amber-900 hover:bg-amber-900/15 active:scale-95"
                   title="Skip minigame and play immediately"
                 >

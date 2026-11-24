@@ -251,14 +251,34 @@ export function App() {
       return () => window.clearTimeout(visitorTimersRef.current.leave);
     }
 
-    const waitMs = nextVisitorDelayMs(lastVisitorEndedAtRef.current);
-    visitorTimersRef.current.spawn = window.setTimeout(() => {
-      if (document.visibilityState === 'hidden') return;
-      setVisitorStartled(false);
-      setBalconyVisitor(pickBalconyVisitor(effectiveTime, isRaining));
-    }, waitMs);
+    let pendingAfterHidden = false;
+    const scheduleSpawn = () => {
+      window.clearTimeout(visitorTimersRef.current.spawn);
+      const waitMs = nextVisitorDelayMs(lastVisitorEndedAtRef.current);
+      visitorTimersRef.current.spawn = window.setTimeout(() => {
+        if (document.visibilityState === 'hidden') {
+          pendingAfterHidden = true;
+          return;
+        }
+        setVisitorStartled(false);
+        setBalconyVisitor(pickBalconyVisitor(effectiveTime, isRaining));
+      }, waitMs);
+    };
 
-    return () => window.clearTimeout(visitorTimersRef.current.spawn);
+    scheduleSpawn();
+
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && pendingAfterHidden) {
+        pendingAfterHidden = false;
+        scheduleSpawn();
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibilityChange);
+
+    return () => {
+      window.clearTimeout(visitorTimersRef.current.spawn);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+    };
   }, [canSpawnVisitor, balconyVisitor, visitorStartled, effectiveTime, isRaining]);
 
   const handleTapBalconyVisitor = useCallback(
@@ -430,7 +450,12 @@ export function App() {
   };
 
   const alertedSnapshotKey = live
-    ? `${live.hunger < 25 ? (live.hunger <= 5 ? 'c' : 'l') : 'n'}-${live.hydration < 25 ? (live.hydration <= 5 ? 'c' : 'l') : 'n'}-${live.happiness < 25 ? (live.happiness <= 5 ? 'c' : 'l') : 'n'}-${live.energy < 25 ? (live.energy <= 5 ? 'c' : 'l') : 'n'}-${live.hygiene < 25 ? (live.hygiene <= 5 ? 'c' : 'l') : 'n'}`
+    ? (['hunger', 'hydration', 'happiness', 'energy', 'hygiene'] as const)
+        .map((k) => {
+          const v = Math.round(live[k]);
+          return v < 25 ? (v <= 5 ? 'c' : 'l') : 'n';
+        })
+        .join('-')
     : '';
 
   useEffect(() => {

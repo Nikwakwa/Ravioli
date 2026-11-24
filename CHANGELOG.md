@@ -4,6 +4,14 @@ All updates to **Oli** are listed here.
 
 ---
 
+## `v1.4.3` — 2026-11-24
+### Polish & Bug Fixes ✨
+- Smoother Oli animations with hearts and sparkles appearing right where he sits, plus dark styling for Nap Mode at night.
+- Fixed Daily Quest streak previews, minigame skip rewards, overlapping floor messes, and balcony visitor recovery after switching tabs.
+- Hardened save validation and background push notification security.
+
+---
+
 ## `v1.4.2` — 2026-11-22
 ### Daily Quests Stage Fix 📋
 - Fixed Daily Quests so Newborn Oli never gets locked challenges like Brain games, and automatically swaps any locked quest already on today’s list.

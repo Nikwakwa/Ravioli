@@ -189,6 +189,7 @@ export function FortuneModal({
             <button
               type="button"
               onClick={onClose}
+              autoFocus
               aria-label="Close fortune modal"
               className="flex h-8 w-8 items-center justify-center rounded-full bg-amber-950/8 text-amber-900 hover:bg-amber-950/15 active:scale-95"
             >
@@ -284,7 +285,7 @@ export function FortuneModal({
               </motion.div>
 
               <p className="mt-3 text-[11px] font-semibold text-amber-900/60">
-                Come back tomorrow at sunrise for a fresh fortune! 🌅
+                Come back tomorrow for a fresh fortune! 🌅
               </p>
 
               <button

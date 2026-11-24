@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { Check, Flame, Gift, Sparkles, X } from 'lucide-react';
+import { localDayKey } from '../data/actions';
 import {
   areAllQuestsDone,
   countCompletedQuests,
@@ -39,11 +40,13 @@ export function DailyQuestsModal({
   const totalCount = questState.quests.length;
   const allDone = areAllQuestsDone(questState);
   const visibleStreak = getVisibleStreak(questState, nowMs);
-  const projectedStreak = Math.max(1, visibleStreak);
-  const rewardChurus = getDailyRewardChurus(projectedStreak);
-  const milestoneToday = isStreakMilestone(projectedStreak) && visibleStreak > 0;
-  const nextMilestone = getNextStreakMilestone(visibleStreak);
-  const daysUntilMilestone = Math.max(1, nextMilestone - visibleStreak);
+  const caredToday = questState.lastCaredDay === localDayKey(nowMs);
+  // Preview the exact streak day today's reward will pay on (avoids Day 3→4 +2→+1 bait-and-switch).
+  const todayStreak = caredToday ? Math.max(1, visibleStreak) : visibleStreak + 1;
+  const rewardChurus = getDailyRewardChurus(todayStreak);
+  const milestoneToday = isStreakMilestone(todayStreak);
+  const nextMilestone = getNextStreakMilestone(caredToday ? visibleStreak : todayStreak);
+  const daysUntilMilestone = Math.max(1, nextMilestone - (caredToday ? visibleStreak : todayStreak));
 
   return (
     <motion.div
@@ -81,6 +84,7 @@ export function DailyQuestsModal({
           <button
             type="button"
             onClick={onClose}
+            autoFocus
             aria-label="Close daily quests"
             className="flex h-8 w-8 items-center justify-center rounded-full bg-amber-950/8 text-amber-900 hover:bg-amber-950/15 active:scale-95"
           >
@@ -103,7 +107,9 @@ export function DailyQuestsModal({
                 </p>
                 <p className="mt-0.5 text-[11px] font-semibold text-amber-900/75">
                   {milestoneToday
-                    ? '🎉 Milestone day! Today’s bonus pays +2 🍬'
+                    ? caredToday
+                      ? '🎉 Milestone day! Today’s bonus pays +2 🍬'
+                      : `🎉 Day ${todayStreak} milestone! Today’s bonus pays +2 🍬`
                     : `Care for Oli daily · Day ${nextMilestone} bonus (+2 🍬) in ${daysUntilMilestone}d`}
                 </p>
               </div>

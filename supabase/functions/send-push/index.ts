@@ -121,20 +121,52 @@ function hoursUntilBothZero(stats: Record<StatKey, number>, isSleeping: boolean,
   return Math.max(hoursHydration, hoursHunger);
 }
 
-/** Rejects non-HTTPS endpoints, localhost, and raw IP literals to prevent SSRF. */
+/** Rejects non-HTTPS endpoints, credentials, custom ports, internal hosts, and IP literals to prevent SSRF. */
 function isSafePushEndpoint(endpoint: unknown): endpoint is string {
   if (typeof endpoint !== 'string' || endpoint.length < 20 || endpoint.length > 2048) return false;
+  if (/\s/.test(endpoint)) return false;
   try {
     const u = new URL(endpoint);
     if (u.protocol !== 'https:') return false;
-    const host = u.hostname.toLowerCase();
-    if (!host || host === 'localhost' || host.endsWith('.local') || host.endsWith('.internal')) return false;
-    // Reject IPv4 and IPv6 literals (Web Push services always use public hostnames).
-    if (/^\d{1,3}(\.\d{1,3}){3}$/.test(host) || host.includes(':')) return false;
+    if (u.username || u.password) return false;
+    if (u.port !== '' && u.port !== '443') return false;
+    const host = u.hostname.toLowerCase().replace(/\.+$/, '');
+    if (
+      !host ||
+      !host.includes('.') ||
+      host === 'localhost' ||
+      host.endsWith('.localhost') ||
+      host.endsWith('.local') ||
+      host.endsWith('.internal') ||
+      host.endsWith('.lan') ||
+      host.endsWith('.home.arpa')
+    ) {
+      return false;
+    }
+    // Reject IPv4, numeric/hex/octal IP shorthands, and IPv6 literals.
+    if (/^\d{1,3}(\.\d{1,3}){3}$/.test(host) || /^(0x[0-9a-f]+|\d+)$/i.test(host) || host.includes(':')) {
+      return false;
+    }
     return true;
   } catch {
     return false;
   }
+}
+
+function isValidPushKey(value: unknown, minLen: number, maxLen: number): value is string {
+  return (
+    typeof value === 'string' &&
+    value.length >= minLen &&
+    value.length <= maxLen &&
+    /^[A-Za-z0-9_-]+=*$/.test(value)
+  );
+}
+
+function isValidSnapshot(snapshot: unknown): snapshot is CatSnapshot {
+  if (!snapshot || typeof snapshot !== 'object') return false;
+  const s = snapshot as Record<string, unknown>;
+  if (typeof s.last_updated_at !== 'string' || !Number.isFinite(Date.parse(s.last_updated_at))) return false;
+  return STAT_KEYS.every((k) => typeof s[k] === 'number' && Number.isFinite(s[k]));
 }
 
 function safePayloadUrl(raw: unknown, fallback: string): string {
@@ -149,11 +181,15 @@ function safePayloadUrl(raw: unknown, fallback: string): string {
   return fallback;
 }
 
-function timingSafeEqual(a: string, b: string): boolean {
+/** Constant-time equality over SHA-256 digests so secret length is never leaked by timing. */
+async function timingSafeEqual(a: string, b: string): Promise<boolean> {
   const enc = new TextEncoder();
-  const ab = enc.encode(a);
-  const bb = enc.encode(b);
-  if (ab.length !== bb.length) return false;
+  const [ah, bh] = await Promise.all([
+    crypto.subtle.digest('SHA-256', enc.encode(a)),
+    crypto.subtle.digest('SHA-256', enc.encode(b)),
+  ]);
+  const ab = new Uint8Array(ah);
+  const bb = new Uint8Array(bh);
   let diff = 0;
   for (let i = 0; i < ab.length; i += 1) {
     diff |= ab[i] ^ bb[i];
@@ -231,7 +267,7 @@ Deno.serve(async (req: Request) => {
   const vapidPublicKey = Deno.env.get('VAPID_PUBLIC_KEY');
   const vapidPrivateKey = Deno.env.get('VAPID_PRIVATE_KEY');
   const vapidSubject = Deno.env.get('VAPID_SUBJECT') || 'mailto:oli@ravioli.app';
-  const cronSecret = Deno.env.get('PUSH_CRON_SECRET')?.trim();
+  const cronSecret = Deno.env.get('PUSH_CRON_SECRET')?.trim() ?? '';
 
   if (!supabaseUrl || !serviceRoleKey || !vapidPublicKey || !vapidPrivateKey) {
     return new Response(JSON.stringify({ error: 'Missing required environment secrets' }), {
@@ -240,27 +276,33 @@ Deno.serve(async (req: Request) => {
     });
   }
 
-  // Optional shared secret lock-down: if PUSH_CRON_SECRET is set, require either
-  // x-cron-secret: <secret>, Authorization: Bearer <secret>, or Bearer <serviceRoleKey>.
-  if (cronSecret) {
-    const headerSecret = req.headers.get('x-cron-secret')?.trim() ?? '';
-    const authHeader = req.headers.get('authorization')?.trim() ?? '';
-    const bearer = authHeader.toLowerCase().startsWith('bearer ') ? authHeader.slice(7).trim() : '';
-    const authorized =
-      (headerSecret.length > 0 && timingSafeEqual(headerSecret, cronSecret)) ||
-      (bearer.length > 0 && (timingSafeEqual(bearer, cronSecret) || timingSafeEqual(bearer, serviceRoleKey)));
-    if (!authorized) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: JSON_HEADERS,
-      });
-    }
+  // Fail-closed authorization: always require either Bearer <serviceRoleKey>
+  // or (when PUSH_CRON_SECRET is configured) x-cron-secret / Bearer <PUSH_CRON_SECRET>.
+  const headerSecret = req.headers.get('x-cron-secret')?.trim() ?? '';
+  const authHeader = req.headers.get('authorization')?.trim() ?? '';
+  const bearer = authHeader.toLowerCase().startsWith('bearer ') ? authHeader.slice(7).trim() : '';
+
+  const serviceMatch = bearer.length > 0 && (await timingSafeEqual(bearer, serviceRoleKey));
+  const cronMatch =
+    cronSecret.length > 0 &&
+    ((headerSecret.length > 0 && (await timingSafeEqual(headerSecret, cronSecret))) ||
+      (bearer.length > 0 && (await timingSafeEqual(bearer, cronSecret))));
+
+  if (!serviceMatch && !cronMatch) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401,
+      headers: JSON_HEADERS,
+    });
   }
 
   webpush.setVapidDetails(vapidSubject, vapidPublicKey, vapidPrivateKey);
   const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-  const { data: rows, error } = await supabase.from('push_subscriptions').select('*');
+  const { data: rows, error } = await supabase
+    .from('push_subscriptions')
+    .select('*')
+    .order('updated_at', { ascending: false })
+    .limit(500);
   if (error) {
     return new Response(JSON.stringify({ error: 'Database query failed' }), {
       status: 500,
@@ -273,15 +315,19 @@ Deno.serve(async (req: Request) => {
   let removedCount = 0;
 
   for (const row of rows ?? []) {
-    if (!isSafePushEndpoint(row.endpoint)) {
+    if (
+      !isSafePushEndpoint(row.endpoint) ||
+      !isValidPushKey(row.p256dh, 20, 256) ||
+      !isValidPushKey(row.auth, 10, 128)
+    ) {
       await supabase.from('push_subscriptions').delete().eq('endpoint', row.endpoint);
       removedCount += 1;
       continue;
     }
 
     const prefs = row.prefs ?? {};
-    const snapshot = row.cat_snapshot as CatSnapshot | undefined;
-    if (!prefs.enabled || !snapshot || snapshot.paused_at || snapshot.deceased_at) continue;
+    const snapshot = row.cat_snapshot;
+    if (!prefs.enabled || !isValidSnapshot(snapshot) || snapshot.paused_at || snapshot.deceased_at) continue;
 
     const { stats, isSleeping, wokeNaturally, isDeceased, stage } = computeLive(snapshot, nowMs);
     const prevAlerted: AlertedMap = {

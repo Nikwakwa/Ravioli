@@ -1047,7 +1047,10 @@ export function CatAvatar({
 
   // Map incoming animation trigger → timed active animation.
   useEffect(() => {
-    if (animation === 'idle') return;
+    if (animation === 'idle') {
+      setActiveAnim('idle');
+      return;
+    }
     const durations: Record<CatAnimation, number> = {
       idle: 0,
       eating: 2.6,
@@ -1077,16 +1080,23 @@ export function CatAvatar({
   // Random natural blinking.
   useEffect(() => {
     let alive = true;
-    let timer: number;
+    const timers: number[] = [];
+    const schedule = (fn: () => void, ms: number) => {
+      const id = window.setTimeout(() => {
+        const idx = timers.indexOf(id);
+        if (idx >= 0) timers.splice(idx, 1);
+        if (alive) fn();
+      }, ms);
+      timers.push(id);
+    };
     const loop = () => {
-      timer = window.setTimeout(() => {
-        if (!alive) return;
+      schedule(() => {
         setBlinking(true);
-        window.setTimeout(() => alive && setBlinking(false), 140);
+        schedule(() => setBlinking(false), 140);
         // Occasional double blink.
         if (Math.random() < 0.25) {
-          window.setTimeout(() => alive && setBlinking(true), 300);
-          window.setTimeout(() => alive && setBlinking(false), 440);
+          schedule(() => setBlinking(true), 300);
+          schedule(() => setBlinking(false), 440);
         }
         loop();
       }, 2200 + Math.random() * 3800);
@@ -1094,26 +1104,33 @@ export function CatAvatar({
     loop();
     return () => {
       alive = false;
-      window.clearTimeout(timer);
+      timers.forEach((id) => window.clearTimeout(id));
     };
   }, []);
 
   // Random ear twitch.
   useEffect(() => {
     let alive = true;
-    let timer: number;
+    const timers: number[] = [];
+    const schedule = (fn: () => void, ms: number) => {
+      const id = window.setTimeout(() => {
+        const idx = timers.indexOf(id);
+        if (idx >= 0) timers.splice(idx, 1);
+        if (alive) fn();
+      }, ms);
+      timers.push(id);
+    };
     const loop = () => {
-      timer = window.setTimeout(() => {
-        if (!alive) return;
+      schedule(() => {
         setEarTwitch(true);
-        window.setTimeout(() => alive && setEarTwitch(false), 220);
+        schedule(() => setEarTwitch(false), 220);
         loop();
       }, 5000 + Math.random() * 7000);
     };
     loop();
     return () => {
       alive = false;
-      window.clearTimeout(timer);
+      timers.forEach((id) => window.clearTimeout(id));
     };
   }, []);
 
@@ -1123,11 +1140,11 @@ export function CatAvatar({
   }, []);
 
   const handlePet = () => {
-    if (petting) return;
+    if (!onPet || petting) return;
     setPetting(true);
     window.clearTimeout(pettingTimerRef.current);
     pettingTimerRef.current = window.setTimeout(() => setPetting(false), 1100);
-    onPet?.();
+    onPet();
   };
 
   const anim = sleeping && activeAnim !== 'misting' ? 'idle' : activeAnim;
@@ -1215,8 +1232,8 @@ export function CatAvatar({
 
       <g transform={stageTransform}>
         <motion.g
-          onPointerDown={handlePet}
-          style={{ cursor: 'pointer' }}
+          onPointerDown={onPet ? handlePet : undefined}
+          style={{ cursor: onPet ? 'pointer' : 'default' }}
           animate={
             anim === 'pounce'
               ? {
