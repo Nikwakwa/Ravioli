@@ -46,7 +46,7 @@ import {
   sendSystemNotification,
   type NotificationPrefs,
 } from './utils/notifications';
-import { schedulePushSync, subscribeAndSyncPush, unsubscribePush } from './utils/pushSync';
+import { isPushConfigured, schedulePushSync, subscribeAndSyncPush, unsubscribePush } from './utils/pushSync';
 import {
   fetchLuxembourgAtmosphere,
   isRainingNow,
@@ -468,6 +468,28 @@ export function App() {
     });
   }, [ready, base, live?.isSleeping, notifPrefs, alertedSnapshotKey]);
 
+  // Keep notification permission state and background push snapshot fresh whenever returning to the app.
+  useEffect(() => {
+    const onVisibilityChange = () => {
+      if (document.visibilityState !== 'visible') return;
+      const latest = loadNotificationPrefs();
+      setNotifPrefs((prev) => (prev.enabled === latest.enabled ? prev : latest));
+      if (latest.enabled && base) {
+        schedulePushSync(
+          {
+            state: base,
+            prefs: latest,
+            alerted: loadAlertedMap(),
+            wokeUpAlerted: !live?.isSleeping,
+          },
+          400,
+        );
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', onVisibilityChange);
+  }, [base, live?.isSleeping]);
+
   const handleChangeNotifPrefs = (next: NotificationPrefs) => {
     saveNotificationPrefs(next);
     setNotifPrefs(next);
@@ -507,20 +529,34 @@ export function App() {
     if (res === 'granted') {
       const next = { ...notifPrefs, enabled: true };
       handleChangeNotifPrefs(next);
-      if (base) {
-        void subscribeAndSyncPush({
-          state: base,
-          prefs: next,
-          alerted: loadAlertedMap(),
-          wokeUpAlerted: !live?.isSleeping,
-        });
-      }
-      pushNotice({ text: '🔔 Oli notifications enabled!', tone: 'info' });
       void sendSystemNotification(
         '🔔 Oli notifications enabled!',
         'You can customize which alerts to receive anytime in the Menu.',
         'oli-test',
       );
+      if (base && isPushConfigured()) {
+        const syncRes = await subscribeAndSyncPush({
+          state: base,
+          prefs: next,
+          alerted: loadAlertedMap(),
+          wokeUpAlerted: !live?.isSleeping,
+        });
+        if (!syncRes.ok) {
+          if (syncRes.reason === 'ios_install_required') {
+            pushNotice({
+              text: '🔔 Alerts on! Add Ravioli to Home Screen for closed-app alerts.',
+              tone: 'info',
+            });
+            return;
+          }
+          pushNotice({
+            text: '🔔 Alerts on while open (background push couldn’t connect).',
+            tone: 'warn',
+          });
+          return;
+        }
+      }
+      pushNotice({ text: '🔔 Oli notifications enabled!', tone: 'info' });
     } else if (res === 'denied') {
       handleChangeNotifPrefs({ ...notifPrefs, enabled: false });
       pushNotice({ text: 'Notifications blocked by browser settings.', tone: 'warn' });
@@ -529,21 +565,33 @@ export function App() {
     }
   };
 
-  const handleTestNotification = () => {
-    if (base && notifPrefs.enabled) {
-      void subscribeAndSyncPush({
-        state: base,
-        prefs: notifPrefs,
-        alerted: loadAlertedMap(),
-        wokeUpAlerted: !live?.isSleeping,
-      });
-    }
-    pushNotice({ text: '🔔 Sent test notification!', tone: 'info' });
+  const handleTestNotification = async () => {
     void sendSystemNotification(
       '🐱 Meow from Oli!',
       'Notifications are working! You’ll be alerted when any need drops below 25.',
       'oli-test',
     );
+    if (base && notifPrefs.enabled && isPushConfigured()) {
+      const syncRes = await subscribeAndSyncPush({
+        state: base,
+        prefs: notifPrefs,
+        alerted: loadAlertedMap(),
+        wokeUpAlerted: !live?.isSleeping,
+      });
+      if (!syncRes.ok) {
+        pushNotice({
+          text:
+            syncRes.reason === 'ios_install_required'
+              ? '🔔 Test sent! Add to Home Screen for closed-app alerts.'
+              : '🔔 Test sent (background push sync couldn’t connect).',
+          tone: 'warn',
+        });
+        return;
+      }
+      pushNotice({ text: '🔔 Sent test alert & synced background alerts!', tone: 'info' });
+      return;
+    }
+    pushNotice({ text: '🔔 Sent test notification!', tone: 'info' });
   };
 
   if (!ready || !live) {

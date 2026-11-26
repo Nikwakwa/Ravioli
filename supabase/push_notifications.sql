@@ -58,21 +58,21 @@ begin
      or char_length(p_endpoint) > 2048
      or p_endpoint !~ '^https://[A-Za-z0-9.-]+\.[A-Za-z]{2,}(/[^[:space:]]*)?$'
      or p_endpoint ~* '^https://(localhost|127\.|10\.|192\.168\.|169\.254\.|172\.(1[6-9]|2[0-9]|3[0-1])\.)'
-     or p_endpoint ~ '[@[:space:]]' then
+     or p_endpoint ~ '[[:space:]]' then
     raise exception 'Invalid push endpoint';
   end if;
 
   if p_p256dh is null
      or char_length(p_p256dh) < 20
      or char_length(p_p256dh) > 256
-     or p_p256dh !~ '^[A-Za-z0-9_-]+=*$' then
+     or p_p256dh !~ '^[A-Za-z0-9+/=_-]+$' then
     raise exception 'Invalid push p256dh key';
   end if;
 
   if p_auth is null
      or char_length(p_auth) < 10
      or char_length(p_auth) > 128
-     or p_auth !~ '^[A-Za-z0-9_-]+=*$' then
+     or p_auth !~ '^[A-Za-z0-9+/=_-]+$' then
     raise exception 'Invalid push auth key';
   end if;
 
@@ -148,23 +148,56 @@ revoke all on function public.delete_push_subscription(text) from public;
 grant execute on function public.delete_push_subscription(text) to anon, authenticated;
 
 -- =============================================================================
--- Optional: Schedule the Edge Function every 5 minutes using pg_cron + pg_net.
--- Replace <YOUR_PROJECT_REF> and <YOUR_SERVICE_ROLE_KEY> before running.
--- =============================================================================
--- create extension if not exists pg_cron;
--- create extension if not exists pg_net;
+-- Reliable 5-Minute Background Push Scheduler (Supabase pg_cron + pg_net)
+-- GitHub Actions throttles */5 cron schedules to once every 6-10 hours.
+-- Running pg_cron inside Supabase checks Oli every exact 5 minutes!
 --
--- select cron.schedule(
---   'ravioli-send-push',
---   '*/5 * * * *',
---   $$
---   select net.http_post(
---     url := 'https://<YOUR_PROJECT_REF>.supabase.co/functions/v1/send-push',
---     headers := jsonb_build_object(
---       'Content-Type', 'application/json',
---       'Authorization', 'Bearer <YOUR_SERVICE_ROLE_KEY>'
---     ),
---     body := '{}'::jsonb
---   );
---   $$
--- );
+-- After running this file, run ONE line in SQL Editor (with your values):
+--   select public.schedule_ravioli_push_cron('https://<YOUR_PROJECT_REF>.supabase.co', '<YOUR_PUSH_CRON_SECRET>');
+-- =============================================================================
+create or replace function public.schedule_ravioli_push_cron(
+  p_supabase_url text,
+  p_cron_secret  text
+)
+returns text
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_url     text := rtrim(trim(p_supabase_url), '/') || '/functions/v1/send-push';
+  v_headers jsonb;
+  v_cmd     text;
+begin
+  if p_supabase_url is null or p_supabase_url !~ '^https://[A-Za-z0-9.-]+\.supabase\.co/?$' then
+    raise exception 'Pass your https://<project-ref>.supabase.co URL';
+  end if;
+  if p_cron_secret is null or char_length(trim(p_cron_secret)) < 12 then
+    raise exception 'Pass your PUSH_CRON_SECRET (at least 12 characters)';
+  end if;
+
+  create extension if not exists pg_cron;
+  create extension if not exists pg_net;
+
+  perform cron.unschedule(jobid)
+  from cron.job
+  where jobname = 'ravioli-send-push';
+
+  v_headers := jsonb_build_object(
+    'Content-Type', 'application/json',
+    'x-cron-secret', trim(p_cron_secret)
+  );
+
+  v_cmd := format(
+    'select net.http_post(url := %L, headers := %L::jsonb, body := %L::jsonb);',
+    v_url,
+    v_headers::text,
+    '{}'
+  );
+
+  perform cron.schedule('ravioli-send-push', '*/5 * * * *', v_cmd);
+  return 'Scheduled ravioli-send-push every 5 minutes -> ' || v_url;
+end;
+$$;
+
+revoke all on function public.schedule_ravioli_push_cron(text, text) from public, anon, authenticated;

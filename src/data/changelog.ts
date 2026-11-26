@@ -7,6 +7,15 @@ export interface ReleaseEntry {
 
 export const CHANGELOG: ReleaseEntry[] = [
   {
+    version: 'v1.4.4',
+    date: '2026-11-25',
+    title: 'Reliable Care Alerts 🔔',
+    changes: [
+      'Fixed notifications turning off after a game reset and automatically re-enable alerts when your browser already allows them.',
+      'Rebuilt background push delivery and immediate sync when closing the app so low-need and wake-up alerts arrive reliably.',
+    ],
+  },
+  {
     version: 'v1.4.3',
     date: '2026-11-24',
     title: 'Polish & Bug Fixes ✨',

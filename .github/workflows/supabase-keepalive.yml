@@ -49,7 +49,8 @@ jobs:
           echo "send-push HTTP status: $HTTP_CODE"
           cat /tmp/push-out.json || true
           echo
-          if [ "${HTTP_CODE:-0}" -ge 500 ]; then
-            echo "::warning::send-push returned HTTP $HTTP_CODE"
+          if [ "${HTTP_CODE:-0}" != "200" ]; then
+            echo "::error::send-push returned HTTP $HTTP_CODE (check PUSH_CRON_SECRET and Edge Function deployment)"
+            exit 1
           fi
           echo "Supabase responded — project stays active."

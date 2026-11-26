@@ -4,6 +4,13 @@ All updates to **Oli** are listed here.
 
 ---
 
+## `v1.4.4` — 2026-11-25
+### Reliable Care Alerts 🔔
+- Fixed notifications turning off after a game reset and automatically re-enable alerts when your browser already allows them.
+- Rebuilt background push delivery and immediate sync when closing the app so low-need and wake-up alerts arrive reliably.
+
+---
+
 ## `v1.4.3` — 2026-11-24
 ### Polish & Bug Fixes ✨
 - Smoother Oli animations with hearts and sparkles appearing right where he sits, plus dark styling for Nap Mode at night.

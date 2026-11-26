@@ -102,12 +102,19 @@ export function loadNotificationPrefs(): NotificationPrefs {
     const granted = getNotificationPermission() === 'granted';
     const raw = window.localStorage.getItem(LS_PREFS);
     if (!raw) {
-      const legacyEnabled = window.localStorage.getItem(LS_ENABLED) === 'true';
-      return {
+      const legacyRaw = window.localStorage.getItem(LS_ENABLED);
+      // If the user already granted browser notification permission for Ravioli and never
+      // explicitly muted alerts in-app (e.g. after a game reset wiped localStorage), keep alerts active.
+      const enabled = granted && legacyRaw !== 'false';
+      const initial: NotificationPrefs = {
         ...DEFAULT_NOTIFICATION_PREFS,
-        enabled: legacyEnabled && granted,
+        enabled,
         stats: { ...DEFAULT_NOTIFICATION_PREFS.stats },
       };
+      if (enabled) {
+        saveNotificationPrefs(initial);
+      }
+      return initial;
     }
     const parsed = JSON.parse(raw) as Partial<NotificationPrefs>;
     const stats: Record<StatKey, boolean> = { ...DEFAULT_NOTIFICATION_PREFS.stats };

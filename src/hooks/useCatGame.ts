@@ -16,7 +16,7 @@ import type {
   SyncMode,
   SyncStatus,
 } from '../types';
-import { isBalconySpot, sceneForSpot } from '../types';
+import { isBalconySpot, sceneForSpot, STAT_KEYS } from '../types';
 import {
   addGrowthBonus,
   applyEffect,
@@ -26,11 +26,12 @@ import {
   isThriving,
   materialize,
   MAX_LIVES,
-  nextNeed,
+  NEED_THRESHOLD,
 } from '../utils/decayEngine';
 import {
   CARE_ACTION_GROWTH_BONUS,
   getMaxSleepEnergy,
+  getStageDecayRates,
   isValidLifeStage,
   STAGE_META,
   stageIndex,
@@ -89,6 +90,7 @@ import {
 } from '../utils/badges';
 import { playActionSound, playSound, type SoundName } from '../utils/sound';
 import {
+  CRITICAL_THRESHOLD,
   evaluateStatThresholds,
   loadAlertedMap,
   loadNotificationPrefs,
@@ -963,12 +965,31 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
     return raw;
   }, [live, tummyAche, messes.length, litterBoxDirty]);
 
-  // Schedule an exact timer for the next low-need threshold crossing so alerts fire right on time.
+  // Schedule an exact timer for the next low-need (<25 rounded), critical (<=5 rounded), or wake-up crossing.
   useEffect(() => {
     if (!live || live.isPaused || live.isDeceased) return;
-    const upcoming = nextNeed(live);
-    if (!upcoming) return;
-    const delayMs = Math.min(Math.max(1000, Math.ceil(upcoming.hours * 3_600_000) + 250), 2_147_483_647);
+    const stageRates = getStageDecayRates(live.lifeStage);
+    const rates = live.isSleeping ? stageRates.sleeping : stageRates.awake;
+    let bestHours = Infinity;
+
+    if (live.isSleeping) {
+      bestHours = Math.min(bestHours, hoursUntilNaturalWake(live.energy, live.lifeStage));
+    }
+
+    const lowTarget = NEED_THRESHOLD - 0.51;
+    const critTarget = CRITICAL_THRESHOLD + 0.49;
+    for (const key of STAT_KEYS) {
+      const rate = rates[key];
+      if (rate >= 0) continue;
+      if (live[key] > lowTarget) {
+        bestHours = Math.min(bestHours, (live[key] - lowTarget) / -rate);
+      } else if (live[key] > critTarget) {
+        bestHours = Math.min(bestHours, (live[key] - critTarget) / -rate);
+      }
+    }
+
+    if (!Number.isFinite(bestHours)) return;
+    const delayMs = Math.min(Math.max(1000, Math.ceil(bestHours * 3_600_000) + 250), 2_147_483_647);
     const timer = window.setTimeout(() => setNow(Date.now()), delayMs);
     return () => window.clearTimeout(timer);
   }, [live]);

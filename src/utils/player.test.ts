@@ -54,19 +54,25 @@ describe('player utility & data management', () => {
     expect(hasSeenOnboarding()).toBe(true);
   });
 
-  it('resets all ravioli:* keys but preserves unrelated keys', () => {
+  it('resets game progress keys while preserving notification preferences and unrelated keys', () => {
     mockLocalStorage.setItem('ravioli:player', 'Alex');
     mockLocalStorage.setItem('ravioli:v1:cat_state', '{"hunger":80}');
     mockLocalStorage.setItem('ravioli:v1:onboarding_completed', '1');
+    mockLocalStorage.setItem('ravioli:v1:alerted_levels', '{"hunger":"low"}');
+    mockLocalStorage.setItem('ravioli:v1:notification_prefs', '{"enabled":true}');
+    mockLocalStorage.setItem('ravioli:v1:notifications_enabled', 'true');
+    mockLocalStorage.setItem('ravioli:v1:push_endpoint', 'https://fcm.googleapis.com/fcm/send/abc');
     mockLocalStorage.setItem('unrelated_app_setting', 'keep_me');
-
-    expect(mockLocalStorage.length).toBe(4);
 
     resetAllGameData();
 
     expect(mockLocalStorage.getItem('ravioli:player')).toBeNull();
     expect(mockLocalStorage.getItem('ravioli:v1:cat_state')).toBeNull();
     expect(mockLocalStorage.getItem('ravioli:v1:onboarding_completed')).toBeNull();
+    expect(mockLocalStorage.getItem('ravioli:v1:alerted_levels')).toBeNull();
+    expect(mockLocalStorage.getItem('ravioli:v1:notification_prefs')).toBe('{"enabled":true}');
+    expect(mockLocalStorage.getItem('ravioli:v1:notifications_enabled')).toBe('true');
+    expect(mockLocalStorage.getItem('ravioli:v1:push_endpoint')).toBe('https://fcm.googleapis.com/fcm/send/abc');
     expect(mockLocalStorage.getItem('unrelated_app_setting')).toBe('keep_me');
   });
 

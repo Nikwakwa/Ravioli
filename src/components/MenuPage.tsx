@@ -34,7 +34,7 @@ import {
   stageIndex,
 } from '../utils/lifeStage';
 import { CRITICAL_THRESHOLD, type NotificationPrefs } from '../utils/notifications';
-import { isIosDevice, isPushConfigured, isStandalonePwa, unsubscribePush } from '../utils/pushSync';
+import { isIosDevice, isPushConfigured, isStandalonePwa } from '../utils/pushSync';
 import {
   BADGES,
   countEarnedMedals,
@@ -141,17 +141,9 @@ Time: ${new Date().toISOString()}`;
     }
   };
 
-  const handleResetGame = async () => {
+  const handleResetGame = () => {
     if (resetting) return;
     setResetting(true);
-    try {
-      await Promise.race([
-        unsubscribePush(),
-        new Promise<void>((resolve) => window.setTimeout(resolve, 2000)),
-      ]);
-    } catch {
-      /* ignore push cleanup errors when offline */
-    }
     resetAllGameData();
     window.location.reload();
   };

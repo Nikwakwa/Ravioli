@@ -2,7 +2,8 @@
 // and sends Web Push alerts when needs drop below 25/5 or when Oli wakes up.
 
 import { createClient } from 'npm:@supabase/supabase-js@2';
-import webpush from 'npm:web-push@3.6.7';
+
+const encoder = new TextEncoder();
 
 const STAT_KEYS = ['hunger', 'hydration', 'happiness', 'energy', 'hygiene'] as const;
 type StatKey = (typeof STAT_KEYS)[number];
@@ -158,8 +159,241 @@ function isValidPushKey(value: unknown, minLen: number, maxLen: number): value i
     typeof value === 'string' &&
     value.length >= minLen &&
     value.length <= maxLen &&
-    /^[A-Za-z0-9_-]+=*$/.test(value)
+    /^[A-Za-z0-9+/=_-]+$/.test(value)
   );
+}
+
+function normalizeVapidSubject(raw?: string | null): string {
+  const trimmed = raw?.trim() ?? '';
+  if (!trimmed) return 'mailto:oli@ravioli.app';
+  if (trimmed.startsWith('mailto:') || trimmed.startsWith('https://')) return trimmed;
+  if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) return `mailto:${trimmed}`;
+  return 'mailto:oli@ravioli.app';
+}
+
+function base64ToBytes(raw: string): Uint8Array<ArrayBuffer> {
+  const clean = raw.trim().replace(/\s+/g, '').replace(/-/g, '+').replace(/_/g, '/');
+  const padded = clean + '='.repeat((4 - (clean.length % 4)) % 4);
+  const bin = atob(padded);
+  const buf = new ArrayBuffer(bin.length);
+  const out = new Uint8Array(buf);
+  for (let i = 0; i < bin.length; i += 1) {
+    out[i] = bin.charCodeAt(i);
+  }
+  return out;
+}
+
+function bytesToBase64Url(bytes: Uint8Array): string {
+  let bin = '';
+  for (let i = 0; i < bytes.length; i += 1) {
+    bin += String.fromCharCode(bytes[i]);
+  }
+  return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+function normalizeP256PrivateScalar(raw: Uint8Array): Uint8Array<ArrayBuffer> {
+  const buf = new ArrayBuffer(32);
+  const out = new Uint8Array(buf);
+  if (raw.length === 32) {
+    out.set(raw);
+    return out;
+  }
+  if (raw.length === 33 && raw[0] === 0) {
+    out.set(raw.subarray(1, 33));
+    return out;
+  }
+  if (raw.length > 0 && raw.length < 32) {
+    out.set(raw, 32 - raw.length);
+    return out;
+  }
+  throw new Error(`Invalid VAPID private key length (${raw.length})`);
+}
+
+function concatBytes(...chunks: Uint8Array[]): Uint8Array<ArrayBuffer> {
+  const total = chunks.reduce((sum, c) => sum + c.length, 0);
+  const buf = new ArrayBuffer(total);
+  const out = new Uint8Array(buf);
+  let offset = 0;
+  for (const chunk of chunks) {
+    out.set(chunk, offset);
+    offset += chunk.length;
+  }
+  return out;
+}
+
+async function buildVapidAuthorization(
+  endpoint: string,
+  subject: string,
+  vapidPublicKey: string,
+  vapidPrivateKey: string,
+  nowMs: number,
+): Promise<string> {
+  const pubBytes = base64ToBytes(vapidPublicKey);
+  if (pubBytes.length !== 65 || pubBytes[0] !== 0x04) {
+    throw new Error(`Invalid VAPID public key length (${pubBytes.length})`);
+  }
+  const privBytes = normalizeP256PrivateScalar(base64ToBytes(vapidPrivateKey));
+
+  const jwk: JsonWebKey = {
+    kty: 'EC',
+    crv: 'P-256',
+    x: bytesToBase64Url(pubBytes.subarray(1, 33)),
+    y: bytesToBase64Url(pubBytes.subarray(33, 65)),
+    d: bytesToBase64Url(privBytes),
+    ext: true,
+  };
+
+  const signingKey = await crypto.subtle.importKey(
+    'jwk',
+    jwk,
+    { name: 'ECDSA', namedCurve: 'P-256' },
+    false,
+    ['sign'],
+  );
+
+  const headerPart = bytesToBase64Url(encoder.encode(JSON.stringify({ typ: 'JWT', alg: 'ES256' })));
+  const claimsPart = bytesToBase64Url(
+    encoder.encode(
+      JSON.stringify({
+        aud: new URL(endpoint).origin,
+        exp: Math.floor(nowMs / 1000) + 12 * 3600,
+        sub: normalizeVapidSubject(subject),
+      }),
+    ),
+  );
+
+  const signingInput = encoder.encode(`${headerPart}.${claimsPart}`);
+  const signature = new Uint8Array(
+    await crypto.subtle.sign({ name: 'ECDSA', hash: 'SHA-256' }, signingKey, signingInput),
+  );
+  const jwt = `${headerPart}.${claimsPart}.${bytesToBase64Url(signature)}`;
+  return `vapid t=${jwt}, k=${bytesToBase64Url(pubBytes)}`;
+}
+
+async function encryptPushPayload(
+  plaintext: string,
+  p256dh: string,
+  auth: string,
+): Promise<Uint8Array<ArrayBuffer>> {
+  const uaPublic = base64ToBytes(p256dh);
+  if (uaPublic.length !== 65 || uaPublic[0] !== 0x04) {
+    throw new Error(`Invalid subscriber p256dh key length (${uaPublic.length})`);
+  }
+  const authSecret = base64ToBytes(auth);
+  if (authSecret.length !== 16) {
+    throw new Error(`Invalid subscriber auth secret length (${authSecret.length})`);
+  }
+
+  const plaintextBytes = encoder.encode(plaintext);
+  const asKeyPair = await crypto.subtle.generateKey({ name: 'ECDH', namedCurve: 'P-256' }, true, [
+    'deriveBits',
+  ]);
+  const asPublic = new Uint8Array(await crypto.subtle.exportKey('raw', asKeyPair.publicKey));
+  const uaPublicKey = await crypto.subtle.importKey(
+    'raw',
+    uaPublic,
+    { name: 'ECDH', namedCurve: 'P-256' },
+    false,
+    [],
+  );
+
+  const ecdhSecret = new Uint8Array(
+    await crypto.subtle.deriveBits({ name: 'ECDH', public: uaPublicKey }, asKeyPair.privateKey, 256),
+  );
+
+  const keyInfo = concatBytes(encoder.encode('WebPush: info\0'), uaPublic, asPublic);
+  const ecdhHkdfKey = await crypto.subtle.importKey('raw', ecdhSecret, 'HKDF', false, ['deriveBits']);
+  const ikm = new Uint8Array(
+    await crypto.subtle.deriveBits(
+      { name: 'HKDF', hash: 'SHA-256', salt: authSecret, info: keyInfo },
+      ecdhHkdfKey,
+      256,
+    ),
+  );
+
+  const saltBuf = new ArrayBuffer(16);
+  const salt = crypto.getRandomValues(new Uint8Array(saltBuf));
+  const ikmHkdfKey = await crypto.subtle.importKey('raw', ikm, 'HKDF', false, [
+    'deriveKey',
+    'deriveBits',
+  ]);
+
+  const cekKey = await crypto.subtle.deriveKey(
+    {
+      name: 'HKDF',
+      hash: 'SHA-256',
+      salt,
+      info: encoder.encode('Content-Encoding: aes128gcm\0'),
+    },
+    ikmHkdfKey,
+    { name: 'AES-GCM', length: 128 },
+    false,
+    ['encrypt'],
+  );
+
+  const nonce = new Uint8Array(
+    await crypto.subtle.deriveBits(
+      {
+        name: 'HKDF',
+        hash: 'SHA-256',
+        salt,
+        info: encoder.encode('Content-Encoding: nonce\0'),
+      },
+      ikmHkdfKey,
+      96,
+    ),
+  );
+
+  const paddedPlaintext = concatBytes(plaintextBytes, new Uint8Array([0x02]));
+  const ciphertext = new Uint8Array(
+    await crypto.subtle.encrypt(
+      { name: 'AES-GCM', iv: nonce, tagLength: 128 },
+      cekKey,
+      paddedPlaintext,
+    ),
+  );
+
+  const rsAndLen = new Uint8Array([0x00, 0x00, 0x10, 0x00, asPublic.length]);
+  return concatBytes(salt, rsAndLen, asPublic, ciphertext);
+}
+
+async function sendWebPush(
+  subscription: { endpoint: string; p256dh: string; auth: string },
+  payloadJson: string,
+  vapid: { subject: string; publicKey: string; privateKey: string },
+  nowMs: number,
+): Promise<{ ok: boolean; status: number; detail?: string }> {
+  const [authorization, encryptedBody] = await Promise.all([
+    buildVapidAuthorization(
+      subscription.endpoint,
+      vapid.subject,
+      vapid.publicKey,
+      vapid.privateKey,
+      nowMs,
+    ),
+    encryptPushPayload(payloadJson, subscription.p256dh, subscription.auth),
+  ]);
+
+  const res = await fetch(subscription.endpoint, {
+    method: 'POST',
+    headers: {
+      Authorization: authorization,
+      'Content-Encoding': 'aes128gcm',
+      'Content-Type': 'application/octet-stream',
+      'Content-Length': String(encryptedBody.byteLength),
+      TTL: '86400',
+      Urgency: 'high',
+    },
+    body: encryptedBody,
+    redirect: 'manual',
+    signal: AbortSignal.timeout(10_000),
+  });
+
+  if (res.status >= 200 && res.status < 300) {
+    return { ok: true, status: res.status };
+  }
+  const text = await res.text().catch(() => '');
+  return { ok: false, status: res.status, detail: text.slice(0, 160) };
 }
 
 function isValidSnapshot(snapshot: unknown): snapshot is CatSnapshot {
@@ -183,10 +417,9 @@ function safePayloadUrl(raw: unknown, fallback: string): string {
 
 /** Constant-time equality over SHA-256 digests so secret length is never leaked by timing. */
 async function timingSafeEqual(a: string, b: string): Promise<boolean> {
-  const enc = new TextEncoder();
   const [ah, bh] = await Promise.all([
-    crypto.subtle.digest('SHA-256', enc.encode(a)),
-    crypto.subtle.digest('SHA-256', enc.encode(b)),
+    crypto.subtle.digest('SHA-256', encoder.encode(a)),
+    crypto.subtle.digest('SHA-256', encoder.encode(b)),
   ]);
   const ab = new Uint8Array(ah);
   const bb = new Uint8Array(bh);
@@ -264,9 +497,9 @@ Deno.serve(async (req: Request) => {
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL');
   const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-  const vapidPublicKey = Deno.env.get('VAPID_PUBLIC_KEY');
-  const vapidPrivateKey = Deno.env.get('VAPID_PRIVATE_KEY');
-  const vapidSubject = Deno.env.get('VAPID_SUBJECT') || 'mailto:oli@ravioli.app';
+  const vapidPublicKey = Deno.env.get('VAPID_PUBLIC_KEY')?.trim();
+  const vapidPrivateKey = Deno.env.get('VAPID_PRIVATE_KEY')?.trim();
+  const vapidSubject = normalizeVapidSubject(Deno.env.get('VAPID_SUBJECT'));
   const cronSecret = Deno.env.get('PUSH_CRON_SECRET')?.trim() ?? '';
 
   if (!supabaseUrl || !serviceRoleKey || !vapidPublicKey || !vapidPrivateKey) {
@@ -295,7 +528,6 @@ Deno.serve(async (req: Request) => {
     });
   }
 
-  webpush.setVapidDetails(vapidSubject, vapidPublicKey, vapidPrivateKey);
   const supabase = createClient(supabaseUrl, serviceRoleKey);
 
   const { data: rows, error } = await supabase
@@ -312,7 +544,9 @@ Deno.serve(async (req: Request) => {
 
   const nowMs = Date.now();
   let sentCount = 0;
+  let failedCount = 0;
   let removedCount = 0;
+  const errors: string[] = [];
 
   for (const row of rows ?? []) {
     if (
@@ -348,7 +582,6 @@ Deno.serve(async (req: Request) => {
     let nextWokeUpAlerted = Boolean(row.woke_up_alerted);
 
     if (isDeceased) {
-      // Send a single emergency alert if not already marked critical across both hunger & hydration.
       if (prevAlerted.hunger !== 'critical' || prevAlerted.hydration !== 'critical') {
         notifications.push({
           title: '🚨 Oli needs you!',
@@ -430,14 +663,22 @@ Deno.serve(async (req: Request) => {
     const safeIcon = safePayloadUrl(row.icon_url, './pwa-192x192.png');
     const safeBadge = safePayloadUrl(row.badge_url, './badge-96x96.png');
     const safeUrl = safePayloadUrl(row.app_url, './');
+    const endpointHost = (() => {
+      try {
+        return new URL(row.endpoint).hostname;
+      } catch {
+        return 'unknown';
+      }
+    })();
 
     let expired = false;
     for (const n of notifications) {
       try {
-        await webpush.sendNotification(
+        const result = await sendWebPush(
           {
             endpoint: row.endpoint,
-            keys: { p256dh: row.p256dh, auth: row.auth },
+            p256dh: row.p256dh,
+            auth: row.auth,
           },
           JSON.stringify({
             title: n.title,
@@ -447,15 +688,32 @@ Deno.serve(async (req: Request) => {
             badge: safeBadge,
             url: safeUrl,
           }),
+          {
+            subject: vapidSubject,
+            publicKey: vapidPublicKey,
+            privateKey: vapidPrivateKey,
+          },
+          nowMs,
         );
-        n.onSuccess();
-        sentCount += 1;
-      } catch (err: unknown) {
-        const statusCode = (err as { statusCode?: number })?.statusCode;
-        if (statusCode === 404 || statusCode === 410) {
+
+        if (result.ok) {
+          n.onSuccess();
+          sentCount += 1;
+        } else if (result.status === 404 || result.status === 410) {
           expired = true;
           break;
+        } else {
+          failedCount += 1;
+          const summary = `${endpointHost}: HTTP ${result.status}${result.detail ? ` (${result.detail})` : ''}`;
+          console.error('Web Push delivery failed:', summary);
+          if (errors.length < 5) errors.push(summary);
         }
+      } catch (err: unknown) {
+        failedCount += 1;
+        const message = err instanceof Error ? err.message : String(err);
+        const summary = `${endpointHost}: ${message.slice(0, 120)}`;
+        console.error('Web Push exception:', summary);
+        if (errors.length < 5) errors.push(summary);
       }
     }
 
@@ -475,7 +733,13 @@ Deno.serve(async (req: Request) => {
   }
 
   return new Response(
-    JSON.stringify({ checked: rows?.length ?? 0, sent: sentCount, removed: removedCount }),
+    JSON.stringify({
+      checked: rows?.length ?? 0,
+      sent: sentCount,
+      failed: failedCount,
+      removed: removedCount,
+      ...(errors.length > 0 ? { errors } : {}),
+    }),
     { headers: JSON_HEADERS },
   );
 });

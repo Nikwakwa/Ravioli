@@ -52,14 +52,20 @@ export function markOnboardingSeen(): void {
   }
 }
 
-/** Clears all Ravioli data from localStorage so testers can start fresh. */
+const PRESERVED_ON_RESET = new Set([
+  'ravioli:v1:notification_prefs',
+  'ravioli:v1:notifications_enabled',
+  'ravioli:v1:push_endpoint',
+]);
+
+/** Clears all Ravioli game progress from localStorage while keeping device alert preferences intact. */
 export function resetAllGameData(): void {
   try {
     if (typeof localStorage === 'undefined') return;
     const keysToRemove: string[] = [];
     for (let i = 0; i < localStorage.length; i++) {
       const k = localStorage.key(i);
-      if (k && k.startsWith('ravioli:')) {
+      if (k && k.startsWith('ravioli:') && !PRESERVED_ON_RESET.has(k)) {
         keysToRemove.push(k);
       }
     }
