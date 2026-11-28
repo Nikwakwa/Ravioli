@@ -397,3 +397,61 @@ describe('App — SPOT_HEAD_SVG Thought Bubble Anchors', () => {
     }
   });
 });
+
+describe('LivingRoom — Surprise Cat Moments', () => {
+  it('renders Box Peek glowing eyes behind the front cardboard panel when box_peek is active', () => {
+    const tree = LivingRoom({
+      fountainBoost: false,
+      activeSpot: 'box',
+      surpriseMoment: { id: 'peek-1', kind: 'box_peek', startedAt: 0, expiresAt: 30_000 },
+      onTapSurprise: () => {},
+    }) as AnyElement;
+
+    const boxGroup = findElements(tree, (el) => (el.props?.['aria-label'] || '').includes('peeking out of his delivery box'))[0];
+    expect(boxGroup).toBeDefined();
+    const boxChildren = boxGroup.props.children as AnyElement[];
+    const peekIdx = boxChildren.findIndex((c) => c?.key === 'cat-box-peek');
+    const frontPanelIdx = boxChildren.findIndex((c) => c?.props?.points === '138,356 194,356 188,382 142,382');
+    expect(peekIdx).toBeGreaterThan(-1);
+    expect(frontPanelIdx).toBeGreaterThan(peekIdx);
+  });
+
+  it('renders Spontaneous Zoomies motion lines and switches rug label when zoomies is active', () => {
+    const tree = LivingRoom({
+      fountainBoost: false,
+      activeSpot: 'rug',
+      surpriseMoment: { id: 'zoom-1', kind: 'zoomies', startedAt: 0, expiresAt: 10_000 },
+      onTapSurprise: () => {},
+    }) as AnyElement;
+
+    const rugGroup = findElements(tree, (el) => (el.props?.['aria-label'] || '').includes('zoomies'))[0];
+    expect(rugGroup).toBeDefined();
+    const avatar = findElements(rugGroup, (el) => typeof el.type === 'function' && el.type.name === 'CatAvatar')[0];
+    expect(avatar?.props?.animation).toBe('zoomies');
+  });
+
+  it('renders Table Knock-Off item inside mobile safe bounds with an accessible >= 40x40 touch target', () => {
+    const tree = LivingRoom({
+      fountainBoost: false,
+      activeSpot: 'rug',
+      surpriseMoment: { id: 'knock-1', kind: 'table_knock', item: 'coaster', startedAt: 0, expiresAt: 20_000 },
+      onTapSurprise: () => {},
+    }) as AnyElement;
+
+    const knockGroup = findElements(tree, (el) => (el.props?.['aria-label'] || '').includes('coffee table'))[0];
+    expect(knockGroup).toBeDefined();
+    const touchRect = findElements(knockGroup, (el) => el.type === 'rect' && el.props?.fill === 'transparent')[0];
+    expect(touchRect).toBeDefined();
+
+    const x = parseFloat(touchRect.props.x);
+    const y = parseFloat(touchRect.props.y);
+    const w = parseFloat(touchRect.props.width);
+    const h = parseFloat(touchRect.props.height);
+    expect(w).toBeGreaterThanOrEqual(40);
+    expect(h).toBeGreaterThanOrEqual(40);
+    expect(x).toBeGreaterThanOrEqual(SAFE_MOBILE.minX);
+    expect(x + w).toBeLessThanOrEqual(SAFE_MOBILE.maxX);
+    expect(y).toBeGreaterThanOrEqual(SAFE_MOBILE.minY);
+    expect(y + h).toBeLessThanOrEqual(SAFE_MOBILE.maxY);
+  });
+});

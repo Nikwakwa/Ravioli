@@ -1,6 +1,7 @@
 import { AnimatePresence, motion, type TargetAndTransition, type Transition } from 'framer-motion';
-import { useEffect, useId, useMemo, useRef, useState } from 'react';
-import type { CatAnimation, LifeStage, Mood } from '../types';
+import { useEffect, useId, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
+import type { CatAnimation, LifeStage, Mood, PetZone } from '../types';
+import { resolvePetZone } from '../utils/petZones';
 import { HeadAccessories, SUIT, useOutfit } from './CatAccessories';
 
 /**
@@ -120,7 +121,7 @@ export interface CatAvatarProps {
   animation: CatAnimation;
   /** Changes every time a new animation should (re)start. */
   animationKey: number;
-  onPet?: () => void;
+  onPet?: (zone?: PetZone) => void;
   className?: string;
   /** Placement when nested inside another SVG (scene overlay). */
   x?: number;
@@ -191,7 +192,15 @@ function expressionFor(mood: Mood, animation: CatAnimation, petting: boolean, li
     case 'treat':
     case 'purring':
     case 'brushing':
+    case 'nose_boop':
+    case 'back_stretch':
       eyes = 'happy';
+      mouth = 'smile';
+      blush = true;
+      earDroop = false;
+      break;
+    case 'belly_trap':
+      eyes = 'wide';
       mouth = 'smile';
       blush = true;
       earDroop = false;
@@ -212,6 +221,7 @@ function expressionFor(mood: Mood, animation: CatAnimation, petting: boolean, li
     case 'tail_chase':
     case 'red_ball':
     case 'pounce':
+    case 'zoomies':
       eyes = 'wide';
       mouth = 'smile';
       earDroop = false;
@@ -235,7 +245,7 @@ function expressionFor(mood: Mood, animation: CatAnimation, petting: boolean, li
       break;
   }
 
-  if (petting && mood !== 'sleeping') {
+  if (petting && mood !== 'sleeping' && animation !== 'belly_trap') {
     eyes = 'happy';
     mouth = 'smile';
     blush = true;
@@ -276,6 +286,26 @@ function headMotion(animation: CatAnimation, sec: number, sleeping: boolean): { 
     case 'purring':
       return {
         animate: { rotate: [0, -10, -6, -10, -6, -10, 0], y: [0, -4, -3, -4, -3, -4, 0] },
+        transition: { duration: sec, ease: 'easeInOut' },
+      };
+    case 'nose_boop':
+      return {
+        animate: { y: [0, -7, 7, -3, 0], rotate: [0, -7, 9, -4, 0] },
+        transition: { duration: sec, ease: 'easeInOut' },
+      };
+    case 'back_stretch':
+      return {
+        animate: { y: [0, -9, -9, -5, 0], rotate: [0, -6, 6, -3, 0] },
+        transition: { duration: sec, ease: 'easeInOut' },
+      };
+    case 'belly_trap':
+      return {
+        animate: { rotate: [0, -13, 13, -10, 10, -6, 0], y: [0, 3, -3, 3, -2, 0, 0] },
+        transition: { duration: sec, ease: 'easeInOut' },
+      };
+    case 'zoomies':
+      return {
+        animate: { rotate: [0, -15, 15, -15, 15, -10, 0], y: [0, -5, 2, -5, 2, -3, 0] },
         transition: { duration: sec, ease: 'easeInOut' },
       };
     case 'playing':
@@ -1007,6 +1037,90 @@ function PurrWaves() {
   );
 }
 
+function NoseBoopPuff() {
+  return (
+    <motion.g
+      initial={{ opacity: 0, scale: 0.5 }}
+      animate={{ opacity: [0, 1, 1, 0], scale: [0.5, 1.15, 1.25, 1.35], y: [0, -5, -8, -12] }}
+      transition={{ duration: 1.2, ease: 'easeOut' }}
+    >
+      {/* Cute little pastel sneeze puff + boop sparkle right by Oli's nose */}
+      <circle cx={100} cy={95} r={7} fill="none" stroke="#f472b6" strokeWidth={2} strokeDasharray="3 2" opacity={0.85} />
+      <circle cx={116} cy={92} r={5} fill="#ffffff" opacity={0.9} />
+      <circle cx={123} cy={95} r={3.8} fill="#fff7ed" opacity={0.85} />
+      <circle cx={84} cy={92} r={4.2} fill="#ffffff" opacity={0.85} />
+      <path d="M100 81 v-6 M91 84 l-4 -4 M109 84 l4 -4" stroke="#fbbf24" strokeWidth={2} strokeLinecap="round" />
+    </motion.g>
+  );
+}
+
+function BellyTrapPaws() {
+  return (
+    <motion.g
+      initial={{ opacity: 0 }}
+      animate={{ opacity: [0, 1, 1, 0] }}
+      transition={{ duration: 1.6, times: [0, 0.12, 0.85, 1] }}
+    >
+      {/* Playful paw-swipe motion arcs on both sides of the tummy */}
+      <motion.path
+        d="M54 148 Q44 166 58 184"
+        stroke="#fb923c"
+        strokeWidth={3}
+        fill="none"
+        strokeLinecap="round"
+        strokeDasharray="6 4"
+        animate={{ x: [0, -5, 4, -5, 0], rotate: [0, -8, 8, -8, 0] }}
+        transition={{ duration: 0.45, repeat: 3 }}
+      />
+      <motion.path
+        d="M146 148 Q156 166 142 184"
+        stroke="#fb923c"
+        strokeWidth={3}
+        fill="none"
+        strokeLinecap="round"
+        strokeDasharray="6 4"
+        animate={{ x: [0, 5, -4, 5, 0], rotate: [0, 8, -8, 8, 0] }}
+        transition={{ duration: 0.45, repeat: 3 }}
+      />
+      <motion.g
+        animate={{ y: [0, -8, 2, -8, 0], rotate: [-12, 14, -12] }}
+        transition={{ duration: 0.42, repeat: 3 }}
+      >
+        <ToeBeans cx={66} cy={164} rotate={-28} small />
+      </motion.g>
+      <motion.g
+        animate={{ y: [0, -8, 2, -8, 0], rotate: [12, -14, 12] }}
+        transition={{ duration: 0.42, repeat: 3, delay: 0.1 }}
+      >
+        <ToeBeans cx={134} cy={164} rotate={28} small />
+      </motion.g>
+    </motion.g>
+  );
+}
+
+function StretchSparkles() {
+  return (
+    <motion.g
+      initial={{ opacity: 0, y: 6 }}
+      animate={{ opacity: [0, 1, 1, 0], y: [6, -6, -12, -18] }}
+      transition={{ duration: 1.8, ease: 'easeOut' }}
+    >
+      {[
+        { x: 56, y: 120 },
+        { x: 146, y: 116 },
+        { x: 100, y: 24 },
+      ].map((pt, i) => (
+        <path
+          key={i}
+          d={`M${pt.x} ${pt.y - 6} L${pt.x + 1.8} ${pt.y - 1.8} L${pt.x + 6} ${pt.y} L${pt.x + 1.8} ${pt.y + 1.8} L${pt.x} ${pt.y + 6} L${pt.x - 1.8} ${pt.y + 1.8} L${pt.x - 6} ${pt.y} L${pt.x - 1.8} ${pt.y - 1.8} Z`}
+          fill="#fbbf24"
+          opacity={0.9}
+        />
+      ))}
+    </motion.g>
+  );
+}
+
 // -----------------------------------------------------------------------------
 // Poses
 // -----------------------------------------------------------------------------
@@ -1037,8 +1151,14 @@ export function CatAvatar({
 }: CatAvatarProps) {
   const rawId = useId();
   const uid = useMemo(() => `oli${rawId.replace(/[^a-zA-Z0-9_-]/g, '')}`, [rawId]);
+  const svgRef = useRef<SVGSVGElement>(null);
   const vis = STAGE_VISUALS[lifeStage];
   const sleeping = mood === 'sleeping';
+  const effectivePose: CatPose = sleeping
+    ? pose === 'belly_up'
+      ? 'belly_up'
+      : 'loaf'
+    : (pose ?? 'sit');
   const [blinking, setBlinking] = useState(false);
   const [earTwitch, setEarTwitch] = useState(false);
   const [petting, setPetting] = useState(false);
@@ -1060,6 +1180,10 @@ export function CatAvatar({
       drinking: 2.8,
       drinking_milk: 2.8,
       purring: 3,
+      nose_boop: 1.5,
+      back_stretch: 2.0,
+      belly_trap: 1.8,
+      zoomies: 3.2,
       playing: 3.2,
       laser: 3.2,
       tail_chase: 3.0,
@@ -1135,16 +1259,32 @@ export function CatAvatar({
   }, []);
 
   const pettingTimerRef = useRef<number | undefined>(undefined);
+  const lastPetDownRef = useRef(0);
   useEffect(() => {
     return () => window.clearTimeout(pettingTimerRef.current);
   }, []);
 
-  const handlePet = () => {
-    if (!onPet || petting) return;
+  const handlePet = (e: ReactPointerEvent<SVGGElement>) => {
+    if (!onPet) return;
+    const nowMs = Date.now();
+    if (nowMs - lastPetDownRef.current < 320) return;
+    lastPetDownRef.current = nowMs;
+
+    let zone: PetZone | undefined;
+    const svg = svgRef.current;
+    if (svg && typeof svg.getBoundingClientRect === 'function') {
+      const rect = svg.getBoundingClientRect();
+      if (rect.width > 0 && rect.height > 0) {
+        const svgX = ((e.clientX - rect.left) / rect.width) * 200;
+        const svgY = ((e.clientY - rect.top) / rect.height) * 220;
+        zone = resolvePetZone(svgX, svgY, effectivePose);
+      }
+    }
+
     setPetting(true);
     window.clearTimeout(pettingTimerRef.current);
     pettingTimerRef.current = window.setTimeout(() => setPetting(false), 1100);
-    onPet();
+    onPet(zone);
   };
 
   const anim = sleeping && activeAnim !== 'misting' ? 'idle' : activeAnim;
@@ -1155,11 +1295,16 @@ export function CatAvatar({
   const showProps = !(pose === 'look_out' && !sleeping);
   const suit = useOutfit().body === 'suit';
   const isPlayAnim =
-    anim === 'playing' || anim === 'laser' || anim === 'tail_chase' || anim === 'red_ball' || anim === 'pounce';
+    anim === 'playing' ||
+    anim === 'laser' ||
+    anim === 'tail_chase' ||
+    anim === 'red_ball' ||
+    anim === 'pounce' ||
+    anim === 'zoomies';
   const tailSpeed =
-    anim === 'tail_chase'
+    anim === 'tail_chase' || anim === 'zoomies'
       ? 0.32
-      : anim === 'pounce'
+      : anim === 'pounce' || anim === 'belly_trap'
         ? 0.42
         : isPlayAnim
           ? 0.6
@@ -1212,6 +1357,7 @@ export function CatAvatar({
 
   return (
     <svg
+      ref={svgRef}
       viewBox="0 0 200 220"
       x={x}
       y={y}
@@ -1233,7 +1379,7 @@ export function CatAvatar({
       <g transform={stageTransform}>
         <motion.g
           onPointerDown={onPet ? handlePet : undefined}
-          style={{ cursor: onPet ? 'pointer' : 'default' }}
+          style={{ cursor: onPet ? 'pointer' : 'default', originX: 0.5, originY: 0.95 }}
           animate={
             anim === 'pounce'
               ? {
@@ -1241,33 +1387,41 @@ export function CatAvatar({
                   y: [0, 5, 5, 6, 6, -22, 0],
                   rotate: [0, -4, 4, -5, 5, 0, 0],
                 }
-              : anim === 'laser' || anim === 'red_ball'
-                ? { x: [0, -18, 18, -14, 16, 0], y: [0, -10, 0, -14, 0, -8, 0] }
-                : anim === 'tail_chase'
-                  ? { x: [0, 14, -14, 14, -14, 0], y: [0, -10, 0, -12, 0, -8, 0], rotate: [0, 8, -8, 8, -8, 0] }
-                  : anim === 'playing'
-                    ? { y: [0, -12, 0, -16, 0, -10, 0] }
-                    : petting
-                      ? { y: [0, -6, 0] }
-                      : anim === 'purring'
-                        ? { x: [0, -0.7, 0.7, -0.7, 0.7, 0] }
-                        : { y: 0, x: 0, rotate: 0 }
+              : anim === 'zoomies'
+                ? {
+                    x: [0, -24, 24, -20, 20, -10, 0],
+                    y: [0, -10, -4, -14, -4, -8, 0],
+                    rotate: [0, -9, 9, -8, 8, -4, 0],
+                  }
+                : anim === 'nose_boop'
+                  ? { y: [0, -5, 3, -1, 0], scale: [1, 1.03, 0.97, 1, 1] }
+                  : anim === 'back_stretch'
+                    ? { scaleY: [1, 1.11, 1.1, 1.03, 1], scaleX: [1, 0.95, 0.96, 0.99, 1], y: [0, -7, -6, -2, 0] }
+                    : anim === 'belly_trap'
+                      ? { rotate: [0, -7, 7, -6, 6, -3, 0], y: [0, -4, 2, -4, 2, 0, 0] }
+                      : anim === 'laser' || anim === 'red_ball'
+                        ? { x: [0, -18, 18, -14, 16, 0], y: [0, -10, 0, -14, 0, -8, 0] }
+                        : anim === 'tail_chase'
+                          ? { x: [0, 14, -14, 14, -14, 0], y: [0, -10, 0, -12, 0, -8, 0], rotate: [0, 8, -8, 8, -8, 0] }
+                          : anim === 'playing'
+                            ? { y: [0, -12, 0, -16, 0, -10, 0] }
+                            : petting
+                              ? { y: [0, -6, 0] }
+                              : anim === 'purring'
+                                ? { x: [0, -0.7, 0.7, -0.7, 0.7, 0] }
+                                : { y: 0, x: 0, rotate: 0, scale: 1, scaleX: 1, scaleY: 1 }
           }
           transition={
             anim === 'purring'
               ? { duration: 0.18, repeat: Math.round(animSec / 0.18) }
               : anim === 'pounce'
                 ? { duration: animSec, times: [0, 0.16, 0.3, 0.44, 0.58, 0.8, 1], ease: 'easeInOut' }
-                : { duration: isPlayAnim ? animSec : 0.5, ease: 'easeInOut' }
+                : anim === 'nose_boop' || anim === 'back_stretch' || anim === 'belly_trap'
+                  ? { duration: animSec, ease: 'easeInOut' }
+                  : { duration: isPlayAnim ? animSec : 0.5, ease: 'easeInOut' }
           }
         >
           {(() => {
-            const effectivePose: CatPose = sleeping
-              ? pose === 'belly_up'
-                ? 'belly_up'
-                : 'loaf'
-              : (pose ?? 'sit');
-
             return (
               <AnimatePresence mode="wait" initial={false}>
                 {effectivePose === 'loaf' && (
@@ -1577,7 +1731,15 @@ export function CatAvatar({
                     {/* Tail */}
                     <motion.g
                       style={{ originX: 0.05, originY: 0.95 }}
-                      animate={sad ? { rotate: [18, 22, 18] } : anim === 'tail_chase' ? { rotate: [-24, 24, -24] } : { rotate: [-7, 10, -7] }}
+                      animate={
+                        sad
+                          ? { rotate: [18, 22, 18] }
+                          : anim === 'back_stretch'
+                            ? { rotate: [-22, -26, -22] }
+                            : anim === 'tail_chase' || anim === 'zoomies'
+                              ? { rotate: [-24, 24, -24] }
+                              : { rotate: [-7, 10, -7] }
+                      }
                       transition={{ duration: tailSpeed, repeat: Infinity, ease: 'easeInOut' }}
                     >
                       <TailStripes
@@ -1677,6 +1839,9 @@ export function CatAvatar({
             {showProps && anim === 'tail_chase' && <TailSpinSwirl key="tail-swirl" sec={animSec} />}
             {showProps && anim === 'red_ball' && <RedBallToy key="red-ball" sec={animSec} />}
             {showProps && anim === 'brushing' && <Brush key="brush" sec={animSec} />}
+            {showProps && anim === 'nose_boop' && <NoseBoopPuff key={`boop-${animationKey}`} />}
+            {showProps && anim === 'belly_trap' && <BellyTrapPaws key={`trap-${animationKey}`} />}
+            {anim === 'back_stretch' && <StretchSparkles key={`stretch-${animationKey}`} />}
           </AnimatePresence>
         </motion.g>
       </g>

@@ -1,7 +1,8 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { STAT_META, type ParticleKind } from '../data/actions';
 import type { GameEvent } from '../hooks/useCatGame';
-import { STAT_KEYS, type CatSpot, type LifeStage, type Mood, type StatKey } from '../types';
+import { STAT_KEYS, type CatSpot, type LifeStage, type Mood, type PetZone, type StatKey } from '../types';
+import { pickPetZoneLine } from '../utils/petZones';
 import { STAT_ICONS } from './statIcons';
 
 const NEWBORN_PET_LINES = [
@@ -86,6 +87,7 @@ export function FloatingEffects({
   targetPos,
   spot = 'rug',
   lifeStage = 'adult',
+  petZone,
 }: {
   event: GameEvent | null;
   tapHeartKey: number;
@@ -93,6 +95,7 @@ export function FloatingEffects({
   targetPos?: { x: number; y: number };
   spot?: CatSpot;
   lifeStage?: LifeStage;
+  petZone?: PetZone;
 }) {
   const deltas: { key: StatKey; delta: number }[] = event
     ? STAT_KEYS.flatMap((k) => {
@@ -106,11 +109,14 @@ export function FloatingEffects({
       ? NEWBORN_PET_LINES
       : (PET_LINES[mood] ?? PET_LINES.content);
   const spotLines = SPOT_PET_LINES[spot] ?? SPOT_PET_LINES.rug;
-  // Alternate between mood line and cozy spot line
+  // Use distinct reaction lines for nose boops, back strokes & belly traps when awake;
+  // chin rubs keep alternating between cozy mood lines and spot-specific lines.
   const petLine =
-    tapHeartKey % 2 === 1 && spot !== 'rug' && lifeStage !== 'newborn'
-      ? spotLines[Math.floor(tapHeartKey / 2) % spotLines.length]
-      : petLines[tapHeartKey % petLines.length];
+    petZone && petZone !== 'chin' && mood !== 'sleeping' && mood !== 'deceased'
+      ? pickPetZoneLine(petZone, tapHeartKey)
+      : tapHeartKey % 2 === 1 && spot !== 'rug' && lifeStage !== 'newborn'
+        ? spotLines[Math.floor(tapHeartKey / 2) % spotLines.length]
+        : petLines[tapHeartKey % petLines.length];
 
   const pos = SPOT_BUBBLE_OFFSETS[spot];
 

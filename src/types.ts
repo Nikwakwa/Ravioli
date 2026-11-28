@@ -125,6 +125,9 @@ export interface CatWhim {
   expiresAt: number;
 }
 
+/** Specific petting spot tapped on Oli's body. */
+export type PetZone = 'chin' | 'nose' | 'back' | 'belly';
+
 /** Transient, purely visual animation the cat should play. */
 export type CatAnimation =
   | 'idle'
@@ -135,6 +138,10 @@ export type CatAnimation =
   | 'drinking'
   | 'drinking_milk'
   | 'purring'
+  | 'nose_boop'
+  | 'back_stretch'
+  | 'belly_trap'
+  | 'zoomies'
   | 'playing'
   | 'laser'
   | 'tail_chase'

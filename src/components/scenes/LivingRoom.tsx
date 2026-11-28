@@ -1,7 +1,8 @@
-import { motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { CatAvatar } from '../CatAvatar';
-import type { CatAnimation, CatSpot, LifeStage, Mood } from '../../types';
+import type { CatAnimation, CatSpot, LifeStage, Mood, PetZone } from '../../types';
 import type { TimeOfDay } from '../../utils/atmosphere';
+import type { SurpriseMoment } from '../../utils/surpriseMoments';
 
 /**
  * Nico & Athina's real Living Room — crafted from their living room photos:
@@ -31,6 +32,9 @@ export function LivingRoom({
   catAnimationKey = 0,
   catLifeStage = 'adult',
   onPetCat,
+  surpriseMoment = null,
+  surpriseResolved = false,
+  onTapSurprise,
 }: {
   fountainBoost: boolean;
   timeOfDay?: TimeOfDay;
@@ -44,11 +48,17 @@ export function LivingRoom({
   catAnimation?: CatAnimation;
   catAnimationKey?: number;
   catLifeStage?: LifeStage;
-  onPetCat?: () => void;
+  onPetCat?: (zone?: PetZone) => void;
+  surpriseMoment?: SurpriseMoment | null;
+  surpriseResolved?: boolean;
+  onTapSurprise?: (moment: SurpriseMoment) => void;
 }) {
   // Lighting follows the real time of day, even when Oli naps during the day.
   const isNight = timeOfDay === 'night';
   const isSunset = timeOfDay === 'sunset';
+  const isBoxPeek = surpriseMoment?.kind === 'box_peek' && !surpriseResolved;
+  const isZoomies = surpriseMoment?.kind === 'zoomies' && !surpriseResolved;
+  const isTableKnock = surpriseMoment?.kind === 'table_knock';
   return (
     <svg viewBox="0 0 400 600" preserveAspectRatio="xMidYMid slice" className="pointer-events-none absolute inset-0 h-full w-full">
       <defs>
@@ -636,6 +646,113 @@ export function LivingRoom({
         <line x1="272" y1="344" x2="399" y2="344" stroke="#e5e1d8" strokeWidth="0.9" />
       </g>
 
+      {/* Surprise Cat Moment: Table Knock-Off (small item teetering on the coffee table edge) */}
+      <AnimatePresence>
+        {isTableKnock && surpriseMoment && (
+          <g
+            key={surpriseMoment.id}
+            onClick={() => {
+              if (!surpriseResolved) onTapSurprise?.(surpriseMoment);
+            }}
+            onKeyDown={(e) => {
+              if (!surpriseResolved && (e.key === 'Enter' || e.key === ' ')) {
+                e.preventDefault();
+                onTapSurprise?.(surpriseMoment);
+              }
+            }}
+            tabIndex={surpriseResolved ? -1 : 0}
+            className={surpriseResolved ? 'pointer-events-none' : 'pointer-events-auto cursor-pointer'}
+            style={{ pointerEvents: surpriseResolved ? 'none' : 'auto', cursor: surpriseResolved ? 'default' : 'pointer', outline: 'none' }}
+            role="button"
+            aria-label={
+              surpriseMoment.item === 'pen'
+                ? 'Tap pen Oli is nudging off the coffee table'
+                : surpriseMoment.item === 'cap'
+                  ? 'Tap bottle cap Oli is nudging off the coffee table'
+                  : 'Tap coaster Oli is nudging off the coffee table'
+            }
+          >
+            {/* Generous touch target (52x52, 100% inside mobile safe bounds) */}
+            <rect x="252" y="314" width="52" height="52" fill="transparent" style={{ pointerEvents: 'all' }} />
+
+            {/* Subtle pulsing ring cue before tap */}
+            {!surpriseResolved && (
+              <motion.circle
+                cx="276"
+                cy="343"
+                r="15"
+                fill="rgba(251, 191, 36, 0.16)"
+                stroke="#f59e0b"
+                strokeWidth="1.4"
+                strokeDasharray="3 2"
+                animate={{ scale: [0.92, 1.15, 0.92], opacity: [0.5, 0.95, 0.5] }}
+                transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}
+              />
+            )}
+
+            {/* Teetering item -> tumbles dramatically off the left edge when tapped */}
+            <motion.g
+              style={{ originX: '276px', originY: '344px' }}
+              initial={{ x: 6, y: 0, rotate: 0, opacity: 0 }}
+              animate={
+                surpriseResolved
+                  ? { x: -28, y: 46, rotate: -145, opacity: [1, 1, 0] }
+                  : { x: [0, -2.5, 0, -3.5, 0], y: 0, rotate: [0, -9, 3, -13, 0], opacity: 1 }
+              }
+              exit={{ opacity: 0 }}
+              transition={
+                surpriseResolved
+                  ? { duration: 0.68, ease: 'easeIn' }
+                  : { duration: 1.6, repeat: Infinity, ease: 'easeInOut' }
+              }
+            >
+              {surpriseMoment.item === 'pen' ? (
+                <g transform="translate(264 338) rotate(-14)">
+                  <rect x="0" y="2" width="24" height="4.4" rx="2" fill="#2563eb" stroke="#1e3a8a" strokeWidth="0.7" />
+                  <polygon points="0,2 -5,4.2 0,6.4" fill="#cbd5e1" stroke="#64748b" strokeWidth="0.5" />
+                  <rect x="16" y="1" width="6" height="1.5" rx="0.6" fill="#93c5fd" />
+                </g>
+              ) : surpriseMoment.item === 'cap' ? (
+                <g transform="translate(276 344)">
+                  <ellipse cx="0" cy="2" rx="7.5" ry="3.2" fill="#dc2626" stroke="#991b1b" strokeWidth="0.8" />
+                  <ellipse cx="0" cy="-0.5" rx="7.5" ry="3" fill="#ef4444" stroke="#b91c1c" strokeWidth="0.7" />
+                  <ellipse cx="-2" cy="-1.2" rx="2.4" ry="0.9" fill="#fca5a5" opacity="0.7" />
+                </g>
+              ) : (
+                <g transform="translate(276 344)">
+                  {/* Cork coaster with paw print */}
+                  <ellipse cx="0" cy="1.8" rx="10.5" ry="4.4" fill="#b07d4f" stroke="#7c532e" strokeWidth="0.8" />
+                  <ellipse cx="0" cy="0" rx="10.5" ry="4.2" fill="#d4a373" stroke="#9c6c3f" strokeWidth="0.7" />
+                  <circle cx="0" cy="0.6" r="1.7" fill="#8b5e34" opacity="0.7" />
+                  <circle cx="-2.8" cy="-1" r="0.9" fill="#8b5e34" opacity="0.7" />
+                  <circle cx="0" cy="-1.5" r="0.9" fill="#8b5e34" opacity="0.7" />
+                  <circle cx="2.8" cy="-1" r="0.9" fill="#8b5e34" opacity="0.7" />
+                </g>
+              )}
+            </motion.g>
+
+            {/* Sneaky ginger paw nudging the item toward the edge */}
+            <motion.g
+              initial={{ x: 12, opacity: 0 }}
+              animate={
+                surpriseResolved
+                  ? { x: -6, y: -3, opacity: [1, 1, 0] }
+                  : { x: [6, -1, 4, -2, 6], opacity: 1 }
+              }
+              transition={
+                surpriseResolved
+                  ? { duration: 0.45, ease: 'easeOut' }
+                  : { duration: 1.6, repeat: Infinity, ease: 'easeInOut' }
+              }
+            >
+              <rect x="288" y="337" width="16" height="8" rx="4" fill="#f08a3c" stroke="#c2631e" strokeWidth="0.8" />
+              <ellipse cx="288" cy="341" rx="4.5" ry="4.2" fill="#fff6ea" stroke="#d2681f" strokeWidth="0.6" />
+              <path d="M294 338.5 v5 M298 338.5 v5" stroke="#d2681f" strokeWidth="1" strokeLinecap="round" opacity="0.7" />
+            </motion.g>
+          </g>
+        )}
+      </AnimatePresence>
+
       {/* Oli's modern two-tone enclosed litter box in the left corner (repositioned to x=72..132, 100% on screen, far from water) */}
       <g
         transform="translate(62 0)"
@@ -835,11 +952,20 @@ export function LivingRoom({
 
       {/* Oli's empty Amazon delivery cardboard box on the floor (Spot: 'box') */}
       <g
-        onClick={() => (activeSpot === 'box' ? onPetCat?.() : onSelectSpot?.('box'))}
+        onClick={() => {
+          if (isBoxPeek && surpriseMoment) {
+            onTapSurprise?.(surpriseMoment);
+          } else if (activeSpot === 'box') {
+            onPetCat?.();
+          } else {
+            onSelectSpot?.('box');
+          }
+        }}
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
-            if (activeSpot === 'box') onPetCat?.();
+            if (isBoxPeek && surpriseMoment) onTapSurprise?.(surpriseMoment);
+            else if (activeSpot === 'box') onPetCat?.();
             else onSelectSpot?.('box');
           }
         }}
@@ -848,7 +974,13 @@ export function LivingRoom({
         style={{ pointerEvents: 'auto', cursor: 'pointer', outline: 'none' }}
         role="button"
         aria-current={activeSpot === 'box' ? 'true' : undefined}
-        aria-label={activeSpot === 'box' ? 'Pet Oli inside his delivery box' : 'Empty Amazon delivery box on the floor (cozy spot)'}
+        aria-label={
+          isBoxPeek
+            ? 'Oli is peeking out of his delivery box — tap to say boo!'
+            : activeSpot === 'box'
+              ? 'Pet Oli inside his delivery box'
+              : 'Empty Amazon delivery box on the floor (cozy spot)'
+        }
       >
         {/* Generous touch target */}
         <rect x="130" y="295" width="76" height="95" fill="transparent" style={{ pointerEvents: 'all' }} />
@@ -856,14 +988,70 @@ export function LivingRoom({
         <ellipse cx="166" cy="382" rx="28" ry="6" fill="rgba(40,30,20,0.18)" />
 
         {/* Open box interior (darker kraft brown) */}
-        <polygon points="140,356 192,356 186,378 144,378" fill="#9e7343" />
+        <polygon points="140,356 192,356 186,378 144,378" fill={isBoxPeek ? '#523820' : '#9e7343'} />
 
         {/* Left and right angled open flaps */}
         <polygon points="138,356 130,344 146,346 142,356" fill={isNight ? '#7d664d' : '#b88b56'} stroke={isNight ? '#6a543e' : '#a87c48'} strokeWidth="0.8" />
         <polygon points="194,356 202,344 186,346 190,356" fill={isNight ? '#7d664d' : '#b88b56'} stroke={isNight ? '#6a543e' : '#a87c48'} strokeWidth="0.8" />
 
-        {/* Oli nestled inside the box (behind front cardboard panel) */}
-        {activeSpot === 'box' && (
+        {/* Surprise Cat Moment: Box Peek — wide glowing amber eyes & ear tips peeking over the rim */}
+        {activeSpot === 'box' && isBoxPeek ? (
+          <motion.g
+            key="cat-box-peek"
+            initial={{ y: 12, opacity: 0 }}
+            animate={{ y: [3, 0, 2, 0, 3], opacity: 1 }}
+            transition={{ duration: 2.6, repeat: Infinity, ease: 'easeInOut' }}
+          >
+            {/* Dark shadow inside the box */}
+            <ellipse cx="166" cy="356" rx="22" ry="12" fill="#3a2514" />
+            {/* Perky ginger ears peeking just over the cardboard rim */}
+            <polygon points="148,348 145,334 157,344" fill="#f08a3c" stroke="#c2631e" strokeWidth="0.8" />
+            <polygon points="149,346 147.5,338 154,344" fill="#f5b0a4" />
+            <polygon points="184,348 187,334 175,344" fill="#f08a3c" stroke="#c2631e" strokeWidth="0.8" />
+            <polygon points="183,346 184.5,338 178,344" fill="#f5b0a4" />
+            {/* Rounded forehead peeking over rim */}
+            <path d="M148 357 Q148 340 166 340 Q184 340 184 357 Z" fill="#f08a3c" />
+            {/* Tabby forehead M stripes */}
+            <g stroke="#d2681f" strokeWidth="1.2" strokeLinecap="round" fill="none">
+              <path d="M166 341.5 v4.5" />
+              <path d="M162.5 342.2 q0.8 2 1.5 3.6" />
+              <path d="M169.5 342.2 q-0.8 2 -1.5 3.6" />
+            </g>
+            {/* Soft glowing amber eye halos */}
+            <motion.circle
+              cx="159"
+              cy="351.5"
+              r="7.5"
+              fill="#fbbf24"
+              animate={{ opacity: [0.22, 0.42, 0.22] }}
+              transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
+            />
+            <motion.circle
+              cx="173"
+              cy="351.5"
+              r="7.5"
+              fill="#fbbf24"
+              animate={{ opacity: [0.22, 0.42, 0.22] }}
+              transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
+            />
+            {/* Wide glowing amber eyes with mischievous scanning pupils */}
+            <ellipse cx="159" cy="351.5" rx="4.4" ry="4.6" fill="#fcd34d" stroke="#b45309" strokeWidth="0.8" />
+            <ellipse cx="173" cy="351.5" rx="4.4" ry="4.6" fill="#fcd34d" stroke="#b45309" strokeWidth="0.8" />
+            <motion.g
+              animate={{ x: [-1.4, 1.4, 1.4, -1.4, 0] }}
+              transition={{ duration: 2.8, repeat: Infinity, ease: 'easeInOut' }}
+            >
+              <ellipse cx="159" cy="351.5" rx="2.6" ry="3.4" fill="#1c1108" />
+              <ellipse cx="173" cy="351.5" rx="2.6" ry="3.4" fill="#1c1108" />
+              <circle cx="157.8" cy="350" r="1.1" fill="#ffffff" />
+              <circle cx="171.8" cy="350" r="1.1" fill="#ffffff" />
+            </motion.g>
+            {/* Tiny little paws gripping the cardboard rim */}
+            <ellipse cx="151" cy="356" rx="4" ry="2.2" fill="#fff6ea" stroke="#d9c0a3" strokeWidth="0.6" />
+            <ellipse cx="181" cy="356" rx="4" ry="2.2" fill="#fff6ea" stroke="#d9c0a3" strokeWidth="0.6" />
+          </motion.g>
+        ) : activeSpot === 'box' ? (
+          /* Oli nestled inside the box (behind front cardboard panel) */
           <motion.g
             key="cat-box"
             initial={{ opacity: 0, scale: 0.85, y: 6 }}
@@ -883,7 +1071,7 @@ export function LivingRoom({
               className="pointer-events-auto"
             />
           </motion.g>
-        )}
+        ) : null}
 
         {/* Corrugated kraft cardboard exterior front panel (covers bottom of Oli) */}
         <polygon points="138,356 194,356 188,382 142,382" fill={isNight ? '#8a7155' : '#c99b64'} stroke={isNight ? '#6a543e' : '#a87c48'} strokeWidth="1" />
@@ -911,11 +1099,20 @@ export function LivingRoom({
 
       {/* Fluffy cream high-pile shag rug with Moroccan grey diamond trellis pattern (PXL_20261101_155116231.jpg, Spot: 'rug') */}
       <g
-        onClick={() => (activeSpot === 'rug' ? onPetCat?.() : onSelectSpot?.('rug'))}
+        onClick={() => {
+          if (isZoomies && surpriseMoment) {
+            onTapSurprise?.(surpriseMoment);
+          } else if (activeSpot === 'rug') {
+            onPetCat?.();
+          } else {
+            onSelectSpot?.('rug');
+          }
+        }}
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
-            if (activeSpot === 'rug') onPetCat?.();
+            if (isZoomies && surpriseMoment) onTapSurprise?.(surpriseMoment);
+            else if (activeSpot === 'rug') onPetCat?.();
             else onSelectSpot?.('rug');
           }
         }}
@@ -924,7 +1121,13 @@ export function LivingRoom({
         style={{ pointerEvents: 'auto', cursor: 'pointer', outline: 'none' }}
         role="button"
         aria-current={activeSpot === 'rug' ? 'true' : undefined}
-        aria-label={activeSpot === 'rug' ? 'Pet Oli on the rug' : 'Fluffy living room rug (cozy spot)'}
+        aria-label={
+          isZoomies
+            ? 'Oli has the zoomies! Tap to catch him on the rug'
+            : activeSpot === 'rug'
+              ? 'Pet Oli on the rug'
+              : 'Fluffy living room rug (cozy spot)'
+        }
       >
         {/* Generous touch target */}
         <rect x="70" y="365" width="260" height="85" fill="transparent" style={{ pointerEvents: 'all' }} />
@@ -958,13 +1161,78 @@ export function LivingRoom({
           <polygon points="278,371 336,403 282,437 226,403" />
         </g>
 
+        {/* Surprise Cat Moment: Spontaneous Zoomies speed lines, dust puffs & chirps */}
+        {activeSpot === 'rug' && isZoomies && (
+          <g pointerEvents="none">
+            {[
+              { x1: 86, x2: 122, y: 342, delay: 0 },
+              { x1: 274, x2: 312, y: 332, delay: 0.25 },
+              { x1: 92, x2: 130, y: 368, delay: 0.5 },
+              { x1: 268, x2: 306, y: 364, delay: 0.75 },
+            ].map((line, i) => (
+              <motion.line
+                key={`zoom-line-${i}`}
+                x1={line.x1}
+                y1={line.y}
+                x2={line.x2}
+                y2={line.y}
+                stroke={isNight ? '#fde68a' : '#f59e0b'}
+                strokeWidth="2.4"
+                strokeLinecap="round"
+                animate={{ opacity: [0, 0.9, 0], x: i % 2 === 0 ? [0, -14, -22] : [0, 14, 22] }}
+                transition={{ duration: 0.75, delay: line.delay, repeat: Infinity, ease: 'easeOut' }}
+              />
+            ))}
+            {[
+              { cx: 132, cy: 406, delay: 0.1 },
+              { cx: 268, cy: 404, delay: 0.45 },
+            ].map((puff, i) => (
+              <motion.circle
+                key={`zoom-puff-${i}`}
+                cx={puff.cx}
+                cy={puff.cy}
+                r="6"
+                fill="#fffbeb"
+                animate={{ scale: [0.4, 1.35, 0.7], opacity: [0, 0.85, 0], y: [0, -10, -16] }}
+                transition={{ duration: 0.9, delay: puff.delay, repeat: Infinity, ease: 'easeOut' }}
+              />
+            ))}
+            <motion.text
+              x="200"
+              y="264"
+              textAnchor="middle"
+              fontSize="11"
+              fontWeight="900"
+              fill={isNight ? '#fef08a' : '#d97706'}
+              animate={{ y: [264, 252, 264], opacity: [0.55, 1, 0.55] }}
+              transition={{ duration: 0.9, repeat: Infinity, ease: 'easeInOut' }}
+            >
+              ⚡ mrp! mrp!
+            </motion.text>
+          </g>
+        )}
+
         {/* Oli sitting in all his glory in the center of the plush rug */}
         {activeSpot === 'rug' && (
           <motion.g
             key="cat-rug"
             initial={{ opacity: 0, scale: 0.88, y: 8 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 22 }}
+            animate={
+              isZoomies
+                ? {
+                    opacity: 1,
+                    scale: 1,
+                    x: [0, -48, 48, -42, 42, 0],
+                    y: [0, -10, -2, -12, -2, 0],
+                    rotate: [0, -8, 8, -7, 7, 0],
+                  }
+                : { opacity: 1, scale: 1, x: 0, y: 0, rotate: 0 }
+            }
+            transition={
+              isZoomies
+                ? { duration: 1.65, repeat: Infinity, ease: 'easeInOut' }
+                : { type: 'spring', stiffness: 300, damping: 22 }
+            }
           >
             <CatAvatar
               x={130}
@@ -972,10 +1240,10 @@ export function LivingRoom({
               width={140}
               height={154}
               mood={catMood}
-              animation={catAnimation}
+              animation={isZoomies ? 'zoomies' : catAnimation}
               animationKey={catAnimationKey}
               lifeStage={catLifeStage}
-              onPet={onPetCat}
+              onPet={isZoomies && surpriseMoment ? () => onTapSurprise?.(surpriseMoment) : onPetCat}
               className="pointer-events-auto"
             />
           </motion.g>

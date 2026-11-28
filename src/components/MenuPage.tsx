@@ -393,7 +393,8 @@ Time: ${new Date().toISOString()}`;
                 <h3 className="font-display text-xs font-bold text-amber-950">Touch & Spots</h3>
               </div>
               <ul className="flex list-disc flex-col gap-1 pl-4 text-xs font-medium text-amber-900/85">
-                <li><strong>Pet Oli:</strong> Tap him anytime (+{PET_JOY_BOOST} Joy).</li>
+                <li><strong>Petting Spots:</strong> Tap Oli’s chin (purrs), nose (boop &amp; sneeze), back (big stretch), or belly (playful paw trap) for +{PET_JOY_BOOST} Joy.</li>
+                <li><strong>Surprise Moments:</strong> Catch Oli peeking from his box, zooming across the rug, or nudging things off the coffee table (+5 Joy).</li>
                 <li><strong>Living Room &amp; Balcony:</strong> Use the bottom switcher or tap any cozy spot (sofa bed, box, window, rug, flower boxes, bistro table, or balcony tiles).</li>
                 <li><strong>Balcony Visitors:</strong> Tap birds, butterflies, or evening moths on the balcony to make Oli wiggle and pounce (+4 Joy).</li>
                 <li><strong>Fountain:</strong> Tap to refresh his water (+40 Water).</li>

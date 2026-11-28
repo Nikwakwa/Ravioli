@@ -7,6 +7,15 @@ export interface ReleaseEntry {
 
 export const CHANGELOG: ReleaseEntry[] = [
   {
+    version: 'v1.5.0',
+    date: '2026-11-27',
+    title: 'Surprise Moments & Petting Spots 😼🐾',
+    changes: [
+      'Added Surprise Cat Moments in the Living Room: catch Oli peeking out of his box, zooming across the rug, or nudging items off the coffee table.',
+      'Petting different spots on Oli now gives unique reactions: chin purrs, nose-boop sneezes, big back stretches, and playful belly paw traps.',
+    ],
+  },
+  {
     version: 'v1.4.4',
     date: '2026-11-25',
     title: 'Reliable Care Alerts 🔔',

@@ -11,6 +11,7 @@ import type {
   LiveCat,
   MessKind,
   Mood,
+  PetZone,
   RoomMess,
   SceneId,
   SyncMode,
@@ -112,6 +113,14 @@ import {
   syncDailyQuestsForToday,
   type QuestEvent,
 } from '../utils/dailyQuests';
+import { defaultPetZoneForSpot, PET_ZONE_META } from '../utils/petZones';
+import {
+  getSurpriseTapReaction,
+  saveLastSurpriseAt,
+  SURPRISE_ACTION_ID,
+  SURPRISE_JOY_BOOST,
+  type SurpriseMoment,
+} from '../utils/surpriseMoments';
 import { DEVICE_ID } from '../utils/player';
 
 const TICK_MS = 30_000;
@@ -1671,101 +1680,211 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
   );
 
   /** Direct interactive petting on Oli's avatar. Returns true when a pet reaction should show. */
-  const petOli = useCallback((): boolean => {
-    if (!base || !live || busy) return false;
-    if (live.isDeceased) return false;
-    if (live.isPaused) {
-      triggerRefusal('✈️ Care clock is paused. Resume in Menu or header.');
-      return false;
-    }
-    vibrate([25, 25, 35, 25, 25]);
-
-    if (live.isSleeping) {
-      playSound('purr_soft');
-      return true;
-    }
-
-    const nowMs = Date.now();
-    // If Oli has a tummy ache, rubbing his belly soothes it right away!
-    if (tummyAche) {
-      clearTummyAche();
-      lastPetRef.current = nowMs;
-      const boost: Partial<CatStats> = { happiness: PET_JOY_BOOST };
-      noticeRef.current({
-        text: '🧡 Belly rubs soothed his tummy!',
-        tone: 'info',
-      });
-      playEvent({
-        actionId: PET_ACTION_ID,
-        player: player ?? 'You',
-        remote: false,
-        effect: boost,
-        particles: ['purr', 'hearts'],
-        animation: 'purring',
-        durationMs: 2200,
-      });
-      trackQuest({ type: 'pet' });
-      if (spot === 'box') trackQuest({ type: 'box_spot' });
-      if (isBalconySpot(spot)) trackQuest({ type: 'balcony_visit' });
-      const mutator = (b: CatState): CatState =>
-        withPetCalm(addGrowthBonus(applyEffect(materialize(b, nowMs), boost), CARE_ACTION_GROWTH_BONUS), nowMs);
-      void commit(mutator, PET_ACTION_ID, `Gave ${live.name} chin scratches — purr session!`);
-      return true;
-    }
-
-    // If Oli's active whim is Chin Scratches, fulfill it immediately even if on pet cooldown!
-    const matchedWhim = whim && whim.actionId === PET_ACTION_ID;
-    if (matchedWhim || (nowMs - lastPetRef.current >= PET_COOLDOWN_MS && !busy)) {
-      lastPetRef.current = nowMs;
-      const joyDelta = matchedWhim ? PET_JOY_BOOST * 2 : PET_JOY_BOOST;
-      const boost: Partial<CatStats> = { happiness: joyDelta };
-
-      if (matchedWhim) {
-        // Chin scratches are just one tap, so they give extra Joy but no churu points.
-        clearWhim();
-        noticeRef.current({
-          text: `🎉 Craving fulfilled! +${joyDelta} Joy`,
-          tone: 'info',
-        });
-        trackQuest({ type: 'fulfill_whim' });
+  const petOli = useCallback(
+    (zone?: PetZone): boolean => {
+      if (!base || !live || busy) return false;
+      if (live.isDeceased) return false;
+      if (live.isPaused) {
+        triggerRefusal('✈️ Care clock is paused. Resume in Menu or header.');
+        return false;
       }
 
-      playEvent({
-        actionId: PET_ACTION_ID,
-        player: player ?? 'You',
-        remote: false,
-        effect: boost,
-        particles: ['purr', 'hearts'],
-        animation: 'purring',
-        durationMs: 2200,
+      if (live.isSleeping) {
+        vibrate([20, 25, 25]);
+        playSound('purr_soft');
+        return true;
+      }
+
+      const resolvedZone = zone ?? defaultPetZoneForSpot(spot);
+      const meta = PET_ZONE_META[resolvedZone];
+      vibrate(meta.haptic);
+
+      const nowMs = Date.now();
+      // If Oli has a tummy ache, gentle rubs soothe it right away!
+      if (tummyAche) {
+        clearTummyAche();
+        lastPetRef.current = nowMs;
+        const boost: Partial<CatStats> = { happiness: PET_JOY_BOOST };
+        noticeRef.current({
+          text: '🧡 Belly rubs soothed his tummy!',
+          tone: 'info',
+        });
+        playEvent(
+          {
+            actionId: PET_ACTION_ID,
+            player: player ?? 'You',
+            remote: false,
+            effect: boost,
+            particles: ['purr', 'hearts'],
+            animation: 'purring',
+            durationMs: 2200,
+          },
+          'purr',
+        );
+        trackQuest({ type: 'pet' });
+        if (spot === 'box') trackQuest({ type: 'box_spot' });
+        if (isBalconySpot(spot)) trackQuest({ type: 'balcony_visit' });
+        const mutator = (b: CatState): CatState =>
+          withPetCalm(addGrowthBonus(applyEffect(materialize(b, nowMs), boost), CARE_ACTION_GROWTH_BONUS), nowMs);
+        void commit(mutator, PET_ACTION_ID, `Soothed ${live.name}’s tummy with gentle rubs!`);
+        return true;
+      }
+
+      // If Oli's active whim is Chin Scratches, fulfill it immediately even if on pet cooldown!
+      const matchedWhim = whim && whim.actionId === PET_ACTION_ID;
+      if (matchedWhim || (nowMs - lastPetRef.current >= PET_COOLDOWN_MS && !busy)) {
+        lastPetRef.current = nowMs;
+        const joyDelta = matchedWhim ? PET_JOY_BOOST * 2 : PET_JOY_BOOST;
+        const boost: Partial<CatStats> = { happiness: joyDelta };
+
+        if (matchedWhim) {
+          // Petting is just one tap, so it gives extra Joy but no churu points.
+          clearWhim();
+          noticeRef.current({
+            text: `🎉 Craving fulfilled! +${joyDelta} Joy`,
+            tone: 'info',
+          });
+          trackQuest({ type: 'fulfill_whim' });
+        }
+
+        playEvent(
+          {
+            actionId: PET_ACTION_ID,
+            player: player ?? 'You',
+            remote: false,
+            effect: boost,
+            particles: meta.particles,
+            animation: meta.animation,
+            durationMs: meta.durationMs,
+          },
+          meta.sound,
+        );
+
+        const wasThriving = messes.length === 0 && !litterBoxDirty && isThriving(live);
+        const willThrive = messes.length === 0 && !litterBoxDirty && isThriving(applyEffect(live, boost));
+        if (!wasThriving && willThrive) {
+          scheduleDelayed(celebrate, 500);
+          handleBadgeUnlocks(trackThriving(nowMs));
+        }
+
+        handleBadgeUnlocks(trackPet(nowMs));
+        trackQuest({ type: 'pet' });
+        if (spot === 'box') trackQuest({ type: 'box_spot' });
+        if (isBalconySpot(spot)) trackQuest({ type: 'balcony_visit' });
+
+        const growthBonus = matchedWhim ? WHIM_GROWTH_BONUS : CARE_ACTION_GROWTH_BONUS;
+        const mutator = (b: CatState): CatState => {
+          const grown = addGrowthBonus(applyEffect(materialize(b, nowMs), boost), growthBonus);
+          return meta.grantsCalm ? withPetCalm(grown, nowMs) : grown;
+        };
+        void commit(mutator, PET_ACTION_ID, meta.logPhrase(live.name));
+      } else {
+        // Petted again during Joy cooldown: still play the spot's unique reaction & sound!
+        const cooldownSound = resolvedZone === 'chin' ? 'chirp' : meta.sound;
+        playEvent(
+          {
+            actionId: PET_ACTION_ID,
+            player: player ?? 'You',
+            remote: false,
+            effect: {},
+            particles: meta.particles,
+            animation: meta.animation,
+            durationMs: meta.durationMs,
+          },
+          cooldownSound,
+        );
+        handleBadgeUnlocks(trackPet(nowMs));
+        trackQuest({ type: 'pet' });
+        if (spot === 'box') trackQuest({ type: 'box_spot' });
+        if (isBalconySpot(spot)) trackQuest({ type: 'balcony_visit' });
+      }
+      return true;
+    },
+    [
+      base,
+      live,
+      busy,
+      tummyAche,
+      whim,
+      messes.length,
+      litterBoxDirty,
+      spot,
+      player,
+      playEvent,
+      commit,
+      clearTummyAche,
+      clearWhim,
+      triggerRefusal,
+      handleBadgeUnlocks,
+      trackQuest,
+      scheduleDelayed,
+    ],
+  );
+
+  /** Reacting to a Surprise Cat Moment (Box Peek, Spontaneous Zoomies, or Table Knock-Off). */
+  const interactSurpriseMoment = useCallback(
+    (moment: SurpriseMoment): boolean => {
+      if (!base || !live || live.isDeceased) return false;
+      if (live.isPaused) {
+        triggerRefusal('✈️ Care clock is paused. Resume in Menu or header.');
+        return false;
+      }
+      if (live.isSleeping) return false;
+
+      const nowMs = Date.now();
+      const reaction = getSurpriseTapReaction(moment, live.name);
+      const boost: Partial<CatStats> = { happiness: SURPRISE_JOY_BOOST };
+
+      saveLastSurpriseAt(nowMs);
+      vibrate(reaction.haptic);
+      playEvent(
+        {
+          actionId: SURPRISE_ACTION_ID,
+          player: player ?? 'You',
+          remote: false,
+          effect: boost,
+          particles: ['stars', 'sparkles'],
+          animation: reaction.animation,
+          durationMs: 1800,
+        },
+        reaction.sound,
+      );
+
+      noticeRef.current({
+        text: reaction.toast,
+        tone: 'info',
       });
 
       const wasThriving = messes.length === 0 && !litterBoxDirty && isThriving(live);
       const willThrive = messes.length === 0 && !litterBoxDirty && isThriving(applyEffect(live, boost));
       if (!wasThriving && willThrive) {
-        scheduleDelayed(celebrate, 500);
+        scheduleDelayed(celebrate, 450);
         handleBadgeUnlocks(trackThriving(nowMs));
       }
 
       handleBadgeUnlocks(trackPet(nowMs));
       trackQuest({ type: 'pet' });
-      if (spot === 'box') trackQuest({ type: 'box_spot' });
-      if (isBalconySpot(spot)) trackQuest({ type: 'balcony_visit' });
+      if (moment.kind === 'box_peek') trackQuest({ type: 'box_spot' });
 
-      const growthBonus = matchedWhim ? WHIM_GROWTH_BONUS : CARE_ACTION_GROWTH_BONUS;
       const mutator = (b: CatState): CatState =>
-        withPetCalm(addGrowthBonus(applyEffect(materialize(b, nowMs), boost), growthBonus), nowMs);
-      void commit(mutator, PET_ACTION_ID, `Gave ${live.name} chin scratches — purr session!`);
-    } else {
-      // Petted again too soon for more Joy: he still answers with a little "mrp?"
-      playSound('chirp');
-      handleBadgeUnlocks(trackPet(nowMs));
-      trackQuest({ type: 'pet' });
-      if (spot === 'box') trackQuest({ type: 'box_spot' });
-      if (isBalconySpot(spot)) trackQuest({ type: 'balcony_visit' });
-    }
-    return true;
-  }, [base, live, busy, tummyAche, whim, messes.length, litterBoxDirty, spot, player, playEvent, commit, clearTummyAche, clearWhim, triggerRefusal, handleBadgeUnlocks, trackQuest, scheduleDelayed]);
+        addGrowthBonus(applyEffect(materialize(b, nowMs), boost), CARE_ACTION_GROWTH_BONUS);
+      void commit(mutator, SURPRISE_ACTION_ID, reaction.log);
+      return true;
+    },
+    [
+      base,
+      live,
+      messes.length,
+      litterBoxDirty,
+      player,
+      playEvent,
+      commit,
+      triggerRefusal,
+      handleBadgeUnlocks,
+      trackQuest,
+      scheduleDelayed,
+    ],
+  );
 
   /** Tapping a visiting bird, butterfly, or moth on the balcony makes Oli wiggle & pounce! */
   const interactBalconyVisitor = useCallback(
@@ -2017,6 +2136,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
     cancelMinigame,
     petOli,
     interactBalconyVisitor,
+    interactSurpriseMoment,
     cleanMess,
     scoopLitterBox,
     fulfillWhim,

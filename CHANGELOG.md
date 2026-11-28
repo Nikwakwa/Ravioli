@@ -4,6 +4,13 @@ All updates to **Oli** are listed here.
 
 ---
 
+## `v1.5.0` — 2026-11-27
+### Surprise Moments & Petting Spots 😼🐾
+- Added Surprise Cat Moments in the Living Room: catch Oli peeking out of his box, zooming across the rug, or nudging items off the coffee table.
+- Petting different spots on Oli now gives unique reactions: chin purrs, nose-boop sneezes, big back stretches, and playful belly paw traps.
+
+---
+
 ## `v1.4.4` — 2026-11-25
 ### Reliable Care Alerts 🔔
 - Fixed notifications turning off after a game reset and automatically re-enable alerts when your browser already allows them.

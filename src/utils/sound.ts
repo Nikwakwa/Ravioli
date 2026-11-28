@@ -22,7 +22,10 @@ export type SoundName =
   | 'pop'
   | 'miss'
   | 'chime'
-  | 'ekekek';
+  | 'ekekek'
+  | 'sneeze'
+  | 'play_swat'
+  | 'clatter';
 
 const LS_MUTED = 'ravioli:v1:sound_muted';
 const MASTER_VOLUME = 1;
@@ -386,6 +389,31 @@ const SOUNDS: Record<SoundName, Player> = {
     );
     burst(c, out, t + 0.52, { dur: 0.22, peak: 0.2, attack: 0.03, from: 1200, to: 2600, q: 0.8 });
     burst(c, out, t + 0.72, { dur: 0.2, peak: 0.14, attack: 0.03, from: 1500, to: 3000, q: 0.8 });
+  },
+
+  // Cute tiny nose-boop cat sneeze ("pff-choo!")
+  sneeze: (c, out, t) => {
+    voice(c, out, t, { dur: 0.07, peak: 0.16, freqs: [880, 1280], wave: 'sine', attack: 0.006 });
+    burst(c, out, t + 0.055, { dur: 0.14, peak: 0.28, attack: 0.008, type: 'highpass', from: 2600, to: 4800, q: 0.9 });
+  },
+
+  // Playful belly-trap "mrr-yap!" double chirp
+  play_swat: (c, out, t) => {
+    voice(c, out, t, { dur: 0.13, peak: 0.22, freqs: [520, 820, 640], wave: 'sawtooth', trill: 34, lowpass: 2400 });
+    voice(c, out, t + 0.14, { dur: 0.16, peak: 0.2, freqs: [660, 980, 740], wave: 'sawtooth', trill: 30, lowpass: 2500 });
+  },
+
+  // Funny light clatter when Oli knocks a small item off the coffee table
+  clatter: (c, out, t) => {
+    [
+      { at: 0, f: 1180, dur: 0.08, peak: 0.22 },
+      { at: 0.16, f: 860, dur: 0.07, peak: 0.26 },
+      { at: 0.27, f: 1020, dur: 0.06, peak: 0.18 },
+      { at: 0.35, f: 740, dur: 0.05, peak: 0.12 },
+    ].forEach((hit) => {
+      voice(c, out, t + hit.at, { dur: hit.dur, peak: hit.peak, freqs: [hit.f, hit.f * 0.72], wave: 'triangle', attack: 0.003 });
+      burst(c, out, t + hit.at, { dur: 0.03, peak: hit.peak * 0.6, attack: 0.002, type: 'highpass', from: 2200, q: 1.1 });
+    });
   },
 };
 

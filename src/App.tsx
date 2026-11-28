@@ -37,7 +37,18 @@ import { OnboardingModal } from './components/OnboardingModal';
 import { BadgeCelebrationModal } from './components/BadgeCelebrationModal';
 import { GrowthCelebrationModal } from './components/GrowthCelebrationModal';
 import { hasSeenOnboarding, loadPlayer, markOnboardingSeen, savePlayer } from './utils/player';
-import type { CatSpot } from './types';
+import type { CatSpot, PetZone } from './types';
+import { defaultPetZoneForSpot } from './utils/petZones';
+import { playSound } from './utils/sound';
+import {
+  createSurpriseMoment,
+  loadLastSurpriseAt,
+  nextIdleSurpriseDelayMs,
+  saveLastSurpriseAt,
+  shouldTriggerOnCheckIn,
+  type SurpriseMoment,
+  type SurpriseMomentKind,
+} from './utils/surpriseMoments';
 import {
   loadAlertedMap,
   loadNotificationPrefs,
@@ -87,15 +98,21 @@ export function App() {
   const dailyQuests = useDailyQuests();
   const [balconyVisitor, setBalconyVisitor] = useState<BalconyVisitor | null>(null);
   const [visitorStartled, setVisitorStartled] = useState(false);
+  const [surpriseMoment, setSurpriseMoment] = useState<SurpriseMoment | null>(null);
+  const [surpriseResolved, setSurpriseResolved] = useState(false);
   const [menuTab, setMenuTab] = useState<MenuTab>('rules');
   const [menuHighlightBadges, setMenuHighlightBadges] = useState<string[]>([]);
   const [notifPrefs, setNotifPrefs] = useState<NotificationPrefs>(() => loadNotificationPrefs());
   const [notice, setNotice] = useState<Notice | null>(null);
   const [tapHeartKey, setTapHeartKey] = useState(0);
+  const [lastPetZone, setLastPetZone] = useState<PetZone>('chin');
   const noticeTimer = useRef<number | undefined>(undefined);
   const noticeSeqRef = useRef(0);
   const visitorTimersRef = useRef<{ spawn?: number; leave?: number; clear?: number }>({});
   const lastVisitorEndedAtRef = useRef(0);
+  const surpriseTimersRef = useRef<{ checkIn?: number; idle?: number; expire?: number; clear?: number }>({});
+  const lastSurpriseKindRef = useRef<SurpriseMomentKind | null>(null);
+  const checkInRolledRef = useRef(false);
 
   useEffect(() => {
     return () => {
@@ -103,6 +120,10 @@ export function App() {
       window.clearTimeout(visitorTimersRef.current.spawn);
       window.clearTimeout(visitorTimersRef.current.leave);
       window.clearTimeout(visitorTimersRef.current.clear);
+      window.clearTimeout(surpriseTimersRef.current.checkIn);
+      window.clearTimeout(surpriseTimersRef.current.idle);
+      window.clearTimeout(surpriseTimersRef.current.expire);
+      window.clearTimeout(surpriseTimersRef.current.clear);
     };
   }, []);
 
@@ -158,6 +179,7 @@ export function App() {
     cancelMinigame,
     petOli,
     interactBalconyVisitor,
+    interactSurpriseMoment,
     cleanMess,
     scoopLitterBox,
     fulfillWhim,
@@ -297,6 +319,137 @@ export function App() {
     [visitorStartled, interactBalconyVisitor],
   );
 
+  // Surprise Cat Moments: playful box peeks, spontaneous zoomies & table knock-offs in the Living Room
+  const canTriggerSurprise =
+    ready &&
+    Boolean(live) &&
+    scene === 'living_room' &&
+    !live?.isSleeping &&
+    !live?.isPaused &&
+    !live?.isDeceased &&
+    !showOnboarding &&
+    !activeMinigame;
+
+  const activateSurprise = useCallback(
+    (moment: SurpriseMoment) => {
+      lastSurpriseKindRef.current = moment.kind;
+      saveLastSurpriseAt(moment.startedAt);
+      if (moment.kind === 'box_peek') {
+        setSpot('box', true);
+      } else if (moment.kind === 'zoomies') {
+        setSpot('rug', true);
+        playSound('chirp');
+      }
+      setSurpriseResolved(false);
+      setSurpriseMoment(moment);
+    },
+    [setSpot],
+  );
+
+  const liveStage = live?.lifeStage ?? 'adult';
+  const liveEnergy = live?.energy ?? 50;
+
+  useEffect(() => {
+    window.clearTimeout(surpriseTimersRef.current.checkIn);
+    window.clearTimeout(surpriseTimersRef.current.idle);
+    window.clearTimeout(surpriseTimersRef.current.expire);
+
+    if (!canTriggerSurprise) {
+      window.clearTimeout(surpriseTimersRef.current.clear);
+      setSurpriseMoment(null);
+      setSurpriseResolved(false);
+      return;
+    }
+
+    // If a surprise is currently on screen, auto-expire it gently after its window.
+    if (surpriseMoment) {
+      if (surpriseResolved) return;
+      const remainMs = Math.max(1000, surpriseMoment.expiresAt - Date.now());
+      surpriseTimersRef.current.expire = window.setTimeout(() => {
+        setSurpriseMoment(null);
+      }, remainMs);
+      return () => window.clearTimeout(surpriseTimersRef.current.expire);
+    }
+
+    const triggerCheckInRoll = () => {
+      window.clearTimeout(surpriseTimersRef.current.checkIn);
+      surpriseTimersRef.current.checkIn = window.setTimeout(() => {
+        if (document.visibilityState === 'hidden') return;
+        const t = Date.now();
+        if (shouldTriggerOnCheckIn(loadLastSurpriseAt(), t)) {
+          activateSurprise(createSurpriseMoment(liveStage, liveEnergy, t, Math.random(), lastSurpriseKindRef.current));
+        }
+      }, 1200);
+    };
+
+    // Roll once on initial check-in when entering the living room.
+    if (!checkInRolledRef.current) {
+      checkInRolledRef.current = true;
+      triggerCheckInRoll();
+    }
+
+    // Also schedule a gentle idle surprise while hanging out in the living room.
+    const scheduleIdle = () => {
+      window.clearTimeout(surpriseTimersRef.current.idle);
+      const waitMs = nextIdleSurpriseDelayMs(loadLastSurpriseAt(), Date.now());
+      surpriseTimersRef.current.idle = window.setTimeout(() => {
+        if (document.visibilityState === 'hidden') return;
+        const t = Date.now();
+        activateSurprise(createSurpriseMoment(liveStage, liveEnergy, t, Math.random(), lastSurpriseKindRef.current));
+      }, waitMs);
+    };
+    scheduleIdle();
+
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        triggerCheckInRoll();
+        scheduleIdle();
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibilityChange);
+
+    return () => {
+      window.clearTimeout(surpriseTimersRef.current.checkIn);
+      window.clearTimeout(surpriseTimersRef.current.idle);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+    };
+  }, [canTriggerSurprise, surpriseMoment, surpriseResolved, liveStage, liveEnergy, activateSurprise]);
+
+  const handleTapSurprise = useCallback(
+    (moment: SurpriseMoment) => {
+      if (surpriseResolved) return;
+      if (!interactSurpriseMoment(moment)) return;
+      setSurpriseResolved(true);
+      window.clearTimeout(surpriseTimersRef.current.expire);
+      window.clearTimeout(surpriseTimersRef.current.clear);
+      if (moment.kind === 'table_knock') {
+        surpriseTimersRef.current.clear = window.setTimeout(() => {
+          setSurpriseMoment(null);
+          setSurpriseResolved(false);
+        }, 720);
+      } else {
+        setSurpriseMoment(null);
+        setSurpriseResolved(false);
+      }
+    },
+    [surpriseResolved, interactSurpriseMoment],
+  );
+
+  const handleSelectSpot = useCallback(
+    (next: CatSpot) => {
+      if (
+        surpriseMoment &&
+        ((surpriseMoment.kind === 'box_peek' && next !== 'box') ||
+          (surpriseMoment.kind === 'zoomies' && next !== 'rug'))
+      ) {
+        setSurpriseMoment(null);
+        setSurpriseResolved(false);
+      }
+      setSpot(next);
+    },
+    [surpriseMoment, setSpot],
+  );
+
   // Automatically refresh Luxembourg atmosphere (weather, real sunrise/sunset) on launch and resume
   useEffect(() => {
     let cancelled = false;
@@ -431,11 +584,13 @@ export function App() {
   };
 
   const lastPetTapRef = useRef(0);
-  const handlePetOli = () => {
+  const handlePetOli = (zone?: PetZone) => {
     const t = Date.now();
     if (t - lastPetTapRef.current < PET_TAP_DEDUPE_MS) return;
     lastPetTapRef.current = t;
-    if (petOli()) {
+    const resolvedZone = zone ?? defaultPetZoneForSpot(spot);
+    if (petOli(resolvedZone)) {
+      setLastPetZone(resolvedZone);
       setTapHeartKey((k) => k + 1);
     }
   };
@@ -691,12 +846,15 @@ export function App() {
                   litterBoxDirty={litterBoxDirty}
                   onTapLitterBox={handleTapLitterBox}
                   activeSpot={spot}
-                  onSelectSpot={setSpot}
+                  onSelectSpot={handleSelectSpot}
                   catMood={mood}
                   catAnimation={catAnimation}
                   catAnimationKey={event?.key ?? 0}
                   catLifeStage={live.lifeStage}
                   onPetCat={handlePetOli}
+                  surpriseMoment={surpriseMoment}
+                  surpriseResolved={surpriseResolved}
+                  onTapSurprise={handleTapSurprise}
                 />
               </motion.div>
             )}
@@ -789,6 +947,7 @@ export function App() {
             mood={mood}
             spot={spot}
             lifeStage={live.lifeStage}
+            petZone={lastPetZone}
             // Keep short-lived pet/stat bubbles from sliding under the HUD on short phones
             targetPos={{ x: targetHeadPos.x, y: Math.max(targetHeadPos.y, 56) }}
           />

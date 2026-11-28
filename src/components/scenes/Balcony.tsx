@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { CatAvatar } from '../CatAvatar';
-import type { CatAnimation, CatSpot, LifeStage, Mood } from '../../types';
+import type { CatAnimation, CatSpot, LifeStage, Mood, PetZone } from '../../types';
 import type { TimeOfDay } from '../../utils/atmosphere';
 import { VISITOR_META, type BalconyVisitor } from '../../utils/balconyVisitors';
 
@@ -867,7 +867,7 @@ export function Balcony({
   catAnimation?: CatAnimation;
   catAnimationKey?: number;
   catLifeStage?: LifeStage;
-  onPetCat?: () => void;
+  onPetCat?: (zone?: PetZone) => void;
   visitor?: BalconyVisitor | null;
   visitorStartled?: boolean;
   onTapVisitor?: (visitor: BalconyVisitor) => void;

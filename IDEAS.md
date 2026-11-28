@@ -42,18 +42,7 @@ When an idea gets picked up, move it into [ROADMAP.md](ROADMAP.md) as a new phas
 
 ---
 
-## 😼 4. Surprise Cat Moments
-
-**The idea:** Add playful, unscripted cat surprises that occasionally greet you when opening the app so every check-in feels alive.
-
-### What it adds
-- **Box Peek:** Oli hides down inside his cardboard delivery box with only his wide glowing amber eyes peeking over the rim until you tap him.
-- **Spontaneous Zoomies:** A quick burst of sudden zoomies across the rug with floating motion lines and chirps.
-- **Table Knock-Off:** Oli casually nudges a small item off the table for a quick, funny reaction tap.
-
----
-
-## ❄️ 5. Seasonal Touches & Weather
+## ❄️ 4. Seasonal Touches & Weather
 
 **The idea:** Build on live outside rain with gentle seasonal atmosphere, festive room touches, and cozy seasonal outfits.
 
@@ -64,7 +53,43 @@ When an idea gets picked up, move it into [ROADMAP.md](ROADMAP.md) as a new phas
 
 ---
 
+## 🪮 5. Hands-On Care
+
+**The idea:** Turn everyday care actions into quick, tactile 3-second interactions instead of just tapping a button.
+
+### What it adds
+- **Interactive Brushing:** Drag your finger across Oli's coat to brush out fur fluff and watch him purr.
+- **Churu Tube Squeeze:** Slide up on the Churu tube to squeeze out the treat while Oli licks it happily.
+
+---
+
+## 🌤️ 6. Oli's Daily Mood
+
+**The idea:** Give Oli a different vibe each day so check-ins feel fresh even after he reaches Adult Oli.
+
+### What it adds
+- **Daily Vibes:** Each morning Oli wakes up with a playful mood (such as *Extra Cuddly*, *Snack Hunter*, *Bird Watcher*, or *Sleepy Loaf*).
+- **Matching Thoughts & Bonus:** His speech bubbles reflect the day's mood, and matching what he's into grants a small Joy bonus.
+
+---
+
+## 🌱 7. Balcony Cat Grass & Catnip
+
+**The idea:** Grow a small herb pot on the sunny balcony to give Oli fresh home-grown treats.
+
+### What it adds
+- **Simple Balcony Gardening:** Plant and water a pot of cat grass or catnip right on the balcony; live outside rain gives it a free growth boost.
+- **Useful Harvests:** Fresh cat grass helps soothe tummy aches and cuts down fur clumps; catnip gives Oli a silly, playful mood burst.
+
+---
+
 ## ✅ Completed Ideas
+
+- **Surprise Cat Moments (Shipped in v1.5.0):**
+  - Box Peek (glowing amber eyes peeking over the delivery box rim), Spontaneous Zoomies across the rug with motion lines, and Table Knock-Off (nudging a coaster, pen, or cap off the coffee table) greet you in the Living Room for +5 Joy.
+
+- **Different Petting Spots (Shipped in v1.5.0):**
+  - Tapping Oli's chin, nose, back, or belly triggers unique animations, sounds, and thought bubbles (loud purrs, nose-boop sneeze, big stretch, or playful paw trap).
 
 - **Balcony Bird Watching (Shipped in v1.4.0):**
   - Pigeons, robins, morning doves, butterflies, and glowing evening moths visit the balcony railing and pansy planters based on the time of day and weather.
