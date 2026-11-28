@@ -3,8 +3,25 @@
  * Kept in a tiny store (saved on this device) so every drawing of Oli shows the same outfit.
  */
 
-export type AccessoryId = 'bowtie' | 'flower_crown' | 'scarf' | 'detective_cap' | 'sunglasses' | 'suit';
+import type { Season } from './atmosphere';
+
+export type AccessoryId =
+  | 'bowtie'
+  | 'flower_crown'
+  | 'winter_beanie'
+  | 'scarf'
+  | 'detective_cap'
+  | 'raincoat'
+  | 'sunglasses'
+  | 'suit';
 export type AccessorySlot = 'head' | 'face' | 'neck' | 'body';
+
+export interface SeasonalTag {
+  emoji: string;
+  label: string;
+  season?: Season;
+  rainy?: boolean;
+}
 
 export interface Accessory {
   id: AccessoryId;
@@ -13,6 +30,8 @@ export interface Accessory {
   slot: AccessorySlot;
   /** Churu tubes it costs to buy. */
   price: number;
+  /** Optional seasonal or weather highlight shown in Oli's Closet. */
+  seasonalTag?: SeasonalTag;
 }
 
 /**
@@ -22,8 +41,22 @@ export interface Accessory {
 export const ACCESSORIES: Accessory[] = [
   { id: 'bowtie', name: 'Red Bowtie', slot: 'neck', price: 2 },
   { id: 'flower_crown', name: 'Flower Crown', slot: 'head', price: 4 },
+  {
+    id: 'winter_beanie',
+    name: 'Knit Beanie',
+    slot: 'head',
+    price: 6,
+    seasonalTag: { emoji: '❄️', label: 'Winter', season: 'winter' },
+  },
   { id: 'scarf', name: 'Knit Scarf', slot: 'neck', price: 7 },
   { id: 'detective_cap', name: 'Detective Cap', slot: 'head', price: 10 },
+  {
+    id: 'raincoat',
+    name: 'Yellow Raincoat',
+    slot: 'body',
+    price: 12,
+    seasonalTag: { emoji: '☔', label: 'Rainy', rainy: true },
+  },
   { id: 'sunglasses', name: 'Sunglasses', slot: 'face', price: 14 },
   { id: 'suit', name: 'Fancy Suit', slot: 'body', price: 20 },
 ];

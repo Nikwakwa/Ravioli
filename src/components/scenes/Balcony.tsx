@@ -1,7 +1,7 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { CatAvatar } from '../CatAvatar';
 import type { CatAnimation, CatSpot, LifeStage, Mood, PetZone } from '../../types';
-import type { TimeOfDay } from '../../utils/atmosphere';
+import type { FestiveDecor, SeasonalWeatherEffect, TimeOfDay } from '../../utils/atmosphere';
 import { VISITOR_META, type BalconyVisitor } from '../../utils/balconyVisitors';
 
 /**
@@ -848,6 +848,8 @@ function BalconyVisitorSprite({
 export function Balcony({
   timeOfDay = 'day',
   isRaining = false,
+  seasonalWeather = 'none',
+  festiveDecor = 'none',
   activeSpot = 'planter',
   onSelectSpot,
   catMood = 'content',
@@ -861,6 +863,8 @@ export function Balcony({
 }: {
   timeOfDay?: TimeOfDay;
   isRaining?: boolean;
+  seasonalWeather?: SeasonalWeatherEffect;
+  festiveDecor?: FestiveDecor;
   activeSpot?: CatSpot;
   onSelectSpot?: (spot: CatSpot) => void;
   catMood?: Mood;
@@ -1037,6 +1041,69 @@ export function Balcony({
               opacity="0.65"
               animate={{ y: [0, 80, 160], opacity: [0, 0.75, 0] }}
               transition={{ duration: drop.dur, delay: drop.delay, repeat: Infinity, ease: 'easeIn' }}
+            />
+          ))}
+        </g>
+      )}
+
+      {/* Soft Winter Snowfall Over Balcony */}
+      {seasonalWeather === 'snow' && (
+        <g pointerEvents="none" data-testid="balcony-snow">
+          <rect width="400" height="325" fill="#e0f2fe" opacity={night ? 0.08 : 0.14} />
+          {[
+            { x: 55, y: 20, r: 2.2, dur: 4.2, delay: 0, dx: 12 },
+            { x: 105, y: 35, r: 1.7, dur: 4.8, delay: 0.8, dx: -10 },
+            { x: 155, y: 15, r: 2.4, dur: 4.0, delay: 1.5, dx: 14 },
+            { x: 205, y: 40, r: 1.8, dur: 5.1, delay: 0.4, dx: -12 },
+            { x: 255, y: 25, r: 2.1, dur: 4.4, delay: 2.0, dx: 10 },
+            { x: 305, y: 45, r: 1.9, dur: 4.7, delay: 1.1, dx: -14 },
+            { x: 345, y: 20, r: 2.0, dur: 4.3, delay: 2.6, dx: 9 },
+            { x: 130, y: 60, r: 1.6, dur: 5.0, delay: 2.9, dx: -8 },
+            { x: 230, y: 55, r: 2.3, dur: 4.5, delay: 3.3, dx: 11 },
+            { x: 285, y: 70, r: 1.5, dur: 4.9, delay: 1.7, dx: -9 },
+          ].map((flake, i) => (
+            <motion.circle
+              key={`bal-snow-${i}`}
+              cx={flake.x}
+              cy={flake.y}
+              r={flake.r}
+              fill="#ffffff"
+              animate={{
+                y: [0, 140, 275],
+                x: [0, flake.dx, -flake.dx * 0.6],
+                opacity: [0, 0.9, 0.75, 0],
+              }}
+              transition={{ duration: flake.dur, delay: flake.delay, repeat: Infinity, ease: 'linear' }}
+            />
+          ))}
+        </g>
+      )}
+
+      {/* Floating Spring Blossoms Drifting Over Balcony */}
+      {seasonalWeather === 'blossoms' && (
+        <g pointerEvents="none" data-testid="balcony-blossoms">
+          {[
+            { x: 70, y: 35, dur: 5.2, delay: 0, fill: '#fbcfe8' },
+            { x: 135, y: 25, dur: 5.8, delay: 1.2, fill: '#f9a8d4' },
+            { x: 195, y: 45, dur: 5.4, delay: 0.6, fill: '#fff1f2' },
+            { x: 260, y: 30, dur: 6.0, delay: 2.1, fill: '#fbcfe8' },
+            { x: 320, y: 50, dur: 5.5, delay: 3.0, fill: '#f9a8d4' },
+            { x: 165, y: 75, dur: 5.6, delay: 3.6, fill: '#fff1f2' },
+          ].map((petal, i) => (
+            <motion.ellipse
+              key={`bal-petal-${i}`}
+              cx={petal.x}
+              cy={petal.y}
+              rx={3.4}
+              ry={1.9}
+              fill={petal.fill}
+              animate={{
+                y: [0, 120, 240],
+                x: [0, 22, -12, 18],
+                rotate: [0, 110, 220, 340],
+                opacity: [0, 0.92, 0.85, 0],
+              }}
+              transition={{ duration: petal.dur, delay: petal.delay, repeat: Infinity, ease: 'easeInOut' }}
             />
           ))}
         </g>
@@ -1468,7 +1535,46 @@ export function Balcony({
                   C ${potRimCx + 2} ${potRimCy - 50}, ${potRimCx + 2} ${potRimCy - 66}, ${potRimCx} ${potRimCy - 80} Z`}
               fill={night ? '#375643' : '#659954'}
             />
+
+            {/* Festive December warm lights twinkling on the balcony cypress tree */}
+            {festiveDecor === 'december_tree' && (
+              <g pointerEvents="none" data-testid="balcony-festive-lights">
+                {[
+                  { dx: -1, dy: -96, c: '#fde047', d: 0 },
+                  { dx: -6, dy: -74, c: '#fb923c', d: 0.35 },
+                  { dx: 5, dy: -60, c: '#fef08a', d: 0.7 },
+                  { dx: -8, dy: -42, c: '#f87171', d: 0.2 },
+                  { dx: 7, dy: -28, c: '#fde047', d: 0.55 },
+                  { dx: -5, dy: -12, c: '#fb923c', d: 0.9 },
+                ].map((bulb, i) => (
+                  <motion.g
+                    key={`cypress-bulb-${i}`}
+                    animate={{ opacity: [0.45, 1, 0.45] }}
+                    transition={{ duration: 1.7, delay: bulb.d, repeat: Infinity, ease: 'easeInOut' }}
+                  >
+                    <circle cx={potRimCx + bulb.dx} cy={potRimCy + bulb.dy} r={night ? 4.5 : 3} fill={bulb.c} opacity={night ? 0.35 : 0.2} />
+                    <circle cx={potRimCx + bulb.dx} cy={potRimCy + bulb.dy} r={1.8} fill={bulb.c} />
+                  </motion.g>
+                ))}
+              </g>
+            )}
           </g>
+
+          {/* Festive October little pumpkin tucked beside the cypress pot */}
+          {festiveDecor === 'october_pumpkins' && (
+            <g pointerEvents="none" data-testid="balcony-pumpkins">
+              <ellipse cx={potBaseCx + 24} cy={potBaseCy + 1.5} rx="9.5" ry="3" fill="rgba(35,25,18,0.2)" />
+              <ellipse cx={potBaseCx + 24} cy={potBaseCy - 4} rx="8.8" ry="6.4" fill="#ea580c" stroke="#c2410c" strokeWidth="0.8" />
+              <ellipse cx={potBaseCx + 24} cy={potBaseCy - 4} rx="4.6" ry="6.4" fill="#f97316" />
+              <path
+                d={`M ${potBaseCx + 24} ${potBaseCy - 10.4} Q ${potBaseCx + 25.5} ${potBaseCy - 13.5} ${potBaseCx + 27.5} ${potBaseCy - 13}`}
+                stroke="#4d7c0f"
+                strokeWidth="1.6"
+                fill="none"
+                strokeLinecap="round"
+              />
+            </g>
+          )}
         </g>
 
       </g>

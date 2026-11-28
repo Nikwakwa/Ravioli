@@ -35,11 +35,15 @@ export function HangerIcon({ className }: { className?: string }) {
 export function ClosetDrawer({
   churuStash,
   lifeStage = 'adult',
+  season,
+  isRaining = false,
   onBuy,
   onClose,
 }: {
   churuStash: number;
   lifeStage?: import('../types').LifeStage;
+  season?: import('../utils/atmosphere').Season;
+  isRaining?: boolean;
   /** Pays for the accessory with Churus. Returns false if it could not be bought. */
   onBuy: (id: AccessoryId) => boolean;
   onClose: () => void;
@@ -97,6 +101,11 @@ export function ClosetDrawer({
             const wearing = closet.outfit[item.slot] === item.id;
             const affordable = canAfford(item, churuStash);
             const isConfirming = confirming === item.id;
+            const inSeason = Boolean(
+              item.seasonalTag &&
+                ((item.seasonalTag.season && item.seasonalTag.season === season) ||
+                  (item.seasonalTag.rainy && isRaining)),
+            );
             const handleTap = () => {
               if (owned) {
                 setConfirming(null);
@@ -145,7 +154,19 @@ export function ClosetDrawer({
                     <AccessoryIcon id={item.id} className="h-8 w-9" />
                   </span>
                   <span className="min-w-0 leading-tight">
-                    <span className="block truncate text-xs font-extrabold">{item.name}</span>
+                    <span className="flex items-center gap-1">
+                      <span className="truncate text-xs font-extrabold">{item.name}</span>
+                      {item.seasonalTag && (
+                        <span
+                          title={inSeason ? `${item.seasonalTag.label} pick!` : `${item.seasonalTag.label} item`}
+                          className={`shrink-0 rounded-full px-1 py-0.2 text-[9px] font-black ${
+                            inSeason ? 'bg-sky-500/18 text-sky-800' : 'bg-amber-900/8 text-amber-900/70'
+                          }`}
+                        >
+                          {item.seasonalTag.emoji}
+                        </span>
+                      )}
+                    </span>
                     {wearing ? (
                       <span className="flex items-center gap-0.5 text-[10px] font-bold text-emerald-700">
                         <Check className="h-3 w-3" /> Wearing

@@ -188,4 +188,18 @@ describe('Balcony — Scenery & Mobile Safe Bounds', () => {
       expect(w1?.key).toBe(w2?.key);
     }
   });
+
+  it('renders seasonal snow, spring blossoms, October pumpkins, and December cypress lights', () => {
+    const snowTree = Balcony({ seasonalWeather: 'snow' }) as AnyElement;
+    expect(findElements(snowTree, (el) => el.props?.['data-testid'] === 'balcony-snow').length).toBe(1);
+
+    const blossomTree = Balcony({ seasonalWeather: 'blossoms' }) as AnyElement;
+    expect(findElements(blossomTree, (el) => el.props?.['data-testid'] === 'balcony-blossoms').length).toBe(1);
+
+    const octTree = Balcony({ festiveDecor: 'october_pumpkins' }) as AnyElement;
+    expect(findElements(octTree, (el) => el.props?.['data-testid'] === 'balcony-pumpkins').length).toBe(1);
+
+    const decTree = Balcony({ festiveDecor: 'december_tree' }) as AnyElement;
+    expect(findElements(decTree, (el) => el.props?.['data-testid'] === 'balcony-festive-lights').length).toBe(1);
+  });
 });

@@ -5,6 +5,9 @@
 import { timeoutSignal } from './net';
 
 export type TimeOfDay = 'day' | 'sunset' | 'night';
+export type Season = 'spring' | 'summer' | 'autumn' | 'winter';
+export type FestiveDecor = 'none' | 'october_pumpkins' | 'december_tree';
+export type SeasonalWeatherEffect = 'none' | 'snow' | 'blossoms';
 
 export const LUXEMBOURG_COORDS = {
   name: 'Luxembourg',
@@ -65,18 +68,69 @@ export function saveCachedLuxembourgData(data: LiveLuxembourgData): void {
   }
 }
 
+/** WMO weather codes that represent snowfall or snow showers. */
+export function isSnowCode(code: number): boolean {
+  return (code >= 71 && code <= 77) || code === 85 || code === 86;
+}
+
 export function isRainingFromWeather(
   code: number,
   precipitation = 0,
   rain = 0,
   showers = 0
 ): boolean {
-  if (rain > 0.05 || showers > 0.05 || precipitation > 0.05) return true;
+  if (rain > 0.05 || showers > 0.05) return true;
+  if (isSnowCode(code)) return false;
+  if (precipitation > 0.05) return true;
   return (
     (code >= 51 && code <= 67) || // drizzle, freezing drizzle, rain, freezing rain
     (code >= 80 && code <= 82) || // rain showers
     (code >= 95 && code <= 99) // thunderstorm
   );
+}
+
+/** Resolves the meteorological season for Luxembourg (Northern Hemisphere). */
+export function resolveSeason(date: Date = new Date()): Season {
+  const safe = Number.isFinite(date.getTime()) ? date : new Date();
+  const m = safe.getMonth(); // 0 = Jan ... 11 = Dec
+  if (m >= 2 && m <= 4) return 'spring';
+  if (m >= 5 && m <= 7) return 'summer';
+  if (m >= 8 && m <= 10) return 'autumn';
+  return 'winter';
+}
+
+/** Subtle seasonal room props: little pumpkins in October, cozy mini tree with warm lights in December. */
+export function resolveFestiveDecor(date: Date = new Date()): FestiveDecor {
+  const safe = Number.isFinite(date.getTime()) ? date : new Date();
+  const m = safe.getMonth();
+  if (m === 9) return 'october_pumpkins';
+  if (m === 11) return 'december_tree';
+  return 'none';
+}
+
+/** True when recent Luxembourg weather reports snow, or freezing cold winter air (<= 2°C) without rain. */
+export function isSnowingNow(
+  data: LiveLuxembourgData | null | undefined,
+  date: Date = new Date(),
+): boolean {
+  if (!data) return false;
+  const safe = Number.isFinite(date.getTime()) ? date : new Date();
+  const age = safe.getTime() - data.fetchedAt;
+  if (age < 0 || age >= RAIN_MAX_AGE_MS) return false;
+  if (isSnowCode(data.weatherCode)) return true;
+  if (resolveSeason(safe) === 'winter' && data.temperatureC <= 2 && !data.isRaining) return true;
+  return false;
+}
+
+/** Resolves gentle seasonal weather particles (winter snowfall or floating spring blossoms). */
+export function resolveSeasonalWeather(
+  data: LiveLuxembourgData | null | undefined,
+  date: Date = new Date(),
+): SeasonalWeatherEffect {
+  const safe = Number.isFinite(date.getTime()) ? date : new Date();
+  if (isSnowingNow(data, safe)) return 'snow';
+  if (resolveSeason(safe) === 'spring' && !isRainingNow(data, safe.getTime())) return 'blossoms';
+  return 'none';
 }
 
 /**

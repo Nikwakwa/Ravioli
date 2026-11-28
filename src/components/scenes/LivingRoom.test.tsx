@@ -455,3 +455,21 @@ describe('LivingRoom — Surprise Cat Moments', () => {
     expect(y + h).toBeLessThanOrEqual(SAFE_MOBILE.maxY);
   });
 });
+
+describe('LivingRoom — Seasonal Touches & Weather', () => {
+  it('renders winter snowfall and spring blossoms outside the window when active', () => {
+    const snowTree = LivingRoom({ fountainBoost: false, seasonalWeather: 'snow' }) as AnyElement;
+    expect(findElements(snowTree, (el) => el.props?.['data-testid'] === 'living-room-snow').length).toBe(1);
+
+    const blossomTree = LivingRoom({ fountainBoost: false, seasonalWeather: 'blossoms' }) as AnyElement;
+    expect(findElements(blossomTree, (el) => el.props?.['data-testid'] === 'living-room-blossoms').length).toBe(1);
+  });
+
+  it('renders October pumpkins and December cozy mini tree on the coffee table', () => {
+    const octTree = LivingRoom({ fountainBoost: false, festiveDecor: 'october_pumpkins' }) as AnyElement;
+    expect(findElements(octTree, (el) => el.props?.['data-testid'] === 'living-room-pumpkins').length).toBe(1);
+
+    const decTree = LivingRoom({ fountainBoost: false, festiveDecor: 'december_tree' }) as AnyElement;
+    expect(findElements(decTree, (el) => el.props?.['data-testid'] === 'living-room-mini-tree').length).toBe(1);
+  });
+});

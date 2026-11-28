@@ -65,4 +65,21 @@ describe('closet shop', () => {
     });
     expect(sanitizeCloset({ outfit: {}, churusEarned: 0 }).owned).toEqual(['bowtie']);
   });
+
+  it('includes seasonal Knit Beanie and Yellow Raincoat with proper slots and tags', () => {
+    const beanie = accessoryById('winter_beanie')!;
+    const raincoat = accessoryById('raincoat')!;
+    expect(beanie).toBeDefined();
+    expect(beanie.slot).toBe('head');
+    expect(beanie.seasonalTag?.season).toBe('winter');
+
+    expect(raincoat).toBeDefined();
+    expect(raincoat.slot).toBe('body');
+    expect(raincoat.seasonalTag?.rainy).toBe(true);
+
+    // Raincoat swaps cleanly with Fancy Suit on the body slot
+    let outfit = toggleInOutfit({}, suit);
+    outfit = toggleInOutfit(outfit, raincoat);
+    expect(outfit).toEqual({ body: 'raincoat' });
+  });
 });

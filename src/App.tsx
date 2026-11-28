@@ -62,6 +62,9 @@ import {
   fetchLuxembourgAtmosphere,
   isRainingNow,
   loadCachedLuxembourgData,
+  resolveFestiveDecor,
+  resolveSeason,
+  resolveSeasonalWeather,
   resolveTimeOfDay,
   type LiveLuxembourgData,
 } from './utils/atmosphere';
@@ -236,8 +239,12 @@ export function App() {
 
   const [luxData, setLuxData] = useState<LiveLuxembourgData | null>(() => loadCachedLuxembourgData());
 
-  const effectiveTime = resolveTimeOfDay(new Date(now), luxData);
+  const nowDate = new Date(now);
+  const effectiveTime = resolveTimeOfDay(nowDate, luxData);
   const isRaining = isRainingNow(luxData, now);
+  const currentSeason = resolveSeason(nowDate);
+  const seasonalWeather = resolveSeasonalWeather(luxData, nowDate);
+  const festiveDecor = resolveFestiveDecor(nowDate);
   // Light follows the real clock in Luxembourg only. A daytime nap stays in daylight.
   const isNight = effectiveTime === 'night';
   const isSunset = effectiveTime === 'sunset';
@@ -817,6 +824,8 @@ export function App() {
                 <Balcony
                   timeOfDay={effectiveTime}
                   isRaining={isRaining}
+                  seasonalWeather={seasonalWeather}
+                  festiveDecor={festiveDecor}
                   activeSpot={spot}
                   onSelectSpot={setSpot}
                   catMood={mood}
@@ -841,6 +850,8 @@ export function App() {
                 <LivingRoom
                   timeOfDay={effectiveTime}
                   isRaining={isRaining}
+                  seasonalWeather={seasonalWeather}
+                  festiveDecor={festiveDecor}
                   fountainBoost={eventPlaying && event?.actionId === 'fountain'}
                   onTapFountain={handleTapFountain}
                   litterBoxDirty={litterBoxDirty}
@@ -1141,6 +1152,8 @@ export function App() {
             <ClosetDrawer
               churuStash={churuStash}
               lifeStage={live.lifeStage}
+              season={currentSeason}
+              isRaining={isRaining}
               onBuy={buyAccessory}
               onClose={closeCloset}
             />

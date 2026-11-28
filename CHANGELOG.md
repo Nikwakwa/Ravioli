@@ -4,6 +4,14 @@ All updates to **Oli** are listed here.
 
 ---
 
+## `v1.6.0` — 2026-11-27
+### Seasonal Weather & Outfits ❄️☔
+- Added winter snowfall on cold or snowy days and floating spring blossoms outside the window and balcony.
+- The apartment now gets subtle festive props automatically: little pumpkins in October and a cozy mini tree with warm twinkling lights in December.
+- Added two new cozy Closet outfits: the Knit Beanie and Yellow Raincoat.
+
+---
+
 ## `v1.5.0` — 2026-11-27
 ### Surprise Moments & Petting Spots 😼🐾
 - Added Surprise Cat Moments in the Living Room: catch Oli peeking out of his box, zooming across the rug, or nudging items off the coffee table.

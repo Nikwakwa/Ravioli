@@ -9,6 +9,15 @@ export function useOutfit(): Outfit {
 /** Colors of the Fancy Suit (drawn on Oli's body by CatAvatar). */
 export const SUIT = { jacket: '#2b3550', line: '#4c5a7d', shirt: '#fbfaf6', button: '#e6c15a' } as const;
 
+/** Colors of the Yellow Raincoat (drawn on Oli's body by CatAvatar). */
+export const RAINCOAT = {
+  coat: '#facc15',
+  shade: '#ca8a04',
+  collar: '#eab308',
+  gloss: '#fef9c3',
+  button: '#5c4028',
+} as const;
+
 // All shapes are drawn in the head's own coordinates (head spans roughly x 39–161, y 30–124),
 // so they follow Oli's head in every pose.
 
@@ -40,6 +49,38 @@ function FlowerCrown() {
       <Flower cx={114} cy={32} petal="#f79bb6" r={3} />
       <Flower cx={128} cy={38} petal="#c9a6f0" />
       <Flower cx={141} cy={49} petal="#f79bb6" r={2.9} />
+    </g>
+  );
+}
+
+function WinterBeanie() {
+  return (
+    <g>
+      {/* Fluffy cream pom-pom on top */}
+      <circle cx={100} cy={10} r={8.5} fill="#fff7ed" stroke="#e5d5be" strokeWidth={1.1} />
+      <circle cx={96} cy={8} r={3.4} fill="#ffffff" opacity={0.8} />
+      {/* Ribbed berry-red knit dome sitting snugly between Oli's ears */}
+      <path d="M68 41 C68 15 132 15 132 41 Q100 35 68 41 Z" fill="#c83e4d" stroke="#992836" strokeWidth={1.1} />
+      {/* Cozy vertical knit rib lines */}
+      <g stroke="#992836" strokeWidth={1.3} fill="none" strokeLinecap="round" opacity={0.6}>
+        <path d="M80 23 Q77 31 76 39" />
+        <path d="M90 19 Q88 29 88 38" />
+        <path d="M100 18 V37" />
+        <path d="M110 19 Q112 29 112 38" />
+        <path d="M120 23 Q123 31 124 39" />
+      </g>
+      {/* Cream snowflake stitch stripe */}
+      <path d="M72 32 Q100 26 128 32" stroke="#fff5e6" strokeWidth={2.2} strokeDasharray="3.5 4.5" fill="none" strokeLinecap="round" opacity={0.9} />
+      {/* Folded ribbed cuff */}
+      <path d="M63 44 Q100 34 137 44 Q138 50 133 51 Q100 42 67 51 Q62 50 63 44 Z" fill="#fff5e6" stroke="#d8c5ad" strokeWidth={1} />
+      <g stroke="#d8c5ad" strokeWidth={1.2} strokeLinecap="round" opacity={0.8}>
+        <path d="M74 42 v6" />
+        <path d="M84 40 v6" />
+        <path d="M94 39 v6" />
+        <path d="M106 39 v6" />
+        <path d="M116 40 v6" />
+        <path d="M126 42 v6" />
+      </g>
     </g>
   );
 }
@@ -118,6 +159,8 @@ function AccessoryShape({ id, back }: { id: AccessoryId; back: boolean }) {
   switch (id) {
     case 'flower_crown':
       return <FlowerCrown />;
+    case 'winter_beanie':
+      return <WinterBeanie />;
     case 'detective_cap':
       return <DetectiveCap />;
     case 'sunglasses':
@@ -127,6 +170,7 @@ function AccessoryShape({ id, back }: { id: AccessoryId; back: boolean }) {
     case 'scarf':
       return <Scarf back={back} />;
     case 'suit':
+    case 'raincoat':
       // Worn on the body: CatAvatar draws it for each pose.
       return null;
   }
@@ -158,11 +202,39 @@ function SuitIcon() {
   );
 }
 
+function RaincoatIcon() {
+  return (
+    <g>
+      {/* Hood */}
+      <path d="M18 12 Q30 2 42 12 L39 18 H21 Z" fill={RAINCOAT.collar} stroke={RAINCOAT.shade} strokeWidth={1.2} />
+      {/* Coat & sleeves */}
+      <path
+        d="M19 14 H41 L54 22 L49 35 L43 32 L46 55 H14 L17 32 L11 35 L6 22 Z"
+        fill={RAINCOAT.coat}
+        stroke={RAINCOAT.shade}
+        strokeWidth={1.3}
+        strokeLinejoin="round"
+      />
+      {/* Front storm flap & toggles */}
+      <line x1={30} y1={16} x2={30} y2={54} stroke={RAINCOAT.shade} strokeWidth={1.4} />
+      {[24, 34, 44].map((y) => (
+        <g key={y}>
+          <line x1={26} y1={y} x2={34} y2={y} stroke={RAINCOAT.button} strokeWidth={2.1} strokeLinecap="round" />
+        </g>
+      ))}
+      {/* Glossy raindrop highlight */}
+      <path d="M19 23 L17 44" stroke={RAINCOAT.gloss} strokeWidth={2.2} strokeLinecap="round" opacity={0.85} />
+    </g>
+  );
+}
+
 const ICON_VIEWBOX: Record<AccessoryId, string> = {
   bowtie: '70 108 60 40',
   flower_crown: '48 18 104 44',
+  winter_beanie: '56 0 88 56',
   scarf: '44 104 112 60',
   detective_cap: '54 4 92 56',
+  raincoat: '0 0 60 60',
   sunglasses: '40 60 120 40',
   suit: '0 0 60 60',
 };
@@ -171,7 +243,7 @@ const ICON_VIEWBOX: Record<AccessoryId, string> = {
 export function AccessoryIcon({ id, className }: { id: AccessoryId; className?: string }) {
   return (
     <svg viewBox={ICON_VIEWBOX[id]} className={className} aria-hidden="true">
-      {id === 'suit' ? <SuitIcon /> : <AccessoryShape id={id} back={false} />}
+      {id === 'suit' ? <SuitIcon /> : id === 'raincoat' ? <RaincoatIcon /> : <AccessoryShape id={id} back={false} />}
     </svg>
   );
 }

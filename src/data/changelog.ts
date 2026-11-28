@@ -7,6 +7,16 @@ export interface ReleaseEntry {
 
 export const CHANGELOG: ReleaseEntry[] = [
   {
+    version: 'v1.6.0',
+    date: '2026-11-27',
+    title: 'Seasonal Weather & Outfits ❄️☔',
+    changes: [
+      'Added winter snowfall on cold or snowy days and floating spring blossoms outside the window and balcony.',
+      'The apartment now gets subtle festive props automatically: little pumpkins in October and a cozy mini tree with warm twinkling lights in December.',
+      'Added two new cozy Closet outfits: the Knit Beanie and Yellow Raincoat.',
+    ],
+  },
+  {
     version: 'v1.5.0',
     date: '2026-11-27',
     title: 'Surprise Moments & Petting Spots 😼🐾',

@@ -4,8 +4,13 @@ import {
   fetchLuxembourgAtmosphere,
   isRainingFromWeather,
   isRainingNow,
+  isSnowCode,
+  isSnowingNow,
   loadCachedLuxembourgData,
   LUXEMBOURG_COORDS,
+  resolveFestiveDecor,
+  resolveSeason,
+  resolveSeasonalWeather,
   resolveTimeOfDay,
   saveCachedLuxembourgData,
   type LiveLuxembourgData,
@@ -247,6 +252,58 @@ describe('Luxembourg Real-Time Atmosphere', () => {
       } finally {
         globalThis.fetch = originalFetch;
       }
+    });
+  });
+
+  describe('Seasonal Touches & Weather', () => {
+    it('resolves meteorological seasons and festive months accurately', () => {
+      expect(resolveSeason(new Date('2026-04-10T12:00:00Z'))).toBe('spring');
+      expect(resolveSeason(new Date('2026-07-15T12:00:00Z'))).toBe('summer');
+      expect(resolveSeason(new Date('2026-10-20T12:00:00Z'))).toBe('autumn');
+      expect(resolveSeason(new Date('2026-12-20T12:00:00Z'))).toBe('winter');
+      expect(resolveSeason(new Date('2026-01-10T12:00:00Z'))).toBe('winter');
+
+      expect(resolveFestiveDecor(new Date('2026-10-15T12:00:00Z'))).toBe('october_pumpkins');
+      expect(resolveFestiveDecor(new Date('2026-12-15T12:00:00Z'))).toBe('december_tree');
+      expect(resolveFestiveDecor(new Date('2026-05-15T12:00:00Z'))).toBe('none');
+    });
+
+    it('treats WMO snow codes as snow rather than rain', () => {
+      expect(isSnowCode(71)).toBe(true);
+      expect(isSnowCode(85)).toBe(true);
+      expect(isSnowCode(61)).toBe(false);
+      expect(isRainingFromWeather(73, 0.8, 0, 0)).toBe(false);
+    });
+
+    it('activates snowfall on snowy or freezing winter days and blossoms on dry spring days', () => {
+      const decDay = new Date('2026-12-18T12:00:00Z');
+      const coldWinter: LiveLuxembourgData = {
+        temperatureC: 1,
+        weatherCode: 3,
+        isRaining: false,
+        isDay: true,
+        sunrise: '',
+        sunset: '',
+        fetchedAt: decDay.getTime() - 60_000,
+      };
+      expect(isSnowingNow(coldWinter, decDay)).toBe(true);
+      expect(resolveSeasonalWeather(coldWinter, decDay)).toBe('snow');
+
+      const mildWinter: LiveLuxembourgData = { ...coldWinter, temperatureC: 7 };
+      expect(isSnowingNow(mildWinter, decDay)).toBe(false);
+      expect(resolveSeasonalWeather(mildWinter, decDay)).toBe('none');
+
+      const springDay = new Date('2026-04-12T12:00:00Z');
+      expect(resolveSeasonalWeather(null, springDay)).toBe('blossoms');
+
+      const rainySpring: LiveLuxembourgData = {
+        ...coldWinter,
+        temperatureC: 14,
+        weatherCode: 61,
+        isRaining: true,
+        fetchedAt: springDay.getTime() - 60_000,
+      };
+      expect(resolveSeasonalWeather(rainySpring, springDay)).toBe('none');
     });
   });
 });

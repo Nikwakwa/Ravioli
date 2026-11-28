@@ -2,7 +2,7 @@ import { AnimatePresence, motion, type TargetAndTransition, type Transition } fr
 import { useEffect, useId, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
 import type { CatAnimation, LifeStage, Mood, PetZone } from '../types';
 import { resolvePetZone } from '../utils/petZones';
-import { HeadAccessories, SUIT, useOutfit } from './CatAccessories';
+import { HeadAccessories, RAINCOAT, SUIT, useOutfit } from './CatAccessories';
 
 /**
  * Oli — hand-drawn SVG ginger cat.
@@ -1293,7 +1293,9 @@ export function CatAvatar({
   const sad = expr.earDroop;
 
   const showProps = !(pose === 'look_out' && !sleeping);
-  const suit = useOutfit().body === 'suit';
+  const outfitBody = useOutfit().body;
+  const suit = outfitBody === 'suit';
+  const raincoat = outfitBody === 'raincoat';
   const isPlayAnim =
     anim === 'playing' ||
     anim === 'laser' ||
@@ -1447,6 +1449,15 @@ export function CatAvatar({
                           <path d="M40 196 H164" stroke={SUIT.line} strokeWidth={1.4} strokeLinecap="round" opacity={0.7} />
                         </g>
                       )}
+                      {raincoat && (
+                        <g>
+                          <path d="M26 198 C22 160 60 136 102 136 C144 136 180 160 175 198 C174 206 28 206 26 198 Z" fill={RAINCOAT.coat} stroke={RAINCOAT.shade} strokeWidth={1.4} />
+                          <path d="M48 164 Q76 146 112 146" stroke={RAINCOAT.gloss} strokeWidth={3} fill="none" strokeLinecap="round" opacity={0.75} />
+                          <path d="M108 138 Q116 170 112 204" stroke={RAINCOAT.shade} strokeWidth={1.6} fill="none" strokeLinecap="round" />
+                          <path d="M104 160 h10 M106 176 h10" stroke={RAINCOAT.button} strokeWidth={2.2} strokeLinecap="round" />
+                          <path d="M40 196 H164" stroke={RAINCOAT.shade} strokeWidth={1.4} strokeLinecap="round" opacity={0.7} />
+                        </g>
+                      )}
                     </motion.g>
                     <TailStripes
                       d={
@@ -1541,6 +1552,22 @@ export function CatAvatar({
                               <path d="M72 132 Q100 122 128 132" />
                               <path d="M81 172 Q75 188 83 204 M119 172 Q125 188 117 204" />
                             </g>
+                          </g>
+                        )}
+                        {raincoat && (
+                          <g>
+                            <path
+                              d="M100 100 C80 100 68 116 64 138 C60 158 52 174 52 190 C52 204 72 208 100 208 C128 208 148 204 148 190 C148 174 140 158 136 138 C132 116 120 100 100 100 Z"
+                              fill={RAINCOAT.coat}
+                              stroke={RAINCOAT.shade}
+                              strokeWidth={1.4}
+                            />
+                            <ellipse cx={66} cy={188} rx={21} ry={19} fill={RAINCOAT.coat} />
+                            <ellipse cx={134} cy={188} rx={21} ry={19} fill={RAINCOAT.coat} />
+                            {/* Folded yellow hood resting on Oli's upper back */}
+                            <path d="M73 116 Q100 140 127 116 Q116 104 100 104 Q84 104 73 116 Z" fill={RAINCOAT.collar} stroke={RAINCOAT.shade} strokeWidth={1.3} />
+                            <path d="M78 142 Q84 166 80 190" stroke={RAINCOAT.gloss} strokeWidth={2.8} fill="none" strokeLinecap="round" opacity={0.75} />
+                            <path d="M100 132 V204" stroke={RAINCOAT.shade} strokeWidth={1.5} fill="none" strokeLinecap="round" opacity={0.7} />
                           </g>
                         )}
                       </motion.g>
@@ -1640,25 +1667,25 @@ export function CatAvatar({
                         style={{ originX: 0.5, originY: 1 }}
                         transition={{ duration: petting ? 0.9 : 3, repeat: Infinity, ease: 'easeInOut' }}
                       >
-                        <path d="M150 174 Q153 152 160 134" stroke={suit ? SUIT.jacket : vis.coatColor} strokeWidth={14} fill="none" strokeLinecap="round" />
-                        <path d="M150 174 Q153 152 160 134" stroke={C.stripe} strokeWidth={14} fill="none" pathLength={100} strokeDasharray="0 30 7 14 7 100" opacity={suit ? 0 : 0.6 * vis.stripeOpacity} />
+                        <path d="M150 174 Q153 152 160 134" stroke={suit ? SUIT.jacket : raincoat ? RAINCOAT.coat : vis.coatColor} strokeWidth={14} fill="none" strokeLinecap="round" />
+                        <path d="M150 174 Q153 152 160 134" stroke={C.stripe} strokeWidth={14} fill="none" pathLength={100} strokeDasharray="0 30 7 14 7 100" opacity={suit || raincoat ? 0 : 0.6 * vis.stripeOpacity} />
                         <ToeBeans cx={161} cy={129} rotate={14} />
                       </motion.g>
                       <motion.g
                         animate={{ y: [0, -3, 0] }}
                         transition={{ duration: petting ? 0.45 : 2.4, repeat: Infinity, ease: 'easeInOut' }}
                       >
-                        <path d="M100 166 Q95 146 103 133" stroke={suit ? SUIT.jacket : vis.coatColor} strokeWidth={12} fill="none" strokeLinecap="round" />
+                        <path d="M100 166 Q95 146 103 133" stroke={suit ? SUIT.jacket : raincoat ? RAINCOAT.coat : vis.coatColor} strokeWidth={12} fill="none" strokeLinecap="round" />
                         <ToeBeans cx={105} cy={129} rotate={-16} small />
                       </motion.g>
 
                       {/* Round bean-shaped body lying on its back */}
                       <path
                         d="M70 182 C66 164 84 152 112 152 C142 152 168 160 170 180 C172 196 152 203 114 203 C86 203 72 196 70 182 Z"
-                        fill={suit ? SUIT.jacket : vis.coatColor}
+                        fill={suit ? SUIT.jacket : raincoat ? RAINCOAT.coat : vis.coatColor}
                       />
                       {/* Flank stripes along the side resting on the tiles */}
-                      <g stroke={suit ? SUIT.line : C.stripe} strokeWidth={suit ? 1.6 : 3} strokeLinecap="round" fill="none" opacity={suit ? 1 : vis.stripeOpacity}>
+                      <g stroke={suit ? SUIT.line : raincoat ? RAINCOAT.shade : C.stripe} strokeWidth={suit || raincoat ? 1.6 : 3} strokeLinecap="round" fill="none" opacity={suit || raincoat ? 1 : vis.stripeOpacity}>
                         <path d="M94 192 Q98 198 104 200" />
                         <path d="M118 193 Q122 199 128 200" />
                         <path d="M142 190 Q147 196 153 196" />
@@ -1666,15 +1693,19 @@ export function CatAvatar({
                       {/* Big fluffy cream tummy facing the sky */}
                       <path
                         d="M84 175 C85 163 101 157 118 157 C138 157 155 163 157 173 C158 183 143 190 118 190 C98 190 83 186 84 175 Z"
-                        fill={suit ? SUIT.shirt : C.cream}
-                        stroke={suit ? SUIT.line : 'none'}
-                        strokeWidth={suit ? 2.4 : 0}
+                        fill={suit ? SUIT.shirt : raincoat ? RAINCOAT.collar : C.cream}
+                        stroke={suit ? SUIT.line : raincoat ? RAINCOAT.shade : 'none'}
+                        strokeWidth={suit || raincoat ? 2.2 : 0}
                       />
                       {suit ? (
                         <g fill={SUIT.button}>
                           <circle cx={104} cy={173} r={2} />
                           <circle cx={120} cy={174} r={2} />
                           <circle cx={136} cy={174} r={2} />
+                        </g>
+                      ) : raincoat ? (
+                        <g stroke={RAINCOAT.button} strokeWidth={2.2} strokeLinecap="round">
+                          <path d="M104 169 v8 M120 170 v8 M136 170 v8" />
                         </g>
                       ) : (
                         <>
@@ -1689,8 +1720,8 @@ export function CatAvatar({
                         style={{ originX: 0, originY: 1 }}
                         transition={{ duration: petting ? 0.9 : 3.4, repeat: Infinity, ease: 'easeInOut' }}
                       >
-                        <path d="M150 184 Q170 176 176 154" stroke={suit ? SUIT.jacket : vis.coatColor} strokeWidth={15} fill="none" strokeLinecap="round" />
-                        <path d="M150 184 Q170 176 176 154" stroke={C.stripe} strokeWidth={15} fill="none" pathLength={100} strokeDasharray="0 34 7 14 7 100" opacity={suit ? 0 : 0.6 * vis.stripeOpacity} />
+                        <path d="M150 184 Q170 176 176 154" stroke={suit ? SUIT.jacket : raincoat ? RAINCOAT.coat : vis.coatColor} strokeWidth={15} fill="none" strokeLinecap="round" />
+                        <path d="M150 184 Q170 176 176 154" stroke={C.stripe} strokeWidth={15} fill="none" pathLength={100} strokeDasharray="0 34 7 14 7 100" opacity={suit || raincoat ? 0 : 0.6 * vis.stripeOpacity} />
                         <ToeBeans cx={177} cy={149} rotate={24} />
                       </motion.g>
 
@@ -1699,7 +1730,7 @@ export function CatAvatar({
                         animate={{ y: [0, -3.5, 0] }}
                         transition={{ duration: petting ? 0.45 : 2.4, repeat: Infinity, ease: 'easeInOut', delay: 0.3 }}
                       >
-                        <path d="M106 182 Q108 162 121 154" stroke={suit ? SUIT.jacket : vis.coatColor} strokeWidth={13} fill="none" strokeLinecap="round" />
+                        <path d="M106 182 Q108 162 121 154" stroke={suit ? SUIT.jacket : raincoat ? RAINCOAT.coat : vis.coatColor} strokeWidth={13} fill="none" strokeLinecap="round" />
                         <ToeBeans cx={124} cy={150} rotate={-34} small />
                       </motion.g>
                     </motion.g>
@@ -1794,6 +1825,26 @@ export function CatAvatar({
                             <rect x={108} y={150} width={19} height={48} rx={9.5} fill={SUIT.jacket} stroke={SUIT.line} strokeWidth={1.2} />
                             <rect x={73.5} y={191} width={18} height={5} rx={2} fill={SUIT.shirt} />
                             <rect x={108.5} y={191} width={18} height={5} rx={2} fill={SUIT.shirt} />
+                          </g>
+                        )}
+                        {raincoat && (
+                          <g>
+                            <path d="M66 112 C46 136 37 176 47 198 C53 209 147 209 153 198 C163 176 154 136 134 112 Z" fill={RAINCOAT.coat} stroke={RAINCOAT.shade} strokeWidth={1.4} />
+                            <ellipse cx={58} cy={188} rx={19} ry={17} fill={RAINCOAT.coat} />
+                            <ellipse cx={142} cy={188} rx={19} ry={17} fill={RAINCOAT.coat} />
+                            {/* Cozy yellow hood collar + storm flap + toggle buttons */}
+                            <path d="M72 114 Q100 132 128 114 Q118 128 100 129 Q82 128 72 114 Z" fill={RAINCOAT.collar} stroke={RAINCOAT.shade} strokeWidth={1.2} />
+                            <line x1={100} y1={126} x2={100} y2={198} stroke={RAINCOAT.shade} strokeWidth={1.5} />
+                            {[140, 158, 176].map((by) => (
+                              <line key={by} x1={94} y1={by} x2={106} y2={by} stroke={RAINCOAT.button} strokeWidth={2.5} strokeLinecap="round" />
+                            ))}
+                            {/* Glossy waterproof sheen */}
+                            <path d="M56 146 Q52 164 56 180" stroke={RAINCOAT.gloss} strokeWidth={2.6} fill="none" strokeLinecap="round" opacity={0.8} />
+                            {/* Raincoat sleeves with cuffs */}
+                            <rect x={73} y={150} width={19} height={47} rx={9.5} fill={RAINCOAT.coat} stroke={RAINCOAT.shade} strokeWidth={1.2} />
+                            <rect x={108} y={150} width={19} height={47} rx={9.5} fill={RAINCOAT.coat} stroke={RAINCOAT.shade} strokeWidth={1.2} />
+                            <rect x={73.5} y={190} width={18} height={5} rx={2} fill={RAINCOAT.collar} />
+                            <rect x={108.5} y={190} width={18} height={5} rx={2} fill={RAINCOAT.collar} />
                           </g>
                         )}
                         <ellipse cx={83} cy={203} rx={13} ry={8} fill={C.cream} />

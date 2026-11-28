@@ -87,7 +87,7 @@ export const BADGES: BadgeDefinition[] = [
     tiers: {
       bronze: { target: 1, label: '1 accessory' },
       silver: { target: 3, label: '3 accessories' },
-      gold: { target: 6, label: 'All 6 accessories' },
+      gold: { target: 6, label: '6 accessories' },
     },
   },
   {

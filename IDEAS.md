@@ -42,18 +42,7 @@ When an idea gets picked up, move it into [ROADMAP.md](ROADMAP.md) as a new phas
 
 ---
 
-## ❄️ 4. Seasonal Touches & Weather
-
-**The idea:** Build on live outside rain with gentle seasonal atmosphere, festive room touches, and cozy seasonal outfits.
-
-### What it adds
-- **Seasonal Weather:** Soft snowfall outside the window and balcony on cold winter days, plus warm floating spring blossoms.
-- **Festive Room Decor:** Subtle seasonal props around the apartment (little pumpkins in October, a cozy mini tree with warm lights in December).
-- **Seasonal Closet Items:** Limited cozy accessories like a yellow raincoat or knit winter beanie.
-
----
-
-## 🪮 5. Hands-On Care
+## 🪮 4. Hands-On Care
 
 **The idea:** Turn everyday care actions into quick, tactile 3-second interactions instead of just tapping a button.
 
@@ -63,7 +52,7 @@ When an idea gets picked up, move it into [ROADMAP.md](ROADMAP.md) as a new phas
 
 ---
 
-## 🌤️ 6. Oli's Daily Mood
+## 🌤️ 5. Oli's Daily Mood
 
 **The idea:** Give Oli a different vibe each day so check-ins feel fresh even after he reaches Adult Oli.
 
@@ -73,7 +62,7 @@ When an idea gets picked up, move it into [ROADMAP.md](ROADMAP.md) as a new phas
 
 ---
 
-## 🌱 7. Balcony Cat Grass & Catnip
+## 🌱 6. Balcony Cat Grass & Catnip
 
 **The idea:** Grow a small herb pot on the sunny balcony to give Oli fresh home-grown treats.
 
@@ -84,6 +73,11 @@ When an idea gets picked up, move it into [ROADMAP.md](ROADMAP.md) as a new phas
 ---
 
 ## ✅ Completed Ideas
+
+- **Seasonal Touches & Weather (Shipped in v1.6.0):**
+  - Soft winter snowfall on snowy or freezing days and floating spring blossoms outside the window and balcony.
+  - Automatic festive room props: little pumpkins in October, plus a cozy mini tree and warm twinkling lights in December.
+  - Added two seasonal Closet outfits: the **Knit Beanie** (❄️ Winter) and **Yellow Raincoat** (☔ Rainy).
 
 - **Surprise Cat Moments (Shipped in v1.5.0):**
   - Box Peek (glowing amber eyes peeking over the delivery box rim), Spontaneous Zoomies across the rug with motion lines, and Table Knock-Off (nudging a coaster, pen, or cap off the coffee table) greet you in the Living Room for +5 Joy.

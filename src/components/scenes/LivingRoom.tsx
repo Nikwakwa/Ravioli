@@ -1,7 +1,7 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { CatAvatar } from '../CatAvatar';
 import type { CatAnimation, CatSpot, LifeStage, Mood, PetZone } from '../../types';
-import type { TimeOfDay } from '../../utils/atmosphere';
+import type { FestiveDecor, SeasonalWeatherEffect, TimeOfDay } from '../../utils/atmosphere';
 import type { SurpriseMoment } from '../../utils/surpriseMoments';
 
 /**
@@ -22,6 +22,8 @@ export function LivingRoom({
   fountainBoost,
   timeOfDay = 'day',
   isRaining = false,
+  seasonalWeather = 'none',
+  festiveDecor = 'none',
   onTapFountain,
   litterBoxDirty = false,
   onTapLitterBox,
@@ -39,6 +41,8 @@ export function LivingRoom({
   fountainBoost: boolean;
   timeOfDay?: TimeOfDay;
   isRaining?: boolean;
+  seasonalWeather?: SeasonalWeatherEffect;
+  festiveDecor?: FestiveDecor;
   onTapFountain?: () => void;
   litterBoxDirty?: boolean;
   onTapLitterBox?: () => void;
@@ -318,6 +322,64 @@ export function LivingRoom({
             ))}
           </g>
         )}
+        {/* Animated Winter Snowfall Outside the Window */}
+        {seasonalWeather === 'snow' && (
+          <g clipPath="url(#lr-window-glass)" data-testid="living-room-snow">
+            <rect x="126" y="112" width="92" height="102" fill="#e0f2fe" opacity={isNight ? 0.08 : 0.14} />
+            {[
+              { x: 134, r: 1.8, dur: 3.4, delay: 0, dx: 6 },
+              { x: 148, r: 1.4, dur: 4.1, delay: 0.7, dx: -5 },
+              { x: 162, r: 2.0, dur: 3.7, delay: 1.4, dx: 7 },
+              { x: 178, r: 1.5, dur: 4.4, delay: 0.4, dx: -6 },
+              { x: 192, r: 1.9, dur: 3.5, delay: 1.9, dx: 5 },
+              { x: 206, r: 1.6, dur: 3.9, delay: 1.0, dx: -7 },
+              { x: 155, r: 1.3, dur: 4.6, delay: 2.3, dx: 4 },
+              { x: 186, r: 1.7, dur: 3.8, delay: 2.8, dx: -4 },
+            ].map((flake, i) => (
+              <motion.circle
+                key={`lr-snow-${i}`}
+                cx={flake.x}
+                cy={112}
+                r={flake.r}
+                fill="#ffffff"
+                initial={{ y: 0, x: 0, opacity: 0 }}
+                animate={{ y: [0, 52, 104], x: [0, flake.dx, -flake.dx * 0.5], opacity: [0, 0.92, 0] }}
+                transition={{ duration: flake.dur, delay: flake.delay, repeat: Infinity, ease: 'linear' }}
+              />
+            ))}
+            {/* Thin snowy dusting along bottom window frame */}
+            <path d="M126 214 Q148 209 170 212 Q194 208 218 214 V216 H126 Z" fill="#ffffff" opacity={0.85} />
+          </g>
+        )}
+        {/* Animated Floating Spring Blossoms Outside the Window */}
+        {seasonalWeather === 'blossoms' && (
+          <g clipPath="url(#lr-window-glass)" data-testid="living-room-blossoms">
+            {[
+              { x: 132, dur: 4.2, delay: 0, fill: '#fbcfe8' },
+              { x: 154, dur: 4.8, delay: 1.1, fill: '#f9a8d4' },
+              { x: 176, dur: 4.4, delay: 0.5, fill: '#fff1f2' },
+              { x: 196, dur: 5.0, delay: 1.9, fill: '#fbcfe8' },
+              { x: 210, dur: 4.5, delay: 2.7, fill: '#f9a8d4' },
+            ].map((petal, i) => (
+              <motion.ellipse
+                key={`lr-petal-${i}`}
+                cx={petal.x}
+                cy={112}
+                rx={2.6}
+                ry={1.5}
+                fill={petal.fill}
+                initial={{ y: 0, x: 0, rotate: 0, opacity: 0 }}
+                animate={{
+                  y: [0, 48, 102],
+                  x: [0, 12, -8, 10],
+                  rotate: [0, 90, 190, 290],
+                  opacity: [0, 0.9, 0.85, 0],
+                }}
+                transition={{ duration: petal.dur, delay: petal.delay, repeat: Infinity, ease: 'easeInOut' }}
+              />
+            ))}
+          </g>
+        )}
         {/* Center window mullion & handle */}
         <rect x="170.5" y="112" width="3" height="102" fill="#ffffff" />
         <rect x="174" y="160" width="2" height="9" rx="1" fill="#b8b5ad" />
@@ -334,6 +396,30 @@ export function LivingRoom({
         />
         <line x1="119" y1="106" x2="225" y2="106" stroke={isNight ? '#b0acc2' : isSunset ? '#e5d7ca' : '#e2ded4'} strokeWidth="1" />
         <line x1="119" y1="113" x2="225" y2="113" stroke={isNight ? '#b0acc2' : isSunset ? '#e5d7ca' : '#e2ded4'} strokeWidth="1" />
+
+        {/* Subtle warm twinkling window lights in December */}
+        {festiveDecor === 'december_tree' && (
+          <g pointerEvents="none">
+            <path d="M120 120 Q146 126 172 120 Q198 126 224 120" stroke="#78716c" strokeWidth="0.8" fill="none" opacity="0.65" />
+            {[
+              { x: 132, y: 122.5, c: '#fde047' },
+              { x: 148, y: 123.5, c: '#fb923c' },
+              { x: 164, y: 121.8, c: '#fef08a' },
+              { x: 180, y: 121.8, c: '#fb923c' },
+              { x: 196, y: 123.5, c: '#fde047' },
+              { x: 212, y: 122.5, c: '#fef08a' },
+            ].map((bulb, i) => (
+              <motion.g
+                key={`win-bulb-${i}`}
+                animate={{ opacity: [0.55, 1, 0.55] }}
+                transition={{ duration: 1.8, delay: i * 0.25, repeat: Infinity, ease: 'easeInOut' }}
+              >
+                <circle cx={bulb.x} cy={bulb.y} r={isNight ? 4.5 : 3} fill={bulb.c} opacity={isNight ? 0.35 : 0.2} />
+                <circle cx={bulb.x} cy={bulb.y} r={1.6} fill={bulb.c} />
+              </motion.g>
+            ))}
+          </g>
+        )}
 
         {/* White windowsill (Spot: 'window') */}
         <g
@@ -644,6 +730,73 @@ export function LivingRoom({
         <polygon points="262,354 398,354 400,334 282,334" fill="#ffffff" stroke="#dedad0" strokeWidth="1" />
         {/* Subtle center split-tabletop line */}
         <line x1="272" y1="344" x2="399" y2="344" stroke="#e5e1d8" strokeWidth="0.9" />
+
+        {/* Festive Room Decor: October little pumpkins on the coffee table */}
+        {festiveDecor === 'october_pumpkins' && (
+          <g pointerEvents="none" data-testid="living-room-pumpkins">
+            {/* Soft tabletop contact shadow */}
+            <ellipse cx="320" cy="346.5" rx="14" ry="3.2" fill="rgba(40,30,20,0.16)" />
+            {/* Main warm orange ribbed pumpkin */}
+            <ellipse cx="315" cy="341" rx="8.5" ry="6.2" fill="#ea580c" stroke="#c2410c" strokeWidth="0.7" />
+            <ellipse cx="315" cy="341" rx="4.6" ry="6.2" fill="#f97316" />
+            <path d="M315 334.8 Q316.5 331.5 318.5 332" stroke="#4d7c0f" strokeWidth="1.6" fill="none" strokeLinecap="round" />
+            {/* Cute mini cream gourd right beside it */}
+            <ellipse cx="326.5" cy="343.5" rx="5.2" ry="4" fill="#fef3c7" stroke="#d97706" strokeWidth="0.6" />
+            <ellipse cx="326.5" cy="343.5" rx="2.6" ry="4" fill="#fffbeb" />
+            <path d="M326.5 339.5 Q325.5 337.2 324.5 337.5" stroke="#65a30d" strokeWidth="1.2" fill="none" strokeLinecap="round" />
+          </g>
+        )}
+
+        {/* Festive Room Decor: December cozy mini tree with warm twinkling lights */}
+        {festiveDecor === 'december_tree' && (
+          <g pointerEvents="none" data-testid="living-room-mini-tree">
+            {/* Warm ambient glow around the mini tree at sunset/night */}
+            {(isNight || isSunset) && (
+              <motion.circle
+                cx="318"
+                cy="321"
+                r={isNight ? 32 : 22}
+                fill="url(#lr-lamp)"
+                animate={{ opacity: [0.55, 0.85, 0.55] }}
+                transition={{ duration: 2.6, repeat: Infinity, ease: 'easeInOut' }}
+              />
+            )}
+            {/* Tabletop shadow & rustic terracotta mini pot */}
+            <ellipse cx="318" cy="346.5" rx="11" ry="3" fill="rgba(40,30,20,0.18)" />
+            <polygon points="311,338 325,338 323,346 313,346" fill="#b45309" stroke="#92400e" strokeWidth="0.7" />
+            <rect x="310" y="336.5" width="16" height="2.6" rx="1" fill="#c2631e" />
+            {/* Three layered evergreen tiers */}
+            <polygon points="318,312 303,337 333,337" fill="#166534" stroke="#14532d" strokeWidth="0.7" strokeLinejoin="round" />
+            <polygon points="318,303 306,325 330,325" fill="#15803d" stroke="#166534" strokeWidth="0.7" strokeLinejoin="round" />
+            <polygon points="318,296 309.5,313 326.5,313" fill="#22c55e" stroke="#15803d" strokeWidth="0.6" strokeLinejoin="round" />
+            {/* Tiny golden star on top */}
+            <path
+              d="M318 291 L319.4 294.4 L323 294.7 L320.2 297 L321 300.4 L318 298.5 L315 300.4 L315.8 297 L313 294.7 L316.6 294.4 Z"
+              fill="#fde047"
+              stroke="#eab308"
+              strokeWidth="0.5"
+            />
+            {/* Warm twinkling fairy lights on the branches */}
+            {[
+              { x: 315, y: 310, c: '#fef08a', d: 0 },
+              { x: 322, y: 315, c: '#fb923c', d: 0.4 },
+              { x: 312, y: 322, c: '#f87171', d: 0.8 },
+              { x: 320, y: 326, c: '#fde047', d: 0.2 },
+              { x: 326, y: 331, c: '#fef08a', d: 0.6 },
+              { x: 310, y: 333, c: '#fb923c', d: 1.0 },
+            ].map((dot, i) => (
+              <motion.circle
+                key={`tree-light-${i}`}
+                cx={dot.x}
+                cy={dot.y}
+                r="1.7"
+                fill={dot.c}
+                animate={{ opacity: [0.45, 1, 0.45], scale: [0.85, 1.2, 0.85] }}
+                transition={{ duration: 1.6, delay: dot.d, repeat: Infinity, ease: 'easeInOut' }}
+              />
+            ))}
+          </g>
+        )}
       </g>
 
       {/* Surprise Cat Moment: Table Knock-Off (small item teetering on the coffee table edge) */}
