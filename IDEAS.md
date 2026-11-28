@@ -28,21 +28,7 @@ When an idea gets picked up, move it into [ROADMAP.md](ROADMAP.md) as a new phas
 
 ---
 
-## 🪴 3. Cozy Room Customization
-
-**The idea:** Let players personalize Nico & Athina's apartment by spending earned Churu treats on cozy room decor.
-
-### What it adds
-- **Room Swaps:**
-  - Balcony railing plants (lavender pot, cat grass tray)
-  - Living room rug patterns and warm colors
-  - Cozy fairy string lights draped above the window
-  - Silly delivery stickers on Oli's cardboard box
-- **Long-Term Goals:** Gives a fun, visible reward for regular caretaking and saving up Churu treats.
-
----
-
-## 🪮 4. Hands-On Care
+## 🪮 3. Hands-On Care
 
 **The idea:** Turn everyday care actions into quick, tactile 3-second interactions instead of just tapping a button.
 
@@ -52,7 +38,7 @@ When an idea gets picked up, move it into [ROADMAP.md](ROADMAP.md) as a new phas
 
 ---
 
-## 🌤️ 5. Oli's Daily Mood
+## 🌤️ 4. Oli's Daily Mood
 
 **The idea:** Give Oli a different vibe each day so check-ins feel fresh even after he reaches Adult Oli.
 
@@ -62,7 +48,7 @@ When an idea gets picked up, move it into [ROADMAP.md](ROADMAP.md) as a new phas
 
 ---
 
-## 🌱 6. Balcony Cat Grass & Catnip
+## 🌱 5. Balcony Cat Grass & Catnip
 
 **The idea:** Grow a small herb pot on the sunny balcony to give Oli fresh home-grown treats.
 
@@ -73,6 +59,9 @@ When an idea gets picked up, move it into [ROADMAP.md](ROADMAP.md) as a new phas
 ---
 
 ## ✅ Completed Ideas
+
+- **Cozy Room Customization (Shipped in v1.7.0):**
+  - Added the 🪴 **Room Decor** shop drawer to buy and toggle apartment swaps with Churu treats: Terracotta & Sage Plaid rugs, Fairy String Lights, Silly Box Stickers, Balcony Lavender Pots & Cat Grass Trays, plus year-round seasonal table decor (Cozy Pumpkins, Spring Tulip Vase, and Mini Christmas Tree).
 
 - **Seasonal Touches & Weather (Shipped in v1.6.0):**
   - Soft winter snowfall on snowy or freezing days and floating spring blossoms outside the window and balcony.

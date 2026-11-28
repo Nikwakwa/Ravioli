@@ -202,4 +202,21 @@ describe('Balcony — Scenery & Mobile Safe Bounds', () => {
     const decTree = Balcony({ festiveDecor: 'december_tree' }) as AnyElement;
     expect(findElements(decTree, (el) => el.props?.['data-testid'] === 'balcony-festive-lights').length).toBe(1);
   });
+
+  it('renders custom Balcony plant swaps (lavender, cat grass) and year-round seasonal decor', () => {
+    const lavTree = Balcony({
+      roomDecor: { balcony_plants: 'balcony_lavender', seasonal_decor: 'decor_spring_vase' },
+    }) as AnyElement;
+    const lavPlanters = findElements(lavTree, (el) => typeof el.type === 'function' && el.type.name === 'HangingPlanterBox');
+    expect(lavPlanters.length).toBe(2);
+    expect(lavPlanters.every((p) => p.props.plantStyle === 'lavender')).toBe(true);
+    expect(findElements(lavTree, (el) => el.props?.['data-testid'] === 'balcony-tulips').length).toBe(1);
+
+    const grassTree = Balcony({
+      roomDecor: { balcony_plants: 'balcony_cat_grass', seasonal_decor: 'decor_pumpkins' },
+    }) as AnyElement;
+    const grassPlanters = findElements(grassTree, (el) => typeof el.type === 'function' && el.type.name === 'HangingPlanterBox');
+    expect(grassPlanters.every((p) => p.props.plantStyle === 'cat_grass')).toBe(true);
+    expect(findElements(grassTree, (el) => el.props?.['data-testid'] === 'balcony-pumpkins').length).toBe(1);
+  });
 });

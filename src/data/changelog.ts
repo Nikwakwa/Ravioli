@@ -7,6 +7,15 @@ export interface ReleaseEntry {
 
 export const CHANGELOG: ReleaseEntry[] = [
   {
+    version: 'v1.7.0',
+    date: '2026-11-28',
+    title: 'Cozy Room Customization 🪴✨',
+    changes: [
+      'Added the 🪴 Room Decor shop: spend Churus to swap living room rugs, drape fairy string lights, add silly stickers to Oli’s box, and plant lavender or cat grass on the balcony.',
+      'Seasonal table decor (Cozy Pumpkins, Spring Tulip Vase, and Mini Christmas Tree) can now be unlocked and displayed year-round.',
+    ],
+  },
+  {
     version: 'v1.6.0',
     date: '2026-11-27',
     title: 'Seasonal Weather & Outfits ❄️☔',

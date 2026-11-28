@@ -3,6 +3,7 @@ import { CatAvatar } from '../CatAvatar';
 import type { CatAnimation, CatSpot, LifeStage, Mood, PetZone } from '../../types';
 import type { FestiveDecor, SeasonalWeatherEffect, TimeOfDay } from '../../utils/atmosphere';
 import { VISITOR_META, type BalconyVisitor } from '../../utils/balconyVisitors';
+import type { EquippedDecor } from '../../utils/roomDecor';
 
 /**
  * Unified 3D pinhole camera projection so every architectural line, tile seam,
@@ -82,12 +83,14 @@ function HangingPlanterBox({
   xRight,
   night,
   hasBurgundyLeft = false,
+  plantStyle = 'pansies',
   pansies,
 }: {
   xLeft: number;
   xRight: number;
   night: boolean;
   hasBurgundyLeft?: boolean;
+  plantStyle?: 'pansies' | 'lavender' | 'cat_grass';
   pansies: { xRatio: number; dy: number; scale?: number; rotate?: number; variant?: 'yellow-top' | 'purple-top' }[];
 }) {
   const zBack = 289;
@@ -122,66 +125,107 @@ function HangingPlanterBox({
         fill={soilFill}
       />
 
-      {/* 2. Organic mounded foliage, burgundy leaves & pansies rising naturally out of the soil */}
-      <g>
-        {hasBurgundyLeft && (
-          <g>
-            <circle cx={boxLeftPx + 8} cy={boxTopPy - 7.5} r="7.8" fill={night ? '#3e2334' : '#681e34'} />
-            <circle cx={boxLeftPx + 17} cy={boxTopPy - 10} r="7" fill={night ? '#4b293d' : '#7f2640'} />
-            <circle cx={boxLeftPx + 13} cy={boxTopPy - 3.5} r="6.2" fill={night ? '#361e2d' : '#541628'} />
-          </g>
-        )}
-        {/* Varied organic green leaf clusters */}
-        {[
-          { t: 0.12, dy: -4.5, r: 7.4, shade: 0 },
-          { t: 0.25, dy: -8.5, r: 9.2, shade: 1 },
-          { t: 0.39, dy: -6.2, r: 8.4, shade: 0 },
-          { t: 0.52, dy: -9.5, r: 9.6, shade: 1 },
-          { t: 0.66, dy: -6.8, r: 8.6, shade: 0 },
-          { t: 0.79, dy: -8.2, r: 8.8, shade: 1 },
-          { t: 0.9, dy: -4.8, r: 7.2, shade: 0 },
-        ].map((leaf, idx) => {
-          const lx = boxLeftPx + boxWidthPx * leaf.t;
-          const ly = boxTopPy + leaf.dy;
-          return (
-            <g key={idx}>
-              <circle
-                cx={lx}
-                cy={ly}
-                r={leaf.r}
-                fill={
-                  night
-                    ? leaf.shade
-                      ? '#354f3e'
-                      : '#2a4032'
-                    : leaf.shade
-                      ? '#5d8c49'
-                      : '#49723a'
-                }
+      {/* 2. Planter foliage: classic pansies, fragrant lavender spikes, or lush cat grass tufts */}
+      {plantStyle === 'lavender' ? (
+        <g data-testid="balcony-planter-lavender" opacity={night ? 0.78 : 1}>
+          {[0.12, 0.24, 0.36, 0.48, 0.6, 0.72, 0.84, 0.92].map((t, idx) => {
+            const lx = boxLeftPx + boxWidthPx * t;
+            const lean = idx % 2 === 0 ? -3 : 3;
+            const h = 16 + (idx % 3) * 4;
+            return (
+              <g key={idx}>
+                <path
+                  d={`M ${lx} ${boxTopPy + 1} Q ${lx + lean * 0.6} ${boxTopPy - h * 0.5} ${lx + lean} ${boxTopPy - h}`}
+                  stroke={night ? '#4d6b53' : '#6a8e64'}
+                  strokeWidth="1.5"
+                  fill="none"
+                  strokeLinecap="round"
+                />
+                <ellipse cx={lx + lean} cy={boxTopPy - h} rx="2.4" ry="5.2" fill={idx % 2 === 0 ? '#9333ea' : '#a855f7'} />
+                <ellipse cx={lx + lean - 1} cy={boxTopPy - h + 2} rx="1.6" ry="3.2" fill="#c084fc" opacity="0.85" />
+              </g>
+            );
+          })}
+        </g>
+      ) : plantStyle === 'cat_grass' ? (
+        <g data-testid="balcony-planter-cat-grass" opacity={night ? 0.76 : 1}>
+          {[0.08, 0.16, 0.24, 0.33, 0.42, 0.51, 0.6, 0.69, 0.78, 0.86, 0.93].map((t, idx) => {
+            const gx = boxLeftPx + boxWidthPx * t;
+            const bend = (idx % 3 - 1) * 6;
+            const h = 15 + (idx % 3) * 4.5;
+            return (
+              <path
+                key={idx}
+                d={`M ${gx} ${boxTopPy + 2} Q ${gx + bend * 0.5} ${boxTopPy - h * 0.6} ${gx + bend} ${boxTopPy - h}`}
+                stroke={idx % 2 === 0 ? (night ? '#3d7044' : '#65a30d') : night ? '#4d8252' : '#84cc16'}
+                strokeWidth="2.4"
+                fill="none"
+                strokeLinecap="round"
               />
-              <circle
-                cx={lx + (idx % 2 === 0 ? 3.2 : -3.2)}
-                cy={ly + 3.8}
-                r={leaf.r * 0.68}
-                fill={night ? '#23362a' : '#3d6230'}
-              />
+            );
+          })}
+        </g>
+      ) : (
+        <g>
+          {hasBurgundyLeft && (
+            <g>
+              <circle cx={boxLeftPx + 8} cy={boxTopPy - 7.5} r="7.8" fill={night ? '#3e2334' : '#681e34'} />
+              <circle cx={boxLeftPx + 17} cy={boxTopPy - 10} r="7" fill={night ? '#4b293d' : '#7f2640'} />
+              <circle cx={boxLeftPx + 13} cy={boxTopPy - 3.5} r="6.2" fill={night ? '#361e2d' : '#541628'} />
             </g>
-          );
-        })}
+          )}
+          {/* Varied organic green leaf clusters */}
+          {[
+            { t: 0.12, dy: -4.5, r: 7.4, shade: 0 },
+            { t: 0.25, dy: -8.5, r: 9.2, shade: 1 },
+            { t: 0.39, dy: -6.2, r: 8.4, shade: 0 },
+            { t: 0.52, dy: -9.5, r: 9.6, shade: 1 },
+            { t: 0.66, dy: -6.8, r: 8.6, shade: 0 },
+            { t: 0.79, dy: -8.2, r: 8.8, shade: 1 },
+            { t: 0.9, dy: -4.8, r: 7.2, shade: 0 },
+          ].map((leaf, idx) => {
+            const lx = boxLeftPx + boxWidthPx * leaf.t;
+            const ly = boxTopPy + leaf.dy;
+            return (
+              <g key={idx}>
+                <circle
+                  cx={lx}
+                  cy={ly}
+                  r={leaf.r}
+                  fill={
+                    night
+                      ? leaf.shade
+                        ? '#354f3e'
+                        : '#2a4032'
+                      : leaf.shade
+                        ? '#5d8c49'
+                        : '#49723a'
+                  }
+                />
+                <circle
+                  cx={lx + (idx % 2 === 0 ? 3.2 : -3.2)}
+                  cy={ly + 3.8}
+                  r={leaf.r * 0.68}
+                  fill={night ? '#23362a' : '#3d6230'}
+                />
+              </g>
+            );
+          })}
 
-        {/* Blooming yellow & purple pansies */}
-        {pansies.map((p, idx) => (
-          <PansyBloom
-            key={idx}
-            cx={boxLeftPx + boxWidthPx * p.xRatio}
-            cy={boxTopPy + p.dy}
-            scale={p.scale ?? 0.95}
-            rotate={p.rotate ?? 0}
-            variant={p.variant ?? (idx % 2 === 0 ? 'yellow-top' : 'purple-top')}
-            night={night}
-          />
-        ))}
-      </g>
+          {/* Blooming yellow & purple pansies */}
+          {pansies.map((p, idx) => (
+            <PansyBloom
+              key={idx}
+              cx={boxLeftPx + boxWidthPx * p.xRatio}
+              cy={boxTopPy + p.dy}
+              scale={p.scale ?? 0.95}
+              rotate={p.rotate ?? 0}
+              variant={p.variant ?? (idx % 2 === 0 ? 'yellow-top' : 'purple-top')}
+              night={night}
+            />
+          ))}
+        </g>
+      )}
 
       {/* 3. 3D Side End-Cap (when inner edge faces camera X=0) */}
       {xLeft > 0 && (
@@ -850,6 +894,7 @@ export function Balcony({
   isRaining = false,
   seasonalWeather = 'none',
   festiveDecor = 'none',
+  roomDecor = {},
   activeSpot = 'planter',
   onSelectSpot,
   catMood = 'content',
@@ -865,6 +910,7 @@ export function Balcony({
   isRaining?: boolean;
   seasonalWeather?: SeasonalWeatherEffect;
   festiveDecor?: FestiveDecor;
+  roomDecor?: EquippedDecor;
   activeSpot?: CatSpot;
   onSelectSpot?: (spot: CatSpot) => void;
   catMood?: Mood;
@@ -880,6 +926,19 @@ export function Balcony({
   const night = timeOfDay === 'night';
   const isNight = night;
   const isSunset = timeOfDay === 'sunset';
+  const balconyPlantStyle: 'pansies' | 'lavender' | 'cat_grass' =
+    roomDecor.balcony_plants === 'balcony_lavender'
+      ? 'lavender'
+      : roomDecor.balcony_plants === 'balcony_cat_grass'
+        ? 'cat_grass'
+        : 'pansies';
+  const showBalconyLights =
+    roomDecor.seasonal_decor === 'decor_xmas_tree' ||
+    (!roomDecor.seasonal_decor && festiveDecor === 'december_tree');
+  const showBalconyPumpkins =
+    roomDecor.seasonal_decor === 'decor_pumpkins' ||
+    (!roomDecor.seasonal_decor && festiveDecor === 'october_pumpkins');
+  const showBalconyTulips = roomDecor.seasonal_decor === 'decor_spring_vase';
 
   // Back railing & right side return geometry in 3D world space (relative to VP_X = 236)
   const zRailBack = 290;
@@ -1451,6 +1510,7 @@ export function Balcony({
           xRight={-22}
           night={night}
           hasBurgundyLeft
+          plantStyle={balconyPlantStyle}
           pansies={[
             { xRatio: 0.32, dy: -6, scale: 0.94, rotate: -8, variant: 'yellow-top' },
             { xRatio: 0.55, dy: -8.8, scale: 1.0, rotate: 6, variant: 'purple-top' },
@@ -1463,6 +1523,7 @@ export function Balcony({
           xLeft={-4}
           xRight={66}
           night={night}
+          plantStyle={balconyPlantStyle}
           pansies={[
             { xRatio: 0.2, dy: -5.8, scale: 0.93, rotate: 7, variant: 'purple-top' },
             { xRatio: 0.43, dy: -8.8, scale: 1.0, rotate: -6, variant: 'yellow-top' },
@@ -1536,8 +1597,8 @@ export function Balcony({
               fill={night ? '#375643' : '#659954'}
             />
 
-            {/* Festive December warm lights twinkling on the balcony cypress tree */}
-            {festiveDecor === 'december_tree' && (
+            {/* Festive & Room Decor: Warm twinkling lights on the balcony cypress tree */}
+            {showBalconyLights && (
               <g pointerEvents="none" data-testid="balcony-festive-lights">
                 {[
                   { dx: -1, dy: -96, c: '#fde047', d: 0 },
@@ -1560,8 +1621,8 @@ export function Balcony({
             )}
           </g>
 
-          {/* Festive October little pumpkin tucked beside the cypress pot */}
-          {festiveDecor === 'october_pumpkins' && (
+          {/* Festive & Room Decor: Cozy little pumpkin tucked beside the cypress pot */}
+          {showBalconyPumpkins && (
             <g pointerEvents="none" data-testid="balcony-pumpkins">
               <ellipse cx={potBaseCx + 24} cy={potBaseCy + 1.5} rx="9.5" ry="3" fill="rgba(35,25,18,0.2)" />
               <ellipse cx={potBaseCx + 24} cy={potBaseCy - 4} rx="8.8" ry="6.4" fill="#ea580c" stroke="#c2410c" strokeWidth="0.8" />
@@ -1572,6 +1633,29 @@ export function Balcony({
                 strokeWidth="1.6"
                 fill="none"
                 strokeLinecap="round"
+              />
+            </g>
+          )}
+
+          {/* Room Decor: Spring Tulip Pot tucked beside the cypress pot */}
+          {showBalconyTulips && (
+            <g pointerEvents="none" data-testid="balcony-tulips">
+              <ellipse cx={potBaseCx + 24} cy={potBaseCy + 1.5} rx="8.5" ry="2.6" fill="rgba(35,25,18,0.18)" />
+              <path
+                d={`M ${potBaseCx + 24} ${potBaseCy - 10} Q ${potBaseCx + 19} ${potBaseCy - 19} ${potBaseCx + 17} ${potBaseCy - 24} M ${potBaseCx + 24} ${potBaseCy - 10} V ${potBaseCy - 26} M ${potBaseCx + 24} ${potBaseCy - 10} Q ${potBaseCx + 29} ${potBaseCy - 18} ${potBaseCx + 31} ${potBaseCy - 23}`}
+                stroke="#4d7c0f"
+                strokeWidth="1.4"
+                fill="none"
+                strokeLinecap="round"
+              />
+              <circle cx={potBaseCx + 17} cy={potBaseCy - 25} r="3.2" fill="#f472b6" />
+              <circle cx={potBaseCx + 24} cy={potBaseCy - 27.5} r="3.3" fill="#facc15" />
+              <circle cx={potBaseCx + 31} cy={potBaseCy - 24} r="3.1" fill="#fb7185" />
+              <polygon
+                points={`${potBaseCx + 18},${potBaseCy - 10} ${potBaseCx + 30},${potBaseCy - 10} ${potBaseCx + 28.5},${potBaseCy + 1} ${potBaseCx + 19.5},${potBaseCy + 1}`}
+                fill="#fdf6ec"
+                stroke="#d6c5b0"
+                strokeWidth="0.8"
               />
             </g>
           )}

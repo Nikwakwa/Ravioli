@@ -9,6 +9,7 @@ import { FloatingEffects } from './components/FloatingEffects';
 import { FortuneModal, useFortune } from './components/FortuneModal';
 import { MenuPage, type MenuTab } from './components/MenuPage';
 import { PlayMinigameModal } from './components/PlayMinigameModal';
+import { RoomDecorDrawer, useRoomDecor } from './components/RoomDecorDrawer';
 import { RoomMesses } from './components/RoomMesses';
 import { Balcony } from './components/scenes/Balcony';
 import { LivingRoom } from './components/scenes/LivingRoom';
@@ -25,6 +26,7 @@ import {
   type BalconyVisitor,
 } from './utils/balconyVisitors';
 import { hasAffordableItem } from './utils/closet';
+import { hasAffordableDecor } from './utils/roomDecor';
 import {
   countCompletedQuests,
   getVisibleStreak,
@@ -95,6 +97,9 @@ export function App() {
   const [closetOpen, setClosetOpen] = useState(false);
   const closeCloset = useCallback(() => setClosetOpen(false), []);
   const closet = useCloset();
+  const [decorOpen, setDecorOpen] = useState(false);
+  const closeDecor = useCallback(() => setDecorOpen(false), []);
+  const roomDecor = useRoomDecor();
   const [fortuneOpen, setFortuneOpen] = useState(false);
   const fortune = useFortune();
   const [questsOpen, setQuestsOpen] = useState(false);
@@ -164,6 +169,7 @@ export function App() {
     churuStash,
     churuProgress,
     buyAccessory,
+    buyRoomDecor,
     buyFortuneCookie,
     claimDailyQuests,
     handleBadgeUnlocks,
@@ -217,6 +223,8 @@ export function App() {
         setQuestsOpen(false);
       } else if (fortuneOpen) {
         setFortuneOpen(false);
+      } else if (decorOpen) {
+        setDecorOpen(false);
       } else if (closetOpen) {
         setClosetOpen(false);
       } else if (menuOpen) {
@@ -233,6 +241,7 @@ export function App() {
     handleAcknowledgeBadge,
     questsOpen,
     fortuneOpen,
+    decorOpen,
     closetOpen,
     menuOpen,
   ]);
@@ -826,6 +835,7 @@ export function App() {
                   isRaining={isRaining}
                   seasonalWeather={seasonalWeather}
                   festiveDecor={festiveDecor}
+                  roomDecor={roomDecor.equipped}
                   activeSpot={spot}
                   onSelectSpot={setSpot}
                   catMood={mood}
@@ -852,6 +862,7 @@ export function App() {
                   isRaining={isRaining}
                   seasonalWeather={seasonalWeather}
                   festiveDecor={festiveDecor}
+                  roomDecor={roomDecor.equipped}
                   fountainBoost={eventPlaying && event?.actionId === 'fountain'}
                   onTapFountain={handleTapFountain}
                   litterBoxDirty={litterBoxDirty}
@@ -1038,6 +1049,24 @@ export function App() {
             ) : null}
           </button>
 
+          {/* Room Decor button (symmetrical with Daily Quests on the left) */}
+          <button
+            type="button"
+            onClick={() => setDecorOpen(true)}
+            title="Room Decor"
+            aria-label="Open Room Decor"
+            className={`pointer-events-auto absolute right-3 bottom-12 z-20 flex h-9 w-9 items-center justify-center rounded-full border shadow-md backdrop-blur-md transition-all active:scale-95 ${
+              isNight
+                ? 'border-white/10 bg-slate-900/80 text-amber-300'
+                : 'border-amber-900/12 bg-white/90 text-amber-700'
+            }`}
+          >
+            <span className="text-base leading-none select-none">🪴</span>
+            {hasAffordableDecor(roomDecor, churuStash) && (
+              <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-pink-500 ring-2 ring-white" />
+            )}
+          </button>
+
           {/* Oli's Closet button */}
           <button
             type="button"
@@ -1145,6 +1174,17 @@ export function App() {
         />
 
         <EmergencyRevivalModal live={live} onRevive={reviveOli} />
+
+        {/* Cozy Room Customization drawer */}
+        <AnimatePresence>
+          {decorOpen && (
+            <RoomDecorDrawer
+              churuStash={churuStash}
+              onBuy={buyRoomDecor}
+              onClose={closeDecor}
+            />
+          )}
+        </AnimatePresence>
 
         {/* Oli's Closet (dress-up drawer) */}
         <AnimatePresence>

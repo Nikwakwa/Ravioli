@@ -399,7 +399,7 @@ Time: ${new Date().toISOString()}`;
                 <li><strong>Balcony Visitors:</strong> Tap birds, butterflies, or evening moths on the balcony to make Oli wiggle and pounce (+4 Joy).</li>
                 <li><strong>Fountain:</strong> Tap to refresh his water (+40 Water).</li>
                 <li><strong>Sound:</strong> Tap the speaker next to Menu to mute or unmute.</li>
-                <li><strong>Closet:</strong> Tap the hanger to dress Oli up. Buy accessories with Churus.</li>
+                <li><strong>Closet &amp; Room Decor:</strong> Tap the hanger to dress Oli up, or 🪴 to decorate the living room and balcony with Churus.</li>
               </ul>
             </div>
 

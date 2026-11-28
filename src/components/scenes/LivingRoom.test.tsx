@@ -472,4 +472,27 @@ describe('LivingRoom — Seasonal Touches & Weather', () => {
     const decTree = LivingRoom({ fountainBoost: false, festiveDecor: 'december_tree' }) as AnyElement;
     expect(findElements(decTree, (el) => el.props?.['data-testid'] === 'living-room-mini-tree').length).toBe(1);
   });
+
+  it('renders custom Room Decor swaps (terracotta & sage rugs, fairy lights, box stickers, tulip vase, and year-round seasonal decor)', () => {
+    const customTree = LivingRoom({
+      fountainBoost: false,
+      roomDecor: {
+        rug: 'rug_sage',
+        window_lights: 'fairy_lights',
+        box_stickers: 'box_stickers',
+        seasonal_decor: 'decor_spring_vase',
+      },
+    }) as AnyElement;
+    expect(findElements(customTree, (el) => el.props?.['data-testid'] === 'living-room-rug-sage').length).toBe(1);
+    expect(findElements(customTree, (el) => el.props?.['data-testid'] === 'living-room-fairy-lights').length).toBe(1);
+    expect(findElements(customTree, (el) => el.props?.['data-testid'] === 'living-room-box-stickers').length).toBe(1);
+    expect(findElements(customTree, (el) => el.props?.['data-testid'] === 'living-room-tulip-vase').length).toBe(1);
+
+    const terracottaXmas = LivingRoom({
+      fountainBoost: false,
+      roomDecor: { rug: 'rug_terracotta', seasonal_decor: 'decor_xmas_tree' },
+    }) as AnyElement;
+    expect(findElements(terracottaXmas, (el) => el.props?.['data-testid'] === 'living-room-rug-terracotta').length).toBe(1);
+    expect(findElements(terracottaXmas, (el) => el.props?.['data-testid'] === 'living-room-mini-tree').length).toBe(1);
+  });
 });

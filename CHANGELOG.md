@@ -4,6 +4,13 @@ All updates to **Oli** are listed here.
 
 ---
 
+## `v1.7.0` — 2026-11-28
+### Cozy Room Customization 🪴✨
+- Added the 🪴 Room Decor shop: spend Churus to swap living room rugs, drape fairy string lights, add silly stickers to Oli’s box, and plant lavender or cat grass on the balcony.
+- Seasonal table decor (Cozy Pumpkins, Spring Tulip Vase, and Mini Christmas Tree) can now be unlocked and displayed year-round.
+
+---
+
 ## `v1.6.0` — 2026-11-27
 ### Seasonal Weather & Outfits ❄️☔
 - Added winter snowfall on cold or snowy days and floating spring blossoms outside the window and balcony.

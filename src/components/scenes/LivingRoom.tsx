@@ -2,6 +2,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { CatAvatar } from '../CatAvatar';
 import type { CatAnimation, CatSpot, LifeStage, Mood, PetZone } from '../../types';
 import type { FestiveDecor, SeasonalWeatherEffect, TimeOfDay } from '../../utils/atmosphere';
+import type { EquippedDecor } from '../../utils/roomDecor';
 import type { SurpriseMoment } from '../../utils/surpriseMoments';
 
 /**
@@ -24,6 +25,7 @@ export function LivingRoom({
   isRaining = false,
   seasonalWeather = 'none',
   festiveDecor = 'none',
+  roomDecor = {},
   onTapFountain,
   litterBoxDirty = false,
   onTapLitterBox,
@@ -43,6 +45,7 @@ export function LivingRoom({
   isRaining?: boolean;
   seasonalWeather?: SeasonalWeatherEffect;
   festiveDecor?: FestiveDecor;
+  roomDecor?: EquippedDecor;
   onTapFountain?: () => void;
   litterBoxDirty?: boolean;
   onTapLitterBox?: () => void;
@@ -63,6 +66,40 @@ export function LivingRoom({
   const isBoxPeek = surpriseMoment?.kind === 'box_peek' && !surpriseResolved;
   const isZoomies = surpriseMoment?.kind === 'zoomies' && !surpriseResolved;
   const isTableKnock = surpriseMoment?.kind === 'table_knock';
+
+  const rugStyle = roomDecor.rug;
+  const hasFairyLights =
+    roomDecor.window_lights === 'fairy_lights' ||
+    roomDecor.seasonal_decor === 'decor_xmas_tree' ||
+    (!roomDecor.seasonal_decor && festiveDecor === 'december_tree');
+  const hasBoxStickers = roomDecor.box_stickers === 'box_stickers';
+  const showPumpkins =
+    roomDecor.seasonal_decor === 'decor_pumpkins' ||
+    (!roomDecor.seasonal_decor && festiveDecor === 'october_pumpkins');
+  const showMiniTree =
+    roomDecor.seasonal_decor === 'decor_xmas_tree' ||
+    (!roomDecor.seasonal_decor && festiveDecor === 'december_tree');
+  const showTulipVase = roomDecor.seasonal_decor === 'decor_spring_vase';
+
+  const rugStops: [string, string, string] =
+    rugStyle === 'rug_terracotta'
+      ? isNight
+        ? ['#a85d4b', '#8d4838', '#73372a']
+        : isSunset
+          ? ['#eb8868', '#d46648', '#b54d33']
+          : ['#e07a5f', '#c95f42', '#ad4b31']
+      : rugStyle === 'rug_sage'
+        ? isNight
+          ? ['#6e826e', '#5a6d5a', '#485948']
+          : isSunset
+            ? ['#acc4a4', '#92ad8b', '#7a9573']
+            : ['#a5bfa0', '#8ca986', '#74906e']
+        : isNight
+          ? ['#c8c3d4', '#b2acc2', '#9b95ad']
+          : isSunset
+            ? ['#fff1e0', '#fae0c7', '#edd1b4']
+            : ['#fcfaf3', '#f2ede0', '#e3dccb'];
+
   return (
     <svg viewBox="0 0 400 600" preserveAspectRatio="xMidYMid slice" className="pointer-events-none absolute inset-0 h-full w-full">
       <defs>
@@ -80,9 +117,9 @@ export function LivingRoom({
           <stop offset="100%" stopColor={isNight ? '#2c3163' : isSunset ? '#fef08a' : '#fff8e8'} />
         </linearGradient>
         <radialGradient id="lr-shag" cx="50%" cy="50%" r="55%">
-          <stop offset="0%" stopColor={isNight ? '#c8c3d4' : isSunset ? '#fff1e0' : '#fcfaf3'} />
-          <stop offset="72%" stopColor={isNight ? '#b2acc2' : isSunset ? '#fae0c7' : '#f2ede0'} />
-          <stop offset="100%" stopColor={isNight ? '#9b95ad' : isSunset ? '#edd1b4' : '#e3dccb'} />
+          <stop offset="0%" stopColor={rugStops[0]} />
+          <stop offset="72%" stopColor={rugStops[1]} />
+          <stop offset="100%" stopColor={rugStops[2]} />
         </radialGradient>
         <linearGradient id="lr-sunbeam" x1="0" y1="0" x2="0.65" y2="1">
           <stop offset="0%" stopColor={isSunset ? '#fb923c' : '#fffbe8'} stopOpacity={isSunset ? 0.24 : 0.16} />
@@ -397,25 +434,25 @@ export function LivingRoom({
         <line x1="119" y1="106" x2="225" y2="106" stroke={isNight ? '#b0acc2' : isSunset ? '#e5d7ca' : '#e2ded4'} strokeWidth="1" />
         <line x1="119" y1="113" x2="225" y2="113" stroke={isNight ? '#b0acc2' : isSunset ? '#e5d7ca' : '#e2ded4'} strokeWidth="1" />
 
-        {/* Subtle warm twinkling window lights in December */}
-        {festiveDecor === 'december_tree' && (
-          <g pointerEvents="none">
-            <path d="M120 120 Q146 126 172 120 Q198 126 224 120" stroke="#78716c" strokeWidth="0.8" fill="none" opacity="0.65" />
+        {/* Cozy warm fairy string lights draped above the window */}
+        {hasFairyLights && (
+          <g pointerEvents="none" data-testid="living-room-fairy-lights">
+            <path d="M120 120 Q146 127 172 120 Q198 127 224 120" stroke="#78716c" strokeWidth="0.9" fill="none" opacity="0.7" />
             {[
-              { x: 132, y: 122.5, c: '#fde047' },
-              { x: 148, y: 123.5, c: '#fb923c' },
-              { x: 164, y: 121.8, c: '#fef08a' },
-              { x: 180, y: 121.8, c: '#fb923c' },
-              { x: 196, y: 123.5, c: '#fde047' },
-              { x: 212, y: 122.5, c: '#fef08a' },
+              { x: 130, y: 123, c: '#fde047' },
+              { x: 146, y: 124.2, c: '#fb923c' },
+              { x: 162, y: 122, c: '#fef08a' },
+              { x: 180, y: 122, c: '#fb923c' },
+              { x: 196, y: 124.2, c: '#fde047' },
+              { x: 212, y: 123, c: '#fef08a' },
             ].map((bulb, i) => (
               <motion.g
                 key={`win-bulb-${i}`}
                 animate={{ opacity: [0.55, 1, 0.55] }}
                 transition={{ duration: 1.8, delay: i * 0.25, repeat: Infinity, ease: 'easeInOut' }}
               >
-                <circle cx={bulb.x} cy={bulb.y} r={isNight ? 4.5 : 3} fill={bulb.c} opacity={isNight ? 0.35 : 0.2} />
-                <circle cx={bulb.x} cy={bulb.y} r={1.6} fill={bulb.c} />
+                <circle cx={bulb.x} cy={bulb.y} r={isNight ? 5 : 3.2} fill={bulb.c} opacity={isNight ? 0.4 : 0.24} />
+                <circle cx={bulb.x} cy={bulb.y} r={1.8} fill={bulb.c} />
               </motion.g>
             ))}
           </g>
@@ -731,8 +768,8 @@ export function LivingRoom({
         {/* Subtle center split-tabletop line */}
         <line x1="272" y1="344" x2="399" y2="344" stroke="#e5e1d8" strokeWidth="0.9" />
 
-        {/* Festive Room Decor: October little pumpkins on the coffee table */}
-        {festiveDecor === 'october_pumpkins' && (
+        {/* Festive & Room Decor: Cozy pumpkins on the coffee table */}
+        {showPumpkins && (
           <g pointerEvents="none" data-testid="living-room-pumpkins">
             {/* Soft tabletop contact shadow */}
             <ellipse cx="320" cy="346.5" rx="14" ry="3.2" fill="rgba(40,30,20,0.16)" />
@@ -747,8 +784,29 @@ export function LivingRoom({
           </g>
         )}
 
-        {/* Festive Room Decor: December cozy mini tree with warm twinkling lights */}
-        {festiveDecor === 'december_tree' && (
+        {/* Room Decor: Spring Tulip Vase on the coffee table */}
+        {showTulipVase && (
+          <g pointerEvents="none" data-testid="living-room-tulip-vase">
+            <ellipse cx="318" cy="346.5" rx="9" ry="2.8" fill="rgba(40,30,20,0.15)" />
+            {/* Stems & leaves */}
+            <path d="M318 331 Q313 321 310 314 M318 331 V310 M318 331 Q323 321 326 315" stroke="#4d7c0f" strokeWidth="1.5" fill="none" strokeLinecap="round" />
+            <path d="M316 330 Q308 326 306 320 Q313 322 316 330 Z" fill="#65a30d" />
+            <path d="M320 330 Q328 326 330 321 Q323 323 320 330 Z" fill="#4d7c0f" />
+            {/* Tulip blooms */}
+            <path d="M306.5 314 C306.5 309 313.5 309 313.5 314 Q310 318 306.5 314 Z" fill="#f472b6" />
+            <path d="M314.5 310 C314.5 305 321.5 305 321.5 310 Q318 314 314.5 310 Z" fill="#facc15" />
+            <path d="M322.5 315 C322.5 310 329.5 310 329.5 315 Q326 319 322.5 315 Z" fill="#fb7185" />
+            {/* Speckled cream ceramic vase */}
+            <path d="M313 330 H323 L325 344 Q318 347 311 344 Z" fill="#fdf6ec" stroke="#d6c5b0" strokeWidth="0.9" />
+            <ellipse cx="318" cy="330" rx="5.2" ry="1.6" fill="#ebe0d1" stroke="#d6c5b0" strokeWidth="0.6" />
+            <circle cx="315.5" cy="337" r="0.8" fill="#c08457" opacity="0.6" />
+            <circle cx="320.5" cy="340" r="0.8" fill="#c08457" opacity="0.6" />
+            <circle cx="318" cy="334.5" r="0.7" fill="#c08457" opacity="0.5" />
+          </g>
+        )}
+
+        {/* Festive & Room Decor: Cozy mini Christmas tree with warm twinkling lights */}
+        {showMiniTree && (
           <g pointerEvents="none" data-testid="living-room-mini-tree">
             {/* Warm ambient glow around the mini tree at sunset/night */}
             {(isNight || isSunset) && (
@@ -1248,6 +1306,34 @@ export function LivingRoom({
         <text x="176" y="372" textAnchor="middle" fontSize="4.5" fontWeight="900" fill="#b91c1c" letterSpacing="0.4">
           📦 OLI
         </text>
+
+        {/* Room Decor: Silly delivery stickers on Oli's cardboard box */}
+        {hasBoxStickers && (
+          <g pointerEvents="none" data-testid="living-room-box-stickers">
+            {/* Tilted sunny yellow CHURU sticker */}
+            <g transform="translate(148 361) rotate(-10)">
+              <rect x="-6" y="-4" width="20" height="8" rx="2" fill="#fde047" stroke="#ca8a04" strokeWidth="0.6" />
+              <text x="4" y="1.7" textAnchor="middle" fontSize="4.2" fontWeight="900" fill="#854d0e">
+                CHURU!
+              </text>
+            </g>
+            {/* Cute pink paw heart sticker */}
+            <g transform="translate(184 361) rotate(12)">
+              <circle cx="0" cy="0" r="5" fill="#fbcfe8" stroke="#db2777" strokeWidth="0.6" />
+              <circle cx="0" cy="1" r="1.5" fill="#db2777" />
+              <circle cx="-2" cy="-1.2" r="0.8" fill="#db2777" />
+              <circle cx="0" cy="-1.8" r="0.8" fill="#db2777" />
+              <circle cx="2" cy="-1.2" r="0.8" fill="#db2777" />
+            </g>
+            {/* Teal 100% FLOOF sticker */}
+            <g transform="translate(166 376.5) rotate(-4)">
+              <rect x="-11" y="-3.5" width="22" height="7" rx="3.5" fill="#5eead4" stroke="#0f766e" strokeWidth="0.6" />
+              <text x="0" y="1.6" textAnchor="middle" fontSize="3.8" fontWeight="900" fill="#115e59">
+                100% FLOOF
+              </text>
+            </g>
+          </g>
+        )}
       </g>
 
       {/* Fluffy cream high-pile shag rug with Moroccan grey diamond trellis pattern (PXL_20261101_155116231.jpg, Spot: 'rug') */}
@@ -1289,30 +1375,71 @@ export function LivingRoom({
           d="M52 372 L348 372 L368 442 L32 442 Z"
           fill="rgba(60,48,35,0.16)"
         />
-        {/* Main perspective cream shag rug silhouette */}
+        {/* Main perspective shag rug silhouette */}
         <path
           d="M54 369 Q200 366 346 369 L364 438 Q200 442 36 438 Z"
           fill="url(#lr-shag)"
-          stroke={isNight ? '#aca6bd' : '#dfd7c5'}
+          stroke={
+            rugStyle === 'rug_terracotta'
+              ? isNight
+                ? '#7c3f30'
+                : '#b54d33'
+              : rugStyle === 'rug_sage'
+                ? isNight
+                  ? '#4f624f'
+                  : '#6f8b69'
+                : isNight
+                  ? '#aca6bd'
+                  : '#dfd7c5'
+          }
           strokeWidth="2.2"
           strokeLinejoin="round"
         />
-        {/* Authentic Moroccan Berber grey diamond trellis lines across the rug */}
-        <g
-          stroke={isNight ? '#9892ab' : '#c6bca8'}
-          strokeWidth="2.8"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          fill="none"
-          opacity="0.72"
-        >
-          {/* Left diamond */}
-          <polygon points="122,371 174,403 118,437 64,403" />
-          {/* Center diamond */}
-          <polygon points="200,370 256,403 200,438 144,403" />
-          {/* Right diamond */}
-          <polygon points="278,371 336,403 282,437 226,403" />
-        </g>
+        {/* Rug woven pattern: Sage Plaid check OR Moroccan diamond trellis */}
+        {rugStyle === 'rug_sage' ? (
+          <g
+            data-testid="living-room-rug-sage"
+            stroke={isNight ? '#cad8c7' : '#f3f7ee'}
+            strokeWidth="2.2"
+            strokeLinecap="round"
+            fill="none"
+            opacity="0.6"
+          >
+            <line x1="48" y1="388" x2="352" y2="388" />
+            <line x1="43" y1="406" x2="357" y2="406" />
+            <line x1="39" y1="424" x2="361" y2="424" />
+            <line x1="106" y1="369" x2="90" y2="439" />
+            <line x1="154" y1="368" x2="146" y2="440" />
+            <line x1="200" y1="368" x2="200" y2="440" />
+            <line x1="246" y1="368" x2="254" y2="440" />
+            <line x1="294" y1="369" x2="310" y2="439" />
+          </g>
+        ) : (
+          <g
+            data-testid={rugStyle === 'rug_terracotta' ? 'living-room-rug-terracotta' : undefined}
+            stroke={
+              rugStyle === 'rug_terracotta'
+                ? isNight
+                  ? '#e6c5b5'
+                  : '#fbe5d2'
+                : isNight
+                  ? '#9892ab'
+                  : '#c6bca8'
+            }
+            strokeWidth="2.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            fill="none"
+            opacity="0.72"
+          >
+            {/* Left diamond */}
+            <polygon points="122,371 174,403 118,437 64,403" />
+            {/* Center diamond */}
+            <polygon points="200,370 256,403 200,438 144,403" />
+            {/* Right diamond */}
+            <polygon points="278,371 336,403 282,437 226,403" />
+          </g>
+        )}
 
         {/* Surprise Cat Moment: Spontaneous Zoomies speed lines, dust puffs & chirps */}
         {activeSpot === 'rug' && isZoomies && (

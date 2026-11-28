@@ -74,6 +74,14 @@ import {
 import { celebrate, vibrate } from '../utils/feedback';
 import { accessoryById, addPurchase, canAfford, getCloset, isOwned, type AccessoryId } from '../utils/closet';
 import {
+  addDecorPurchase,
+  canAffordDecor,
+  decorById,
+  getRoomDecor,
+  isDecorOwned,
+  type DecorId,
+} from '../utils/roomDecor';
+import {
   FORTUNE_COOKIE_PRICE,
   canAffordFortune,
   getFortuneState,
@@ -628,6 +636,25 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
       return true;
     },
     [updateChuruStash, handleBadgeUnlocks],
+  );
+
+  /** Buys a cozy room decor item with Churu tubes from the stash. */
+  const buyRoomDecor = useCallback(
+    (id: DecorId): boolean => {
+      const item = decorById(id);
+      if (!item || isDecorOwned(getRoomDecor(), id)) return false;
+      if (!canAffordDecor(item, churuStashRef.current)) {
+        vibrate([20, 40, 20]);
+        return false;
+      }
+      updateChuruStash((c) => c - item.price);
+      addDecorPurchase(id);
+      vibrate([25, 35, 25, 35, 40]);
+      playSound('chime');
+      noticeRef.current({ text: `${item.emoji} Placed ${item.name}!`, tone: 'info' });
+      return true;
+    },
+    [updateChuruStash],
   );
 
   /** Unlocks the daily fortune cookie with Churu tubes from the stash. */
@@ -2113,6 +2140,7 @@ export function useCatGame(player: string | null, onNotice: (n: Omit<Notice, 'id
     churuStash,
     churuProgress,
     buyAccessory,
+    buyRoomDecor,
     buyFortuneCookie,
     claimDailyQuests,
     handleBadgeUnlocks,
